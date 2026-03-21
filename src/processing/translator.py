@@ -24,7 +24,9 @@ MAX_CHUNK = 4900          # Google 免费翻译单次上限约 5000 字符
 DOWNLOAD_TIMEOUT = 60     # 下载 PDF/HTML 超时（秒）
 RETRY_WAIT = 2            # 翻译失败后重试等待（秒）
 MAX_RETRIES = 3           # 每段最大重试次数
-TRANSLATE_DELAY = 0.5     # 每个翻译请求之间的友好延迟
+TRANSLATE_DELAY = 0.3     # 每个翻译请求之间的友好延迟
+BATCH_SEPARATOR = "\n999888777\n"  # 批量翻译分隔符（纯数字，Google 不会翻译）
+BATCH_MAX_CHARS = 4500    # 单次批量翻译的最大字符数
 
 # arXiv HTML 中需要跳过的标签（不翻译其内部文本）[R02]
 SKIP_TAGS = frozenset([
@@ -230,41 +232,90 @@ def _any_ancestor_skipped(tag: Tag) -> bool:
 
 
 def _batch_translate_nodes(text_nodes: list, translator):
-    """逐个翻译文本节点，避免分隔符被翻译"""
+    """批量翻译文本节点：将多个短文本合并为一次 API 调用，减少请求数 ~10x"""
+    from html import escape
     total = len(text_nodes)
     translated_count = 0
     
-    for i, node in enumerate(text_nodes):
-        original_text = str(node).strip()
+    # 过滤有效节点
+    valid_nodes = []
+    for node in text_nodes:
+        text = str(node).strip()
+        if text and len(text) >= 3:
+            valid_nodes.append((node, text))
+    
+    logger.info(f"    → 有效节点: {len(valid_nodes)}/{total}")
+    
+    # 将节点分批：每批累计字符数不超过 BATCH_MAX_CHARS
+    batches = []
+    current_batch = []
+    current_chars = 0
+    
+    for node, text in valid_nodes:
+        text_len = len(text) + len(BATCH_SEPARATOR)
+        if current_chars + text_len > BATCH_MAX_CHARS and current_batch:
+            batches.append(current_batch)
+            current_batch = []
+            current_chars = 0
+        current_batch.append((node, text))
+        current_chars += text_len
+    if current_batch:
+        batches.append(current_batch)
+    
+    logger.info(f"    → 分为 {len(batches)} 个批次（平均 {len(valid_nodes)//max(len(batches),1)} 节点/批）")
+    
+    for batch_idx, batch in enumerate(batches):
+        # 合并批次中的所有文本
+        originals = [text for _, text in batch]
+        merged_text = BATCH_SEPARATOR.join(originals)
         
-        if not original_text or len(original_text) < 3:
-            continue
+        # 翻译合并文本
+        zh_merged = _translate_with_retry(merged_text, translator)
         
-        # 翻译单个节点
-        zh_text = _translate_with_retry(original_text, translator)
-        
-        if zh_text and zh_text != original_text:
-            # 创建双语包装：中文 + 隐藏的英文原文
-            # 转义 HTML 特殊字符以避免注入
-            from html import escape
-            safe_original = escape(original_text)
-            new_tag = BeautifulSoup(
-                f'<span class="translated-text">{zh_text}</span>'
-                f'<span class="original-text">{safe_original}</span>',
-                'html.parser'
-            )
-            node.replace_with(new_tag)
-            translated_count += 1
+        if zh_merged:
+            # 按分隔符拆分翻译结果
+            # Google Translate 可能改变分隔符格式，尝试多种匹配
+            zh_parts = re.split(r'\s*999888777\s*', zh_merged)
+            
+            if len(zh_parts) == len(originals):
+                # 完美匹配：逐一替换
+                for (node, original_text), zh_text in zip(batch, zh_parts):
+                    zh_text = zh_text.strip()
+                    if zh_text and zh_text != original_text:
+                        safe_original = escape(original_text)
+                        new_tag = BeautifulSoup(
+                            f'<span class="translated-text">{zh_text}</span>'
+                            f'<span class="original-text">{safe_original}</span>',
+                            'html.parser'
+                        )
+                        node.replace_with(new_tag)
+                        translated_count += 1
+            else:
+                # 分隔符被破坏：降级为逐个翻译
+                logger.warning(f"    ⚠ 批次 {batch_idx+1} 分隔符失效（期望 {len(originals)} 段，得到 {len(zh_parts)} 段），降级逐个翻译")
+                for node, original_text in batch:
+                    zh_text = _translate_with_retry(original_text, translator)
+                    if zh_text and zh_text != original_text:
+                        safe_original = escape(original_text)
+                        new_tag = BeautifulSoup(
+                            f'<span class="translated-text">{zh_text}</span>'
+                            f'<span class="original-text">{safe_original}</span>',
+                            'html.parser'
+                        )
+                        node.replace_with(new_tag)
+                        translated_count += 1
+                    time.sleep(TRANSLATE_DELAY)
         
         # 友好限速
-        if i < total - 1:
+        if batch_idx < len(batches) - 1:
             time.sleep(TRANSLATE_DELAY)
         
-        # 每 20 个节点输出一次进度
-        if (i + 1) % 20 == 0:
-            logger.info(f"    → 翻译进度: {i+1}/{total} ({translated_count} 已替换)")
+        # 进度日志
+        done = sum(len(b) for b in batches[:batch_idx+1])
+        if (batch_idx + 1) % 5 == 0 or batch_idx == len(batches) - 1:
+            logger.info(f"    → 翻译进度: {done}/{len(valid_nodes)} ({translated_count} 已替换)")
     
-    logger.info(f"    ✓ 翻译完成: {translated_count}/{total} 个节点已替换")
+    logger.info(f"    ✓ 翻译完成: {translated_count}/{len(valid_nodes)} 个节点已替换")
 
 
 def _translate_with_retry(text: str, translator, max_retries=MAX_RETRIES) -> Optional[str]:

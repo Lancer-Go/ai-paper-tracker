@@ -4,6 +4,14 @@
 
 ---
 
+## [v2.2.1] - 2026-03-21
+### 修复
+- 🐛 **图片不显示**：新增 `_fix_relative_urls()` 将 arXiv 相对路径转为绝对 URL
+- 🐛 **中英对照切换无效**：移除 inline `style="display:none"`，改用 CSS `!important` 类规则控制可见性
+- 🐛 **GitHub Actions 翻译超时**：批量合并翻译（~10 节点/批，API 调用减少 ~10x）+ 45 分钟时间预算自动停止
+
+---
+
 ## [v2.2.0] - 2026-03-21
 ### 新增
 - 🔬 **arXiv HTML 保真翻译**：优先抓取 arXiv 原生 HTML，保留图片、公式 (MathJax)、表格结构进行翻译

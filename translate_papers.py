@@ -38,6 +38,8 @@ logger = logging.getLogger(__name__)
 
 # 连续失败上限，超过后终止流水线
 MAX_CONSECUTIVE_FAILURES = 5
+# 全局时间预算（秒）：45 分钟，留 15 分钟给后续步骤（build/deploy/commit）
+TIME_BUDGET_SECONDS = 45 * 60
 
 
 def main():
@@ -77,6 +79,7 @@ def main():
 
     consecutive_failures = 0
     stats = {"html": 0, "pdf": 0, "skipped": 0, "failed": 0}
+    pipeline_start = time.time()
 
     for i, paper in enumerate(papers, 1):
         arxiv_id = paper.get("arxiv_id", "unknown")
@@ -85,6 +88,13 @@ def main():
         safe_id = arxiv_id.replace("/", "_")
 
         logger.info(f"\n【{i}/{len(papers)}】{title[:60]}...")
+
+        # ── 时间预算检查 ──
+        elapsed = time.time() - pipeline_start
+        if elapsed > TIME_BUDGET_SECONDS:
+            remaining = len(papers) - i + 1
+            logger.warning(f"  ⏱ 已用时 {elapsed/60:.1f} 分钟，超出 {TIME_BUDGET_SECONDS//60} 分钟预算，跳过剩余 {remaining} 篇")
+            break
 
         # ── 缓存检查：已翻译则跳过 ──
         html_cache_file = output_dir / f"{safe_id}_html.html"
