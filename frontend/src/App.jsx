@@ -62,8 +62,9 @@ function CatTag({ cat }) {
 }
 
 // ── 论文卡片 ─────────────────────────────────────────────
-function PaperCard({ paper, rank }) {
+function PaperCard({ paper, rank, translatedIds }) {
   const [expanded, setExpanded] = useState(false)
+  const hasTranslation = translatedIds.has(paper.arxiv_id.replace('/', '_'))
 
   const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other'
 
@@ -141,30 +142,26 @@ function PaperCard({ paper, rank }) {
             >
               <FileText size={13} /> PDF
             </a>
-            <a
-              className="action-btn action-btn-secondary"
-              style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', borderColor: 'rgba(168, 85, 247, 0.3)' }}
-              href={`data/translations/${paper.arxiv_id.replace('/', '_')}.html`}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="阅读由系统自动翻译的全中文论文"
-              onClick={(e) => {
-                // 检查翻译文件是否存在，不存在则提示
-                fetch(`data/translations/${paper.arxiv_id.replace('/', '_')}.html`, { method: 'HEAD' })
-                  .then(res => {
-                    if (!res.ok) {
-                      e.preventDefault();
-                      alert('⏳ 这篇论文的翻译正在路上！\n\n系统每天下午 14:00 自动翻译排名前 10 的热门论文。\n当前论文暂未被翻译，请明天再来查看~');
-                    }
-                  })
-                  .catch(() => {
-                    e.preventDefault();
-                    alert('⏳ 翻译文件暂时不可用，请稍后再试~');
-                  });
-              }}
-            >
-              <BookOpen size={13} /> 中文翻译
-            </a>
+            {hasTranslation ? (
+              <a
+                className="action-btn action-btn-secondary"
+                style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', borderColor: 'rgba(168, 85, 247, 0.3)' }}
+                href={`data/translations/${paper.arxiv_id.replace('/', '_')}.html`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="阅读由系统自动翻译的全中文论文"
+              >
+                <BookOpen size={13} /> 中文翻译
+              </a>
+            ) : (
+              <span
+                className="action-btn action-btn-secondary"
+                style={{ background: 'rgba(100, 116, 139, 0.08)', color: '#475569', borderColor: 'rgba(100, 116, 139, 0.15)', cursor: 'not-allowed', opacity: 0.5 }}
+                title="翻译暂未生成，系统每天 14:00 自动翻译"
+              >
+                <BookOpen size={13} /> 中文翻译
+              </span>
+            )}
           </div>
 
           {/* 评分拆解 */}
@@ -297,6 +294,7 @@ export default function App() {
   const [search, setSearch] = useState('')
   const [catFilter, setCatFilter] = useState(CAT_ALL)
   const [dataInfo, setDataInfo] = useState({ date: '', total: 0 })
+  const [translatedIds, setTranslatedIds] = useState(new Set())
 
   // 加载日期列表
   useEffect(() => {
@@ -311,6 +309,18 @@ export default function App() {
         // 没有 index.json 时默认加载 latest.json
         setSelectedDate('latest')
       })
+  }, [])
+
+  // 加载翻译索引
+  useEffect(() => {
+    const base = import.meta.env.BASE_URL || '/'
+    fetch(`${base}data/translations/index.json`)
+      .then(r => r.ok ? r.json() : { translations: [] })
+      .then(data => {
+        const ids = new Set((data.translations || []).map(t => t.arxiv_id.replace('/', '_')))
+        setTranslatedIds(ids)
+      })
+      .catch(() => setTranslatedIds(new Set()))
   }, [])
 
   // 加载论文数据
@@ -454,7 +464,7 @@ export default function App() {
               ) : (
                 <div className="paper-list">
                   {filtered.map((paper, i) => (
-                    <PaperCard key={paper.arxiv_id} paper={paper} rank={paper.rank || i + 1} />
+                    <PaperCard key={paper.arxiv_id} paper={paper} rank={paper.rank || i + 1} translatedIds={translatedIds} />
                   ))}
                 </div>
               )}
