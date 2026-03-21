@@ -28,6 +28,7 @@ from src.processing.translator import (
     fetch_arxiv_html,
     translate_html,
     download_pdf,
+    translate_pdf_as_html,
     extract_text_by_page,
     translate_text,
 )
@@ -98,45 +99,65 @@ def translate_single_paper(paper: dict, output_dir: str, pdf_cache_dir: str) -> 
                 },
             }
         else:
-            # ── PDF 降级翻译 ──
+            # ── PDF 图文保真翻译（新流程） ──
             if not pdf_url:
                 proc_logger.warning(f"  [{arxiv_id}] ✗ 无 PDF URL，跳过")
                 return {"arxiv_id": arxiv_id, "ok": False, "error": "no_pdf_url"}
 
-            proc_logger.info(f"  [{arxiv_id}] 降级到 PDF 翻译...")
+            proc_logger.info(f"  [{arxiv_id}] PDF 图文保真翻译...")
             pdf_file = pdf_cache / f"{safe_id}.pdf"
 
             if not download_pdf(pdf_url, pdf_file):
                 return {"arxiv_id": arxiv_id, "ok": False, "error": "pdf_download_failed"}
 
-            pages = extract_text_by_page(pdf_file)
-            if not pages:
-                return {"arxiv_id": arxiv_id, "ok": False, "error": "pdf_extract_empty"}
+            # 新流程：PDF → Markdown(含图片) → HTML → translate_html
+            translated_html = translate_pdf_as_html(
+                pdf_file, arxiv_id, output_path
+            )
 
-            proc_logger.info(f"  [{arxiv_id}] 提取到 {len(pages)} 页文本")
+            if translated_html:
+                html_file = output_path / f"{safe_id}_html.html"
+                html_file.write_text(translated_html, encoding="utf-8")
 
-            pages_zh = []
-            for pi, page_text in enumerate(pages, 1):
-                zh = translate_text(page_text)
-                pages_zh.append(zh)
+                elapsed = time.time() - start_time
+                proc_logger.info(f"  [{arxiv_id}] ✓ PDF 图文翻译完成 ({elapsed:.1f}s)")
 
-            pdf_out = output_path / f"{safe_id}.html"
-            generate_html_pdf_fallback(paper, pages_zh, pdf_out)
+                return {
+                    "arxiv_id": arxiv_id,
+                    "ok": True,
+                    "type": "html",
+                    "entry": {
+                        "file": f"{safe_id}_html.html",
+                        "title": title,
+                        "pages": 0,
+                        "type": "html",
+                    },
+                }
+            else:
+                # 兜底：旧的纯文本翻译
+                proc_logger.warning(f"  [{arxiv_id}] 图文翻译失败，降级纯文本...")
+                pages = extract_text_by_page(pdf_file)
+                if not pages:
+                    return {"arxiv_id": arxiv_id, "ok": False, "error": "pdf_extract_empty"}
 
-            elapsed = time.time() - start_time
-            proc_logger.info(f"  [{arxiv_id}] ✓ PDF 降级翻译完成 ({elapsed:.1f}s)")
+                pages_zh = [translate_text(p) for p in pages]
+                pdf_out = output_path / f"{safe_id}.html"
+                generate_html_pdf_fallback(paper, pages_zh, pdf_out)
 
-            return {
-                "arxiv_id": arxiv_id,
-                "ok": True,
-                "type": "pdf",
-                "entry": {
-                    "file": f"{safe_id}.html",
-                    "title": title,
-                    "pages": len(pages_zh),
+                elapsed = time.time() - start_time
+                proc_logger.info(f"  [{arxiv_id}] ✓ 纯文本降级翻译完成 ({elapsed:.1f}s)")
+
+                return {
+                    "arxiv_id": arxiv_id,
+                    "ok": True,
                     "type": "pdf",
-                },
-            }
+                    "entry": {
+                        "file": f"{safe_id}.html",
+                        "title": title,
+                        "pages": len(pages_zh),
+                        "type": "pdf",
+                    },
+                }
 
     except Exception as e:
         proc_logger.error(f"  [{arxiv_id}] ✗ 翻译异常: {e}")

@@ -3,7 +3,7 @@ src/processing/translator.py — 论文翻译核心逻辑
 
 支持两种翻译模式：
   1. arXiv HTML 保真翻译（优先） — 保留图片、公式、表格
-  2. PDF 纯文本降级翻译（兜底） — 旧逻辑保留
+  2. PDF 图文保真翻译（兜底） — pymupdf4llm 提取 Markdown → HTML → translate_html
 """
 
 import time
@@ -14,6 +14,8 @@ from typing import Optional
 
 import httpx
 import fitz  # PyMuPDF
+import pymupdf4llm
+import markdown as md_lib
 from bs4 import BeautifulSoup, NavigableString, Tag
 from deep_translator import GoogleTranslator
 
@@ -487,7 +489,96 @@ def inject_degraded_alert(soup: BeautifulSoup):
 
 
 # ═══════════════════════════════════════════════════════════════
-# Part 2: PDF 降级翻译（保留原有逻辑）
+# Part 2a: PDF 图文保真翻译（新流程）
+# ═══════════════════════════════════════════════════════════════
+
+def extract_html_from_pdf(pdf_path: Path, arxiv_id: str,
+                          translations_dir: Path) -> str:
+    """
+    使用 pymupdf4llm 将 PDF 提取为 Markdown（含图片），再转为 HTML。
+    图片保存至 translations_dir / images / {safe_id} /
+    返回可直接传入 translate_html 的 HTML 字符串。
+    """
+    safe_id = arxiv_id.replace('/', '_')
+    image_dir = translations_dir / "images" / safe_id
+    image_dir.mkdir(parents=True, exist_ok=True)
+
+    logger.info(f"  → pymupdf4llm 提取 Markdown + 图片...")
+    md_text = pymupdf4llm.to_markdown(
+        str(pdf_path),
+        write_images=True,
+        image_path=str(image_dir),
+    )
+
+    # 图片路径修正：pymupdf4llm 写入的路径是 image_dir 的绝对/相对路径
+    # 我们需要替换为相对于 translations_dir 的路径（HTML 也在那里）
+    md_text = md_text.replace(str(image_dir).replace('\\', '/'), f"images/{safe_id}")
+    md_text = md_text.replace(str(image_dir), f"images/{safe_id}")
+
+    # Markdown → HTML
+    html_body = md_lib.markdown(
+        md_text,
+        extensions=['tables', 'fenced_code', 'toc'],
+    )
+
+    # 包裹完整 HTML 结构 + 学术阅读 CSS
+    full_html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{arxiv_id}</title>
+<style>
+  body {{
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px 30px;
+    font-family: 'Georgia', 'Times New Roman', 'SimSun', serif;
+    line-height: 1.8;
+    color: #333;
+    background: #fff;
+  }}
+  img {{ max-width: 100%; height: auto; display: block; margin: 16px auto; }}
+  table {{ border-collapse: collapse; max-width: 100%; margin: 16px 0; }}
+  td, th {{ padding: 8px 12px; border: 1px solid #ddd; }}
+  th {{ background: #f5f5f5; }}
+  h1, h2, h3, h4 {{ margin-top: 1.5em; color: #1a1a2e; }}
+  blockquote {{ border-left: 4px solid #6366f1; padding-left: 16px; color: #555; margin: 16px 0; }}
+  pre {{ background: #f8f9fa; padding: 16px; border-radius: 8px; overflow-x: auto; }}
+  code {{ background: #f0f0f0; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }}
+  hr {{ border: none; border-top: 1px solid #e0e0e0; margin: 32px 0; }}
+</style>
+</head>
+<body>
+{html_body}
+</body>
+</html>"""
+
+    img_count = len(list(image_dir.glob('*')))
+    logger.info(f"  ✓ PDF→HTML 完成: {len(md_text)} 字符 Markdown, {img_count} 张图片")
+    return full_html
+
+
+def translate_pdf_as_html(pdf_path: Path, arxiv_id: str,
+                          translations_dir: Path) -> Optional[str]:
+    """
+    PDF 图文保真翻译：PDF → Markdown+图片 → HTML → translate_html
+    返回翻译后的 HTML 字符串。失败返回 None。
+    """
+    try:
+        raw_html = extract_html_from_pdf(pdf_path, arxiv_id, translations_dir)
+        translated = translate_html(raw_html, arxiv_id)
+        # 注入降级提示
+        soup = BeautifulSoup(translated, 'html.parser')
+        inject_degraded_alert(soup)
+        return str(soup)
+    except Exception as e:
+        logger.error(f"  ✗ PDF 图文保真翻译失败: {e}")
+        return None
+
+
+# ═══════════════════════════════════════════════════════════════
+# Part 2b: PDF 降级翻译（保留原有逻辑作为兜底）
 # ═══════════════════════════════════════════════════════════════
 
 def download_pdf(url: str, dest: Path) -> bool:
