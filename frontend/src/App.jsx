@@ -144,17 +144,26 @@ function PaperCard({ paper, rank }) {
             <a
               className="action-btn action-btn-secondary"
               style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', borderColor: 'rgba(168, 85, 247, 0.3)' }}
-              href="https://kimi.moonshot.cn/"
+              href={`data/translations/${paper.arxiv_id.replace('/', '_')}.html`}
               target="_blank"
               rel="noopener noreferrer"
-              title="一键复制 PDF 链接！前往大模型（如 Kimi）对话框粘贴即可沉浸式图文伴读"
+              title="阅读由系统自动翻译的全中文论文"
               onClick={(e) => {
-                navigator.clipboard.writeText(paper.pdf_url).then(() => {
-                  alert("✅ 已为您复制底层高质量排版 PDF 直链！\n\n小助手正带您前往 Kimi，只需在对话框粘贴 (Ctrl+V) 该链接，即可让 AI 帮您进行无损排版的深度双语图文解读啦！");
-                });
+                // 检查翻译文件是否存在，不存在则提示
+                fetch(`data/translations/${paper.arxiv_id.replace('/', '_')}.html`, { method: 'HEAD' })
+                  .then(res => {
+                    if (!res.ok) {
+                      e.preventDefault();
+                      alert('⏳ 这篇论文的翻译正在路上！\n\n系统每天下午 14:00 自动翻译排名前 10 的热门论文。\n当前论文暂未被翻译，请明天再来查看~');
+                    }
+                  })
+                  .catch(() => {
+                    e.preventDefault();
+                    alert('⏳ 翻译文件暂时不可用，请稍后再试~');
+                  });
               }}
             >
-              <BookOpen size={13} /> AI 伴读
+              <BookOpen size={13} /> 中文翻译
             </a>
           </div>
 

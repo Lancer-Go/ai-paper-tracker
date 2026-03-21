@@ -40,6 +40,14 @@ jobs:
           python run.py --days-back 7 --top-n 50
         working-directory: .
 
+      - name: Translate top papers
+        if: github.event_name != 'push'
+        run: |
+          mkdir -p data/translations
+          python translate_papers.py --top-n 10
+        working-directory: .
+        timeout-minutes: 20
+
       - name: Build frontend
         working-directory: frontend
         run: |
@@ -47,6 +55,9 @@ jobs:
           npm run build
           # 将 data/exports 复制到 dist，前端直接读取
           cp -r ../data/exports ./dist/data/ 2>/dev/null || mkdir -p ./dist/data/exports && cp -r ../data/exports/* ./dist/data/exports/ 2>/dev/null || true
+          # 将翻译文件复制到 dist
+          mkdir -p ./dist/data/translations
+          cp -r ../data/translations/* ./dist/data/translations/ 2>/dev/null || true
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
