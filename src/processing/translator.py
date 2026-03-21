@@ -22,9 +22,9 @@ logger = logging.getLogger(__name__)
 # ── 常量 ──────────────────────────────────────────────────────
 MAX_CHUNK = 4900          # Google 免费翻译单次上限约 5000 字符
 DOWNLOAD_TIMEOUT = 60     # 下载 PDF/HTML 超时（秒）
-RETRY_WAIT = 2            # 翻译失败后重试等待（秒）
+RETRY_WAIT = 3            # 翻译失败后重试等待（秒），并发下适当加大
 MAX_RETRIES = 3           # 每段最大重试次数
-TRANSLATE_DELAY = 0.3     # 每个翻译请求之间的友好延迟
+TRANSLATE_DELAY = 0.5     # 每个翻译请求之间的友好延迟（并发时降低 429 风险）
 BATCH_SEPARATOR = "\n999888777\n"  # 批量翻译分隔符（纯数字，Google 不会翻译）
 BATCH_MAX_CHARS = 4500    # 单次批量翻译的最大字符数
 

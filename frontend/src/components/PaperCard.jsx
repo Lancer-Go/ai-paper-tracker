@@ -28,7 +28,8 @@ export default function PaperCard({ paper, rank, translationIndex }) {
   const [expanded, setExpanded] = useState(false)
   const safeId = paper.arxiv_id.replace('/', '_')
   const translationInfo = translationIndex[safeId]
-  const translationType = translationInfo?.type // 'html' | 'pdf' | undefined
+  // 旧版 index 条目可能缺少 type 字段，有 translationInfo 则默认为 'pdf'
+  const translationType = translationInfo ? (translationInfo.type || 'pdf') : undefined
 
   const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other'
 
