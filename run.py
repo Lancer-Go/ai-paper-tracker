@@ -35,10 +35,11 @@ def main():
     logger.info(f"═══ AI 论文热度追踪 | 运行日期: {run_date} ═══")
 
     # ── Step 0: 初始化数据库 ────────────────────────────────
-    from storage.db import (
+    from src.storage.db import (
         init_db, upsert_papers, save_citation_snapshots,
         get_citation_history, save_daily_rankings, log_run
     )
+    from src.config import DB_PATH
     from pathlib import Path
     Path("data/exports").mkdir(parents=True, exist_ok=True)
 
@@ -47,13 +48,13 @@ def main():
 
     # ── Step 1: arXiv 抓取 ──────────────────────────────────
     logger.info("【1/5】arXiv 论文抓取")
-    from crawler.arxiv_fetcher import fetch_all_categories
+    from src.sources.arxiv.fetcher import fetch_all_categories
     raw_papers = fetch_all_categories(days_back=args.days_back)
     logger.info(f"  → 原始论文: {len(raw_papers)} 篇（含重复）")
 
     # ── Step 2: 去重 ────────────────────────────────────────
     logger.info("【2/5】去重")
-    from processor.deduper import deduplicate
+    from src.processing.deduper import deduplicate
     papers = deduplicate(raw_papers)
     logger.info(f"  → 去重后: {len(papers)} 篇")
 
@@ -64,14 +65,13 @@ def main():
         return
 
     # ── Step 3: OpenAlex 引用量（惰性补充，每次最多 100 篇） ─────
-    logger.info("》3/5「OpenAlex 引用量查询（免费无需 Key）")
+    logger.info("【3/5】OpenAlex 引用量查询（免费无需 Key）")
     arxiv_ids = [p["arxiv_id"] for p in papers]
 
     # 只查询已入库且从未有过引用量快照的论文（避免重复查）
     import sqlite3 as _sqlite3
-    from config import DB_PATH as _DB_PATH
     if not args.dry_run:
-        with _sqlite3.connect(_DB_PATH) as _conn:
+        with _sqlite3.connect(DB_PATH) as _conn:
             existing = {r[0] for r in _conn.execute(
                 "SELECT DISTINCT arxiv_id FROM citation_snapshots"
             ).fetchall()}
@@ -81,7 +81,7 @@ def main():
 
     citation_data = {}
     if ids_to_fetch:
-        from crawler.openalex_fetcher import fetch_batch_papers
+        from src.sources.arxiv.enrichers.openalex import fetch_batch_papers
         logger.info(f"  → 查询 {len(ids_to_fetch)} 篇（新论文查完一次即缓存）")
         new_cit = fetch_batch_papers(ids_to_fetch)
         citation_data.update(new_cit)
@@ -90,7 +90,7 @@ def main():
 
     # 读取所有已有快照（包含过去积累的）
     if not args.dry_run:
-        with _sqlite3.connect(_DB_PATH) as _conn:
+        with _sqlite3.connect(DB_PATH) as _conn:
             rows = _conn.execute("""
                 SELECT arxiv_id, MAX(citation_count) as citation_count,
                        MAX(influential_citation_count) as influential_citation_count
@@ -113,7 +113,7 @@ def main():
     if not args.skip_reddit:
         logger.info("【4/5】Reddit 讨论量采集（可选）")
         try:
-            from crawler.reddit_fetcher import RedditFetcher
+            from src.sources.arxiv.reddit_fetcher import RedditFetcher
             fetcher = RedditFetcher()
             # 只对 Top 候选论文查 Reddit，节省配额
             candidates = sorted(papers, key=lambda p: citation_data.get(p["arxiv_id"], {}).get("citation_count", 0), reverse=True)[:50]
@@ -126,7 +126,7 @@ def main():
 
     # ── Step 5: 评分 & 排行 ─────────────────────────────────
     logger.info("【5/5】热度评分")
-    from processor.scorer import score_papers
+    from src.processing.scorer import score_papers
     scored = score_papers(papers, citation_data, citation_history, reddit_data)
     top_papers = scored[: args.top_n]
 
@@ -154,7 +154,7 @@ def main():
     save_daily_rankings(top_papers, rank_date=run_date)
 
     # ── 导出 JSON ───────────────────────────────────────────
-    from api.export import export_daily_json, export_index_json
+    from src.export.json_exporter import export_daily_json, export_index_json
     export_daily_json(rank_date=run_date, top_n=args.top_n)
     export_index_json()
 

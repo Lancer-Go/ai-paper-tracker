@@ -14,10 +14,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from config import ARXIV_BASE_URL, ARXIV_CATEGORIES, ARXIV_MAX_RESULTS_PER_CATEGORY
+from src.config import ARXIV_BASE_URL, ARXIV_CATEGORIES, ARXIV_MAX_RESULTS_PER_CATEGORY
 
 logger = logging.getLogger(__name__)
 

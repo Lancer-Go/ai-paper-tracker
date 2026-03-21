@@ -1,13 +1,21 @@
-"""临时脚本：用新评分公式重新计算今日排行并导出"""
-import json, sqlite3, sys, os
-sys.path.insert(0, os.path.dirname(__file__))
+"""
+scripts/rescore.py — 用当前评分公式重新计算今日排行并导出
 
-from storage.db import save_daily_rankings, get_citation_history
-from processor.scorer import score_papers
-from api.export import export_daily_json, export_index_json
+用法：
+    python scripts/rescore.py                   # 默认今天
+    python scripts/rescore.py 2026-03-21        # 指定日期
+"""
+import json, sqlite3, sys
+from datetime import date
 
-DB_PATH = "data/papers.db"
-TODAY = "2026-03-21"
+sys.path.insert(0, ".")
+
+from src.storage.db import save_daily_rankings, get_citation_history
+from src.processing.scorer import score_papers
+from src.export.json_exporter import export_daily_json, export_index_json
+from src.config import DB_PATH
+
+TODAY = sys.argv[1] if len(sys.argv) > 1 else date.today().isoformat()
 
 conn = sqlite3.connect(DB_PATH)
 conn.row_factory = sqlite3.Row
@@ -22,7 +30,7 @@ for row in rows:
     papers.append(d)
 print(f"论文总数: {len(papers)}")
 
-# 读取今日引用量快照
+# 读取引用量快照
 cit_rows = conn.execute(
     "SELECT arxiv_id, citation_count, influential_citation_count FROM citation_snapshots WHERE snapshot_date = ?",
     (TODAY,)
@@ -57,6 +65,6 @@ save_daily_rankings(top50, rank_date=TODAY)
 export_daily_json(rank_date=TODAY)
 export_index_json()
 
-print("\n✅ 重新评分完成！Top 5:")
+print(f"\n✅ 重新评分完成（{TODAY}）！Top 5:")
 for p in top50[:5]:
     print(f"  #{p['rank']} score={p['score']:.4f} | delta={p['citation_delta_7d']} | fresh={p['score_breakdown'].get('freshness_norm',0):.1f} | {p['title'][:60]}")

@@ -14,10 +14,7 @@ _SSL_CTX = ssl.create_default_context()
 _SSL_CTX.check_hostname = False
 _SSL_CTX.verify_mode = ssl.CERT_NONE
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from config import SS_API_KEY, SS_BASE_URL, SS_BATCH_SIZE
+from src.config import SS_API_KEY, SS_BASE_URL, SS_BATCH_SIZE
 
 logger = logging.getLogger(__name__)
 

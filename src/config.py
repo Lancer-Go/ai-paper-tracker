@@ -36,8 +36,9 @@ SCORE_WEIGHTS = {
 }
 
 # ── 数据库 ──────────────────────────────────────────────
-DB_PATH = os.path.join(os.path.dirname(__file__), "data", "papers.db")
-EXPORT_DIR = os.path.join(os.path.dirname(__file__), "data", "exports")
+_PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))  # ai-paper-tracker/
+DB_PATH = os.path.join(_PROJECT_ROOT, "data", "papers.db")
+EXPORT_DIR = os.path.join(_PROJECT_ROOT, "data", "exports")
 
 # ── 其他 ────────────────────────────────────────────────
 TOP_N = 50          # 每日热榜展示 Top N

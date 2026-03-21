@@ -4,6 +4,21 @@
 
 ---
 
+## [v2.0.0] - 2026-03-21
+### 重构
+- 🏗️ **项目架构重构**：从扁平脚本升级为分层模块化架构
+  - 后端代码统一移入 `src/` 目录，按职责分层（`sources/`、`processing/`、`storage/`、`export/`）
+  - 引入**数据源插件化设计**（`src/sources/base.py` 抽象基类），为未来添加新资讯源预留扩展点
+  - 清理根目录散落脚本 → 移入 `scripts/`，删除临时测试文件
+  - 移除所有 `sys.path.insert` hack，改为标准 `src.` 包导入
+- 📄 **翻译管线拆分**：`translate_papers.py` 核心逻辑提取到 `src/processing/translator.py` + `src/export/html_exporter.py`
+- ⚛️ **前端组件化**：488 行单文件 `App.jsx` 拆分为 `PaperCard`、`CategorySidebar`、`CitationTrend` 组件 + `usePapers` Hook
+
+### 修复
+- 🐛 修复 GitHub Actions 30 分钟超时导致每日任务失败的问题（job timeout 30→90 分钟）
+
+---
+
 ## [v1.2.0] - 2026-03-21
 ### 新增
 - 📄 **PDF 全文中文翻译流水线**：每日自动下载 Top 50 论文 PDF，通过 PyMuPDF 提取文本 + Google Translate 翻译，生成精美深色主题 HTML 页面

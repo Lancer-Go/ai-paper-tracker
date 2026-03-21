@@ -16,10 +16,7 @@ import math
 import logging
 from typing import Optional
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from config import SCORE_WEIGHTS
+from src.config import SCORE_WEIGHTS
 
 logger = logging.getLogger(__name__)
 

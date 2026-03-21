@@ -5,11 +5,8 @@ import logging
 from datetime import date
 from pathlib import Path
 
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from config import EXPORT_DIR, TOP_N
-from storage.db import get_top_papers
+from src.config import EXPORT_DIR, TOP_N
+from src.storage.db import get_top_papers
 
 logger = logging.getLogger(__name__)
 
