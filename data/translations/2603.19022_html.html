@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">LLM 端点稳定性和身份的行为指纹</span><span class="original-text">Behavioral Fingerprints for LLM Endpoint Stability and Identity</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 3 月 19 日星期四 15:06:12 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Thu Mar 19 15:06:12 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<meta content="LLM monitoring,  distribution shift,  change detection, 
+stability,  fingerprinting,  energy distance,  permutation test, 
+black-box testing,  model identity" lang="en" name="keywords"/>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2603.19022" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2603.19022" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2603.19022v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2603.19022v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<a class="header-button color-tog" href="javascript:toggleColorScheme();" title="Toggle dark/light mode">
+<label class="toggle-icon automatic-tog" title="Switch to light mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon light-tog" title="Switch to dark mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon dark-tog" title="Switch to system preference">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+</a>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title">Abstract.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S1" title="In Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S1.SS1" title="In 1. Introduction ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1.1 </span>Reliability is not stability</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S1.SS2" title="In 1. Introduction ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1.2 </span>Contribution and scope</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S2" title="In Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Background and related work</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S3" title="In Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Problem definition</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Methodology: fingerprints and change
+detection</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In 4. Methodology: fingerprints and change detection ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>Fingerprint construction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS2" title="In 4. Methodology: fingerprints and change detection ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2 </span>Pairwise fingerprint comparisons</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS3" title="In 4. Methodology: fingerprints and change detection ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3 </span>Fingerprint comparisons over time</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S5" title="In Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>System: Stability Monitor and Stability Arena</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S6" title="In Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6 </span>Findings: controlled methodology validation</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S6.SS1" title="In 6. Findings: controlled methodology validation ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6.1 </span>Experimental setup</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S6.SS2" title="In 6. Findings: controlled methodology validation ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6.2 </span>Results</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S7" title="In Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">7 </span>Findings: cross-provider comparisons for the
+same model</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S7.SS1" title="In 7. Findings: cross-provider comparisons for the same model ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">7.1 </span>Pairwise provider similarity (heatmap)</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S7.SS2" title="In 7. Findings: cross-provider comparisons for the same model ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">7.2 </span>Individual endpoint divergence</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S8" title="In Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">8 </span>Findings: real-world deployment stability examples</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S9" title="In Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">9 </span>Caveats and limitations</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S10" title="In Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">10 </span>Conclusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2603.19022v1 [cs.AI] 2026 年 3 月 19 日</span><span class="original-text">arXiv:2603.19022v1 [cs.AI] 19 Mar 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line ltx_leqno">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">LLM 端点稳定性和身份的行为指纹</span><span class="original-text">Behavioral Fingerprints for LLM Endpoint Stability and Identity</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Jonah Leshin
+</span></span>
+<span class="ltx_author_before">, </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Manish Shah
+</span></span>
+<span class="ltx_author_before">, </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Ian Timmis
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_text ltx_affiliation_institution" id="id1.1.id1">Project VAIL</span><span class="ltx_text ltx_affiliation_city" id="id2.2.id2">San Francisco</span><span class="ltx_text ltx_affiliation_country" id="id3.3.id3">USA</span>
+</span>
+<span class="ltx_contact ltx_role_email"><a href="https://arxiv.org/html/2603.19022v1/mailto:jonah@projectvail.org">jonah@projectvail.org</a>
+</span></span></span>
+<span class="ltx_author_before"> and </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Daniel Kang
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_text ltx_affiliation_institution" id="id4.1.id1">University of Illinois Urbana-Champaign</span><span class="ltx_text ltx_affiliation_department" id="id5.2.id2">Department of Computer Science</span><span class="ltx_text ltx_affiliation_city" id="id6.3.id3">Urbana</span><span class="ltx_text ltx_affiliation_state" id="id7.4.id4">Illinois</span><span class="ltx_text ltx_affiliation_country" id="id8.5.id5">USA</span>
+</span></span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要。</span><span class="original-text">Abstract.</span></h6>
+<p class="ltx_p"><span class="translated-text">AI原生应用程序的一致性取决于</span><span class="original-text">The consistency of AI-native applications depends on the</span><em class="ltx_emph ltx_font_italic"><span class="translated-text">行为的
+一致性</span><span class="original-text">behavioral
+consistency</span></em><span class="translated-text">为它们提供动力的模型端点。传统的可靠性
+正常运行时间、延迟和吞吐量等指标未捕获
+行为改变，并且终点可以保留
+“健康”，而其有效模型身份发生变化
+由于权重、分词器、量化的更新，
+推理引擎、内核、缓存、路由或
+硬件。我们介绍</span><span class="original-text">of the model endpoints that power them. Traditional reliability
+metrics such as uptime, latency and throughput do not capture
+behavioral change, and an endpoint can remain
+“healthy” while its effective model identity changes
+due to updates to weights, tokenizers, quantization,
+inference engines, kernels, caching, routing, or
+hardware. We introduce</span><span class="ltx_text ltx_font_bold"><span class="translated-text">稳定性监测器</span><span class="original-text">Stability Monitor</span></span><span class="translated-text">, 一个
+黑匣子稳定性监测系统，定期
+通过对固定的输出进行采样来对端点进行指纹识别
+提示设置并比较结果输出
+随时间的分布。指纹比较使用
+能量距离统计总和
+提示，用排列检验 p 值作为分布变化的证据
+按顺序聚合以检测
+更改事件并定义稳定期。在受控的
+验证，稳定性监视器检测到更改
+模型系列、版本、推理堆栈、量化和行为参数。在
+对同一模型的真实世界监控
+多个提供商，我们观察到大量
+提供商之间以及提供商内部的稳定性
+差异。</span><span class="original-text">, a
+black-box stability monitoring system that periodically
+fingerprints an endpoint by sampling outputs from a fixed
+prompt set and comparing the resulting output
+distributions over time. Fingerprints are compared using
+a summed energy distance statistic across
+prompts, with permutation-test p-values as evidence of distribution shift
+aggregated sequentially to detect
+change events and define stability periods. In controlled
+validation, Stability Monitor detects changes to
+model family, version, inference stack, quantization, and behavioral parameters. In
+real-world monitoring of the same model hosted by
+multiple providers, we observe substantial
+provider-to-provider and within-provider stability
+differences.</span></p>
+</div>
+<div class="ltx_keywords"><span class="translated-text">LLM监控、分布转移、变化检测、
+稳定性、指纹识别、能量距离、排列测试、
+黑盒测试、模型识别</span><span class="original-text">LLM monitoring, distribution shift, change detection,
+stability, fingerprinting, energy distance, permutation test,
+black-box testing, model identity</span></div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1. </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<section class="ltx_subsection" id="S1.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">1.1. </span><span class="translated-text">可靠性不等于稳定性</span><span class="original-text">Reliability is not stability</span></h3>
+<div class="ltx_para" id="S1.SS1.p1">
+<p class="ltx_p" id="S1.SS1.p1.1"><span class="translated-text">软件部署直觉“如果它正常运行并且
+快，很好”对于 AI 原生系统来说还不够：
+端点可以通过标准健康检查，而其输出
+漂移、改变格式、语气或工具行为
+破坏下游解析器和护栏的方法。
+稳定性故障在多步代理中特别有影响
+工作流程，早期步骤中的微小差异可以
+复合成大的工作流程差异。这个
+激励</span><span class="original-text">The software deployment intuition “if it’s up and
+fast, it’s fine” is insufficient for AI-native systems: an
+endpoint can pass standard health checks while its outputs
+drift, shifting formatting, tone, or tool behavior in
+ways that break downstream parsers and guardrails.
+Stability failures are particularly impactful in multi-step agentic
+workflows, where small variance in early steps can
+compound into large workflow variance. This
+motivates</span><span class="ltx_text ltx_font_bold" id="S1.SS1.p1.1.1"><span class="translated-text">稳定性</span><span class="original-text">stability</span></span><span class="translated-text">作为一个独特的运营
+指标：模型端点的行为一致性
+根据固定的接口合同。</span><span class="original-text">as a distinct operational
+metric: behavioral consistency of a model endpoint
+under a fixed interface contract.</span></p>
+</div>
+<div class="ltx_para" id="S1.SS1.p2">
+<p class="ltx_p" id="S1.SS1.p2.1"><span class="translated-text">即使用户修复了可见的设置（例如温度），
+由于系统级别的不确定性“在
+表面”：推理引擎、内核、缓存、批量大小和硬件的差异——提供商可能会
+跨异构环境路由请求。这些因素的值
+在运行时可能是整个系统负载的函数，用户无法控制，
+从而使端点与用户的不确定性
+观点</span><span class="original-text">Even if users fix visible settings (e.g., temperature),
+endpoint behavior can vary due to system level nondeterminism “beneath the
+surface”: variance in inference engines, kernels, caching, batch sizes, and hardware—and providers may
+route requests across heterogeneous environments. The values of these factors
+at run time may be a function of overall system load, which the user cannot control,
+thus making the endpoint nondeterministic from the user’s
+perspective</span><cite class="ltx_cite ltx_citemacro_citep">(He and Thinking Machines Lab, <a class="ltx_ref" href="#bib.bib4" title="Defeating nondeterminism in llm inference">2025</a>)</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.SS1.p3">
+<p class="ltx_p" id="S1.SS1.p3.1"><span class="translated-text">这些系统级因素可能会导致
+即使在温度为 0 时也必须考虑不确定性行为
+离散的、有意的更新，例如模型版本
+变化，破坏了生产的可重复性
+和评估环境。评估不稳定和提供者影响
+现在被认为是差异的主要来源
+基准测试结果</span><span class="original-text">These system-level factors, which can result in
+nondeterministic behavior even at temperature 0, must be considered on top of
+discrete, deliberate updates such as a model version
+change, undermining reproducibility in both production
+and evaluation environments. Evaluation instability and provider effects
+are now recognized as a major source of variance in
+benchmarking results</span><cite class="ltx_cite ltx_citemacro_citep">(Brand and Denain, <a class="ltx_ref" href="#bib.bib5" title="Why benchmarking is hard">2025</a>)</cite>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S1.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">1.2. </span><span class="translated-text">贡献和范围</span><span class="original-text">Contribution and scope</span></h3>
+<div class="ltx_para" id="S1.SS2.p1">
+<p class="ltx_p" id="S1.SS2.p1.1"><span class="translated-text">我们引入两个组件：</span><span class="original-text">We introduce two components:</span><span class="ltx_text ltx_font_bold" id="S1.SS2.p1.1.1"><span class="translated-text">稳定性监测器</span><span class="original-text">Stability Monitor</span></span><span class="translated-text">，其中
+持续采集端点指纹并检测行为变化
+事件，以及</span><span class="original-text">, which
+continuously fingerprints endpoints and detects behavioral change
+events, and</span><span class="ltx_text ltx_font_bold" id="S1.SS2.p1.1.2"><span class="translated-text">稳定竞技场</span><span class="original-text">Stability Arena</span></span><span class="translated-text">，一个网络应用程序
+发布并可视化稳定性监视器生成的数据。
+共同的目标是实现持续稳定
+现实约束下的监测：</span><span class="original-text">, a web application that
+publishes and visualizes the data Stability Monitor produces.
+Together, the goal is to operationalize continuous stability
+monitoring under realistic constraints:</span></p>
+<ul class="ltx_itemize" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i1.p1.1.1"><span class="translated-text">黑匣子</span><span class="original-text">Black-box</span></span><span class="translated-text">：仅观察公共API
+输入/输出；没有权重或提供者的特权访问权限
+内部结构。</span><span class="original-text">: observe only public API
+I/O; no privileged access to weights or provider
+internals.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i2.p1.1.1"><span class="translated-text">轻量且频繁</span><span class="original-text">Lightweight and frequent</span></span><span class="translated-text">: 监控于
+高节奏与频繁的周期性评估（激发了以下概念
+稳定期和变化事件）。</span><span class="original-text">: monitor at
+high cadence versus heavy periodic evals (motivating the notions of
+stability periods and change events).</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i3.p1.1.1"><span class="translated-text">可行的</span><span class="original-text">Actionable</span></span><span class="translated-text">：生成审计跟踪和
+更改工程可用的事件警报，
+安全性和合规性。</span><span class="original-text">: produce audit trails and
+change event alerts usable by engineering,
+security, and compliance.</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="S1.SS2.p2">
+<p class="ltx_p" id="S1.SS2.p2.1"><span class="translated-text">Stability Arena 暴露了系统的
+监控能力——建立在其基础上
+指纹识别方法和顺序
+变更检测管道——通过实时网络界面
+让用户可以检查这些功能
+真实的端点数据。</span><span class="original-text">Stability Arena exposes the system’s
+monitoring capabilities—built on its
+fingerprinting methodology and sequential
+change-detection pipeline—through a live web interface
+that lets users inspect these capabilities against
+real endpoint data.</span></p>
+</div>
+<div class="ltx_para" id="S1.SS2.p3">
+<p class="ltx_p" id="S1.SS2.p3.1"><span class="translated-text">我们贡献：</span><span class="original-text">We contribute:</span></p>
+<ol class="ltx_enumerate" id="S1.I2">
+<li class="ltx_item" id="S1.I2.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">(1)</span>
+<div class="ltx_para" id="S1.I2.i1.p1">
+<p class="ltx_p" id="S1.I2.i1.p1.1"><span class="translated-text">实用的指纹识别和变化检测
+基于能量距离排列测试的管道
+和顺序证据聚合。</span><span class="original-text">A practical fingerprinting and change-detection
+pipeline based on energy-distance permutation testing
+and sequential evidence aggregation.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I2.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">(2)</span>
+<div class="ltx_para" id="S1.I2.i2.p1">
+<p class="ltx_p" id="S1.I2.i2.p1.1"><span class="translated-text">跨多个现实世界的受控验证
+改变类型。</span><span class="original-text">Controlled validation across multiple real-world
+change types.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I2.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">(3)</span>
+<div class="ltx_para" id="S1.I2.i3.p1">
+<p class="ltx_p" id="S1.I2.i3.p1.1"><span class="translated-text">现实世界中相同提供商的比较
+名义模型显示大型跨提供商和
+供应商内部稳定性差异，激励
+“相同的模型，不同的行为”作为运营
+现实。</span><span class="original-text">Real-world provider comparisons for the same
+nominal model showing large cross-provider and
+within-provider stability differences, motivating
+“same model, different behavior” as an operational
+reality.</span></p>
+</div>
+</li>
+</ol>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2. </span><span class="translated-text">背景及相关工作</span><span class="original-text">Background and related work</span></h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="translated-text">先前关于模型指纹识别的工作包括知识产权框架
+保护——验证已部署的模型是否是复制品或衍生品
+受保护模型的（</span><span class="original-text">Prior work on model fingerprinting includes frameworks for intellectual property
+protection– verifying whether a deployed model is a copy or derivative
+of a protected model (</span><cite class="ltx_cite ltx_citemacro_citep">(Cao<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib8" title="IPGuard: protecting intellectual property of deep neural networks via fingerprinting the classification boundary">2021</a>; Uchida<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib9" title="Embedding watermarks into deep neural networks">2017</a>)</cite><span class="translated-text">）。这些方法通常需要白盒
+精心设计的访问或对抗性输入以区分特定的
+架构。我们的工作在目标和背景上都不同：而不是
+验证模型所有权，我们检测到</span><span class="original-text">). These methods typically require white-box
+access or adversarial inputs crafted to distinguish specific
+architectures. Our work differs in both goal and setting: rather than
+verifying model ownership, we detect</span><em class="ltx_emph ltx_font_italic" id="S2.p1.1.1"><span class="translated-text">行为改变</span><span class="original-text">behavioral change</span></em><span class="translated-text">在一个
+随着时间的推移端点，仅使用标准黑盒 API 访问
+自然语言提示。</span><span class="original-text">at an
+endpoint over time, using only standard black-box API access with
+natural-language prompts.</span></p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="translated-text">陈等人。</span><span class="original-text">Chen et al.</span><cite class="ltx_cite ltx_citemacro_citep">(Chen<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib10" title="How is ChatGPT’s behavior changing over time?">2024</a>)</cite><span class="translated-text">证明了
+GPT-3.5 和 GPT-4 在几个月内发生了巨大变化，
+准确性、格式和安全行为方面的可衡量的变化，
+为持续行为监控提供直接动力
+生产端点。</span><span class="original-text">demonstrated that the behavior of
+GPT-3.5 and GPT-4 changed substantially over several months, with
+measurable shifts in accuracy, formatting, and safety behavior,
+providing direct motivation for continuous behavioral monitoring of
+production endpoints.</span></p>
+</div>
+<div class="ltx_para" id="S2.p3">
+<p class="ltx_p" id="S2.p3.1"><span class="translated-text">关于黑盒变更检测的最新工作包括 B3IT</span><span class="original-text">More recent work on black-box change detection includes B3IT</span><cite class="ltx_cite ltx_citemacro_citep">(Chauvin<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib11" title="Token-efficient change detection in LLM APIs">2026</a>)</cite><span class="translated-text">，它使用每个端点的“边界
+输入”——多个令牌几乎并列为顶部的提示
+低温预测。就像我们的方法一样，
+B3IT 将问题描述为对输出分布的假设检验
+并制定持续监测目标。一个关键的区别是 B3IT 的
+探针在初始化阶段针对每个端点进行定制
+并且可能需要在更改事件后重新发现，因为
+模型的决策边界可能已经发生了变化。我们的系统使用
+一个固定的、与模型无关的提示集，在更改事件中持续存在
+和端点，避免每个端点初始化。</span><span class="original-text">, which uses per-endpoint “border
+inputs”—prompts where multiple tokens are nearly tied as the top
+prediction at low temperature. Like our approach,
+B3IT frames the problem as a hypothesis test on the output distribution
+and targets continuous monitoring. A key difference is that B3IT’s
+probes are tailored to each endpoint during an initialization phase
+and may require re-discovery after a change event, since the
+model’s decision boundaries may have shifted. Our system uses
+a fixed, model-agnostic prompt set that persists across change events
+and endpoints, avoiding per-endpoint initialization.</span></p>
+</div>
+<div class="ltx_para" id="S2.p4">
+<p class="ltx_p" id="S2.p4.1"><span class="translated-text">我们使用能量距离统计作为核心指标
+比较响应嵌入的样本。该指标是一个
+分布之间的非参数距离 和 是
+当且仅当分布在温和条件下匹配时为零（如
+随机向量分布的度量）</span><span class="original-text">We use an energy distance statistic as the core metric
+comparing samples of response embeddings. This metric is a
+nonparametric distance between distributions and is
+zero if and only if the distributions match under mild conditions (as
+a metric on distributions of random vectors)</span><cite class="ltx_cite ltx_citemacro_citep">(Székely and Rizzo, <a class="ltx_ref" href="#bib.bib1" title="Energy statistics: a class of statistics based on distances">2013</a>)</cite><span class="translated-text">。能量距离密切相关
+最大平均差异 (MMD)</span><span class="original-text">. Energy distance is closely related to
+maximum mean discrepancy (MMD)</span><cite class="ltx_cite ltx_citemacro_citep">(Gretton<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib12" title="A kernel two-sample test">2012</a>)</cite><span class="translated-text">;我们选择了
+能量距离的可解释性和无参数性
+配方。</span><span class="original-text">; we chose
+energy distance for its interpretability and parameter-free
+formulation.</span></p>
+</div>
+<div class="ltx_para" id="S2.p5">
+<p class="ltx_p" id="S2.p5.1"><span class="translated-text">我们使用基于顺序证据积累
+e 值（期望有界测试统计量）
+启用连续监控并可选择停止
+行为，适合流检测设置</span><span class="original-text">We use sequential evidence accumulation based on
+e-values (expectation-bounded test statistics) to
+enable continuous monitoring with optional stopping
+behavior, suited for streaming detection settings</span><cite class="ltx_cite ltx_citemacro_citep">(Wang, <a class="ltx_ref" href="#bib.bib2" title="A tiny review on e-values and e-processes">2023</a>; Ramdas and Wang, <a class="ltx_ref" href="#bib.bib3" title="Hypothesis testing with e-values">2025</a>)</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.p6">
+<p class="ltx_p" id="S2.p6.1"><span class="translated-text">我们衡量行为变化的统计方法是
+与随着时间的推移运行特定领域评估的项目相补充</span><span class="original-text">Our statistical approach to measuring behavioral change is
+complementary to projects that run domain-specific evaluations over time</span><cite class="ltx_cite ltx_citemacro_citep">(Margin Research, <a class="ltx_ref" href="#bib.bib6" title="Claude code historical performance tracker">2025</a>; Phillips, <a class="ltx_ref" href="#bib.bib7" title="Daily-bench">2025</a>)</cite><span class="translated-text">。
+随着时间的推移，这些努力提供了有关特定能力的信号，
+但通常运行成本昂贵，限制了覆盖的可行性
+跨越一系列模型和提供商。</span><span class="original-text">.
+These efforts offer a signal about specific abilities over time,
+but are typically expensive to run, limiting the feasibility of coverage
+across a range of models and providers.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3. </span><span class="translated-text">问题定义</span><span class="original-text">Problem definition</span></h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="translated-text">在文本到文本模型的上下文中，我们定义</span><span class="original-text">In the context of text-to-text models, we define</span><span class="ltx_text ltx_font_bold" id="S3.p1.1.1"><span class="translated-text">终点稳定性</span><span class="original-text">endpoint stability</span></span><span class="translated-text">作为分布式的
+在固定提示下反应的一致性和
+修复了用户可见的设置。我们将端点视为黑匣子。
+由于以下变化，可能会出现端点不稳定：</span><span class="original-text">as distributional
+consistency of responses under a fixed prompt set and
+fixed user-visible settings. We treat the endpoint as a black box.
+Endpoint instability may occur due to changes to:</span></p>
+<ul class="ltx_itemize" id="S3.I1">
+<li class="ltx_item" id="S3.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i1.p1">
+<p class="ltx_p" id="S3.I1.i1.p1.1"><span class="translated-text">模特身份
+（系列、版本、分词器、权重）、</span><span class="original-text">model identity
+(family, version, tokenizer, weights),</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i2.p1">
+<p class="ltx_p" id="S3.I1.i2.p1.1"><span class="translated-text">部署（推理引擎、堆栈）、</span><span class="original-text">deployment (inference engine, stack),</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i3.p1">
+<p class="ltx_p" id="S3.I1.i3.p1.1"><span class="translated-text">优化技术（量化、缓存、
+内核，推测解码），</span><span class="original-text">optimization techniques (quantization, caching,
+kernels, speculative decoding),</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i4.p1">
+<p class="ltx_p" id="S3.I1.i4.p1.1"><span class="translated-text">配置（采样参数，
+系统提示）</span><span class="original-text">configurations (sampling parameters,
+system prompts)</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="S3.p2">
+<p class="ltx_p" id="S3.p2.1"><span class="translated-text">我们的目标是检测端点的变化何时发生
+有效的输出分配并创建审计跟踪</span><span class="original-text">Our objective is to detect when there has been a change in the endpoint’s
+effective output distribution and to create an audit trail of</span><span class="ltx_text ltx_font_bold" id="S3.p2.1.1"><span class="translated-text">改变事件</span><span class="original-text">change events</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_bold" id="S3.p2.1.2"><span class="translated-text">稳定期</span><span class="original-text">stability periods</span></span>.</p>
+</div>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4. </span><span class="translated-text">方法论：指纹和变革
+检测</span><span class="original-text">Methodology: fingerprints and change
+detection</span></h2>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1. </span><span class="translated-text">指纹建设</span><span class="original-text">Fingerprint construction</span></h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.1"><span class="translated-text">通过选择固定的集合来构造指纹
+提示并对每个提示采样多个响应；
+响应被嵌入为实值向量。一个
+因此，指纹由</span><span class="original-text">A fingerprint is constructed by selecting a fixed set
+of prompts and sampling multiple responses per prompt;
+responses are embedded as real-valued vectors. A
+fingerprint thus consists of a</span><em class="ltx_emph ltx_font_italic" id="S4.SS1.p1.1.1"><span class="translated-text">集合的集合
+向量</span><span class="original-text">set of sets of
+vectors</span></em><span class="translated-text">— 每个提示一组样本。我们的实施总共需要
+向端点发出 800 个推理请求，每个推理请求包含一些令牌
+生成指纹。</span><span class="original-text">—one sample set per prompt. Our implementation requires a total
+of 800 inference requests, each consisting of a few tokens, to be made to an endpoint
+to generate a fingerprint.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2. </span><span class="translated-text">成对指纹比较</span><span class="original-text">Pairwise fingerprint comparisons</span></h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.3"><span class="translated-text">给出指纹</span><span class="original-text">Given fingerprints</span><math alttext="X" class="ltx_Math" display="inline" id="S4.SS2.p1.1.m1" intent=":literal"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="Y" class="ltx_Math" display="inline" id="S4.SS2.p1.2.m2" intent=":literal"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math><span class="translated-text">，我们计算能量
+每个提示之间的距离统计
+提示特定的嵌入样本，以及总和
+跨越提示以产生聚合距离</span><span class="original-text">, we compute an energy
+distance statistic per prompt between the
+prompt-specific embedding samples, and sum
+across prompts to produce an aggregate distance</span><math alttext="E=E(X,Y)" class="ltx_Math" display="inline" id="S4.SS2.p1.3.m3" intent=":literal"><semantics><mrow><mi>E</mi><mo>=</mo><mrow><mi>E</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>X</mi><mo>,</mo><mi>Y</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">E=E(X,Y)</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="S4.SS2.p2">
+<p class="ltx_p" id="S4.SS2.p2.4"><span class="translated-text">检验从指纹中提取两个指纹的原假设
+相同的基础分布，我们通过对
+总计统计</span><span class="original-text">To test the null hypothesis that two fingerprints are drawn from the
+same underlying distribution, we compute a p-value via a permutation test on the
+aggregate statistic</span><math alttext="E" class="ltx_Math" display="inline" id="S4.SS2.p2.1.m1" intent=":literal"><semantics><mi>E</mi><annotation encoding="application/x-tex">E</annotation></semantics></math><span class="translated-text">。为了计算 p 值，嵌入
+每个提示的向量被汇集并随机重新分成两部分
+原始尺寸组根据
+排列</span><span class="original-text">. To compute the p-value, the embedding
+vectors for each prompt are pooled and randomly re-split into two
+groups of the original sizes according to
+a permutation</span><math alttext="\pi" class="ltx_Math" display="inline" id="S4.SS2.p2.2.m2" intent=":literal"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math><span class="translated-text">在向量集合上，产生排列统计量</span><span class="original-text">on the pooled set of vectors, yielding a permuted statistic</span><math alttext="E_{\pi}" class="ltx_Math" display="inline" id="S4.SS2.p2.3.m3" intent=":literal"><semantics><msub><mi>E</mi><mi>π</mi></msub><annotation encoding="application/x-tex">E_{\pi}</annotation></semantics></math><span class="translated-text">。 p 值是排列的分数，其中</span><span class="original-text">. The p-value is the fraction of permutations for which</span><math alttext="E_{\pi}\geq E" class="ltx_Math" display="inline" id="S4.SS2.p2.4.m4" intent=":literal"><semantics><mrow><msub><mi>E</mi><mi>π</mi></msub><mo>≥</mo><mi>E</mi></mrow><annotation encoding="application/x-tex">E_{\pi}\geq E</annotation></semantics></math><span class="translated-text">当对一组随机选择的对象进行比较时
+排列。 p 值越低表明变化的证据越有力。</span><span class="original-text">when this comparison is done across a set of randomly selected
+permutations. Lower p-values indicate stronger evidence of change.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3. </span><span class="translated-text">随时间变化的指纹比较</span><span class="original-text">Fingerprint comparisons over time</span></h3>
+<div class="ltx_para" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.6"><span class="translated-text">端点监控从生成基线指纹开始</span><span class="original-text">Monitoring of an endpoint begins by generating a baseline fingerprint</span><math alttext="F_{0}" class="ltx_Math" display="inline" id="S4.SS3.p1.1.m1" intent=":literal"><semantics><msub><mi>F</mi><mn>0</mn></msub><annotation encoding="application/x-tex">F_{0}</annotation></semantics></math><span class="translated-text">。
+我们以固定的节奏生成新的指纹</span><span class="original-text">.
+At a regular cadence we generate new fingerprints</span><math alttext="F_{i}" class="ltx_Math" display="inline" id="S4.SS3.p1.2.m2" intent=":literal"><semantics><msub><mi>F</mi><mi>i</mi></msub><annotation encoding="application/x-tex">F_{i}</annotation></semantics></math><span class="translated-text">在某个时间</span><span class="original-text">at time</span><math alttext="t_{i}" class="ltx_Math" display="inline" id="S4.SS3.p1.3.m3" intent=":literal"><semantics><msub><mi>t</mi><mi>i</mi></msub><annotation encoding="application/x-tex">t_{i}</annotation></semantics></math><span class="translated-text">和
+计算上述 p 值</span><span class="original-text">and
+compute the aforementioned p-value</span><math alttext="p_{i}=p(F_{0},F_{i})" class="ltx_Math" display="inline" id="S4.SS3.p1.4.m4" intent=":literal"><semantics><mrow><msub><mi>p</mi><mi>i</mi></msub><mo>=</mo><mrow><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>F</mi><mn>0</mn></msub><mo>,</mo><msub><mi>F</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">p_{i}=p(F_{0},F_{i})</annotation></semantics></math><span class="translated-text">。每次有新的
+指纹</span><span class="original-text">. Each time a new
+fingerprint</span><math alttext="F_{i}" class="ltx_Math" display="inline" id="S4.SS3.p1.5.m5" intent=":literal"><semantics><msub><mi>F</mi><mi>i</mi></msub><annotation encoding="application/x-tex">F_{i}</annotation></semantics></math><span class="translated-text">是使用 e-values 方法生成的</span><span class="original-text">is generated, using the e-values methods from</span><cite class="ltx_cite ltx_citemacro_citep">(Wang, <a class="ltx_ref" href="#bib.bib2" title="A tiny review on e-values and e-processes">2023</a>; Ramdas and Wang, <a class="ltx_ref" href="#bib.bib3" title="Hypothesis testing with e-values">2025</a>)</cite><span class="translated-text">应用
+p 值序列</span><span class="original-text">applied
+to the sequence of p-values</span><math alttext="p_{1},...,p_{i}" class="ltx_Math" display="inline" id="S4.SS3.p1.6.m6" intent=":literal"><semantics><mrow><msub><mi>p</mi><mn>1</mn></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>p</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">p_{1},...,p_{i}</annotation></semantics></math><span class="translated-text">,
+我们评估了变化的累积证据
+自基线指纹时间以来端点的有效输出分布。
+如果证据超过预定阈值，我们将宣布
+更改事件并设置最新的
+指纹作为新的基线，后续指纹将与之进行比较。</span><span class="original-text">,
+we assess the cumulative evidence for a change in the
+endpoint’s effective output distribution since the time of the baseline fingerprint.
+If the evidence exceeds a predetermined threshold, we declare a
+change event and set the most recent
+fingerprint as the new baseline, to which subsequent fingerprints are compared.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F1"><span class="ltx_inline-block"><svg class="ltx_picture ltx_centering" height="182.61" id="S4.F1.pic1" overflow="visible" version="1.1" viewbox="0 0 816.69 182.61" width="816.69"><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,182.61) matrix(1 0 0 -1 0 0) translate(72.67,0) translate(0,129.14)"><g stroke-width="0.8pt"><path d="M 38.92 19.69 L -38.92 19.69 C -40.45 19.69 -41.68 18.45 -41.68 16.92 L -41.68 -16.92 C -41.68 -18.45 -40.45 -19.69 -38.92 -19.69 L 38.92 -19.69 C 40.45 -19.69 41.68 -18.45 41.68 -16.92 L 41.68 16.92 C 41.68 18.45 40.45 19.69 38.92 19.69 Z M -41.68 -19.69" style="fill:none"></path></g><g fill="#000000" stroke="#000000" stroke-width="0.8pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 -33.38 -4.8)"><text transform="matrix(1 0 0 -1 0 0)">Provider A</text></g><g stroke-width="0.8pt"><path d="M 38.63 -27.71 L -38.63 -27.71 C -40.16 -27.71 -41.4 -28.95 -41.4 -30.48 L -41.4 -64.31 C -41.4 -65.84 -40.16 -67.08 -38.63 -67.08 L 38.63 -67.08 C 40.16 -67.08 41.4 -65.84 41.4 -64.31 L 41.4 -30.48 C 41.4 -28.95 40.16 -27.71 38.63 -27.71 Z M -41.4 -67.08" style="fill:none"></path></g><g fill="#000000" stroke="#000000" stroke-width="0.8pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 -33.09 -52.2)"><text transform="matrix(1 0 0 -1 0 0)">Provider B</text></g><g stroke-width="0.8pt"><path d="M 38.72 -75.11 L -38.72 -75.11 C -40.25 -75.11 -41.49 -76.34 -41.49 -77.87 L -41.49 -111.71 C -41.49 -113.24 -40.25 -114.48 -38.72 -114.48 L 38.72 -114.48 C 40.25 -114.48 41.49 -113.24 41.49 -111.71 L 41.49 -77.87 C 41.49 -76.34 40.25 -75.11 38.72 -75.11 Z M -41.49 -114.48" style="fill:none"></path></g><g fill="#000000" stroke="#000000" stroke-width="0.8pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 -33.19 -99.6)"><text transform="matrix(1 0 0 -1 0 0)">Provider C</text></g><g stroke-width="0.4pt"><g stroke-dasharray="3.0pt,3.0pt" stroke-dashoffset="0.0pt"><path d="M 50.54 34.08 L -50.54 34.08 C -53.6 34.08 -56.07 31.6 -56.07 28.54 L -56.07 -123.33 C -56.07 -126.39 -53.6 -128.87 -50.54 -128.87 L 50.54 -128.87 C 53.6 -128.87 56.07 -126.39 56.07 -123.33 L 56.07 28.54 C 56.07 31.6 53.6 34.08 50.54 34.08 Z M -56.07 -128.87" style="fill:none"></path></g><g fill="#000000" stroke="#000000" stroke-dasharray="3.0pt,3.0pt" stroke-dashoffset="0.0pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 -42.24 -47.4)"><foreignobject height="135.27" overflow="visible" style="--ltx-fo-width:6.1em;--ltx-fo-height:4.89em;--ltx-fo-depth:4.89em;" transform="matrix(1 0 0 -1 0 67.63)" width="84.47"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_top" id="S4.F1.pic1.7.7.7.7.1.1" style="width:6.1em;">
+<span class="ltx_p" id="S4.F1.pic1.7.7.7.7.1.1.1"></span>
+</span></span></span></foreignobject></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 -68.06 39.24)"><foreignobject height="9.61" overflow="visible" style="--ltx-fo-width:8.58em;--ltx-fo-height:0.6em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 9.61)" width="136.56"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text ltx_font_bold" id="S4.F1.pic1.8.8.8.8.1.1">Inference Providers</span></span></span></foreignobject></g><g stroke-width="0.8pt"><path d="M 342.23 -4.09 L 155.51 -4.09 C 153.98 -4.09 152.74 -5.33 152.74 -6.86 L 152.74 -87.94 C 152.74 -89.46 153.98 -90.7 155.51 -90.7 L 342.23 -90.7 C 343.75 -90.7 344.99 -89.46 344.99 -87.94 L 344.99 -6.86 C 344.99 -5.33 343.75 -4.09 342.23 -4.09 Z M 152.74 -90.7" style="fill:none"></path></g><g fill="#000000" stroke="#000000" stroke-width="0.8pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 161.04 -64.2)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 36.03)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 24.96)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 24.96)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 9.61)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 27.16 0)"><foreignobject height="12.3" overflow="visible" style="--ltx-fo-width:7.65em;--ltx-fo-height:0.6em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 9.61)" width="121.77"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text ltx_font_bold" id="S4.F1.pic1.9.9.9.9.4.4.4.4.4.1.1.1">Stability Monitor</span></span></span></foreignobject></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 24.96)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><foreignobject height="10.93" overflow="visible" style="--ltx-fo-width:13.72em;--ltx-fo-height:0.66em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 8.51)" width="175.65"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S4.F1.pic1.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3" style="font-size:90%;">generate <math alttext="F_{i}" class="ltx_Math" display="inline" id="S4.F1.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.m1" intent=":literal"><semantics><msub><mi>F</mi><mi>i</mi></msub><annotation encoding="application/x-tex">F_{i}</annotation></semantics></math>, compare <math alttext="F_{i}" class="ltx_Math" display="inline" id="S4.F1.pic1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.m2" intent=":literal"><semantics><msub><mi>F</mi><mi>i</mi></msub><annotation encoding="application/x-tex">F_{i}</annotation></semantics></math> vs <math alttext="F_{0}" class="ltx_Math" display="inline" id="S4.F1.pic1.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.3.m3" intent=":literal"><semantics><msub><mi>F</mi><mn>0</mn></msub><annotation encoding="application/x-tex">F_{0}</annotation></semantics></math></span></span></span></foreignobject></g></g></g></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 36.03)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 30.22 0)"><foreignobject height="11.07" overflow="visible" style="--ltx-fo-width:9.09em;--ltx-fo-height:0.68em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 8.65)" width="116.35"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S4.F1.pic1.10.10.10.10.5.5.1.1.1" style="font-size:90%;">detect change events</span></span></span></foreignobject></g></g></g></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 233.22 -105.48)"><foreignobject height="12.45" overflow="visible" style="--ltx-fo-width:2.44em;--ltx-fo-height:0.73em;--ltx-fo-depth:0.24em;" transform="matrix(1 0 0 -1 0 9.34)" width="31.28"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S4.F1.pic1.11.11.11.11.1.1" style="font-size:90%;">(VM)</span></span></span></foreignobject></g><g stroke-width="0.8pt"><path d="M 551.35 -12.84 L 447.29 -12.84 C 445.76 -12.84 444.53 -14.08 444.53 -15.61 L 444.53 -79.18 C 444.53 -80.71 445.76 -81.95 447.29 -81.95 L 551.35 -81.95 C 552.88 -81.95 554.12 -80.71 554.12 -79.18 L 554.12 -15.61 C 554.12 -14.08 552.88 -12.84 551.35 -12.84 Z M 444.53 -81.95" style="fill:none"></path></g><g fill="#000000" stroke="#000000" stroke-width="0.8pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 455.59 -68.46)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 44.55)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 33.48)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 33.48)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 22.41)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 22.41)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 9.61)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><foreignobject height="9.61" overflow="visible" style="--ltx-fo-width:4.02em;--ltx-fo-height:0.6em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 9.61)" width="64.01"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text ltx_font_bold" id="S4.F1.pic1.12.12.12.12.4.4.3.3.3.2.2.2.1.1.1">Database</span></span></span></foreignobject></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 22.41)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><foreignobject height="11.07" overflow="visible" style="--ltx-fo-width:5.87em;--ltx-fo-height:0.68em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 8.65)" width="75.15"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><math alttext="\bullet" class="ltx_Math" display="inline" id="S4.F1.pic1.4.4.4.4.4.4.4.4.4.4.4.4.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.m1" intent=":literal"><semantics><mo mathsize="0.900em">∙</mo><annotation encoding="application/x-tex">\bullet</annotation></semantics></math><span class="ltx_text" id="S4.F1.pic1.13.13.13.13.5.5.4.4.4.3.3.3.2.2.1" style="font-size:90%;"> fingerprints</span></span></span></foreignobject></g></g></g></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 33.48)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><foreignobject height="11.07" overflow="visible" style="--ltx-fo-width:4.42em;--ltx-fo-height:0.68em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 8.65)" width="56.6"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><math alttext="\bullet" class="ltx_Math" display="inline" id="S4.F1.pic1.5.5.5.5.5.5.5.5.5.5.5.5.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1.1.1.m1" intent=":literal"><semantics><mo mathsize="0.900em">∙</mo><annotation encoding="application/x-tex">\bullet</annotation></semantics></math><span class="ltx_text" id="S4.F1.pic1.14.14.14.14.6.6.5.5.5.2.2.1" style="font-size:90%;"> p-values</span></span></span></foreignobject></g></g></g></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 44.55)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><foreignobject height="11.07" overflow="visible" style="--ltx-fo-width:6.92em;--ltx-fo-height:0.68em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 8.65)" width="88.61"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><math alttext="\bullet" class="ltx_Math" display="inline" id="S4.F1.pic1.6.6.6.6.6.6.6.6.6.6.6.6.3.3.3.3.3.3.3.3.3.3.3.3.1.1.1.m1" intent=":literal"><semantics><mo mathsize="0.900em">∙</mo><annotation encoding="application/x-tex">\bullet</annotation></semantics></math><span class="ltx_text" id="S4.F1.pic1.15.15.15.15.7.7.2.2.1" style="font-size:90%;"> change events</span></span></span></foreignobject></g></g></g></g><g stroke-width="0.8pt"><path d="M 714.69 -27.71 L 644.61 -27.71 C 643.08 -27.71 641.84 -28.95 641.84 -30.48 L 641.84 -64.31 C 641.84 -65.84 643.08 -67.08 644.61 -67.08 L 714.69 -67.08 C 716.22 -67.08 717.45 -65.84 717.45 -64.31 L 717.45 -30.48 C 717.45 -28.95 716.22 -27.71 714.69 -27.71 Z M 641.84 -67.08" style="fill:none"></path></g><g fill="#000000" stroke="#000000" stroke-width="0.8pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 650.14 -58.29)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 21.79)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 9.61)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><foreignobject height="12.3" overflow="visible" style="--ltx-fo-width:3.74em;--ltx-fo-height:0.6em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 9.61)" width="59.45"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text ltx_font_bold" id="S4.F1.pic1.16.16.16.16.1.1.1.1.1">Stability</span></span></span></foreignobject></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 21.79)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 8.28 0)"><foreignobject height="9.49" overflow="visible" style="--ltx-fo-width:2.67em;--ltx-fo-height:0.6em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 9.49)" width="42.45"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text ltx_font_bold" id="S4.F1.pic1.17.17.17.17.2.2.1.1.1">Arena</span></span></span></foreignobject></g></g></g></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 619.88 -81.17)"><foreignobject height="11.07" overflow="visible" style="--ltx-fo-width:9.34em;--ltx-fo-height:0.68em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 8.65)" width="119.53"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S4.F1.pic1.18.18.18.18.1.1" style="font-size:90%;">arena.projectvail.com</span></span></span></foreignobject></g></g><g stroke-width="0.8pt"><path d="M 152.19 -43.24 L 62.31 -43.24" style="fill:none"></path><g stroke-dasharray="none" stroke-dashoffset="0.0pt" stroke-linejoin="miter" transform="matrix(-1.0 0.0 0.0 -1.0 65.48 -43.24)"><path d="M 7.66 0 L 1.79 2.18 L 3.45 0 L 1.79 -2.18 Z"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 82.49 -35.39)"><foreignobject height="11.2" overflow="visible" style="--ltx-fo-width:3.15em;--ltx-fo-height:0.62em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 8.51)" width="43.55"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S4.F1.pic1.19.19.19.1.1.1">request</span></span></span></foreignobject></g></g><g stroke-width="0.8pt"><path d="M 56.35 -51.55 L 146.22 -51.55" style="fill:none"></path><g stroke-dasharray="none" stroke-dashoffset="0.0pt" stroke-linejoin="miter" transform="matrix(1.0 0.0 0.0 1.0 143.05 -51.55)"><path d="M 7.66 0 L 1.79 2.18 L 3.45 0 L 1.79 -2.18 Z"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 78.61 -62.67)"><foreignobject height="8.65" overflow="visible" style="--ltx-fo-width:3.68em;--ltx-fo-height:0.43em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 5.96)" width="50.93"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S4.F1.pic1.20.20.20.1.1.1">response</span></span></span></foreignobject></g></g><g stroke-width="0.8pt"><path d="M 345.55 -47.4 L 438.01 -47.4" style="fill:none"></path><g stroke-dasharray="none" stroke-dashoffset="0.0pt" stroke-linejoin="miter" transform="matrix(1.0 0.0 0.0 1.0 434.84 -47.4)"><path d="M 7.66 0 L 1.79 2.18 L 3.45 0 L 1.79 -2.18 Z"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 379.37 -42.23)"><foreignobject height="9.24" overflow="visible" style="--ltx-fo-width:2.22em;--ltx-fo-height:0.67em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 9.24)" width="30.79"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S4.F1.pic1.21.21.21.1.1.1">write</span></span></span></foreignobject></g></g><g stroke-width="0.8pt"><path d="M 554.67 -47.4 L 635.33 -47.4" style="fill:none"></path><g stroke-dasharray="none" stroke-dashoffset="0.0pt" stroke-linejoin="miter" transform="matrix(1.0 0.0 0.0 1.0 632.16 -47.4)"><path d="M 7.66 0 L 1.79 2.18 L 3.45 0 L 1.79 -2.18 Z"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 584.89 -42.23)"><foreignobject height="9.61" overflow="visible" style="--ltx-fo-width:1.89em;--ltx-fo-height:0.69em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 9.61)" width="26.18"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S4.F1.pic1.22.22.22.1.1.1">read</span></span></span></foreignobject></g></g></g></svg></span>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1. </span>System architecture. Stability Monitor periodically queries
+inference providers, generates fingerprints <math alttext="F_{i}" class="ltx_Math" display="inline" id="S4.F1.3.m1" intent=":literal"><semantics><msub><mi>F</mi><mi>i</mi></msub><annotation encoding="application/x-tex">F_{i}</annotation></semantics></math>, compares them
+against the baseline <math alttext="F_{0}" class="ltx_Math" display="inline" id="S4.F1.4.m2" intent=":literal"><semantics><msub><mi>F</mi><mn>0</mn></msub><annotation encoding="application/x-tex">F_{0}</annotation></semantics></math> to compute p-values and detect change
+events, and writes all results to the database. The Stability Arena
+web application reads from the database to display monitoring data.</figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5. </span><span class="translated-text">系统：稳定性监视器和稳定性竞技场</span><span class="original-text">System: Stability Monitor and Stability Arena</span></h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">稳定性监视器持续运行
+端点：</span><span class="original-text">Stability Monitor runs continuously against an
+endpoint:</span></p>
+<ol class="ltx_enumerate" id="S5.I1">
+<li class="ltx_item" id="S5.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">(1)</span>
+<div class="ltx_para" id="S5.I1.i1.p1">
+<p class="ltx_p" id="S5.I1.i1.p1.1"><span class="translated-text">生成基线指纹</span><span class="original-text">generate baseline fingerprint</span><math alttext="F_{0}" class="ltx_Math" display="inline" id="S5.I1.i1.p1.1.m1" intent=":literal"><semantics><msub><mi>F</mi><mn>0</mn></msub><annotation encoding="application/x-tex">F_{0}</annotation></semantics></math>,</p>
+</div>
+</li>
+<li class="ltx_item" id="S5.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">(2)</span>
+<div class="ltx_para" id="S5.I1.i2.p1">
+<p class="ltx_p" id="S5.I1.i2.p1.1"><span class="translated-text">以固定的节奏（通常每隔几个小时）生成</span><span class="original-text">at regular cadence (typically every few hours) generate</span><math alttext="F_{i}" class="ltx_Math" display="inline" id="S5.I1.i2.p1.1.m1" intent=":literal"><semantics><msub><mi>F</mi><mi>i</mi></msub><annotation encoding="application/x-tex">F_{i}</annotation></semantics></math>,</p>
+</div>
+</li>
+<li class="ltx_item" id="S5.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">(3)</span>
+<div class="ltx_para" id="S5.I1.i3.p1">
+<p class="ltx_p" id="S5.I1.i3.p1.1"><span class="translated-text">计算</span><span class="original-text">compute</span><math alttext="p_{i}=p(F_{i},F_{0})" class="ltx_Math" display="inline" id="S5.I1.i3.p1.1.m1" intent=":literal"><semantics><mrow><msub><mi>p</mi><mi>i</mi></msub><mo>=</mo><mrow><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>F</mi><mi>i</mi></msub><mo>,</mo><msub><mi>F</mi><mn>0</mn></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">p_{i}=p(F_{i},F_{0})</annotation></semantics></math>,</p>
+</div>
+</li>
+<li class="ltx_item" id="S5.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">(4)</span>
+<div class="ltx_para" id="S5.I1.i4.p1">
+<p class="ltx_p" id="S5.I1.i4.p1.1"><span class="translated-text">更新连续证据并检测变化
+事件，</span><span class="original-text">update sequential evidence and detect change
+events,</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S5.I1.i5" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">(5)</span>
+<div class="ltx_para" id="S5.I1.i5.p1">
+<p class="ltx_p" id="S5.I1.i5.p1.1"><span class="translated-text">编写稳定期的审核日志并
+事件。</span><span class="original-text">write an audit log of stability periods and
+events.</span></p>
+</div>
+</li>
+</ol>
+</div>
+<div class="ltx_para" id="S5.p2">
+<p class="ltx_p" id="S5.p2.1"><span class="translated-text">稳定竞技场（</span><span class="original-text">Stability Arena (</span><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arena.projectvail.com" title="">https://arena.projectvail.com</a><span class="translated-text">）发布
+跨端点和支持的稳定性数据
+同一标称模型的跨提供商比较。它运行为
+向模型提供者发出 API 请求以执行推理生成的服务。
+端点元数据、指纹、p 值和更改事件存储在云中
+postgres 数据库。 Stability Arena 作为一项单独的服务运行，可拉动
+数据库中的数据并将其显示在 Web 界面中。</span><span class="original-text">) publishes
+stability data across endpoints and supports
+cross-provider comparisons for the same nominal model. It runs as
+a service that makes API requests to model providers to perform inference generation.
+Endpoint metadata, fingerprints, p-values, and change events are stored in a cloud
+postgres database. Stability Arena runs as a separate service that pulls
+data from the database and displays it in a web interface.</span></p>
+</div>
+<div class="ltx_para" id="S5.p3">
+<p class="ltx_p" id="S5.p3.1"><span class="translated-text">Web 界面公开了多个视图。供应商矩阵
+显示每个端点的累积更改事件计数
+时间，一目了然地了解哪些提供商
+最稳定和最不稳定。每个端点的视图
+同时显示完整的变更事件历史记录
+传统的运营指标，例如延迟和
+错误率，将行为稳定性置于
+传统可靠性信号的背景。一个
+跨提供商比较视图显示每个提供商的
+偏离所有提供商的集体行为
+服务于相同的标称模型，使其变得简单
+识别异常提供商行为。因为稳定
+Arena 针对实时端点、数据持续运行
+反映最新的真实行为而不是静态快照。</span><span class="original-text">The web interface exposes several views. A provider matrix
+shows cumulative change event counts per endpoint over
+time, giving an at-a-glance picture of which providers
+have been most and least stable. Per-endpoint views
+surface the full change event history alongside
+traditional operational metrics such as latency and
+error rates, situating behavioral stability in the
+context of conventional reliability signals. A
+cross-provider comparison view shows each provider’s
+deviation from the pooled behavior of all providers
+serving the same nominal model, making it straightforward
+to identify outlier provider behavior. Because Stability
+Arena runs continuously against live endpoints, the data
+reflects the latest real behavior rather than a static snapshot.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6. </span><span class="translated-text">结果：受控方法验证</span><span class="original-text">Findings: controlled methodology validation</span></h2>
+<section class="ltx_subsection" id="S6.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">6.1. </span><span class="translated-text">实验装置</span><span class="original-text">Experimental setup</span></h3>
+<div class="ltx_para" id="S6.SS1.p1">
+<p class="ltx_p" id="S6.SS1.p1.1"><span class="translated-text">通过在以下位置托管模型来运行验证实验：
+本地端点并通过 API 调用生成指纹。在一个独立的
+在此过程中，我们运行稳定性监视器，以每小时的节奏生成指纹。
+一旦稳定性监视器生成了一些指纹，我们就制作了一个离散的指纹
+更改本地端点托管的模型而不修改稳定性
+监控。稳定性监视器继续运行，生成指纹，
+不知道对端点所做的更改。</span><span class="original-text">Validation experiments were run by hosting a model at a
+local endpoint and generating fingerprints via API calls. In an independent
+process, we ran Stability Monitor, generating fingerprints at an hourly cadence.
+Once Stability Monitor had generated a few fingerprints, we made a discrete
+change to the model hosted at the local endpoint without modifying Stability
+Monitor. Stability Monitor continued to run, generating fingerprints,
+unaware of the change that had been made to the endpoint.</span></p>
+</div>
+<div class="ltx_para" id="S6.SS1.p2">
+<p class="ltx_p" id="S6.SS1.p2.1"><span class="translated-text">我们测试了五种变更类型，表中显示了每种变更类型的示例</span><span class="original-text">We tested five change types, with examples of each shown in Table</span><a class="ltx_ref" href="#S6.T1" title="Table 1 ‣ 6.1. Experimental setup ‣ 6. Findings: controlled methodology validation ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">。
+每个变更都会单独评估，保持其他变更类型不变。</span><span class="original-text">.
+Each change was evaluated on its own, holding the other change types constant.</span></p>
+</div>
+<figure class="ltx_table" id="S6.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1. </span>Validation tests.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S6.T1.5">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S6.T1.5.6.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S6.T1.5.6.1.1">Change type</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="S6.T1.5.6.1.2">Example Intervention</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S6.T1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S6.T1.1.1.2">Model family</th>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S6.T1.1.1.1">Qwen <math alttext="\to" class="ltx_Math" display="inline" id="S6.T1.1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> Llama</td>
+</tr>
+<tr class="ltx_tr" id="S6.T1.2.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S6.T1.2.2.2">Version upgrade</th>
+<td class="ltx_td ltx_align_left" id="S6.T1.2.2.1">Qwen2.5-0.5B <math alttext="\to" class="ltx_Math" display="inline" id="S6.T1.2.2.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> Qwen3-0.6B</td>
+</tr>
+<tr class="ltx_tr" id="S6.T1.3.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S6.T1.3.3.2">Inference stack</th>
+<td class="ltx_td ltx_align_left" id="S6.T1.3.3.1">vLLM <math alttext="\to" class="ltx_Math" display="inline" id="S6.T1.3.3.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> Transformers</td>
+</tr>
+<tr class="ltx_tr" id="S6.T1.4.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S6.T1.4.4.2">Quantization</th>
+<td class="ltx_td ltx_align_left" id="S6.T1.4.4.1">Qwen2.5-14B BF16 <math alttext="\to" class="ltx_Math" display="inline" id="S6.T1.4.4.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> Qwen2.5-14B INT8</td>
+</tr>
+<tr class="ltx_tr" id="S6.T1.5.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S6.T1.5.5.2">Temperature</th>
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S6.T1.5.5.1">0.7 <math alttext="\to" class="ltx_Math" display="inline" id="S6.T1.5.5.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 0.6</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section class="ltx_subsection" id="S6.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">6.2. </span><span class="translated-text">结果</span><span class="original-text">Results</span></h3>
+<div class="ltx_para" id="S6.SS2.p1">
+<p class="ltx_p" id="S6.SS2.p1.1"><span class="translated-text">除了一个例外，每个更改都会产生一个更改事件
+立即在下一个指纹上；例外的是
+微小的温度变化
+（0.7</span><span class="original-text">With one exception, each change produced a change event
+immediately on the next fingerprint; the exception was
+a small temperature change
+(0.7</span><math alttext="\rightarrow" class="ltx_Math" display="inline" id="S6.SS2.p1.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math><span class="translated-text">0.6），更改后采集了 18 个指纹
+触发变更事件。</span><span class="original-text">0.6), which took 18 fingerprints after the change was made to
+trigger a change event.</span></p>
+</div>
+<div class="ltx_para" id="S6.SS2.p2">
+<p class="ltx_p" id="S6.SS2.p2.1"><span class="translated-text">此外，稳定性监视器记录了一个变化
+每次干预的事件：我们观察到变化之前的稳定性，并且
+检测后相对于新基线指纹的稳定性。</span><span class="original-text">Moreover, Stability Monitor recorded a single change
+event per intervention: we observed stability before the change and
+stability after detection relative to the new baseline fingerprint.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S7">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">7. </span><span class="translated-text">调查结果：跨提供商比较
+相同型号</span><span class="original-text">Findings: cross-provider comparisons for the
+same model</span></h2>
+<div class="ltx_para" id="S7.p1">
+<p class="ltx_p" id="S7.p1.1"><span class="translated-text">VAIL的指纹支持不同端点的比较
+以两种模式提供相同的标称模型：
+(a) 共享时间窗口上的成对比较，以及
+(b) 单个端点相对于一组端点的分歧。</span><span class="original-text">VAIL’s fingerprints support comparisons of different endpoints
+serving the same nominal model in two modes:
+(a) pairwise comparisons over shared time windows, and
+(b) individual endpoint divergence relative to a group of endpoints.</span></p>
+</div>
+<section class="ltx_subsection" id="S7.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">7.1. </span><span class="translated-text">成对提供商相似度（热图）</span><span class="original-text">Pairwise provider similarity (heatmap)</span></h3>
+<figure class="ltx_figure" id="S7.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="533" id="S7.F2.g1" src="https://arxiv.org/html/2603.19022v1/figures/kimi_k2_provider_distance.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2. </span>Comparison of selected providers serving Kimi-K2-0905-Instruct from
+2025-11-27 to 2025-11-28.</figcaption>
+</figure>
+<div class="ltx_para" id="S7.SS1.p1">
+<p class="ltx_p" id="S7.SS1.p1.1"><span class="translated-text">在 (a) 的情况下，我们考虑多个提供者服务于相同的名义模型
+在同一时间段内。在这段时间里，我们进行成对指纹
+使用能量距离形成每对提供者之间的比较
+距离矩阵。
+一个应用程序是提供者识别：给定一个为模型提供服务的端点
+已知在一组候选提供商中，我们可以确定哪个提供商
+通过对端点进行指纹识别并与候选者进行比较来提供服务。
+图中</span><span class="original-text">In the case of (a), we consider multiple providers serving the same nominal model
+over the same time period. During this time period, we perform pairwise fingerprint
+comparisons between each pair of providers using energy distance to form
+a distance matrix.
+One application is provider identification: given an endpoint serving a model
+known to be among a set of candidate providers, we can determine which provider
+is serving it by fingerprinting the endpoint and comparing against the candidates.
+In Figure</span><a class="ltx_ref" href="#S7.F2" title="Figure 2 ‣ 7.1. Pairwise provider similarity (heatmap) ‣ 7. Findings: cross-provider comparisons for the same model ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">，对角线条目是每行和每列中的最小值，
+确认提供商的指纹与其自己的指纹最相似，因此
+与已知提供商指纹进行可靠的最近邻比较
+标识服务提供者。</span><span class="original-text">, the diagonal entries are the minimum in each row and column,
+confirming that a provider’s fingerprints are most similar to its own—and therefore
+that nearest-neighbor comparison against known-provider fingerprints reliably
+identifies the serving provider.</span><span class="ltx_note ltx_role_footnote" id="footnote1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span><span class="translated-text">对角线条目可以是
+略有负数，因为有限样本无偏能量统计</span><span class="original-text">A diagonal entry can be
+slightly negative because the finite-sample unbiased energy statistic</span><math alttext="2\,\mathbb{E}\|X{-}Y\|-\mathbb{E}\|X{-}X^{\prime}\|-\mathbb{E}\|Y{-}Y^{\prime}\|" class="ltx_Math" display="inline" id="footnote1.m1" intent=":literal"><semantics><mrow><mrow><mn>2</mn><mo lspace="0.170em" rspace="0em">​</mo><mi>𝔼</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">‖</mo><mrow><mi>X</mi><mo>−</mo><mi>Y</mi></mrow><mo stretchy="false">‖</mo></mrow></mrow><mo>−</mo><mrow><mi>𝔼</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">‖</mo><mrow><mi>X</mi><mo>−</mo><msup><mi>X</mi><mo>′</mo></msup></mrow><mo stretchy="false">‖</mo></mrow></mrow><mo>−</mo><mrow><mi>𝔼</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">‖</mo><mrow><mi>Y</mi><mo>−</mo><msup><mi>Y</mi><mo>′</mo></msup></mrow><mo stretchy="false">‖</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">2\,\mathbb{E}\|X{-}Y\|-\mathbb{E}\|X{-}X^{\prime}\|-\mathbb{E}\|Y{-}Y^{\prime}\|</annotation></semantics></math><span class="translated-text">当采样噪声导致时可以降至零以下
+指纹内扩展项略超过
+交叉指纹术语；在人口限制下，统计数据是
+当分布匹配时非负且等于零。</span><span class="original-text">can dip below zero when sampling noise causes
+the within-fingerprint spread terms to slightly exceed the
+cross-fingerprint term; in the population limit the statistic is
+non-negative and equals zero when the distributions match.</span></span></span></span><span class="translated-text">我们同样可以对一系列连续的数据进行上述分析
+共享时间窗口，使我们能够随着时间的推移测量成对提供商的相似性。</span><span class="original-text">We can likewise perform the above analysis over a sequence of consecutive
+shared time windows, enabling us to measure pairwise provider similarity over time.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S7.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">7.2. </span><span class="translated-text">个别端点分歧</span><span class="original-text">Individual endpoint divergence</span></h3>
+<div class="ltx_para" id="S7.SS2.p1">
+<p class="ltx_p" id="S7.SS2.p1.1"><span class="translated-text">对于(b)的情况，我们提出“提供商与群体”的方案
+我们将一个提供商的指纹与偏差分数进行比较
+所有其他提供商的集中分配
+在匹配的时间窗口内同一模型的指纹。对于每个提供商来说，
+我们计算该提供商与所有其他提供商指纹的聚合分布之间的距离。
+然后，我们将这些距离相对于所有提供商之间的中值距离归一化到聚合分布
+产生发散比。例如，分歧比为 2 的提供商的差异是其两倍
+来自中位数提供者的总分布。</span><span class="original-text">For the case of (b), we propose a “provider vs the pack”
+deviation score in which we compare one provider’s fingerprints to
+the pooled distribution of all other providers’
+fingerprints for the same model over matched time windows. For each provider,
+we compute the distance between that provider and an aggregate distribution of all other providers’ fingerprints.
+We then normalize these distances relative to the median distance across all providers to the aggregate distribution
+to produce a divergence ratio. For example, a provider with a divergence ratio of 2 is twice as different
+from the aggregate distribution as the median provider is.</span></p>
+</div>
+<div class="ltx_para" id="S7.SS2.p2">
+<p class="ltx_p" id="S7.SS2.p2.1"><span class="translated-text">在稳定竞技场“提供商比较”选项卡中，我们计算此
+每日差异率并将其值绘制在
+时间，使我们能够识别哪些提供商偏离共识并
+当。由于该指标是按中位数标准化的，因此它对
+个别异常值而不是统一的变化；滚动模型更新
+跨提供商的传播不均匀将显示为一系列异常峰值。</span><span class="original-text">In the Stability Arena ”Provider Comparisons” tab we compute this
+divergence ratio daily and plot its values over
+time, enabling us to identify which providers diverge from the consensus and
+when. Because the metric is normalized by the median, it is sensitive to
+individual outliers rather than uniform shifts; a rolling model update that
+propagates unevenly across providers would appear as a sequence of outlier spikes.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S8">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">8. </span><span class="translated-text">调查结果：现实世界的部署稳定性示例</span><span class="original-text">Findings: real-world deployment stability examples</span></h2>
+<div class="ltx_para" id="S8.p1">
+<p class="ltx_p" id="S8.p1.1"><span class="translated-text">Kimi-K2-0905-Instruct 的生产监控
+跨提供商的模型，稳定性监视器观察到
+2025 年 11 月，有一个提供商（DeepInfra）最不稳定——几乎所有提供商
+指纹生成导致输出分布
+触发了一个变更事件。另一方面，由
+模型的创建者（Moonshot）表现出 100% 的稳定性。</span><span class="original-text">In production monitoring of the Kimi-K2-0905-Instruct
+model across providers, Stability Monitor observed that
+in November 2025, one provider (DeepInfra) was least stable—nearly every
+fingerprint generation resulted in an output distribution
+that triggered a change event. On the other hand, the endpoint hosted by the
+model’s creator (Moonshot) showed 100% stability.</span></p>
+</div>
+<div class="ltx_para" id="S8.p2">
+<p class="ltx_p" id="S8.p2.1"><span class="translated-text">2025 年 12 月，稳定性监视器标记了模型更改事件
+Parasail，Parasail 团队证实了
+由于物理节点而导致硬件提供商切换
+失败。</span><span class="original-text">In December 2025, when Stability Monitor flagged a model change event for
+Parasail, the Parasail team confirmed a
+hardware-provider switch due to a physical node
+failure.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S9">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">9. </span><span class="translated-text">注意事项和限制</span><span class="original-text">Caveats and limitations</span></h2>
+<div class="ltx_para" id="S9.p1">
+<p class="ltx_p" id="S9.p1.1"><span class="translated-text">即使对于固定模型，推理执行规范
+（引擎、内核、缓存、推测解码、
+硬件）可以影响下一个令牌概率和令牌
+选择；提供商可以跨路由/批量请求
+异构环境，引发持续的随机性
+这使归因变得复杂并且可能模糊界限
+在“改变事件”和“总是有点”之间
+不稳定。”</span><span class="original-text">Even for a fixed model, inference execution specifications
+(engine, kernels, caching, speculative decoding,
+hardware) can affect next-token probabilities and token
+selection; providers may route/batch requests across
+heterogeneous environments, inducing ongoing randomness
+that complicates attribution and can blur the line
+between “change event” and “always somewhat
+unstable.”</span></p>
+</div>
+<div class="ltx_para" id="S9.p2">
+<p class="ltx_p" id="S9.p2.1"><span class="translated-text">这种持续的、基础设施驱动的随机性的存在与系统工作一致，认为
+端点不确定性通常由以下因素驱动
+负载引起的批量大小变化相互作用
+非批次不变内核</span><span class="original-text">This presence of ongoing, infrastructure-driven randomness is consistent with systems work arguing that
+endpoint nondeterminism is often driven by
+load-induced batch-size variation interacting with
+non-batch-invariant kernels</span><cite class="ltx_cite ltx_citemacro_citep">(He and Thinking Machines Lab, <a class="ltx_ref" href="#bib.bib4" title="Defeating nondeterminism in llm inference">2025</a>)</cite><span class="translated-text">。稳定性监视器是
+旨在检测端点级别的变化，以及
+端点水平方差可以是这些的乘积
+执行层面因素。</span><span class="original-text">. Stability Monitor is
+designed to detect endpoint-level changes, and
+endpoint-level variance can be a product of these
+execution-level factors.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S10">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">10. </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h2>
+<div class="ltx_para" id="S10.p1">
+<p class="ltx_p" id="S10.p1.1"><span class="translated-text">行为不稳定提高安全性和合规性
+担忧：如果模型悄无声息地发生变化，安全性就会受到影响
+验证和护栏可能不再适用。稳定性监测提供
+行为改变时间的审计跟踪。</span><span class="original-text">Behavioral instability raises security and compliance
+concerns: if a model changes silently, prior safety
+validation and guardrails may no longer apply. Stability monitoring provides
+an audit trail of when behavior changed.</span></p>
+</div>
+<div class="ltx_para" id="S10.p2">
+<p class="ltx_p" id="S10.p2.1"><span class="translated-text">在操作上，稳定竞技场还表明
+由不同提供商提供的“同一模型”可以
+表现出不同的行为特征
+提供商基础设施选择；这对于
+选择制作提供商和口译
+取决于提供商的基准或评估结果
+访问路径。</span><span class="original-text">Operationally, Stability Arena also surfaces that
+“the same model” served by different providers can
+exhibit different behavioral characteristics due to
+provider infrastructure choices; this matters for
+selecting production providers and for interpreting
+benchmark or eval results that depend on provider
+access paths.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib5">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">F. Brand and J. Denain (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Why benchmarking is hard</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://epoch.ai/gradient-updates/why-benchmarking-is-hard/" title="">https://epoch.ai/gradient-updates/why-benchmarking-is-hard/</a>Accessed: 2026-03-10</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.SS1.p3.1" title="1.1. Reliability is not stability ‣ 1. Introduction ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_tag">§1.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib8">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">X. Cao, J. Jia, and N. Z. Gong (2021)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">IPGuard: protecting intellectual property of deep neural networks via fingerprinting the classification boundary</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 2021 ACM Asia Conference on Computer and
+Communications Security (AsiaCCS)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 14–25</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1145/3433210.3437526" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="2. Background and related work ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib11">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">T. Chauvin, C. Lalanne, E. Le Merrer, J. Loubes, F. Taïani, and G. Tredan (2026)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Token-efficient change detection in LLM APIs</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2602.11083</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p3.1" title="2. Background and related work ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib10">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">L. Chen, M. Zaharia, and J. Zou (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">How is ChatGPT’s behavior changing over time?</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Harvard Data Science Review</span> <span class="ltx_text ltx_bib_volume">6</span> (<span class="ltx_text ltx_bib_number">2</span>).
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://hdsr.mitpress.mit.edu/pub/y95zitmz" title="">https://hdsr.mitpress.mit.edu/pub/y95zitmz</a></span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1162/99608f92.5317da47" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="2. Background and related work ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib12">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">A. Gretton, K. M. Borgwardt, M. J. Rasch, B. Schölkopf, and A. Smola (2012)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A kernel two-sample test</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Journal of Machine Learning Research</span> <span class="ltx_text ltx_bib_volume">13</span>, <span class="ltx_text ltx_bib_pages"> pp. 723–773</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p4.1" title="2. Background and related work ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib4">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">H. He and Thinking Machines Lab (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Defeating nondeterminism in llm inference</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Thinking Machines Lab: Connectionism</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://thinkingmachines.ai/blog/defeating-nondeterminism-in-llm-inference/" title="">https://thinkingmachines.ai/blog/defeating-nondeterminism-in-llm-inference/</a></span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.64434/tml.20250910" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.SS1.p2.1" title="1.1. Reliability is not stability ‣ 1. Introduction ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_tag">§1.1</span></a>,
+<a class="ltx_ref" href="#S9.p2.1" title="9. Caveats and limitations ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_tag">§9</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib6">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Margin Research (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Claude code historical performance tracker</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://marginlab.ai/trackers/claude-code-historical-performance/" title="">https://marginlab.ai/trackers/claude-code-historical-performance/</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p6.1" title="2. Background and related work ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib7">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">J. Phillips (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Daily-bench</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/jacobphillips99/daily-bench" title="">https://github.com/jacobphillips99/daily-bench</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p6.1" title="2. Background and related work ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_book" id="bib.bib3">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">A. Ramdas and R. Wang (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Hypothesis testing with e-values</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://stat.cmu.edu/~aramdas/ebook-final.pdf" title="">https://stat.cmu.edu/~aramdas/ebook-final.pdf</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p5.1" title="2. Background and related work ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_tag">§2</span></a>,
+<a class="ltx_ref" href="#S4.SS3.p1.6" title="4.3. Fingerprint comparisons over time ‣ 4. Methodology: fingerprints and change detection ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_tag">§4.3</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib1">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">G. J. Székely and M. L. Rizzo (2013)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Energy statistics: a class of statistics based on distances</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Journal of Statistical Planning and Inference</span> <span class="ltx_text ltx_bib_volume">143</span> (<span class="ltx_text ltx_bib_number">8</span>), <span class="ltx_text ltx_bib_pages"> pp. 1249–1272</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1016/j.jspi.2013.03.018" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p4.1" title="2. Background and related work ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib9">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Y. Uchida, Y. Nagai, S. Sakazawa, and S. Satoh (2017)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Embedding watermarks into deep neural networks</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 2017 ACM on International Conference on
+Multimedia Retrieval (ICMR)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 269–277</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1145/3078971.3078974" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="2. Background and related work ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_report" id="bib.bib2">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">R. Wang (2023)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A tiny review on e-values and e-processes</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_type">Technical report</span>
+</span>
+<span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">University of Waterloo</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://sas.uwaterloo.ca/~wang/files/e-review.pdf" title="">https://sas.uwaterloo.ca/~wang/files/e-review.pdf</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p5.1" title="2. Background and related work ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_tag">§2</span></a>,
+<a class="ltx_ref" href="#S4.SS3.p1.6" title="4.3. Fingerprint comparisons over time ‣ 4. Methodology: fingerprints and change detection ‣ Behavioral Fingerprints for LLM Endpoint Stability and Identity"><span class="ltx_text ltx_ref_tag">§4.3</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2603.19022v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
