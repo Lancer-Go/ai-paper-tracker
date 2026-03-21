@@ -39,6 +39,7 @@ jobs:
           mkdir -p data/exports
           python run.py --days-back 7 --top-n 50
         working-directory: .
+        timeout-minutes: 20
 
       - name: Translate top papers
         if: github.event_name != 'push'
@@ -54,7 +55,8 @@ jobs:
           npm ci
           npm run build
           # 将 data/exports 复制到 dist，前端直接读取
-          cp -r ../data/exports ./dist/data/ 2>/dev/null || mkdir -p ./dist/data/exports && cp -r ../data/exports/* ./dist/data/exports/ 2>/dev/null || true
+          mkdir -p ./dist/data/exports
+          cp -r ../data/exports/* ./dist/data/exports/ 2>/dev/null || true
           # 将翻译文件复制到 dist
           mkdir -p ./dist/data/translations
           cp -r ../data/translations/* ./dist/data/translations/ 2>/dev/null || true
@@ -65,7 +67,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./frontend/dist
-          keep_files: false
+          keep_files: true       # 保留已有数据文件，避免 push 触发的构建覆盖翻译等数据
 
       - name: Commit data files
         if: github.event_name != 'push'
@@ -76,3 +78,4 @@ jobs:
           git diff --staged --quiet || git commit -m "chore: daily paper update $(date -u +%Y-%m-%d)"
           git push
         continue-on-error: true
+

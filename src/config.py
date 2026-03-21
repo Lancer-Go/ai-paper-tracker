@@ -28,11 +28,15 @@ REDDIT_CLIENT_SECRET = os.getenv("REDDIT_CLIENT_SECRET", "")
 REDDIT_USER_AGENT = "ai-paper-tracker/1.0"
 REDDIT_SUBREDDIT = "MachineLearning"
 
-# ── 热度评分权重 ────────────────────────────────────────
+# ── 热度评分权重（8 维度，总和 = 100）───────────────────
 SCORE_WEIGHTS = {
-    "citation_delta_7d": 0.50,  # 近7日引用增量
-    "citation_total_log": 0.30,  # 引用总量对数
-    "reddit_score": 0.20,        # Reddit 讨论热度（可选，无数据则置0）
+    "citation_velocity":  25,   # 引用速度（增量 ÷ 天数）
+    "citation_mass":      15,   # 引用总量（对数）
+    "author_influence":   10,   # 作者最高 h-index（对数）
+    "code_available":      5,   # 有无开源代码
+    "github_stars":       15,   # GitHub 星标数（对数）
+    "freshness":          15,   # 发布新鲜度（指数衰减）
+    "social_buzz":        15,   # 社区讨论热度（HN）
 }
 
 # ── 数据库 ──────────────────────────────────────────────

@@ -108,26 +108,78 @@ def main():
         citation_history = get_citation_history(arxiv_ids, days_ago=7)
         logger.info(f"  → 历史引用量快照: {len(citation_history)} 篇")
 
-    # ── Step 4: Reddit 数据（可选）──────────────────────────
+    # ── Step 4: 多源数据丰富 ─────────────────────────────────
+    # 4a. Hacker News 社区讨论
+    hn_data = {}
+    logger.info("【4/7】Hacker News 社区讨论热度")
+    try:
+        from src.sources.arxiv.enrichers.hackernews import batch_fetch_hn_buzz
+        # 只查 Top 候选论文（按引用量排序前 50）
+        candidates = sorted(
+            papers,
+            key=lambda p: citation_data.get(p["arxiv_id"], {}).get("citation_count", 0),
+            reverse=True,
+        )[:50]
+        hn_data = batch_fetch_hn_buzz(candidates, delay=0.3)
+        has_buzz = sum(1 for v in hn_data.values() if v > 0)
+        logger.info(f"  → HN 数据: {has_buzz}/{len(candidates)} 篇有讨论")
+    except Exception as e:
+        logger.warning(f"  → HN 采集失败，跳过: {e}")
+
+    # 4b. Papers With Code + GitHub Stars
+    code_data = {}
+    logger.info("【5/7】Papers With Code + GitHub Stars")
+    try:
+        from src.sources.arxiv.enrichers.paperswithcode import batch_fetch_code_info
+        candidates = sorted(
+            papers,
+            key=lambda p: citation_data.get(p["arxiv_id"], {}).get("citation_count", 0),
+            reverse=True,
+        )[:50]
+        code_data = batch_fetch_code_info(candidates, delay=0.5, max_papers=50)
+        has_code = sum(1 for v in code_data.values() if v.get("has_code"))
+        total_stars = sum(v.get("github_stars", 0) for v in code_data.values())
+        logger.info(f"  → 代码: {has_code}/{len(candidates)} 篇有开源代码，总 ⭐ {total_stars}")
+    except Exception as e:
+        logger.warning(f"  → PwC 采集失败，跳过: {e}")
+
+    # 4c. 作者影响力（h-index）
+    author_data = {}
+    logger.info("【6/7】作者影响力（OpenAlex h-index）")
+    try:
+        from src.sources.arxiv.enrichers.author_influence import batch_fetch_author_influence
+        candidates = sorted(
+            papers,
+            key=lambda p: citation_data.get(p["arxiv_id"], {}).get("citation_count", 0),
+            reverse=True,
+        )[:50]
+        author_data = batch_fetch_author_influence(candidates, max_papers=50)
+        has_h = sum(1 for v in author_data.values() if v > 0)
+        logger.info(f"  → 作者数据: {has_h}/{len(candidates)} 篇有 h-index")
+    except Exception as e:
+        logger.warning(f"  → 作者影响力采集失败，跳过: {e}")
+
+    # ── Step 5: Reddit 数据（可选，已标记为 legacy）───────────
     reddit_data = {}
     if not args.skip_reddit:
-        logger.info("【4/5】Reddit 讨论量采集（可选）")
         try:
             from src.sources.arxiv.reddit_fetcher import RedditFetcher
             fetcher = RedditFetcher()
-            # 只对 Top 候选论文查 Reddit，节省配额
             candidates = sorted(papers, key=lambda p: citation_data.get(p["arxiv_id"], {}).get("citation_count", 0), reverse=True)[:50]
             reddit_data = fetcher.batch_fetch(candidates)
-            logger.info(f"  → Reddit 数据: {sum(1 for v in reddit_data.values() if v > 0)} 篇有讨论")
+            logger.info(f"  → Reddit: {sum(1 for v in reddit_data.values() if v > 0)} 篇有讨论")
         except Exception as e:
-            logger.info(f"  → Reddit 跳过: {e}")
-    else:
-        logger.info("【4/5】Reddit 采集已跳过（--skip-reddit）")
+            logger.debug(f"  → Reddit 跳过: {e}")
 
-    # ── Step 5: 评分 & 排行 ─────────────────────────────────
-    logger.info("【5/5】热度评分")
+    # ── Step 6: 8 维度热度评分 ──────────────────────────────
+    logger.info("【7/7】8 维度热度评分")
     from src.processing.scorer import score_papers
-    scored = score_papers(papers, citation_data, citation_history, reddit_data)
+    scored = score_papers(
+        papers, citation_data, citation_history,
+        hn_data=hn_data,
+        code_data=code_data,
+        author_data=author_data,
+    )
     top_papers = scored[: args.top_n]
 
     logger.info(f"\n{'─'*60}")
@@ -135,7 +187,11 @@ def main():
     logger.info(f"{'─'*60}")
     for p in top_papers[:10]:
         logger.info(
-            f"  #{p.get('rank', '?'):>2} [{p['arxiv_id']}] score={p['score']:.2f} | 引用增量: +{p.get('citation_delta_7d', 0)}"
+            f"  #{p.get('rank', '?'):>2} [{p['arxiv_id']}] score={p['score']:.2f}"
+            f" | 速度={p.get('citation_velocity', 0):.2f}/d"
+            f" | h={p.get('author_h_index', 0)}"
+            f" | ⭐={p.get('github_stars', 0)}"
+            f" | HN={p.get('hn_buzz', 0)}"
         )
         logger.info(f"      {p['title'][:75]}")
     logger.info(f"{'─'*60}")
