@@ -24,9 +24,11 @@ function CatTag({ cat }) {
 }
 
 // ── 论文卡片 ─────────────────────────────────────────────
-export default function PaperCard({ paper, rank, translatedIds }) {
+export default function PaperCard({ paper, rank, translationIndex }) {
   const [expanded, setExpanded] = useState(false)
-  const hasTranslation = translatedIds.has(paper.arxiv_id.replace('/', '_'))
+  const safeId = paper.arxiv_id.replace('/', '_')
+  const translationInfo = translationIndex[safeId]
+  const translationType = translationInfo?.type // 'html' | 'pdf' | undefined
 
   const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other'
 
@@ -127,16 +129,27 @@ export default function PaperCard({ paper, rank, translatedIds }) {
                 <Code size={13} /> GitHub ⭐{(paper.github_stars || 0).toLocaleString()}
               </a>
             )}
-            {hasTranslation ? (
+            {translationType === 'html' ? (
               <a
                 className="action-btn action-btn-secondary"
-                style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', borderColor: 'rgba(168, 85, 247, 0.3)' }}
-                href={`data/translations/${paper.arxiv_id.replace('/', '_')}.html`}
+                style={{ background: 'rgba(168, 85, 247, 0.15)', color: '#a855f7', borderColor: 'rgba(168, 85, 247, 0.4)', fontWeight: 600 }}
+                href={`data/translations/${translationInfo.file}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                title="阅读由系统自动翻译的全中文论文"
+                title="保留图片、公式、表格的高保真中文翻译"
               >
-                <BookOpen size={13} /> 中文翻译
+                <BookOpen size={13} /> 🔬 保真翻译
+              </a>
+            ) : translationType === 'pdf' ? (
+              <a
+                className="action-btn action-btn-secondary"
+                style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b', borderColor: 'rgba(245, 158, 11, 0.3)' }}
+                href={`data/translations/${translationInfo.file}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="基于 PDF 提取的纯文本翻译版"
+              >
+                <BookOpen size={13} /> 📝 简版翻译
               </a>
             ) : (
               <span
@@ -144,7 +157,7 @@ export default function PaperCard({ paper, rank, translatedIds }) {
                 style={{ background: 'rgba(100, 116, 139, 0.08)', color: '#475569', borderColor: 'rgba(100, 116, 139, 0.15)', cursor: 'not-allowed', opacity: 0.5 }}
                 title="翻译暂未生成，系统每天 14:00 自动翻译"
               >
-                <BookOpen size={13} /> 中文翻译
+                <BookOpen size={13} /> 暂无翻译
               </span>
             )}
           </div>

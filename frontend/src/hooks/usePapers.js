@@ -10,7 +10,7 @@ export function usePapers() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [dataInfo, setDataInfo] = useState({ date: '', total: 0 })
-  const [translatedIds, setTranslatedIds] = useState(new Set())
+  const [translationIndex, setTranslationIndex] = useState({})
 
   const base = import.meta.env.BASE_URL || '/'
 
@@ -27,17 +27,20 @@ export function usePapers() {
       })
   }, [])
 
-  // 加载翻译索引
+  // 加载翻译索引（包含 type: html/pdf 信息）
   useEffect(() => {
     fetch(`${base}data/translations/index.json`)
       .then(r => r.ok ? r.json() : {})
       .then(data => {
-        // index.json 格式: {"2603.19229": {"file": "xxx.html", ...}, ...}
-        // 取所有 key（即 arxiv_id），替换 / 为 _
-        const ids = new Set(Object.keys(data).map(id => id.replace('/', '_')))
-        setTranslatedIds(ids)
+        // index.json 格式: {"2603.19229": {"file": "xxx.html", "type": "html", ...}, ...}
+        // 转换为以 safe_id（/ -> _）为 key 的对象
+        const idx = {}
+        for (const [id, info] of Object.entries(data)) {
+          idx[id.replace('/', '_')] = info
+        }
+        setTranslationIndex(idx)
       })
-      .catch(() => setTranslatedIds(new Set()))
+      .catch(() => setTranslationIndex({}))
   }, [])
 
   // 加载论文数据
@@ -74,6 +77,6 @@ export function usePapers() {
     loading,
     error,
     dataInfo,
-    translatedIds,
+    translationIndex,
   }
 }

@@ -10,7 +10,7 @@ import './index.css'
 export default function App() {
   const {
     papers, availableDates, selectedDate, setSelectedDate,
-    loading, error, dataInfo, translatedIds,
+    loading, error, dataInfo, translationIndex,
   } = usePapers()
 
   const [search, setSearch] = useState('')
@@ -130,7 +130,7 @@ export default function App() {
               ) : (
                 <div className="paper-list">
                   {filtered.map((paper, i) => (
-                    <PaperCard key={paper.arxiv_id} paper={paper} rank={paper.rank || i + 1} translatedIds={translatedIds} />
+                    <PaperCard key={paper.arxiv_id} paper={paper} rank={paper.rank || i + 1} translationIndex={translationIndex} />
                   ))}
                 </div>
               )}

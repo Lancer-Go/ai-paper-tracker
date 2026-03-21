@@ -13,8 +13,11 @@ ai-paper-tracker/
 │   │   └── arxiv/                 #   arXiv 数据源
 │   │       ├── fetcher.py         #     论文抓取
 │   │       ├── reddit_fetcher.py  #     Reddit 讨论量（可选）
-│   │       └── enrichers/         #     引用量补充
-│   │           ├── openalex.py    #       OpenAlex（免费首选）
+│   │       └── enrichers/         #     数据丰富插件
+│   │           ├── openalex.py    #       OpenAlex 引用量（免费首选）
+│   │           ├── hackernews.py  #       Hacker News 社区讨论
+│   │           ├── paperswithcode.py #   Papers With Code + GitHub Stars
+│   │           ├── author_influence.py # 作者 h-index（OpenAlex）
 │   │           └── semantic_scholar.py  #  Semantic Scholar（备用）
 │   ├── processing/                # 数据处理
 │   │   ├── deduper.py             #   去重
@@ -94,16 +97,28 @@ python run.py --top-n 100              # 热榜展示 Top 100
 | `REDDIT_CLIENT_ID` | Reddit App Client ID（开启社区信号） |
 | `REDDIT_CLIENT_SECRET` | Reddit App Client Secret |
 
-## 热度评分公式
+## 热度评分公式（8 维度 v2.1）
 
 ```
 热度得分 =
-    引用量增量(近7日) × 0.50 ← 近期学术影响力增速
-  + 引用总量(对数)    × 0.30 ← 累计学术积累
-  + Reddit 讨论量    × 0.20 ← 社区关注度（可选）
+    📈 引用速度(增量÷天数)  × 25%  ← 近期引文加速度
+  + 📚 引用总量(对数)       × 15%  ← 累计学术积累
+  + 👤 作者影响力(h-index)  × 10%  ← 顶级团队加分
+  + 💻 有代码              ×  5%  ← Papers With Code
+  + ⭐ GitHub Stars(对数)  × 15%  ← 工程界关注度
+  + 🕐 新鲜度(指数衰减)     × 15%  ← 越新越高
+  + 💬 社区讨论(HN)        × 15%  ← Hacker News 热度
 ```
 
 所有指标均做 Min-Max 归一化到 [0, 100] 后加权求和。
+
+### 数据源
+| 维度 | 数据源 | 费用 |
+|:---|:---|:---|
+| 引用量 + 作者 h-index | OpenAlex API | 免费 |
+| 代码 + Stars | Papers With Code + GitHub API | 免费 |
+| 社区讨论 | Hacker News Algolia API | 免费 |
+| Reddit | Reddit API | 可选（需申请） |
 
 ## GitHub Pages 自动部署
 
@@ -131,13 +146,24 @@ AI 将自动帮您总结修改的内容，执行 add, commit 动作并 push 推�
 | `05_数据模型与业务对象.md` | Paper、CitationSnapshot、DailyRanking 等数据结构定义 |
 | `06_系统功能清单与集成.md` | 前端展示端 + 后端自动化端的模块划分与外部依赖清单 |
 
+### 产品演进文档 (`产品文档/`)
+| 文档 | 核心内容 |
+|:---|:---|
+| `翻译流水线升级_需求拆解.md` | 针对 HTML 保真翻译特性的需求结构剖析 |
+| `翻译流水线升级_功能结构.md` | 新版双通道引擎与三态按钮交互架构 |
+| `翻译流水线升级PRD.md` | 完整实现路径、流程图与数据流设计规范 |
+| `翻译流水线升级PRD_质量走查报告.md` | SOP 内审环节输出的逻辑覆盖度质检单 |
+
 ### 当前已上线功能亮点
 | 功能 | 描述 |
 |:---|:---|
-| 📊 每日热榜 | 基于引用增量、跨学科广度、新鲜度等多维度加权排名 |
+| 📊 每日热榜 | 基于引用速度、作者影响力、代码热度、社区讨论等 **8 维度**加权排名 |
 | 🔍 分类筛选 | 支持 cs.AI、cs.LG、cs.CV 等多学科标签过滤 |
-| 📄 PDF 全文中文翻译 | 每日自动下载 Top 50 论文 PDF，翻译为精美的全中文 HTML 页面 |
+| 📄 结构保真翻译 | 突破纯文本限制，保留原刊 HTML 的图片、MathJax 公式及表格排版 |
+| 🔘 三态翻译机制 | 核心组件升级，支持保真版(紫) / 降级版(橙) / 暂无(灰)一键智能回退分发 |
 | 📈 引用趋势图 | 可视化展示 Top 10 论文的引用量变化曲线 |
+| 💬 多源社区信号 | Hacker News 讨论热度（替代 Reddit） |
+| 💻 代码可用性 | Papers With Code + GitHub Stars 自动采集 |
 | 🤖 全自动化运维 | GitHub Actions 每天定时抓取 + 翻译 + 部署，零人工干预 |
 
 <!-- PROJECT-DOCS-INDEX-END -->
