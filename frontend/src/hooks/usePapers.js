@@ -30,9 +30,11 @@ export function usePapers() {
   // 加载翻译索引
   useEffect(() => {
     fetch(`${base}data/translations/index.json`)
-      .then(r => r.ok ? r.json() : { translations: [] })
+      .then(r => r.ok ? r.json() : {})
       .then(data => {
-        const ids = new Set((data.translations || []).map(t => t.arxiv_id.replace('/', '_')))
+        // index.json 格式: {"2603.19229": {"file": "xxx.html", ...}, ...}
+        // 取所有 key（即 arxiv_id），替换 / 为 _
+        const ids = new Set(Object.keys(data).map(id => id.replace('/', '_')))
         setTranslatedIds(ids)
       })
       .catch(() => setTranslatedIds(new Set()))
