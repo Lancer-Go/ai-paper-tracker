@@ -144,12 +144,17 @@ function PaperCard({ paper, rank }) {
             <a
               className="action-btn action-btn-secondary"
               style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', borderColor: 'rgba(168, 85, 247, 0.3)' }}
-              href={`https://translate.google.com/website?sl=en&tl=zh-CN&hl=zh-CN&client=webapp&u=${encodeURIComponent(paper.arxiv_url.replace('/abs/', '/html/'))}`}
+              href="https://kimi.moonshot.cn/"
               target="_blank"
               rel="noopener noreferrer"
-              title="使用页面翻译阅读全中文的论文详情"
+              title="一键复制 PDF 链接！前往大模型（如 Kimi）对话框粘贴即可沉浸式图文伴读"
+              onClick={(e) => {
+                navigator.clipboard.writeText(paper.pdf_url).then(() => {
+                  alert("✅ 已为您复制底层高质量排版 PDF 直链！\n\n小助手正带您前往 Kimi，只需在对话框粘贴 (Ctrl+V) 该链接，即可让 AI 帮您进行无损排版的深度双语图文解读啦！");
+                });
+              }}
             >
-              <BookOpen size={13} /> 翻译阅读
+              <BookOpen size={13} /> AI 伴读
             </a>
           </div>
 
