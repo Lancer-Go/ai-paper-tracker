@@ -85,5 +85,10 @@ python run.py --top-n 100              # 热榜展示 Top 100
 ## GitHub Pages 自动部署
 
 1. 在仓库 Settings → Pages 中将 Source 设为 `gh-pages` 分支
-2. 在 Settings → Secrets 中添加 `SEMANTIC_SCHOLAR_API_KEY`（可选）
-3. 推送代码后，Actions 将在每天 UTC 06:00（北京 14:00）自动运行
+2. 推送代码后，Actions 将在每天 UTC 06:00（北京 14:00）自动运行
+
+## AI 自动化运维指南
+
+如果您在本地修改了代码或新增了文档，无需手动敲打任何繁琐的 Git 命令。
+只需在 AI 对话框中输入：**“更新项目”** （或使用指令 **/update-project**）
+AI 将自动帮您总结修改的内容，执行 add, commit 动作并 push 推送到远端云库，同时自动化触发网页版的实时更新！
