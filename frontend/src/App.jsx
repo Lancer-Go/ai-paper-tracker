@@ -144,7 +144,7 @@ function PaperCard({ paper, rank }) {
             <a
               className="action-btn action-btn-secondary"
               style={{ background: 'rgba(168, 85, 247, 0.1)', color: '#a855f7', borderColor: 'rgba(168, 85, 247, 0.3)' }}
-              href={`https://translate.google.com/website?sl=en&tl=zh-CN&hl=zh-CN&client=webapp&u=${encodeURIComponent(paper.arxiv_url)}`}
+              href={`https://translate.google.com/website?sl=en&tl=zh-CN&hl=zh-CN&client=webapp&u=${encodeURIComponent(paper.arxiv_url.replace('/abs/', '/html/'))}`}
               target="_blank"
               rel="noopener noreferrer"
               title="使用页面翻译阅读全中文的论文详情"
