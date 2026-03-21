@@ -1,7 +1,7 @@
 """
 translate_papers.py — 自动下载 Top N 论文 PDF，提取文本并翻译为中文，生成静态 HTML 页面
 用法：
-    python translate_papers.py                  # 翻译 latest.json 中 Top 10 论文
+    python translate_papers.py                  # 翻译 latest.json 中全部 50 篇论文
     python translate_papers.py --top-n 5        # 只翻译 Top 5
     python translate_papers.py --input data/exports/daily_2026-03-21.json
 """
@@ -287,8 +287,8 @@ def main():
     parser = argparse.ArgumentParser(description="论文 PDF 自动翻译流水线")
     parser.add_argument("--input", type=str, default="data/exports/latest.json",
                         help="输入的论文 JSON 文件路径")
-    parser.add_argument("--top-n", type=int, default=10,
-                        help="翻译排名前 N 篇论文（默认 10）")
+    parser.add_argument("--top-n", type=int, default=50,
+                        help="翻译排名前 N 篇论文（默认 50，即全部）")
     parser.add_argument("--output-dir", type=str, default="data/translations",
                         help="翻译结果输出目录")
     args = parser.parse_args()
