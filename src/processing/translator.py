@@ -4,13 +4,21 @@ src/processing/translator.py — 论文翻译核心逻辑
 支持两种翻译模式：
   1. arXiv HTML 保真翻译（优先） — 保留图片、公式、表格
   2. PDF 图文保真翻译（兜底） — pymupdf4llm 提取 Markdown → HTML → translate_html
+
+特性：
+  - 乱码智能检测 + EasyOCR 降级：当 PyMuPDF 提取的文本含大量 U+FFFD 替换字符
+    （常见于阿拉伯语等非拉丁 CID 字体），自动对该页渲染图片并 OCR 识别
 """
 
+import io
 import time
 import logging
 import re
 from pathlib import Path
 from typing import Optional
+
+import numpy as np
+from PIL import Image
 
 import httpx
 import fitz  # PyMuPDF
@@ -29,6 +37,12 @@ MAX_RETRIES = 3           # 每段最大重试次数
 TRANSLATE_DELAY = 0.5     # 每个翻译请求之间的友好延迟（并发时降低 429 风险）
 BATCH_SEPARATOR = "\n999888777\n"  # 批量翻译分隔符（纯数字，Google 不会翻译）
 BATCH_MAX_CHARS = 4500    # 单次批量翻译的最大字符数
+
+# ── OCR 降级相关 ────────────────────────────────────────────────
+GARBLED_THRESHOLD = 0.03  # 乱码占比超过 3% 判定为乱码页
+OCR_DPI = 300             # OCR 渲染分辨率
+OCR_LANGUAGES = ['en', 'ar']  # EasyOCR 语言（英语 + 阿拉伯语）
+_easyocr_reader = None    # 延迟加载的 EasyOCR Reader 实例
 
 # arXiv HTML 中需要跳过的标签（不翻译其内部文本）[R02]
 SKIP_TAGS = frozenset([
@@ -489,6 +503,82 @@ def inject_degraded_alert(soup: BeautifulSoup):
 
 
 # ═══════════════════════════════════════════════════════════════
+# Part OCR: 乱码检测 + EasyOCR 智能降级
+# ═══════════════════════════════════════════════════════════════
+
+def _has_garbled_text(text: str, threshold: float = GARBLED_THRESHOLD) -> bool:
+    """
+    检测文本中是否包含乱码。
+    判定指标：U+FFFD（替换字符）占比超过 threshold。
+    """
+    if not text:
+        return False
+    fffd_count = text.count('\ufffd')
+    if fffd_count == 0:
+        return False
+    ratio = fffd_count / len(text)
+    if ratio >= threshold:
+        logger.info(f"    ⚠ 检测到乱码: {fffd_count} 个替换字符, 占比 {ratio:.1%}")
+        return True
+    return False
+
+
+def _get_ocr_reader():
+    """延迟加载 EasyOCR Reader，避免不需要时浪费内存和启动时间"""
+    global _easyocr_reader
+    if _easyocr_reader is None:
+        try:
+            import easyocr
+            logger.info("    → 首次加载 EasyOCR 模型（英语+阿拉伯语）...")
+            _easyocr_reader = easyocr.Reader(OCR_LANGUAGES, gpu=False)
+            logger.info("    ✓ EasyOCR 模型加载完成")
+        except ImportError:
+            logger.error("    ✗ EasyOCR 未安装，请运行: pip install easyocr")
+            return None
+        except Exception as e:
+            logger.error(f"    ✗ EasyOCR 加载失败: {e}")
+            return None
+    return _easyocr_reader
+
+
+def _ocr_page_fallback(doc, page_num: int) -> Optional[str]:
+    """
+    对指定页面渲染为图片并 OCR 识别文本。
+    
+    Args:
+        doc: PyMuPDF Document 对象
+        page_num: 页码（0-indexed）
+    
+    Returns:
+        OCR 识别的文本，失败返回 None
+    """
+    reader = _get_ocr_reader()
+    if reader is None:
+        return None
+    
+    try:
+        page = doc[page_num]
+        # 渲染为高分辨率图片
+        mat = fitz.Matrix(OCR_DPI / 72, OCR_DPI / 72)  # 72 DPI 是 PDF 默认
+        pix = page.get_pixmap(matrix=mat)
+        
+        # Pixmap → PIL Image → numpy array（EasyOCR 需要 numpy 数组）
+        img_data = pix.tobytes("png")
+        img = Image.open(io.BytesIO(img_data))
+        img_array = np.array(img)
+        
+        # OCR 识别
+        results = reader.readtext(img_array, detail=0, paragraph=True)
+        ocr_text = "\n".join(results)
+        
+        logger.info(f"    ✓ 页 {page_num+1} OCR 完成: {len(ocr_text)} 字符")
+        return ocr_text
+    except Exception as e:
+        logger.warning(f"    ✗ 页 {page_num+1} OCR 失败: {e}")
+        return None
+
+
+# ═══════════════════════════════════════════════════════════════
 # Part 2a: PDF 图文保真翻译（新流程）
 # ═══════════════════════════════════════════════════════════════
 
@@ -498,6 +588,9 @@ def extract_html_from_pdf(pdf_path: Path, arxiv_id: str,
     使用 pymupdf4llm 将 PDF 提取为 Markdown（含图片），再转为 HTML。
     图片保存至 translations_dir / images / {safe_id} /
     返回可直接传入 translate_html 的 HTML 字符串。
+
+    如果检测到提取的 Markdown 中含有乱码（U+FFFD），会自动对乱码页面
+    启用 EasyOCR 降级识别并替换。
     """
     safe_id = arxiv_id.replace('/', '_')
     image_dir = translations_dir / "images" / safe_id
@@ -508,7 +601,46 @@ def extract_html_from_pdf(pdf_path: Path, arxiv_id: str,
         str(pdf_path),
         write_images=True,
         image_path=str(image_dir),
+        page_chunks=True,  # 按页分块，便于逐页检测乱码
     )
+
+    # pymupdf4llm page_chunks=True 返回 list[dict]，每项含 'text' 和 'metadata'
+    # 逐页检测乱码并 OCR 降级
+    if isinstance(md_text, list):
+        doc = fitz.open(str(pdf_path))
+        ocr_count = 0
+        page_texts = []
+        for i, chunk in enumerate(md_text):
+            page_md = chunk.get('text', '') if isinstance(chunk, dict) else str(chunk)
+            if _has_garbled_text(page_md):
+                logger.info(f"    → 页 {i+1} 检测到乱码，启用 EasyOCR 降级...")
+                ocr_text = _ocr_page_fallback(doc, i)
+                if ocr_text:
+                    page_texts.append(ocr_text)
+                    ocr_count += 1
+                else:
+                    page_texts.append(page_md)  # OCR 失败，保留原文
+            else:
+                page_texts.append(page_md)
+        doc.close()
+        md_text = "\n\n".join(page_texts)
+        if ocr_count > 0:
+            logger.info(f"  ✓ OCR 降级处理了 {ocr_count} 个乱码页面")
+    else:
+        # 如果返回的是字符串（旧版 pymupdf4llm），整体检测
+        if _has_garbled_text(md_text):
+            logger.info(f"    → 整篇 Markdown 检测到乱码，逐页 OCR 降级...")
+            doc = fitz.open(str(pdf_path))
+            ocr_pages = []
+            for i in range(len(doc)):
+                page_text = doc[i].get_text("text")
+                if _has_garbled_text(page_text):
+                    ocr_text = _ocr_page_fallback(doc, i)
+                    ocr_pages.append(ocr_text or page_text)
+                else:
+                    ocr_pages.append(page_text)
+            doc.close()
+            md_text = "\n\n".join(ocr_pages)
 
     # 图片路径修正：pymupdf4llm 写入的路径是 image_dir 的绝对/相对路径
     # 我们需要替换为相对于 translations_dir 的路径（HTML 也在那里）
@@ -600,14 +732,28 @@ def download_pdf(url: str, dest: Path) -> bool:
 
 
 def extract_text_by_page(pdf_path: Path) -> list[str]:
-    """使用 PyMuPDF 提取 PDF 每页的文本内容"""
+    """
+    使用 PyMuPDF 提取 PDF 每页的文本内容。
+    如果某页提取结果含乱码（U+FFFD），自动使用 EasyOCR 降级识别。
+    """
     pages = []
     try:
         doc = fitz.open(str(pdf_path))
-        for page in doc:
+        for page_num, page in enumerate(doc):
             text = page.get_text("text")
             if text.strip():
-                pages.append(text.strip())
+                # 乱码检测 + OCR 降级
+                if _has_garbled_text(text):
+                    logger.info(f"    → 页 {page_num+1} 检测到乱码，启用 EasyOCR 降级...")
+                    ocr_text = _ocr_page_fallback(doc, page_num)
+                    if ocr_text:
+                        pages.append(ocr_text.strip())
+                    else:
+                        # OCR 失败，过滤掉 U+FFFD 替换字符后保留可读部分
+                        cleaned = text.replace('\ufffd', ' ').strip()
+                        pages.append(cleaned)
+                else:
+                    pages.append(text.strip())
         doc.close()
     except Exception as e:
         logger.warning(f"  ✗ PDF 解析失败: {e}")
