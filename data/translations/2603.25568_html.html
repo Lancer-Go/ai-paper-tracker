@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">LLM 对数据库来说是杀伤力大吗？：关于 SQL 有限性的研究</span><span class="original-text">Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 3 月 26 日星期四 15:36:23 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Thu Mar 26 15:36:23 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2603.25568" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2603.25568" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">描述：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2603.25568v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2603.25568v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<a class="header-button color-tog" href="javascript:toggleColorScheme();" title="Toggle dark/light mode">
+<label class="toggle-icon automatic-tog" title="Switch to light mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon light-tog" title="Switch to dark mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon dark-tog" title="Switch to system preference">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+</a>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S2" title="In Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Related Work</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Methodology</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In 3 Methodology ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Database and Query Collection</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S3.SS2" title="In 3 Methodology ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>SQL Templates Extraction</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS2.SSS0.Px1" title="In 3.2 SQL Templates Extraction ‣ 3 Methodology ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title">Type 1: Hard Templates.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS2.SSS0.Px2" title="In 3.2 SQL Templates Extraction ‣ 3 Methodology ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title">Type 2: Soft Templates.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS2.SSS0.Px3" title="In 3.2 SQL Templates Extraction ‣ 3 Methodology ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title">Example: Template Generation Procedure.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS3" title="In 3 Methodology ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.3 </span>Proxies for Complexity</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Results</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS0.SSS0.Px1" title="In 4 Results ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title">Non-monotonic SQL Query Complexity Trend</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS0.SSS0.Px2" title="In 4 Results ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title">Power Law-like Distribution of Template Frequency.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS0.SSS0.Px3" title="In 4 Results ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title">70% SQL queries can be covered using only 13.19% soft templates.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S5" title="In Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Conclusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title">References</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_appendix">
+<a class="ltx_ref" href="#A1" title="In Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">A </span>Examples of Generated NLQs by Difficulty Level</span></a>
+<ol class="ltx_toclist ltx_toclist_appendix">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#A1.SS1" title="In Appendix A Examples of Generated NLQs by Difficulty Level ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">A.1 </span>Example 1 (Easy, cachet).</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#A1.SS2" title="In Appendix A Examples of Generated NLQs by Difficulty Level ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">A.2 </span>Example 2 (Medium, cachet).</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#A1.SS3" title="In Appendix A Examples of Generated NLQs by Difficulty Level ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">A.3 </span>Example 3 (Hard, cachet).</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_appendix">
+<a class="ltx_ref" href="#A2" title="In Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">B </span>Templates Extraction Examples</span></a>
+<ol class="ltx_toclist ltx_toclist_appendix">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#A2.SS0.SSS0.Px1" title="In Appendix B Templates Extraction Examples ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title">Example 1: Simple Selection</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#A2.SS0.SSS0.Px2" title="In Appendix B Templates Extraction Examples ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title">Example 2: Join with Aliases</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#A2.SS0.SSS0.Px3" title="In Appendix B Templates Extraction Examples ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title">Example 3: Aggregation</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#A2.SS0.SSS0.Px4" title="In Appendix B Templates Extraction Examples ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title">Example 4: Subquery</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#A2.SS0.SSS0.Px5" title="In Appendix B Templates Extraction Examples ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title">Example 5: CTE with Join and Aggregation</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_appendix"><a class="ltx_ref" href="#A3" title="In Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">C </span>Complete Hard Templates Extraction Rules</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_appendix"><a class="ltx_ref" href="#A4" title="In Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">D </span>Complete Soft Templates Extraction Rules</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_appendix"><a class="ltx_ref" href="#A5" title="In Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">E </span>Frequency Curves for Hard and Soft Templates</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_appendix"><a class="ltx_ref" href="#A6" title="In Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">F </span>Spearman Correlation Test Results</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_appendix"><a class="ltx_ref" href="#A7" title="In Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">G </span>Individual Plots for Six Proxies</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_appendix"><a class="ltx_ref" href="#A8" title="In Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">H </span>Average Proxy Values Across template frequency groups.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_appendix"><a class="ltx_ref" href="#A9" title="In Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">I </span>Template Frequency Distribution.</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2603.25568v1 [cs.DB] 2026 年 3 月 26 日</span><span class="original-text">arXiv:2603.25568v1 [cs.DB] 26 Mar 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">LLM 对数据库来说是杀伤力大吗？：关于 SQL 有限性的研究</span><span class="original-text">Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+Yue Li, David Mimno, Unso Eun Seo Jo 
+<br class="ltx_break"/>Cornell University 
+<br class="ltx_break"/><span class="ltx_text ltx_font_typewriter" id="id1.1.id1">{yl3865, mimno, unsojo}@cornell.edu</span>
+</span><span class="ltx_author_notes">Corresponding author.</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">借助代码生成法学硕士，将自然语言转换为 SQL 以进行数据检索变得更加容易。但是生成 SQL 代码有多难呢？虽然数据库的复杂性可能变得无限，但查询的复杂性却受到现实生活实用性和人类需求的限制。通过 376 个数据库的样本，我们表明 SQL 查询作为自然语言问题的翻译是有限的</span><span class="original-text">Translating natural language to SQL for data retrieval has become more accessible thanks to code generation LLMs. But how hard is it to generate SQL code? While databases can become unbounded in complexity, the complexity of queries is bounded by real life utility and human needs. With a sample of 376 databases, we show that SQL queries, as translations of natural language questions are finite in</span><span class="ltx_text ltx_font_italic"><span class="translated-text">实用的</span><span class="original-text">practical</span></span><span class="translated-text">复杂性。数据库表数量的增加和 SQL 查询复杂性的增加之间不存在明显的单调关系。在模板形式中，SQL 查询遵循类似幂律的频率分布，其中 70% 的测试查询可以用所有模板类型的 13% 覆盖，这表明绝大多数 SQL 查询是可预测的。这表明，虽然用于代码生成的法学硕士可能很有用，但在数据库访问领域，它们可能在一个狭窄的、高度公式化的空间中运行，其中模板可能更安全、更便宜且可审计。</span><span class="original-text">complexity. There is no clear monotonic relationship between increases in database table count and increases in complexity of SQL queries. In their template forms, SQL queries follow a Power Law-like distribution of frequency where 70% of our tested queries can be covered with just 13% of all template types, indicating that the high majority of SQL queries are predictable. This suggests that while LLMs for code generation can be useful, in the domain of database access, they may be operating in a narrow, highly formulaic space where templates could be safer, cheaper, and auditable.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="p1">
+<div class="ltx_block ltx_align_bottom" id="p1.1">
+<p class="ltx_p ltx_align_center" id="p1.1.1"><span class="ltx_text ltx_font_bold" id="p1.1.1.1"><span class="translated-text">LLM 对数据库来说是杀伤力大吗？：关于 SQL 有限性的研究</span><span class="original-text">Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL</span></span></p>
+<p class="ltx_p ltx_align_center" id="p1.1.2" style="width:345.0pt;"><span class="ltx_text ltx_inline-block" id="p1.1.2.1" style="width:0.0pt;">
+<span class="ltx_tabular ltx_align_top" id="p1.1.2.1.1">
+<span class="ltx_tbody">
+<span class="ltx_tr" id="p1.1.2.1.1.1.1">
+<span class="ltx_td ltx_align_center" id="p1.1.2.1.1.1.1.1"><span class="ltx_text ltx_font_bold" id="p1.1.2.1.1.1.1.1.1"><span class="translated-text">李悦</span><span class="original-text">Yue Li</span><span class="ltx_note ltx_role_thanks" id="p1.1.2.1.1.1.1.1.1.1"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type"><span class="translated-text">谢谢：</span><span class="original-text">thanks:</span></span><span class="translated-text">通讯作者.</span><span class="original-text">Corresponding author.</span></span></span></span><span class="translated-text">, 大卫·米诺, 赵云素恩瑞</span><span class="original-text">, David Mimno, Unso Eun Seo Jo</span></span></span></span>
+<span class="ltx_tr" id="p1.1.2.1.1.2.2">
+<span class="ltx_td ltx_align_center" id="p1.1.2.1.1.2.2.1"><span class="translated-text">康奈尔大学</span><span class="original-text">Cornell University</span></span></span>
+<span class="ltx_tr" id="p1.1.2.1.1.3.3">
+<span class="ltx_td ltx_align_center" id="p1.1.2.1.1.3.3.1"><span class="ltx_text ltx_font_typewriter" id="p1.1.2.1.1.3.3.1.1"><span class="translated-text">{yl3865，mimno，unsojo}@cornell.edu</span><span class="original-text">{yl3865, mimno, unsojo}@cornell.edu</span></span></span></span>
+</span>
+</span></span></p>
+</div>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">文本到 SQL 的任务早于语言模型的兴起</span><span class="original-text">The text-to-SQL task predates the rise of language models</span><cite class="ltx_cite ltx_citemacro_cite">Woods (<a class="ltx_ref" href="#bib.bib19" title="Progress in natural language understanding: an application to lunar geology">1973</a>); Harris (<a class="ltx_ref" href="#bib.bib20" title="ROBOT: a high performance natural language data base query system">1977</a>)</cite><span class="translated-text">，但目前以基于 LLM 的方法为主</span><span class="original-text">, but is currently dominated by LLM-based approaches</span><cite class="ltx_cite ltx_citemacro_cite">Li<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib25" title="Agent bain vs. agent mckinsey: a new text-to-sql benchmark for the business domain">2025</a>)</cite><span class="translated-text">。
+例如，在首要的 BIRD 文本到 SQL 基准测试中，公共网站上几乎所有排名靠前的方法都是基于代理的</span><span class="original-text">.
+For instance, on the premier BIRD text-to-SQL benchmark, almost all of the top ranking methods on the public site are either agent-based</span><cite class="ltx_cite ltx_citemacro_cite">Pourreza and Rafiei (<a class="ltx_ref" href="#bib.bib23" title="CHASE-sql: multi-path reasoning and schema linking for text-to-sql">2024</a>)</cite><span class="translated-text">或基于法学硕士</span><span class="original-text">or LLM-based</span><cite class="ltx_cite ltx_citemacro_cite">LongShine AI Research (<a class="ltx_ref" href="#bib.bib24" title="LongData-sql: scaling text-to-sql with long context modeling">2025</a>)</cite><span class="translated-text">。
+虽然这些方法很有效，但它们可能会变得昂贵，每次查询的令牌计数会花费数美元，并且可能不可靠，而企业数据库查询对效率和安全性高度敏感。
+该代码在多大程度上是样板、可预测或可模板化的？
+在这项工作中，我们探讨了 SQL 应用程序是否真的需要完整的代码生成。</span><span class="original-text">.
+While these approaches are effective, they can get expensive, costing several dollars in token-count per query, and potentially unreliable, whereas enterprise database queries are highly sensitive to efficiency and security.
+To what extent is this code boilerplate, predictable, or templatizable?
+In this work, we probe whether full code generation is really necessary for SQL applications.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">我们探索</span><span class="original-text">We explore the</span><span class="ltx_text ltx_font_italic" id="S1.p2.1.1"><span class="translated-text">实用的</span><span class="original-text">practical</span></span><span class="translated-text">通过实证实验确定 SQL 的边界。我们从基准测试和开源数据库存储库中精选了 376 个数据库模式，</span><span class="original-text">boundaries of SQL through empirical experiments. We curate 376 database schemas from benchmarks and open source database repository,</span><span class="ltx_text ltx_font_italic" id="S1.p2.1.2"><span class="translated-text">绘制SQL</span><span class="original-text">drawSQL</span><span class="ltx_note ltx_role_footnote" id="footnote1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note"><span class="ltx_text ltx_font_upright" id="footnote1.1.1.1">1</span></span><a class="ltx_ref ltx_href ltx_font_upright" href="https://drawsql.app/templates" title="">drawsql.app/templates</a></span></span></span></span><span class="translated-text">并根据模式设计生成超过 20,000 个自然语言问题 (NLQ) 和匹配的 SQL 查询。使用代理计数来衡量复杂性，例如 JOIN 子句计数、子子句计数和查询长度，我们表明数据库表计数的增加与代理计数的增加之间不存在单调关系。我们观察到，无论数据库模式设计的复杂性和规模如何，SQL 查询中基于代理的复杂性都存在“上限”。</span><span class="original-text">and generate over 20,000 natural language questions (NLQ) and matching SQL queries based on schema designs. Using counts of proxies for complexity such as JOIN clause count, subclause count, and length of query, we show that there is no monotonic relationship between increase in table count of databases and increase in proxy count. We observe there is a “ceiling” of proxy-based complexity in SQL queries regardless of the complexity and size of the database schema design.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">当按频率进行模板化和分析时，SQL 查询表现出类似幂律的分布（图</span><span class="original-text">When templated and analyzed by frequency, SQL queries exhibit a power-law-like distribution (Figure</span><a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">）。我们发现前 13% 的模板占所有查询的 90%：只有 7 个模板覆盖了 10%，大约 40 个模板覆盖了 30%。高频模板往往不太复杂（例如，较少的 JOIN），这表明相对简单的结构足以涵盖大多数用户问题。总体而言，几百个模板足以捕获绝大多数数据库查询。</span><span class="original-text">). We find that the top 13% of templates account for 90% of all queries: only 7 templates cover 10%, and about 40 cover 30%. High-frequency templates tend to be less complex (e.g., fewer JOINs), suggesting that relatively simple structures suffice to cover most user questions. Overall, a few hundred templates are sufficient to capture the vast majority of database queries.</span></p>
+</div>
+<figure class="ltx_figure" id="S1.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="377" id="S1.F1.g1" src="https://arxiv.org/html/2603.25568v1/latex/photos/figure1_v3.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Frequency curve of soft templates.</figcaption>
+</figure>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="translated-text">长期以来，文本到 SQL 一直被研究为使用深度学习模型的语义解析任务</span><span class="original-text">Text-to-SQL has long been studied as a semantic parsing task using deep learning models</span><cite class="ltx_cite ltx_citemacro_cite">Zhong<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib9" title="Seq2SQL: generating structured queries from natural language using reinforcement learning">2017</a>); Xu<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib10" title="SQLNet: generating structured queries from natural language without reinforcement learning">2017</a>)</cite><span class="translated-text">。法学硕士的最新进展改变了这种范式，最先进的系统采用了法学硕士驱动的管道，具有迭代推理、自我纠正和基于代理的工作流程</span><span class="original-text">. Recent advances in LLMs have shifted this paradigm, with state-of-the-art systems adopting LLM-driven pipelines with iterative reasoning, self-correction, and agent-based workflows</span><cite class="ltx_cite ltx_citemacro_cite">Pourreza and Rafiei (<a class="ltx_ref" href="#bib.bib12" title="DIN-sql: decomposed in-context learning of text-to-sql with self-correction">2023</a>)</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="translated-text">虽然基于 LLM 的 SQL 生成显着提高了准确性，但对实证研究的工作有限</span><span class="original-text">While LLM-based SQL generation has significantly improved accuracy, limited work has examined the empirical</span><span class="ltx_text ltx_font_italic" id="S2.p2.1.1"><span class="translated-text">科学</span><span class="original-text">science</span></span><span class="translated-text">的数据库查询。据我们所知，这是第一个探索 SQL 查询边界的工作，得益于最近出现的大规模、高质量 AI 生成的 SQL 数据，这些数据允许对查询模式和用户意图进行系统分析。</span><span class="original-text">of database queries. To our knowledge, this is the first work to explore the boundaries of SQL queries, enabled by the recent availability of large-scale, high-quality AI-generated SQL data that allows systematic analysis of query patterns and user intents.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">方法论</span><span class="original-text">Methodology</span></h2>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">数据库和查询集合</span><span class="original-text">Database and Query Collection</span></h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">我们从在线基准测试和开源存储库收集 NLQ-SQL 对和数据库模式，</span><span class="original-text">We collect NLQ–SQL pairs and database schemas from online benchmarks and an open source repository,</span><span class="ltx_text ltx_font_italic" id="S3.SS1.p1.1.1"><span class="translated-text">绘制SQL</span><span class="original-text">drawSQL</span></span><span class="translated-text">。我们使用来自经典文本到 SQL 基准（例如 Spider 1.0）的数据库架构和黄金标签查询</span><span class="original-text">. We use database schemas and gold label queries from classic text-to-SQL benchmarks such as Spider 1.0</span><cite class="ltx_cite ltx_citemacro_cite">Yu<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib15" title="Spider: a large-scale human-labeled dataset for complex and cross-domain semantic parsing and text-to-SQL task">2018</a>)</cite><span class="translated-text">。我们采用架构设计</span><span class="original-text">. We take schema designs from</span><span class="ltx_text ltx_font_italic" id="S3.SS1.p1.1.2"><span class="translated-text">绘制SQL</span><span class="original-text">drawSQL</span></span><span class="translated-text">并使用 Claude-Sonnet-4.6 构建 NLQ-SQL 对</span><span class="original-text">and construct NLQ–SQL pairs using Claude-Sonnet-4.6</span><cite class="ltx_cite ltx_citemacro_cite">Anthropic (<a class="ltx_ref" href="#bib.bib16" title="Introducing claude sonnet 4.6">2026</a>)</cite><span class="translated-text">具有不同的难度级别。表</span><span class="original-text">with varying levels of difficulty. Table</span><a class="ltx_ref" href="#S3.T1" title="Table 1 ‣ 3.1 Database and Query Collection ‣ 3 Methodology ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">显示从这些来源收集的数据库模式的统计信息。我们手动验证所有生成的 NLQ-SQL 对，以确保语义正确性和可执行有效性。为了确保模板提取和指标计算的一致性，我们将所有 SQL 查询限制为 SQLite 方言。</span><span class="original-text">shows the statistics of database schemas collected from these sources. We manually verify all generated NLQ–SQL pairs to ensure semantic correctness and executable validity. To ensure consistency in template extraction and metric computation, we restrict all SQL queries to SQLite dialect.</span></p>
+</div>
+<figure class="ltx_table" id="S3.T1">
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="S3.T1.1" style="width:433.6pt;height:83pt;vertical-align:-39.1pt;"><span class="ltx_transformed_inner" style="transform:translate(-5.8pt,1.1pt) scale(0.97400857628177,0.97400857628177) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S3.T1.1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T1.1.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S3.T1.1.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S3.T1.1.1.1.1.1.1">Source</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S3.T1.1.1.1.1.2"><span class="ltx_text ltx_font_bold" id="S3.T1.1.1.1.1.2.1">#DB</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T1.1.1.1.1.3"><span class="ltx_text ltx_font_bold" id="S3.T1.1.1.1.1.3.1">#T/DB</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T1.1.1.1.1.4"><span class="ltx_text ltx_font_bold" id="S3.T1.1.1.1.1.4.1">#Q</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T1.1.1.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S3.T1.1.1.2.1.1">Bird23-train-filtered <cite class="ltx_cite ltx_citemacro_cite">Li<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib14" title="Can llm already serve as a database interface? a big bench for large-scale database grounded text-to-sqls">2023</a>)</cite>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t" id="S3.T1.1.1.2.1.2">69</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.1.1.2.1.3">7.57</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.1.1.2.1.4">6,601</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.1.1.3.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.1.1.3.2.1">Spider 1.0 <cite class="ltx_cite ltx_citemacro_cite">Yu<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib15" title="Spider: a large-scale human-labeled dataset for complex and cross-domain semantic parsing and text-to-SQL task">2018</a>)</cite>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S3.T1.1.1.3.2.2">196</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.1.3.2.3">5.15</td>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.1.3.2.4">11,245</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.1.1.4.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.1.1.4.3.1">Spider 2.0-lite <cite class="ltx_cite ltx_citemacro_cite">Lei<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib18" title="Spider 2.0: evaluating language models on real-world enterprise text-to-sql workflows">2024</a>)</cite>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S3.T1.1.1.4.3.2">15</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.1.4.3.3">14.87</td>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.1.4.3.4">287</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.1.1.5.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.1.1.5.4.1">KaggleDBQA <cite class="ltx_cite ltx_citemacro_cite">Lee<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib17" title="KaggleDBQA: realistic evaluation of text-to-sql parsers">2021</a>)</cite>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S3.T1.1.1.5.4.2">8</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.1.5.4.3">2.12</td>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.1.5.4.4">244</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.1.1.6.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.1.1.6.5.1">drawSQL</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S3.T1.1.1.6.5.2">88</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.1.6.5.3">14.34</td>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.1.6.5.4">2,112</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.1.1.7.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S3.T1.1.1.7.6.1"><span class="ltx_text ltx_font_bold" id="S3.T1.1.1.7.6.1.1">Overall</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_bb" id="S3.T1.1.1.7.6.2"><span class="ltx_text ltx_font_bold" id="S3.T1.1.1.7.6.2.1">376</span></th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T1.1.1.7.6.3"><span class="ltx_text ltx_font_bold" id="S3.T1.1.1.7.6.3.1">8.07</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T1.1.1.7.6.4"><span class="ltx_text ltx_font_bold" id="S3.T1.1.1.7.6.4.1">20,489</span></td>
+</tr>
+</tbody>
+</table>
+</span></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Statistics of database schemas collected from text-to-SQL benchmarks and drawSQL. #DB indicates the number of databases from each data source, #T/DB indicates the average number of tables per database, and #Q indicates the number of SQL queries per source. For drawSQL, we manually generate three difficulty levels of NLQs: easy, medium, and difficult. Appendix <a class="ltx_ref" href="#A1" title="Appendix A Examples of Generated NLQs by Difficulty Level ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">A</span></a> provides concrete examples.</figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span><span class="translated-text">SQL模板提取</span><span class="original-text">SQL Templates Extraction</span></h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">为了按“类型”分析重复 SQL 查询的频率，我们使用统一的方法对查询进行模板化或泛化。我们有两种不同类别的 SQL 模板：(1)</span><span class="original-text">To analyze the frequency of repeat SQL queries by “type”, we templatize or generalize the queries with uniform methods. We have two different categories of SQL templates: (1)</span><span class="ltx_text ltx_font_bold" id="S3.SS2.p1.1.1"><span class="translated-text">硬模板</span><span class="original-text">hard templates</span></span><span class="translated-text">保持更多独特的特征，并且（2）</span><span class="original-text">keep more distinctive traits, and (2)</span><span class="ltx_text ltx_font_bold" id="S3.SS2.p1.1.2"><span class="translated-text">软模板</span><span class="original-text">soft templates</span></span><span class="translated-text">更严格地统一以允许更宽松的分类。</span><span class="original-text">uniformize more strictly to allow for looser categorization.</span></p>
+</div>
+<section class="ltx_paragraph" id="S3.SS2.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">类型 1：硬模板。</span><span class="original-text">Type 1: Hard Templates.</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS0.Px1.p1">
+<p class="ltx_p" id="S3.SS2.SSS0.Px1.p1.1"><span class="translated-text">我们通过抽象数据集特定来构建硬 SQL 模板
+来自 SQL 查询的标识符和文字，同时保留其结构和逻辑形式。此过程将查询规范化为代表底层 SQL 模式的规范模板。硬模板具有更严格、更详细的提取规则，可将 SQL 查询转换为 SQL 模板。我们将表、列和别名等实体类型保留为占位符。附录</span><span class="original-text">We construct hard SQL templates by abstracting dataset-specific
+identifiers and literals from SQL queries while preserving their structural and logical forms. This process normalizes queries into canonical templates that represent the underlying SQL pattern. Hard templates have stricter and more detailed extraction rules to transform SQL queries into SQL templates. We keep entity types such as table, column, and alias names as placeholders. Appendix</span><a class="ltx_ref" href="#A3" title="Appendix C Complete Hard Templates Extraction Rules ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">C</span></a><span class="translated-text">显示详细的硬模板提取规则。</span><span class="original-text">shows detailed hard templates extraction rules.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS2.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">类型 2：软模板。</span><span class="original-text">Type 2: Soft Templates.</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS0.Px2.p1">
+<p class="ltx_p" id="S3.SS2.SSS0.Px2.p1.1"><span class="translated-text">除了硬模板提供的屏蔽之外，我们还进一步概括了变量并专注于保留底层 SQL 结构和关键字。函数特定的关键字（例如alias和table）都被统一视为变量。通过这种转换，一些不同的“硬”模板可以映射到相同的软模板。附录</span><span class="original-text">In addition to the masking presented by hard templates, we further generalize the variables and focus on preserving the underlying SQL structure and keywords. Function-specific keywords such as alias and table are all uniformly treated as variables. With this transformation, some distinct “hard” templates could be mapped to the same soft template. Appendix</span><a class="ltx_ref" href="#A4" title="Appendix D Complete Soft Templates Extraction Rules ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">D</span></a><span class="translated-text">显示详细的软模板提取规则。</span><span class="original-text">shows detailed soft template extraction rules.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS2.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">示例：模板生成过程。</span><span class="original-text">Example: Template Generation Procedure.</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS0.Px3.p1">
+<p class="ltx_p" id="S3.SS2.SSS0.Px3.p1.2"><span class="translated-text">原始 SQL 查询分阶段转换为模板：</span><span class="original-text">The original SQL query is translated into templates in stages:</span><span class="ltx_text ltx_font_italic" id="S3.SS2.SSS0.Px3.p1.2.2">SQL <math alttext="\rightarrow" class="ltx_Math" display="inline" id="S3.SS2.SSS0.Px3.p1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math><span class="translated-text">硬模板</span><span class="original-text">Hard Template</span><math alttext="\rightarrow" class="ltx_Math" display="inline" id="S3.SS2.SSS0.Px3.p1.2.2.m2" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math><span class="translated-text">软模板</span><span class="original-text">Soft Template</span></span>.</p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS0.Px3.p2">
+<blockquote class="ltx_quote" id="S3.SS2.SSS0.Px3.p2.1">
+<p class="ltx_p" id="S3.SS2.SSS0.Px3.p2.1.1"><span class="ltx_text ltx_font_bold" id="S3.SS2.SSS0.Px3.p2.1.1.1"><span class="translated-text">SQL查询</span><span class="original-text">SQL Query</span></span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="S3.SS2.SSS0.Px3.p2.1.2">
+SELECT c.name
+FROM customers AS c
+JOIN orders AS o ON c.id = o.customer_id
+WHERE o.amount &gt; 100
+ORDER BY o.amount DESC LIMIT 10
+</pre>
+<p class="ltx_p" id="S3.SS2.SSS0.Px3.p2.1.3"><span class="ltx_text ltx_font_bold" id="S3.SS2.SSS0.Px3.p2.1.3.1"><span class="translated-text">硬模板</span><span class="original-text">Hard Template</span></span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="S3.SS2.SSS0.Px3.p2.1.4">
+SELECT table_alias0.col_name
+FROM table_name AS table_alias0
+JOIN table_name AS table_alias1
+ON table_alias0.col_name = t
+able_alias1.col_name
+WHERE table_alias1.col_name &gt; num
+ORDER BY table_alias1.col_name
+DESC LIMIT num
+</pre>
+<p class="ltx_p" id="S3.SS2.SSS0.Px3.p2.1.5"><span class="ltx_text ltx_font_bold" id="S3.SS2.SSS0.Px3.p2.1.5.1"><span class="translated-text">软模板</span><span class="original-text">Soft Template</span></span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="S3.SS2.SSS0.Px3.p2.1.6">
+SELECT variable
+FROM variable AS variable
+JOIN variable AS variable
+ON variable = variable
+WHERE variable &gt; num
+ORDER BY variable DESC LIMIT num
+</pre>
+</blockquote>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS0.Px3.p3">
+<p class="ltx_p" id="S3.SS2.SSS0.Px3.p3.1"><span class="translated-text">此示例说明了硬模板如何保留精确的别名和模式结构，而软模板如何将标识符角色折叠为单个变量标记。附录</span><span class="original-text">This example illustrates how hard templates preserve precise alias and schema structure, while soft templates collapse identifier roles into a single variable token. Appendix</span><a class="ltx_ref" href="#A2" title="Appendix B Templates Extraction Examples ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">B</span></a><span class="translated-text">提供了更多硬模板和软模板提取示例。</span><span class="original-text">presents more hard and soft template extraction examples.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span><span class="translated-text">复杂性代理</span><span class="original-text">Proxies for Complexity</span></h3>
+<div class="ltx_para" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.1"><span class="translated-text">量化 SQL 查询“复杂性”的一种方法是计算某些代理特征的出现次数。我们确定了 6 个用于表征 SQL 查询复杂性的代理。其中包括查询的结构属性（表数、联接、子查询和最大嵌套深度）以及分析操作，例如聚合</span><span class="original-text">One way to quantify “complexity” of SQL queries is to count the appearance of certain proxy traits. We identify 6 proxies used to characterize SQL query complexity. These include structural properties of queries (number of tables, joins, subqueries, and maximum nesting depth) as well as analytical operations such as aggregations with</span><span class="ltx_text ltx_font_typewriter" id="S3.SS3.p1.1.1"><span class="translated-text">分组依据</span><span class="original-text">GROUP BY</span></span><span class="translated-text">和高级 SQL 功能（例如窗口函数、百分位函数、</span><span class="original-text">and advanced SQL features (e.g., window functions, percentile functions,</span><span class="ltx_text ltx_font_typewriter" id="S3.SS3.p1.1.2"><span class="translated-text">过滤器</span><span class="original-text">FILTER</span></span><span class="translated-text">、集合运算和 CTE）。表</span><span class="original-text">, set operations, and CTEs). Table</span><a class="ltx_ref" href="#S3.T2" title="Table 2 ‣ 3.3 Proxies for Complexity ‣ 3 Methodology ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">提供所有代理的完整列表。</span><span class="original-text">provides the full list of all proxies.</span></p>
+</div>
+<figure class="ltx_table" id="S3.T2">
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T2.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T2.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_t" id="S3.T2.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S3.T2.1.1.1.1.1">Proxy</span></th>
+<th class="ltx_td ltx_align_justify ltx_align_top ltx_th ltx_th_column ltx_border_t" id="S3.T2.1.1.1.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.1.1.1.2.1">
+<span class="ltx_p" id="S3.T2.1.1.1.2.1.1" style="width:284.5pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.1.1.1.2.1.1.1">Definition</span></span>
+</span>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T2.1.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S3.T2.1.2.1.1">Num_tables</th>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_t" id="S3.T2.1.2.1.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.1.2.1.2.1">
+<span class="ltx_p" id="S3.T2.1.2.1.2.1.1" style="width:284.5pt;"># of distinct tables referenced (i.e., number of data sources involved)</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.3.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.1.3.2.1">Num_joins</th>
+<td class="ltx_td ltx_align_justify ltx_align_top" id="S3.T2.1.3.2.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.1.3.2.2.1">
+<span class="ltx_p" id="S3.T2.1.3.2.2.1.1" style="width:284.5pt;"># of JOIN operations (capturing cross-table relational reasoning)</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.4.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.1.4.3.1">Num_subqueries</th>
+<td class="ltx_td ltx_align_justify ltx_align_top" id="S3.T2.1.4.3.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.1.4.3.2.1">
+<span class="ltx_p" id="S3.T2.1.4.3.2.1.1" style="width:284.5pt;"># of nested subqueries (capturing hierarchical reasoning)</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.5.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.1.5.4.1">Max_nesting_depth</th>
+<td class="ltx_td ltx_align_justify ltx_align_top" id="S3.T2.1.5.4.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.1.5.4.2.1">
+<span class="ltx_p" id="S3.T2.1.5.4.2.1.1" style="width:284.5pt;">Maximum depth of nested queries (i.e., levels of embedding)</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.6.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.1.6.5.1">Num_aggs_plus_group_by</th>
+<td class="ltx_td ltx_align_justify ltx_align_top" id="S3.T2.1.6.5.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.1.6.5.2.1">
+<span class="ltx_p" id="S3.T2.1.6.5.2.1.1" style="width:284.5pt;"># of aggregation operations (e.g., COUNT, SUM) and GROUP BY clauses</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.7.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b" id="S3.T2.1.7.6.1">Advanced_feature_count</th>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_b" id="S3.T2.1.7.6.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.1.7.6.2.1">
+<span class="ltx_p" id="S3.T2.1.7.6.2.1.1" style="width:284.5pt;"># of advanced constructs (e.g., window functions, FILTER, set operations, CTEs)</span>
+</span>
+</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>
+Structural proxies for SQL query complexity, capturing aspects such as multi-table interactions, hierarchical structure, and advanced analytical operations.
+</figcaption>
+</figure>
+<figure class="ltx_table" id="S3.T3">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 3: </span>Summary statistics and peak characteristics of six SQL complexity proxies.</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="S3.T3.1" style="width:433.6pt;height:97.1pt;vertical-align:-45.7pt;"><span class="ltx_transformed_inner" style="transform:translate(26.4pt,-5.9pt) scale(1.13873520206678,1.13873520206678) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S3.T3.1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T3.1.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="S3.T3.1.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S3.T3.1.1.1.1.1.1">Proxy</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.1.1.1.1.2"><span class="ltx_text ltx_font_bold" id="S3.T3.1.1.1.1.2.1">Median</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.1.1.1.1.3"><span class="ltx_text ltx_font_bold" id="S3.T3.1.1.1.1.3.1">Average</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.1.1.1.1.4"><span class="ltx_text ltx_font_bold" id="S3.T3.1.1.1.1.4.1">Min</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.1.1.1.1.5"><span class="ltx_text ltx_font_bold" id="S3.T3.1.1.1.1.5.1">Max</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.1.1.1.1.6"><span class="ltx_text ltx_font_bold" id="S3.T3.1.1.1.1.6.1">Peak Value</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T3.1.1.2.1">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S3.T3.1.1.2.1.1">Num_tables</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.1.2.1.2">2.00</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.1.2.1.3">1.73</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.1.2.1.4">1</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.1.2.1.5">27</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.1.2.1.6">1.94</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.1.3.2">
+<td class="ltx_td ltx_align_left" id="S3.T3.1.1.3.2.1">Num_joins</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.3.2.2">1.00</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.3.2.3">0.73</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.3.2.4">0</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.3.2.5">26</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.3.2.6">0.90</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.1.4.3">
+<td class="ltx_td ltx_align_left" id="S3.T3.1.1.4.3.1">Num_subqueries</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.4.3.2">0.00</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.4.3.3">0.11</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.4.3.4">0</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.4.3.5">7</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.4.3.6">0.22</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.1.5.4">
+<td class="ltx_td ltx_align_left" id="S3.T3.1.1.5.4.1">Max_nesting_depth</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.5.4.2">1.00</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.5.4.3">0.62</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.5.4.4">0</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.5.4.5">5</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.5.4.6">0.74</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.1.6.5">
+<td class="ltx_td ltx_align_left" id="S3.T3.1.1.6.5.1">Num_aggs_plus_group_by</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.6.5.2">0.00</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.6.5.3">0.74</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.6.5.4">0</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.6.5.5">9</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.1.6.5.6">0.81</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.1.7.6">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S3.T3.1.1.7.6.1">Advanced_feature_count</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.1.7.6.2">0.00</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.1.7.6.3">0.06</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.1.7.6.4">0</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.1.7.6.5">6</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.1.7.6.6">0.17</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">结果</span><span class="original-text">Results</span></h2>
+<section class="ltx_paragraph" id="S4.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">非单调 SQL 查询复杂度趋势</span><span class="original-text">Non-monotonic SQL Query Complexity Trend</span></h4>
+<div class="ltx_para" id="S4.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S4.SS0.SSS0.Px1.p1.1"><span class="translated-text">数据库模式复杂性的增加和 SQL 查询复杂性的增加之间不存在可观察到的单调关系。 SQL 查询不会像数据库模式那样变得越来越复杂。
+图</span><span class="original-text">There is no observable monotonic relationship between increase in database schema complexity and increase in SQL query complexity. SQL queries do not grow more and more complex as database schemas do.
+Figure</span><a class="ltx_ref" href="#S4.F2" title="Figure 2 ‣ Non-monotonic SQL Query Complexity Trend ‣ 4 Results ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">显示六个代理的移动平均值（窗口大小 = 15）。所有曲线都表现出相似的模式：它们增加到一些</span><span class="original-text">presents the moving average values of six proxies (window size = 15). All curves exhibit a similar pattern: they increase to some</span><span class="ltx_text ltx_font_italic" id="S4.SS0.SSS0.Px1.p1.1.1"><span class="translated-text">峰值</span><span class="original-text">peak value</span></span><span class="translated-text">在一个</span><span class="original-text">at a</span><span class="ltx_text ltx_font_italic" id="S4.SS0.SSS0.Px1.p1.1.2"><span class="translated-text">断点</span><span class="original-text">breaking point</span></span><span class="translated-text">，然后逐渐停滞或下降，这表明这些代理测量的 SQL 查询复杂性不会随着数据库中表的数量而持续增长。相反，SQL 查询的复杂性似乎遵循有界趋势，而不是随着数据库大小的增长而单调增加。桌子</span><span class="original-text">, and then gradually stall or decline, suggesting that the SQL query complexity measured by these proxies does not continuously grow with the number of tables in the database. Instead, the complexity of SQL queries appears to follow a bounded trend rather than monotonically increasing as database size grows. Table</span><a class="ltx_ref" href="#A6.T5" title="Table 5 ‣ Appendix F Spearman Correlation Test Results ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">在附录中</span><span class="original-text">in Appendix</span><a class="ltx_ref" href="#A6" title="Appendix F Spearman Correlation Test Results ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">F</span></a><span class="translated-text">报告斯皮尔曼相关结果，显示代理和表计数之间不存在单调关系。</span><span class="original-text">reports the Spearman Correlation results, showing the absence of a monotonic relationship between the proxies and the table count.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS0.SSS0.Px1.p2">
+<p class="ltx_p" id="S4.SS0.SSS0.Px1.p2.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S3.T3" title="Table 3 ‣ 3.3 Proxies for Complexity ‣ 3 Methodology ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">总结了所有 SQL 查询中六个代理的统计信息。大多数代理平均每次查询出现的次数少于一次。表变量的数量较多：有些查询包含多达 27 个表变量。但平均餐桌数似乎限制在 2 张左右。</span><span class="original-text">summarizes the statistics of the six proxies across all SQL queries. Most of the proxies appear on average less than once per query. The count of table variables is higher: there are queries that include as many as 27 table variables. But the average table count seems bounded at around 2.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="448" id="S4.F2.g1" src="https://arxiv.org/html/2603.25568v1/latex/photos/sql_metrics_win15.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Moving average values of six proxies (window size = 15).</figcaption>
+</figure>
+</section>
+<section class="ltx_paragraph" id="S4.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">模板频率的幂律分布。</span><span class="original-text">Power Law-like Distribution of Template Frequency.</span></h4>
+<div class="ltx_para" id="S4.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="S4.SS0.SSS0.Px2.p1.1"><span class="translated-text">当按频率进行模板化和分组时，20,489 个查询遵循近似幂律分布。硬模板和软模板都表现出长尾分布：少数模板出现非常频繁，而大多数模板仅出现几次或一次。图</span><span class="original-text">When templatized and grouped by frequency, the 20,489 queries follow a near Power Law distribution. The hard and soft templates both exhibit long-tail distributions: a small number of templates appear very frequently while most templates occur only a few times or once. Figure</span><a class="ltx_ref" href="#A5.F4" title="Figure 4 ‣ Appendix E Frequency Curves for Hard and Soft Templates ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">在附录中</span><span class="original-text">in Appendix</span><a class="ltx_ref" href="#A5" title="Appendix E Frequency Curves for Hard and Soft Templates ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">E</span></a><span class="translated-text">显示长尾模式。这表明有限的模板集占主导地位，而大多数模板具有更专门的 SQL 结构。幂律假设被自举拟合优度检验拒绝</span><span class="original-text">shows the long-tail pattern. This indicates a limited set of templates dominate while the majority of templates have more specialized SQL structures. The Power Law hypothesis is rejected by bootstrap goodness-of-fit test</span><cite class="ltx_cite ltx_citemacro_cite">Clauset<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib8" title="Power-law distributions in empirical data">2009</a>)</cite> (<math alttext="p\approx 0" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p1.1.m1" intent=":literal"><semantics><mrow><mi>p</mi><mo>≈</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">p\approx 0</annotation></semantics></math><span class="translated-text">），但尾部曲线类似幂律。</span><span class="original-text">), but the curves are Power Law-like in the tail.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F3">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S4.F3.sf1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="423" id="S4.F3.sf1.g1" src="https://arxiv.org/html/2603.25568v1/latex/photos/hard_log.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">(a) </span>Log–log plot of Hard Templates</figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S4.F3.sf2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="423" id="S4.F3.sf2.g1" src="https://arxiv.org/html/2603.25568v1/latex/photos/soft_log.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">(b) </span>Log–log plot of Soft Templates</figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Log–log plots for hard and soft templates.</figcaption>
+</figure>
+<figure class="ltx_table" id="S4.T4">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 4: </span>Number of templates required to cover different proportions of SQL queries.
+Numbers in parentheses denote the cumulative percentage of templates.</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="S4.T4.1" style="width:433.6pt;height:43.3pt;vertical-align:-19.5pt;"><span class="ltx_transformed_inner" style="transform:translate(-31.7pt,3.2pt) scale(0.872596922605467,0.872596922605467) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S4.T4.1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T4.1.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T4.1.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S4.T4.1.1.1.1.1.1">Template Type</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="6" id="S4.T4.1.1.1.1.2"><span class="ltx_text ltx_font_bold" id="S4.T4.1.1.1.1.2.1">Query Coverage (%)</span></th>
+</tr>
+<tr class="ltx_tr" id="S4.T4.1.1.2.2">
+<th class="ltx_td ltx_th ltx_th_row" id="S4.T4.1.1.2.2.1"></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T4.1.1.2.2.2">10</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T4.1.1.2.2.3">30</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T4.1.1.2.2.4">50</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T4.1.1.2.2.5"><span class="ltx_text ltx_font_bold" id="S4.T4.1.1.2.2.5.1">70</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T4.1.1.2.2.6">90</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T4.1.1.2.2.7">100</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T4.1.1.3.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T4.1.1.3.1.1">Hard</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.1.1.3.1.2">9 (0.13%)</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.1.1.3.1.3">58 (0.87%)</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.1.1.3.1.4">306 (4.57%)</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.1.1.3.1.5"><span class="ltx_text ltx_font_bold" id="S4.T4.1.1.3.1.5.1">1616 (24.12%)</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.1.1.3.1.6">4677 (69.82%)</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.1.1.3.1.7">6699 (100%)</td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.1.1.4.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S4.T4.1.1.4.2.1">Soft</th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T4.1.1.4.2.2">7 (0.15%)</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T4.1.1.4.2.3">42 (0.92%)</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T4.1.1.4.2.4">140 (3.05%)</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T4.1.1.4.2.5"><span class="ltx_text ltx_font_bold" id="S4.T4.1.1.4.2.5.1">605 (13.19%)</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T4.1.1.4.2.6">2565 (55.92%)</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T4.1.1.4.2.7">4587 (100%)</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+<div class="ltx_para" id="S4.SS0.SSS0.Px2.p2">
+<p class="ltx_p" id="S4.SS0.SSS0.Px2.p2.4"><span class="translated-text">我们在图中的双对数刻度上绘制了硬模板频率和软模板频率</span><span class="original-text">We plot hard and soft template frequencies on log-log scale in figure</span><a class="ltx_ref" href="#S4.F3" title="Figure 3 ‣ Power Law-like Distribution of Template Frequency. ‣ 4 Results ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">呈现出近似线性的趋势。
+我们根据幂律分布的线性表示绘制拟合线：</span><span class="original-text">showing an approximately linear trend.
+We draw fitted lines following the linear representation of the Power Law distribution:</span><math alttext="\log P(x)=-\alpha\log x+C" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p2.1.m1" intent=":literal"><semantics><mrow><mrow><mrow><mi>log</mi><mo lspace="0.167em">⁡</mo><mi>P</mi></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mrow><mo>−</mo><mrow><mi>α</mi><mo lspace="0.167em" rspace="0em">​</mo><mrow><mi>log</mi><mo lspace="0.167em">⁡</mo><mi>x</mi></mrow></mrow></mrow><mo>+</mo><mi>C</mi></mrow></mrow><annotation encoding="application/x-tex">\log P(x)=-\alpha\log x+C</annotation></semantics></math><span class="translated-text">,哪里</span><span class="original-text">,where</span><math alttext="C" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p2.2.m2" intent=":literal"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math><span class="translated-text">是一个常数。硬模板和软模板频率对数尺度分布的拟合线为</span><span class="original-text">is a constant. The fitted lines for hard and soft template frequency log–log scale distributions are</span><math alttext="\log y=-0.7258\log x+6.1106" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p2.3.m3" intent=":literal"><semantics><mrow><mrow><mi>log</mi><mo lspace="0.167em">⁡</mo><mi>y</mi></mrow><mo>=</mo><mrow><mrow><mo>−</mo><mrow><mn>0.7258</mn><mo lspace="0.167em" rspace="0em">​</mo><mrow><mi>log</mi><mo lspace="0.167em">⁡</mo><mi>x</mi></mrow></mrow></mrow><mo>+</mo><mn>6.1106</mn></mrow></mrow><annotation encoding="application/x-tex">\log y=-0.7258\log x+6.1106</annotation></semantics></math><span class="translated-text">（困难）和</span><span class="original-text">(hard) and</span><math alttext="\log y=-0.8858\log x+7.1968" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p2.4.m4" intent=":literal"><semantics><mrow><mrow><mi>log</mi><mo lspace="0.167em">⁡</mo><mi>y</mi></mrow><mo>=</mo><mrow><mrow><mo>−</mo><mrow><mn>0.8858</mn><mo lspace="0.167em" rspace="0em">​</mo><mrow><mi>log</mi><mo lspace="0.167em">⁡</mo><mi>x</mi></mrow></mrow></mrow><mo>+</mo><mn>7.1968</mn></mrow></mrow><annotation encoding="application/x-tex">\log y=-0.8858\log x+7.1968</annotation></semantics></math><span class="translated-text">（软），分别。毫不奇怪，软模板遵循更陡峭的分布，其中“顶部”频率模板具有更高的计数。表</span><span class="original-text">(soft), respectively. Not surprisingly, soft templates follow a steeper distribution, where the “top” frequency templates have higher counts. Table</span><a class="ltx_ref" href="#A9.T7" title="Table 7 ‣ Appendix I Template Frequency Distribution. ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">7</span></a><span class="translated-text">在附录中</span><span class="original-text">in Appendix</span><a class="ltx_ref" href="#A9.T7" title="Table 7 ‣ Appendix I Template Frequency Distribution. ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">7</span></a><span class="translated-text">显示软模板有 28 个计数超过 100 的模板，而硬模板只有 19 个。这两个分布都有单一外观查询的长尾，占硬模板分布的 60%。</span><span class="original-text">shows soft templates have 28 templates with more than 100 counts whereas hard templates have just 19. Both distributions have long tails of single appearance queries making up 60% of the hard template distribution.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS0.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">仅使用 13.19% 的软模板即可覆盖 70% 的 SQL 查询。</span><span class="original-text">70% SQL queries can be covered using only 13.19% soft templates.</span></h4>
+<div class="ltx_para" id="S4.SS0.SSS0.Px3.p1">
+<p class="ltx_p" id="S4.SS0.SSS0.Px3.p1.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S4.T4" title="Table 4 ‣ Power Law-like Distribution of Template Frequency. ‣ 4 Results ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">表明少量模板可以通过表名和列名的适当模式链接来覆盖不成比例的查询量。对于软模板，幂律效应更为显着，其中高达 70% 的查询源自约 13% 的模板。只需约 600 个软模板即可覆盖 20,489 个查询中的 70%。最常见的 140 个模板覆盖了所有查询的大约 50%。两个最常见的软模板是</span><span class="original-text">shows that a small number of templates can cover a disproportionate volume of queries with the appropriate schema linking of table and column names. The Power Law effect is more dramatic with soft templates, where up to 70% of all queries are derived from about 13% of templates. It takes only about 600 soft templates to cover 70% of 20,489 queries. The most frequent 140 templates cover about 50% of all queries. The two most frequent soft templates are</span><span class="ltx_text ltx_font_typewriter" id="S4.SS0.SSS0.Px3.p1.1.1"><span class="translated-text">从变量中选择变量，其中变量=字符串</span><span class="original-text">SELECT variable FROM variable WHERE variable = string</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_typewriter" id="S4.SS0.SSS0.Px3.p1.1.2"><span class="translated-text">从变量中选择 COUNT(*)</span><span class="original-text">SELECT COUNT(*) FROM variable</span></span><span class="translated-text">。例如，前者对应于NLQ，如“列出所有状态为‘active’的用户”，而后者对应于NLQ，如“总共有多少用户？”</span><span class="original-text">. For example, the former corresponds to NLQ such as “List all users whose status is ‘active‘,” while the latter corresponds to NLQ such as “How many users are there in total?”</span></p>
+</div>
+<div class="ltx_para" id="S4.SS0.SSS0.Px3.p2">
+<p class="ltx_p" id="S4.SS0.SSS0.Px3.p2.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#A8.T6" title="Table 6 ‣ Appendix H Average Proxy Values Across template frequency groups. ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">在附录中</span><span class="original-text">in Appendix</span><a class="ltx_ref" href="#A8" title="Appendix H Average Proxy Values Across template frequency groups. ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">H</span></a><span class="translated-text">还显示复杂性的平均代理数量与我们预期的频率呈负相关。越简单的模板更有可能在更多的上下文中使用。</span><span class="original-text">also shows the average proxy count of complexity negatively correlates with frequency as we expected. The simpler templates are more likely to be used in more contexts.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">关系数据库和其他数据库是人类理解和计算效率之间的数据存储和组织的中间基础。 SQL 于 20 世纪 70 年代提出，作为弥合人类自然语言和计算机执行之间差距的一种方法。法学硕士以其看似神奇的代码生成功能成为了这一层的附加层。但我们的实验表明，SQL 领域的 LLM 代码生成可能并不那么令人印象深刻，因为它们在复杂性的上限下运行，其中仅几百个模板就涵盖了绝大多数查询案例。</span><span class="original-text">Relational and other databases are the middle ground of data storage and organization between human understanding and computational efficiency. SQL was proposed in the 1970s as a way to bridge the gap between human natural language and computer execution. LLMs have emerged as the additional layer over this with its seemingly magical code generation capabilities. But our experiments show LLMs code generation in the SQL domain may not be as impressive as they operate under a ceiling of complexity where just a few hundred templates cover the vast majority of query cases.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="Sx1">
+<h2 class="ltx_title ltx_title_section"><span class="translated-text">局限性</span><span class="original-text">Limitations</span></h2>
+<div class="ltx_para" id="Sx1.p1">
+<p class="ltx_p" id="Sx1.p1.1"><span class="translated-text">基于模板的分析的局限性之一是 SQL 查询没有规范形式，并且许多不同的查询可以是同构的。换句话说，可以生成看起来完全不同的代码，因此具有不同的模板，但检索相同的“答案”或表格结果。我们尝试了使生成的查询的整体风格同质化的方法，以测试最大化模板频率的不同级别，但最终决定以最纯粹的、已发现的形式测试查询（以及生成的模板）。</span><span class="original-text">One limitation of template-based analysis is that SQL queries do not have canonical forms and many different queries can be isomorphic. In other words, it is possible to generate code that looks completely different, and therefore have different templates, but retrieve the same “answer” or table result. We experimented with ways of homogenizing the overall style of generated queries to test different levels of maximizing template frequency, but ultimately decided that we wanted to test the queries (and resulting templates) in the most unadulterated, as-found forms.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="Sx2">
+<h2 class="ltx_title ltx_title_section"><span class="translated-text">致谢</span><span class="original-text">Acknowledgments</span></h2>
+<div class="ltx_para" id="Sx2.p1">
+<p class="ltx_p" id="Sx2.p1.1"><span class="translated-text">我们感谢匿名审稿人和区域主席的宝贵反馈。</span><span class="original-text">We thank the anonymous reviewers and area chairs for their valuable feedback.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib16">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Anthropic (2026)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Introducing claude sonnet 4.6</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://www.anthropic.com/news/claude-sonnet-4-6" title="">https://www.anthropic.com/news/claude-sonnet-4-6</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS1.p1.1" title="3.1 Database and Query Collection ‣ 3 Methodology ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">§3.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib8">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">A. Clauset, C. R. Shalizi, and M. E. J. Newman (2009)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Power-law distributions in empirical data</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">SIAM Review</span> <span class="ltx_text ltx_bib_volume">51</span> (<span class="ltx_text ltx_bib_number">4</span>), <span class="ltx_text ltx_bib_pages"> pp. 661–703</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.SS0.SSS0.Px2.p1.1" title="Power Law-like Distribution of Template Frequency. ‣ 4 Results ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">§4</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib20">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">L. R. Harris (1977)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">ROBOT: a high performance natural language data base query system</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Proceedings of the National Computer Conference (NCC)</span>, <span class="ltx_text ltx_bib_pages"> pp. 229–237</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib17">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">D. Lee, S. Park, J. Kim, and S. Lee (2021)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">KaggleDBQA: realistic evaluation of text-to-sql parsers</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">ACL Findings</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.T1.1.1.5.4.1" title="In 3.1 Database and Query Collection ‣ 3 Methodology ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">Table 1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib18">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">F. Lei, J. Chen, Y. Ye, R. Cao, D. Shin, H. Su, Z. Suo, H. Gao, W. Hu, P. Yin, <span class="ltx_text ltx_bib_etal">et al.</span> (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Spider 2.0: evaluating language models on real-world enterprise text-to-sql workflows</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2411.07763</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.T1.1.1.4.3.1" title="In 3.1 Database and Query Collection ‣ 3 Methodology ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">Table 1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib14">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">J. Li, B. Hui, G. Qu, J. Yang, B. Li, B. Li, B. Wang, B. Qin, R. Geng, N. Huo, X. Zhou, C. Ma, G. Li, K. C.C. Chang, F. Huang, R. Cheng, and Y. Li (2023)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Can llm already serve as a database interface? a big bench for large-scale database grounded text-to-sqls</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 37th International Conference on Neural Information Processing Systems</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_series">NIPS ’23</span>, <span class="ltx_text ltx_bib_place">Red Hook, NY, USA</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.T1.1.1.2.1.1" title="In 3.1 Database and Query Collection ‣ 3 Methodology ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">Table 1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib25">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Y. Li, R. Tao, D. Hommel, Y. D. Dönder, S. Chang, D. Mimno, and U. E. S. Jo (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Agent bain vs. agent mckinsey: a new text-to-sql benchmark for the business domain</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2510.07309</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib24">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">LongShine AI Research (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">LongData-sql: scaling text-to-sql with long context modeling</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">Technical report</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib12">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">M. Pourreza and D. Rafiei (2023)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">DIN-sql: decomposed in-context learning of text-to-sql with self-correction</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">NeurIPS</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="2 Related Work ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib23">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">M. Pourreza and D. Rafiei (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">CHASE-sql: multi-path reasoning and schema linking for text-to-sql</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2410.01943</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib19">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">W. A. Woods (1973)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Progress in natural language understanding: an application to lunar geology</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">AFIPS Conference Proceedings</span> <span class="ltx_text ltx_bib_volume">42</span>, <span class="ltx_text ltx_bib_pages"> pp. 441–450</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib10">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">X. Xu, C. Liu, and D. Song (2017)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">SQLNet: generating structured queries from natural language without reinforcement learning</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">ICLR</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="2 Related Work ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib15">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">T. Yu, R. Zhang, K. Yang, M. Yasunaga, D. Wang, Z. Li, J. Ma, I. Li, Q. Yao, S. Roman, Z. Zhang, and D. Radev (2018)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Spider: a large-scale human-labeled dataset for complex and cross-domain semantic parsing and text-to-SQL task</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing</span>,  <span class="ltx_text ltx_bib_editor">E. Riloff, D. Chiang, J. Hockenmaier, and J. Tsujii (Eds.)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_place">Brussels, Belgium</span>, <span class="ltx_text ltx_bib_pages"> pp. 3911–3921</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://aclanthology.org/D18-1425/" title="">Link</a>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.18653/v1/D18-1425" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS1.p1.1" title="3.1 Database and Query Collection ‣ 3 Methodology ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">§3.1</span></a>,
+<a class="ltx_ref" href="#S3.T1.1.1.3.2.1" title="In 3.1 Database and Query Collection ‣ 3 Methodology ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">Table 1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib9">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">V. Zhong, C. Xiong, and R. Socher (2017)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Seq2SQL: generating structured queries from natural language using reinforcement learning</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">EMNLP</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="2 Related Work ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+</ul>
+</section>
+<section class="ltx_appendix" id="A1">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录A</span><span class="original-text">Appendix A</span></span><span class="translated-text">按难度级别生成的 NLQ 示例</span><span class="original-text">Examples of Generated NLQs by Difficulty Level</span></h2>
+<div class="ltx_para" id="A1.p1">
+<p class="ltx_p" id="A1.p1.1"><span class="translated-text">我们使用</span><span class="original-text">We use the</span><span class="ltx_text ltx_font_italic" id="A1.p1.1.1"><span class="translated-text">威望</span><span class="original-text">cachet</span></span><span class="translated-text">以 drawSQL 数据集的数据库作为说明性示例，并呈现三个难度级别的 NLQ-SQL 对：简单、中等和困难。</span><span class="original-text">database from the drawSQL dataset as an illustrative example, and present NLQ–SQL pairs across three difficulty levels: easy, medium, and difficult.</span></p>
+</div>
+<section class="ltx_subsection" id="A1.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">A.1 </span><span class="translated-text">示例 1（简单，有纪念意义）。</span><span class="original-text">Example 1 (Easy, cachet).</span></h3>
+<div class="ltx_para" id="A1.SS1.p1">
+<p class="ltx_p" id="A1.SS1.p1.1"><span class="ltx_text ltx_font_bold" id="A1.SS1.p1.1.1"><span class="translated-text">NLQ：</span><span class="original-text">NLQ:</span></span>
+<br class="ltx_break"/><span class="translated-text">总共有多少订阅者？</span><span class="original-text">How many subscribers are there in total?</span><br class="ltx_break"/><span class="ltx_text ltx_font_bold" id="A1.SS1.p1.1.2"><span class="translated-text">SQL查询：</span><span class="original-text">SQL Query:</span></span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A1.SS1.p1.2">
+SELECT COUNT(*)
+FROM subscribers;
+</pre>
+</div>
+</section>
+<section class="ltx_subsection" id="A1.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">A.2 </span><span class="translated-text">示例 2（中号，标志）。</span><span class="original-text">Example 2 (Medium, cachet).</span></h3>
+<div class="ltx_para" id="A1.SS2.p1">
+<p class="ltx_p" id="A1.SS2.p1.1"><span class="ltx_text ltx_font_bold" id="A1.SS2.p1.1.1"><span class="translated-text">NLQ：</span><span class="original-text">NLQ:</span></span>
+<br class="ltx_break"/><span class="translated-text">有多少活动日志条目没有匹配的组件？</span><span class="original-text">How many activity log entries do not have a matching component?</span><br class="ltx_break"/><span class="ltx_text ltx_font_bold" id="A1.SS2.p1.1.2"><span class="translated-text">SQL查询：</span><span class="original-text">SQL Query:</span></span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A1.SS2.p1.2">
+SELECT COUNT(*)
+FROM actions a
+LEFT JOIN components b
+ON a.taggable_id = b.id
+WHERE b.id IS NULL;
+</pre>
+</div>
+</section>
+<section class="ltx_subsection" id="A1.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">A.3 </span><span class="translated-text">示例 3（困难、威望）。</span><span class="original-text">Example 3 (Hard, cachet).</span></h3>
+<div class="ltx_para" id="A1.SS3.p1">
+<p class="ltx_p" id="A1.SS3.p1.1"><span class="ltx_text ltx_font_bold" id="A1.SS3.p1.1.1"><span class="translated-text">NLQ：</span><span class="original-text">NLQ:</span></span>
+<br class="ltx_break"/><span class="translated-text">对于每个类，计算活动日志条目的数量，并仅返回计数高于所有类的平均计数的类。按计数的降序对结果进行排序。</span><span class="original-text">For each class, count the number of activity log entries, and return only those classes whose count is above the average count across all classes. Sort the results in descending order of the count.</span><br class="ltx_break"/><span class="ltx_text ltx_font_bold" id="A1.SS3.p1.1.2"><span class="translated-text">SQL查询：</span><span class="original-text">SQL Query:</span></span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A1.SS3.p1.2">
+WITH grouped AS (
+    SELECT class_name, COUNT(*) AS cnt
+    FROM actions
+    GROUP BY class_name
+)
+SELECT *
+FROM grouped
+WHERE cnt &gt; (
+    SELECT AVG(cnt) FROM grouped
+)
+ORDER BY cnt DESC;
+</pre>
+</div>
+</section>
+</section>
+<section class="ltx_appendix" id="A2">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录B</span><span class="original-text">Appendix B</span></span><span class="translated-text">模板提取示例</span><span class="original-text">Templates Extraction Examples</span></h2>
+<div class="ltx_para" id="A2.p1">
+<p class="ltx_p" id="A2.p1.1"><span class="translated-text">为了说明模板抽象过程，我们提出了几个
+显示从 SQL 查询到的转换管道的示例
+硬模板和软模板。</span><span class="original-text">To illustrate the template abstraction process, we present several
+examples showing the transformation pipeline from SQL queries to
+hard templates and soft templates.</span></p>
+</div>
+<section class="ltx_paragraph" id="A2.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">示例 1：简单选择</span><span class="original-text">Example 1: Simple Selection</span></h4>
+<div class="ltx_para" id="A2.SS0.SSS0.Px1.p1">
+<blockquote class="ltx_quote" id="A2.SS0.SSS0.Px1.p1.1">
+<p class="ltx_p" id="A2.SS0.SSS0.Px1.p1.1.1"><span class="ltx_text ltx_font_bold" id="A2.SS0.SSS0.Px1.p1.1.1.1">SQL</span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A2.SS0.SSS0.Px1.p1.1.2">
+SELECT name FROM employees
+WHERE salary &gt; 50000
+</pre>
+<p class="ltx_p" id="A2.SS0.SSS0.Px1.p1.1.3"><span class="ltx_text ltx_font_bold" id="A2.SS0.SSS0.Px1.p1.1.3.1"><span class="translated-text">硬模板</span><span class="original-text">Hard Template</span></span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A2.SS0.SSS0.Px1.p1.1.4">
+SELECT col_name FROM table_name
+WHERE col_name &gt; num
+</pre>
+<p class="ltx_p" id="A2.SS0.SSS0.Px1.p1.1.5"><span class="ltx_text ltx_font_bold" id="A2.SS0.SSS0.Px1.p1.1.5.1"><span class="translated-text">软模板</span><span class="original-text">Soft Template</span></span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A2.SS0.SSS0.Px1.p1.1.6">
+SELECT variable FROM variable
+WHERE variable &gt; num
+</pre>
+</blockquote>
+</div>
+</section>
+<section class="ltx_paragraph" id="A2.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">示例 2：使用别名连接</span><span class="original-text">Example 2: Join with Aliases</span></h4>
+<div class="ltx_para" id="A2.SS0.SSS0.Px2.p1">
+<blockquote class="ltx_quote" id="A2.SS0.SSS0.Px2.p1.1">
+<p class="ltx_p" id="A2.SS0.SSS0.Px2.p1.1.1"><span class="ltx_text ltx_font_bold" id="A2.SS0.SSS0.Px2.p1.1.1.1">SQL</span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A2.SS0.SSS0.Px2.p1.1.2">
+SELECT T1.name
+FROM employees AS T1
+JOIN departments AS T2
+ON T1.dept_id = T2.id
+WHERE T2.location = ’NY’
+</pre>
+<p class="ltx_p" id="A2.SS0.SSS0.Px2.p1.1.3"><span class="ltx_text ltx_font_bold" id="A2.SS0.SSS0.Px2.p1.1.3.1"><span class="translated-text">硬模板</span><span class="original-text">Hard Template</span></span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A2.SS0.SSS0.Px2.p1.1.4">
+SELECT table_alias0.col_name
+FROM table_name AS table_alias0
+JOIN table_name AS table_alias1
+ON table_alias0.col_name =
+table_alias1.col_name
+WHERE table_alias1.col_name = string
+</pre>
+<p class="ltx_p" id="A2.SS0.SSS0.Px2.p1.1.5"><span class="ltx_text ltx_font_bold" id="A2.SS0.SSS0.Px2.p1.1.5.1"><span class="translated-text">软模板</span><span class="original-text">Soft Template</span></span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A2.SS0.SSS0.Px2.p1.1.6">
+SELECT variable
+FROM variable AS variable
+JOIN variable AS variable
+ON variable = variable
+WHERE variable = string
+</pre>
+</blockquote>
+</div>
+</section>
+<section class="ltx_paragraph" id="A2.SS0.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">示例 3：聚合</span><span class="original-text">Example 3: Aggregation</span></h4>
+<div class="ltx_para" id="A2.SS0.SSS0.Px3.p1">
+<blockquote class="ltx_quote" id="A2.SS0.SSS0.Px3.p1.1">
+<p class="ltx_p" id="A2.SS0.SSS0.Px3.p1.1.1"><span class="ltx_text ltx_font_bold" id="A2.SS0.SSS0.Px3.p1.1.1.1">SQL</span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A2.SS0.SSS0.Px3.p1.1.2">
+SELECT department, COUNT(*)
+FROM employees
+GROUP BY department
+ORDER BY COUNT(*) DESC
+LIMIT 5
+</pre>
+<p class="ltx_p" id="A2.SS0.SSS0.Px3.p1.1.3"><span class="ltx_text ltx_font_bold" id="A2.SS0.SSS0.Px3.p1.1.3.1"><span class="translated-text">硬模板</span><span class="original-text">Hard Template</span></span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A2.SS0.SSS0.Px3.p1.1.4">
+SELECT col_name, COUNT(*)
+FROM table_name
+GROUP BY col_name
+ORDER BY COUNT(*) DESC
+LIMIT num
+</pre>
+<p class="ltx_p" id="A2.SS0.SSS0.Px3.p1.1.5"><span class="ltx_text ltx_font_bold" id="A2.SS0.SSS0.Px3.p1.1.5.1"><span class="translated-text">软模板</span><span class="original-text">Soft Template</span></span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A2.SS0.SSS0.Px3.p1.1.6">
+SELECT variable, COUNT(*)
+FROM variable
+GROUP BY variable
+ORDER BY COUNT(*) DESC
+LIMIT num
+</pre>
+</blockquote>
+</div>
+</section>
+<section class="ltx_paragraph" id="A2.SS0.SSS0.Px4">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">示例 4：子查询</span><span class="original-text">Example 4: Subquery</span></h4>
+<div class="ltx_para" id="A2.SS0.SSS0.Px4.p1">
+<blockquote class="ltx_quote" id="A2.SS0.SSS0.Px4.p1.1">
+<p class="ltx_p" id="A2.SS0.SSS0.Px4.p1.1.1"><span class="ltx_text ltx_font_bold" id="A2.SS0.SSS0.Px4.p1.1.1.1">SQL</span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A2.SS0.SSS0.Px4.p1.1.2">
+SELECT name
+FROM employees
+WHERE salary &gt;
+    (SELECT AVG(salary) FROM employees)
+</pre>
+<p class="ltx_p" id="A2.SS0.SSS0.Px4.p1.1.3"><span class="ltx_text ltx_font_bold" id="A2.SS0.SSS0.Px4.p1.1.3.1"><span class="translated-text">硬模板</span><span class="original-text">Hard Template</span></span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A2.SS0.SSS0.Px4.p1.1.4">
+SELECT col_name
+FROM table_name
+WHERE col_name &gt;
+    (SELECT AVG(col_name)
+    FROM table_name)
+</pre>
+<p class="ltx_p" id="A2.SS0.SSS0.Px4.p1.1.5"><span class="ltx_text ltx_font_bold" id="A2.SS0.SSS0.Px4.p1.1.5.1"><span class="translated-text">软模板</span><span class="original-text">Soft Template</span></span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A2.SS0.SSS0.Px4.p1.1.6">
+SELECT variable
+FROM variable
+WHERE variable &gt;
+    (SELECT AVG(variable) FROM variable)
+</pre>
+</blockquote>
+</div>
+</section>
+<section class="ltx_paragraph" id="A2.SS0.SSS0.Px5">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">示例 5：具有连接和聚合的 CTE</span><span class="original-text">Example 5: CTE with Join and Aggregation</span></h4>
+<div class="ltx_para" id="A2.SS0.SSS0.Px5.p1">
+<blockquote class="ltx_quote" id="A2.SS0.SSS0.Px5.p1.1">
+<p class="ltx_p" id="A2.SS0.SSS0.Px5.p1.1.1"><span class="ltx_text ltx_font_bold" id="A2.SS0.SSS0.Px5.p1.1.1.1">SQL</span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A2.SS0.SSS0.Px5.p1.1.2">
+WITH dept_avg AS (
+  SELECT dept_id, AVG(salary) AS avg_salary
+  FROM employees
+  GROUP BY dept_id
+)
+SELECT d.name
+FROM departments d
+JOIN dept_avg a
+ON d.id = a.dept_id
+WHERE a.avg_salary &gt; 70000
+</pre>
+<p class="ltx_p" id="A2.SS0.SSS0.Px5.p1.1.3"><span class="ltx_text ltx_font_bold" id="A2.SS0.SSS0.Px5.p1.1.3.1"><span class="translated-text">硬模板</span><span class="original-text">Hard Template</span></span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A2.SS0.SSS0.Px5.p1.1.4">
+WITH CTE0 AS (
+  SELECT col_name, AVG(col_name)
+  AS column_alias0
+  FROM table_name
+  GROUP BY col_name
+)
+SELECT table_alias0.col_name
+FROM table_name AS table_alias0
+JOIN CTE0 AS table_alias1
+ON table_alias0.col_name =
+table_alias1.col_name
+WHERE table_alias1.column_alias0 &gt; num
+</pre>
+<p class="ltx_p" id="A2.SS0.SSS0.Px5.p1.1.5"><span class="ltx_text ltx_font_bold" id="A2.SS0.SSS0.Px5.p1.1.5.1"><span class="translated-text">软模板</span><span class="original-text">Soft Template</span></span></p>
+<pre class="ltx_verbatim ltx_font_typewriter" id="A2.SS0.SSS0.Px5.p1.1.6">
+WITH CTE0 AS (
+  SELECT variable, AVG(variable)
+  AS variable
+  FROM variable
+  GROUP BY variable
+)
+SELECT variable
+FROM variable AS table_alias0
+JOIN CTE0 AS table_alias1
+ON variable = variable
+WHERE variable &gt; num
+</pre>
+</blockquote>
+</div>
+</section>
+</section>
+<section class="ltx_appendix" id="A3">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录C</span><span class="original-text">Appendix C</span></span><span class="translated-text">完整的硬模板提取规则</span><span class="original-text">Complete Hard Templates Extraction Rules</span></h2>
+<div class="ltx_para" id="A3.p1">
+<p class="ltx_p" id="A3.p1.1"><span class="translated-text">生成过程由以下步骤组成：</span><span class="original-text">The generation procedure consists of the following steps:</span></p>
+</div>
+<div class="ltx_para" id="A3.p2">
+<ol class="ltx_enumerate" id="A3.I1">
+<li class="ltx_item" id="A3.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span>
+<div class="ltx_para" id="A3.I1.i1.p1">
+<p class="ltx_p" id="A3.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="A3.I1.i1.p1.1.1"><span class="translated-text">预处理。</span><span class="original-text">Preprocessing.</span></span><span class="translated-text">我们删除评论（例如，</span><span class="original-text">We remove comments (e.g.,</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i1.p1.1.2">--</span>, <span class="ltx_text ltx_font_typewriter" id="A3.I1.i1.p1.1.3">/* */</span><span class="translated-text">) 和空行
+从 SQL 查询中执行不区分大小写的匹配以标准化
+输入表示。</span><span class="original-text">) and blank lines
+from the SQL query and perform case-insensitive matching to standardize
+the input representation.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="A3.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span>
+<div class="ltx_para" id="A3.I1.i2.p1">
+<p class="ltx_p" id="A3.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="A3.I1.i2.p1.1.1"><span class="translated-text">字面抽象。</span><span class="original-text">Literal Abstraction.</span></span><span class="translated-text">所有文字值都替换为类型占位符。
+数字常量映射到</span><span class="original-text">All literal values are replaced with typed placeholders.
+Numeric constants are mapped to</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i2.p1.1.2"><span class="translated-text">编号</span><span class="original-text">num</span></span><span class="translated-text">, 字符串文字为</span><span class="original-text">, string literals to</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i2.p1.1.3"><span class="translated-text">字符串</span><span class="original-text">string</span></span><span class="translated-text">，日期文字到</span><span class="original-text">, date literals to</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i2.p1.1.4"><span class="translated-text">日期</span><span class="original-text">date</span></span><span class="translated-text">，布尔值到</span><span class="original-text">, boolean values to</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i2.p1.1.5"><span class="translated-text">布尔值</span><span class="original-text">boolean</span></span><span class="translated-text">, 和</span><span class="original-text">, and</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i2.p1.1.6"><span class="translated-text">空值</span><span class="original-text">NULL</span></span><span class="translated-text">价值观</span><span class="original-text">values to</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i2.p1.1.7"><span class="translated-text">其他</span><span class="original-text">others</span></span><span class="translated-text">。
+此步骤消除了值级别的可变性，同时保留了类型信号。</span><span class="original-text">.
+This step removes value-level variability while preserving type signals.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="A3.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span>
+<div class="ltx_para" id="A3.I1.i3.p1">
+<p class="ltx_p" id="A3.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="A3.I1.i3.p1.1.1"><span class="translated-text">模式感知标识符替换。</span><span class="original-text">Schema-aware Identifier Replacement.</span></span><span class="translated-text">使用数据库模式，表名替换为</span><span class="original-text">Using the database schema, table names are replaced with</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i3.p1.1.2"><span class="translated-text">表名</span><span class="original-text">table_name</span></span><span class="translated-text">和列参考</span><span class="original-text">and column references with</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i3.p1.1.3"><span class="translated-text">列名</span><span class="original-text">col_name</span></span><span class="translated-text">。
+未出现在模式中的标识符被映射到
+特殊占位符，例如</span><span class="original-text">.
+Identifiers that do not appear in the schema are mapped to
+special placeholders such as</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i3.p1.1.4"><span class="translated-text">新表</span><span class="original-text">new_table</span></span>, <span class="ltx_text ltx_font_typewriter" id="A3.I1.i3.p1.1.5"><span class="translated-text">新视图</span><span class="original-text">new_view</span></span><span class="translated-text">,
+或</span><span class="original-text">,
+or</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i3.p1.1.6"><span class="translated-text">新列</span><span class="original-text">new_column</span></span><span class="translated-text">取决于他们的 SQL 上下文。</span><span class="original-text">depending on their SQL context.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="A3.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">4.</span>
+<div class="ltx_para" id="A3.I1.i4.p1">
+<p class="ltx_p" id="A3.I1.i4.p1.1"><span class="ltx_text ltx_font_bold" id="A3.I1.i4.p1.1.1"><span class="translated-text">别名标准化。</span><span class="original-text">Alias Normalization.</span></span><span class="translated-text">表别名引入于</span><span class="original-text">Table aliases introduced in</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i4.p1.1.2"><span class="translated-text">从</span><span class="original-text">FROM</span></span> or <span class="ltx_text ltx_font_typewriter" id="A3.I1.i4.p1.1.3"><span class="translated-text">加入</span><span class="original-text">JOIN</span></span><span class="translated-text">条款是
+归一化为</span><span class="original-text">clauses are
+normalized as</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i4.p1.1.4"><span class="translated-text">表别名0</span><span class="original-text">table_alias0</span></span>, <span class="ltx_text ltx_font_typewriter" id="A3.I1.i4.p1.1.5"><span class="translated-text">表别名1</span><span class="original-text">table_alias1</span></span><span class="translated-text">等等，
+根据他们的出现顺序。
+列别名通过定义</span><span class="original-text">, etc.,
+according to their order of appearance.
+Column aliases defined via</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i4.p1.1.6">AS</span><span class="translated-text">类似地替换为</span><span class="original-text">are similarly replaced with</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i4.p1.1.7"><span class="translated-text">列别名0</span><span class="original-text">column_alias0</span></span>, <span class="ltx_text ltx_font_typewriter" id="A3.I1.i4.p1.1.8"><span class="translated-text">列别名1</span><span class="original-text">column_alias1</span></span><span class="translated-text">等</span><span class="original-text">, etc.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="A3.I1.i5" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">5.</span>
+<div class="ltx_para" id="A3.I1.i5.p1">
+<p class="ltx_p" id="A3.I1.i5.p1.1"><span class="ltx_text ltx_font_bold" id="A3.I1.i5.p1.1.1"><span class="translated-text">合格的参考分辨率。</span><span class="original-text">Qualified Reference Resolution.</span></span><span class="translated-text">对于限定表达式（例如，</span><span class="original-text">For qualified expressions (e.g.,</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i5.p1.1.2"><span class="translated-text">别名.column</span><span class="original-text">alias.column</span></span><span class="translated-text">），限定符是
+替换为其标准化形式（例如，</span><span class="original-text">), the qualifier is
+replaced by its normalized form (e.g.,</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i5.p1.1.3"><span class="translated-text">表名</span><span class="original-text">table_name</span></span> or
+<span class="ltx_text ltx_font_typewriter" id="A3.I1.i5.p1.1.4"><span class="translated-text">表别名N</span><span class="original-text">table_aliasN</span></span><span class="translated-text">），而列分量映射到</span><span class="original-text">), while the column component is mapped to</span><span class="ltx_text ltx_font_typewriter" id="A3.I1.i5.p1.1.5"><span class="translated-text">列名</span><span class="original-text">col_name</span></span> or <span class="ltx_text ltx_font_typewriter" id="A3.I1.i5.p1.1.6"><span class="translated-text">新列</span><span class="original-text">new_column</span></span>.</p>
+</div>
+</li>
+</ol>
+</div>
+<div class="ltx_para" id="A3.p3">
+<p class="ltx_p" id="A3.p3.1"><span class="translated-text">生成的 SQL 语句形成一个硬模板，保留原始查询的结构语义，同时抽象出数据集特定的详细信息。</span><span class="original-text">The resulting SQL statement forms a hard template that preserves the structural semantics of the original query while abstracting away dataset-specific details.</span></p>
+</div>
+</section>
+<section class="ltx_appendix" id="A4">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录D</span><span class="original-text">Appendix D</span></span><span class="translated-text">完整的软模板提取规则</span><span class="original-text">Complete Soft Templates Extraction Rules</span></h2>
+<div class="ltx_para" id="A4.p1">
+<p class="ltx_p" id="A4.p1.1"><span class="translated-text">生成过程由以下步骤组成：</span><span class="original-text">The generation procedure consists of the following steps:</span></p>
+<ol class="ltx_enumerate" id="A4.I1">
+<li class="ltx_item" id="A4.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span>
+<div class="ltx_para" id="A4.I1.i1.p1">
+<p class="ltx_p" id="A4.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="A4.I1.i1.p1.1.1"><span class="translated-text">标识符泛化。</span><span class="original-text">Identifier Generalization.</span></span><span class="translated-text">硬模板提取过程中生成的所有标识符占位符
+（例如，</span><span class="original-text">All identifier placeholders produced during hard template extraction
+(e.g.,</span><span class="ltx_text ltx_font_typewriter" id="A4.I1.i1.p1.1.2"><span class="translated-text">表名</span><span class="original-text">table_name</span></span>, <span class="ltx_text ltx_font_typewriter" id="A4.I1.i1.p1.1.3"><span class="translated-text">列名</span><span class="original-text">col_name</span></span>, <span class="ltx_text ltx_font_typewriter" id="A4.I1.i1.p1.1.4"><span class="translated-text">新表</span><span class="original-text">new_table</span></span>,
+<span class="ltx_text ltx_font_typewriter" id="A4.I1.i1.p1.1.5"><span class="translated-text">新列</span><span class="original-text">new_column</span></span>, <span class="ltx_text ltx_font_typewriter" id="A4.I1.i1.p1.1.6"><span class="translated-text">热膨胀系数</span><span class="original-text">cte</span></span><span class="translated-text">，以及别名标记，例如</span><span class="original-text">, and alias tokens such as</span><span class="ltx_text ltx_font_typewriter" id="A4.I1.i1.p1.1.7"><span class="translated-text">表别名N</span><span class="original-text">table_aliasN</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_typewriter" id="A4.I1.i1.p1.1.8"><span class="translated-text">列别名N</span><span class="original-text">column_aliasN</span></span><span class="translated-text">）被替换为
+单一令牌</span><span class="original-text">) are replaced with a
+single token</span><span class="ltx_text ltx_font_typewriter" id="A4.I1.i1.p1.1.9"><span class="translated-text">变量</span><span class="original-text">variable</span></span><span class="translated-text">。该标记代表任何表或列
+标识符，将不同的模式角色折叠成统一的符号。</span><span class="original-text">. This token represents any table or column
+identifier, collapsing different schema roles into a unified symbol.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="A4.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span>
+<div class="ltx_para" id="A4.I1.i2.p1">
+<p class="ltx_p" id="A4.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="A4.I1.i2.p1.1.1"><span class="translated-text">文字类型保留。</span><span class="original-text">Literal Type Preservation.</span></span><span class="translated-text">与标识符不同，硬编码中引入的类型文字占位符
+模板（例如，</span><span class="original-text">Unlike identifiers, typed literal placeholders introduced in the hard
+template (e.g.,</span><span class="ltx_text ltx_font_typewriter" id="A4.I1.i2.p1.1.2"><span class="translated-text">编号</span><span class="original-text">num</span></span>, <span class="ltx_text ltx_font_typewriter" id="A4.I1.i2.p1.1.3"><span class="translated-text">字符串</span><span class="original-text">string</span></span>, <span class="ltx_text ltx_font_typewriter" id="A4.I1.i2.p1.1.4"><span class="translated-text">日期</span><span class="original-text">date</span></span>,
+<span class="ltx_text ltx_font_typewriter" id="A4.I1.i2.p1.1.5"><span class="translated-text">布尔值</span><span class="original-text">boolean</span></span>, <span class="ltx_text ltx_font_typewriter" id="A4.I1.i2.p1.1.6">jsonb</span>, <span class="ltx_text ltx_font_typewriter" id="A4.I1.i2.p1.1.7"><span class="translated-text">其他</span><span class="original-text">others</span></span><span class="translated-text">）被保留。
+这保持了谓词和子句中常量的语义角色
+比如</span><span class="original-text">) are preserved.
+This maintains the semantic role of constants in predicates and clauses
+such as</span><span class="ltx_text ltx_font_typewriter" id="A4.I1.i2.p1.1.8"><span class="translated-text">限制数量</span><span class="original-text">LIMIT num</span></span> or <span class="ltx_text ltx_font_typewriter" id="A4.I1.i2.p1.1.9"><span class="translated-text">变量=字符串</span><span class="original-text">variable = string</span></span>.</p>
+</div>
+</li>
+<li class="ltx_item" id="A4.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span>
+<div class="ltx_para" id="A4.I1.i3.p1">
+<p class="ltx_p" id="A4.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="A4.I1.i3.p1.1.1"><span class="translated-text">关键字和结构保留。</span><span class="original-text">Keyword and Structure Retention.</span></span><span class="translated-text">所有 SQL 关键字、运算符和语法结构（例如，</span><span class="original-text">All SQL keywords, operators, and syntactic structure (e.g.,</span><span class="ltx_text ltx_font_typewriter" id="A4.I1.i3.p1.1.2"><span class="translated-text">选择</span><span class="original-text">SELECT</span></span>, <span class="ltx_text ltx_font_typewriter" id="A4.I1.i3.p1.1.3"><span class="translated-text">加入</span><span class="original-text">JOIN</span></span>, <span class="ltx_text ltx_font_typewriter" id="A4.I1.i3.p1.1.4"><span class="translated-text">分组依据</span><span class="original-text">GROUP BY</span></span>, <span class="ltx_text ltx_font_typewriter" id="A4.I1.i3.p1.1.5"><span class="translated-text">订购依据</span><span class="original-text">ORDER BY</span></span><span class="translated-text">）
+保持不变，以便通用模板仍然反映
+底层查询逻辑。</span><span class="original-text">)
+remain unchanged so that the generalized template still reflects the
+underlying query logic.</span></p>
+</div>
+</li>
+</ol>
+</div>
+<div class="ltx_para" id="A4.p2">
+<p class="ltx_p" id="A4.p2.1"><span class="translated-text">生成的 SQL 语句形成一个软模板，保留原始查询的结构语义。</span><span class="original-text">The resulting SQL statement forms a soft template that preserves the structural semantics of the original query.</span></p>
+</div>
+</section>
+<section class="ltx_appendix" id="A5">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录E</span><span class="original-text">Appendix E</span></span><span class="translated-text">硬模板和软模板的频率曲线</span><span class="original-text">Frequency Curves for Hard and Soft Templates</span></h2>
+<figure class="ltx_figure" id="A5.F4">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="A5.F4.sf1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="394" id="A5.F4.sf1.g1" src="https://arxiv.org/html/2603.25568v1/latex/photos/hard_fre.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">(a) </span>Hard templates</figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="A5.F4.sf2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="394" id="A5.F4.sf2.g1" src="https://arxiv.org/html/2603.25568v1/latex/photos/soft_fre.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">(b) </span>Soft templates</figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Frequency curves for hard and soft templates.</figcaption>
+</figure>
+<div class="ltx_para" id="A5.p1">
+<p class="ltx_p" id="A5.p1.2"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#A5.F4" title="Figure 4 ‣ Appendix E Frequency Curves for Hard and Soft Templates ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">显示了硬模板和软模板的频率分布，两者都表现出类似幂律的模式。拟合分布如下</span><span class="original-text">shows the frequency distributions of hard and soft templates, both of which exhibit a Power Law–like pattern. The fitted distributions follow</span><math alttext="P(x)\propto x^{-0.726}" class="ltx_Math" display="inline" id="A5.p1.1.m1" intent=":literal"><semantics><mrow><mrow><mi>P</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><mo>∝</mo><msup><mi>x</mi><mrow><mo>−</mo><mn>0.726</mn></mrow></msup></mrow><annotation encoding="application/x-tex">P(x)\propto x^{-0.726}</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="P(x)\propto x^{-0.886}" class="ltx_Math" display="inline" id="A5.p1.2.m2" intent=":literal"><semantics><mrow><mrow><mi>P</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><mo>∝</mo><msup><mi>x</mi><mrow><mo>−</mo><mn>0.886</mn></mrow></msup></mrow><annotation encoding="application/x-tex">P(x)\propto x^{-0.886}</annotation></semantics></math><span class="translated-text">，分别。</span><span class="original-text">, respectively.</span></p>
+</div>
+</section>
+<section class="ltx_appendix" id="A6">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录F</span><span class="original-text">Appendix F</span></span><span class="translated-text">Spearman 相关性检验结果</span><span class="original-text">Spearman Correlation Test Results</span></h2>
+<div class="ltx_para" id="A6.p1">
+<p class="ltx_p" id="A6.p1.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#A6.T5" title="Table 5 ‣ Appendix F Spearman Correlation Test Results ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">显示 Spearman 相关性检验结果。</span><span class="original-text">shows the Spearman Correlation test results.</span></p>
+</div>
+<figure class="ltx_table" id="A6.T5">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 5: </span>Spearman correlation test for the monotonic relationship between each proxy and the table count.</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="A6.T5.7" style="width:433.6pt;height:152pt;vertical-align:-71.5pt;"><span class="ltx_transformed_inner" style="transform:translate(95.3pt,-33.4pt) scale(1.78413622451885,1.78413622451885) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="A6.T5.7.7">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="A6.T5.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="A6.T5.1.1.1.2"><span class="ltx_text ltx_font_bold" id="A6.T5.1.1.1.2.1">Proxy</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="A6.T5.1.1.1.1"><math alttext="\rho" class="ltx_Math" display="inline" id="A6.T5.1.1.1.1.m1" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="A6.T5.1.1.1.3"><span class="ltx_text ltx_font_bold" id="A6.T5.1.1.1.3.1">p-value</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="A6.T5.2.2.2">
+<td class="ltx_td ltx_align_left ltx_border_t" id="A6.T5.2.2.2.2">Num_tables</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A6.T5.2.2.2.3">-0.3673</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A6.T5.2.2.2.1"><math alttext="2.33\times 10^{-2}" class="ltx_Math" display="inline" id="A6.T5.2.2.2.1.m1" intent=":literal"><semantics><mrow><mn>2.33</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">2.33\times 10^{-2}</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="A6.T5.3.3.3">
+<td class="ltx_td ltx_align_left" id="A6.T5.3.3.3.2">Num_joins</td>
+<td class="ltx_td ltx_align_center" id="A6.T5.3.3.3.3">-0.3839</td>
+<td class="ltx_td ltx_align_center" id="A6.T5.3.3.3.1"><math alttext="1.73\times 10^{-2}" class="ltx_Math" display="inline" id="A6.T5.3.3.3.1.m1" intent=":literal"><semantics><mrow><mn>1.73</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1.73\times 10^{-2}</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="A6.T5.4.4.4">
+<td class="ltx_td ltx_align_left" id="A6.T5.4.4.4.2">Num_subqueries</td>
+<td class="ltx_td ltx_align_center" id="A6.T5.4.4.4.3">0.4481</td>
+<td class="ltx_td ltx_align_center" id="A6.T5.4.4.4.1"><math alttext="4.79\times 10^{-3}" class="ltx_Math" display="inline" id="A6.T5.4.4.4.1.m1" intent=":literal"><semantics><mrow><mn>4.79</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>3</mn></mrow></msup></mrow><annotation encoding="application/x-tex">4.79\times 10^{-3}</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="A6.T5.5.5.5">
+<td class="ltx_td ltx_align_left" id="A6.T5.5.5.5.2">Max_nesting_depth</td>
+<td class="ltx_td ltx_align_center" id="A6.T5.5.5.5.3">0.3124</td>
+<td class="ltx_td ltx_align_center" id="A6.T5.5.5.5.1"><math alttext="5.62\times 10^{-2}" class="ltx_Math" display="inline" id="A6.T5.5.5.5.1.m1" intent=":literal"><semantics><mrow><mn>5.62</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">5.62\times 10^{-2}</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="A6.T5.6.6.6">
+<td class="ltx_td ltx_align_left" id="A6.T5.6.6.6.2">Num_aggs_plus_group_by</td>
+<td class="ltx_td ltx_align_center" id="A6.T5.6.6.6.3">-0.4263</td>
+<td class="ltx_td ltx_align_center" id="A6.T5.6.6.6.1"><math alttext="7.61\times 10^{-3}" class="ltx_Math" display="inline" id="A6.T5.6.6.6.1.m1" intent=":literal"><semantics><mrow><mn>7.61</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>3</mn></mrow></msup></mrow><annotation encoding="application/x-tex">7.61\times 10^{-3}</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="A6.T5.7.7.7">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="A6.T5.7.7.7.2">Advanced_feature_count</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="A6.T5.7.7.7.3">0.4921</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="A6.T5.7.7.7.1"><math alttext="1.70\times 10^{-3}" class="ltx_Math" display="inline" id="A6.T5.7.7.7.1.m1" intent=":literal"><semantics><mrow><mn>1.70</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>3</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1.70\times 10^{-3}</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+</section>
+<section class="ltx_appendix" id="A7">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录G</span><span class="original-text">Appendix G</span></span><span class="translated-text">六个代理的单独图</span><span class="original-text">Individual Plots for Six Proxies</span></h2>
+<div class="ltx_para" id="A7.p1">
+<p class="ltx_p" id="A7.p1.1"><span class="translated-text">图中</span><span class="original-text">In figure</span><a class="ltx_ref" href="#A7.F5" title="Figure 5 ‣ Appendix G Individual Plots for Six Proxies ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">，每个点代表特定表计数的代理指标的平均值。虚线表示窗口大小为 15 的代理值的移动平均值。</span><span class="original-text">, each point represents the average value of a proxy metric for a specific table count. The dashed line denotes the moving average of the proxy values with a window size of 15.</span></p>
+</div>
+<figure class="ltx_figure" id="A7.F5"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="229" id="A7.F5.g1" src="https://arxiv.org/html/2603.25568v1/latex/photos/sql_metrics_plot_avg.png" width="405"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Individual Plots for Six Proxies. Each point represents the average value of a proxy metric for a specific table count. The dashed line denotes the moving average of the proxy values with a window size of 15.</figcaption>
+</figure>
+</section>
+<section class="ltx_appendix" id="A8">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录H</span><span class="original-text">Appendix H</span></span><span class="translated-text">跨模板频率组的平均代理值。</span><span class="original-text">Average Proxy Values Across template frequency groups.</span></h2>
+<div class="ltx_para" id="A8.p1">
+<p class="ltx_p" id="A8.p1.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#A8.T6" title="Table 6 ‣ Appendix H Average Proxy Values Across template frequency groups. ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">显示硬模板和软模板的平均代理值。</span><span class="original-text">presents the average proxy values across hard and soft templates.</span></p>
+</div>
+<figure class="ltx_table" id="A8.T6">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 6: </span>Average proxy values across template frequency groups. The maximum value in each row is highlighted in bold.</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="A8.T6.1" style="width:433.6pt;height:191.2pt;vertical-align:-92.6pt;"><span class="ltx_transformed_inner" style="transform:translate(36.4pt,-16.0pt) scale(1.20148905271941,1.20148905271941) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="A8.T6.1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="A8.T6.1.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="A8.T6.1.1.1.1.1"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.1.1.1.1">Metric</span></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="A8.T6.1.1.1.1.2"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.1.1.2.1">Type</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="A8.T6.1.1.1.1.3"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.1.1.3.1">High</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="A8.T6.1.1.1.1.4"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.1.1.4.1">Middle</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="A8.T6.1.1.1.1.5"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.1.1.5.1">Long Tail</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="A8.T6.1.1.1.1.6"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.1.1.6.1">Once</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="A8.T6.1.1.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="A8.T6.1.1.2.1.1">Num_tables</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="A8.T6.1.1.2.1.2">Soft</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.2.1.3">1.41</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.2.1.4">1.74</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.2.1.5">1.83</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.2.1.6"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.2.1.6.1">2.12</span></td>
+</tr>
+<tr class="ltx_tr" id="A8.T6.1.1.3.2">
+<th class="ltx_td ltx_th ltx_th_row" id="A8.T6.1.1.3.2.1"></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="A8.T6.1.1.3.2.2">Hard</th>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.3.2.3">1.12</td>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.3.2.4">1.55</td>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.3.2.5">1.91</td>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.3.2.6"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.3.2.6.1">2.21</span></td>
+</tr>
+<tr class="ltx_tr" id="A8.T6.1.1.4.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="A8.T6.1.1.4.3.1">Num_joins</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="A8.T6.1.1.4.3.2">Soft</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.4.3.3">0.41</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.4.3.4">0.74</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.4.3.5">0.82</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.4.3.6"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.4.3.6.1">1.10</span></td>
+</tr>
+<tr class="ltx_tr" id="A8.T6.1.1.5.4">
+<th class="ltx_td ltx_th ltx_th_row" id="A8.T6.1.1.5.4.1"></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="A8.T6.1.1.5.4.2">Hard</th>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.5.4.3">0.12</td>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.5.4.4">0.55</td>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.5.4.5">0.91</td>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.5.4.6"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.5.4.6.1">1.20</span></td>
+</tr>
+<tr class="ltx_tr" id="A8.T6.1.1.6.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="A8.T6.1.1.6.5.1">Num_subqueries</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="A8.T6.1.1.6.5.2">Soft</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.6.5.3">0.03</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.6.5.4">0.11</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.6.5.5">0.14</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.6.5.6"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.6.5.6.1">0.23</span></td>
+</tr>
+<tr class="ltx_tr" id="A8.T6.1.1.7.6">
+<th class="ltx_td ltx_th ltx_th_row" id="A8.T6.1.1.7.6.1"></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="A8.T6.1.1.7.6.2">Hard</th>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.7.6.3">0.04</td>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.7.6.4">0.13</td>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.7.6.5">0.11</td>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.7.6.6"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.7.6.6.1">0.15</span></td>
+</tr>
+<tr class="ltx_tr" id="A8.T6.1.1.8.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="A8.T6.1.1.8.7.1">Max_nesting_depth</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="A8.T6.1.1.8.7.2">Soft</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.8.7.3">0.41</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.8.7.4">0.54</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.8.7.5">0.72</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.8.7.6"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.8.7.6.1">1.06</span></td>
+</tr>
+<tr class="ltx_tr" id="A8.T6.1.1.9.8">
+<th class="ltx_td ltx_th ltx_th_row" id="A8.T6.1.1.9.8.1"></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="A8.T6.1.1.9.8.2">Hard</th>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.9.8.3">0.43</td>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.9.8.4">0.54</td>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.9.8.5">0.64</td>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.9.8.6"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.9.8.6.1">0.86</span></td>
+</tr>
+<tr class="ltx_tr" id="A8.T6.1.1.10.9">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="A8.T6.1.1.10.9.1">Num_aggs_plus_group_by</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="A8.T6.1.1.10.9.2">Soft</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.10.9.3">0.49</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.10.9.4">0.64</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.10.9.5">0.94</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.10.9.6"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.10.9.6.1">1.09</span></td>
+</tr>
+<tr class="ltx_tr" id="A8.T6.1.1.11.10">
+<th class="ltx_td ltx_th ltx_th_row" id="A8.T6.1.1.11.10.1"></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="A8.T6.1.1.11.10.2">Hard</th>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.11.10.3">0.51</td>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.11.10.4">0.62</td>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.11.10.5">0.87</td>
+<td class="ltx_td ltx_align_center" id="A8.T6.1.1.11.10.6"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.11.10.6.1">0.90</span></td>
+</tr>
+<tr class="ltx_tr" id="A8.T6.1.1.12.11">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="A8.T6.1.1.12.11.1">Advanced_feature_count</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="A8.T6.1.1.12.11.2">Soft</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.12.11.3">0.00</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.12.11.4"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.12.11.4.1">0.10</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.12.11.5">0.07</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A8.T6.1.1.12.11.6">0.04</td>
+</tr>
+<tr class="ltx_tr" id="A8.T6.1.1.13.12">
+<th class="ltx_td ltx_th ltx_th_row ltx_border_bb" id="A8.T6.1.1.13.12.1"></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="A8.T6.1.1.13.12.2">Hard</th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="A8.T6.1.1.13.12.3">0.00</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="A8.T6.1.1.13.12.4"><span class="ltx_text ltx_font_bold" id="A8.T6.1.1.13.12.4.1">0.10</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="A8.T6.1.1.13.12.5">0.07</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="A8.T6.1.1.13.12.6">0.02</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+</section>
+<section class="ltx_appendix" id="A9">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录一</span><span class="original-text">Appendix I</span></span><span class="translated-text">模板频率分布。</span><span class="original-text">Template Frequency Distribution.</span></h2>
+<div class="ltx_para" id="A9.p1">
+<p class="ltx_p" id="A9.p1.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#A9.T7" title="Table 7 ‣ Appendix I Template Frequency Distribution. ‣ Are LLMs Overkill for Databases?: A Study on the Finiteness of SQL"><span class="ltx_text ltx_ref_tag">7</span></a><span class="translated-text">显示模板频率分布。</span><span class="original-text">shows the template frequency distribution.</span></p>
+</div>
+<figure class="ltx_table" id="A9.T7">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 7: </span>Template frequency distribution. Percentages indicate the proportion of templates in each frequency category.</figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="A9.T7.1" style="width:433.6pt;height:38.3pt;vertical-align:-16.6pt;"><span class="ltx_transformed_inner" style="transform:translate(6.4pt,-0.6pt) scale(1.03045555954346,1.03045555954346) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="A9.T7.1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="A9.T7.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="A9.T7.1.1.1.2"><span class="ltx_text ltx_font_bold" id="A9.T7.1.1.1.2.1">Template Type</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="A9.T7.1.1.1.1"><span class="ltx_text ltx_font_bold" id="A9.T7.1.1.1.1.1">High (<math alttext="\geq" class="ltx_Math" display="inline" id="A9.T7.1.1.1.1.1.m1" intent=":literal"><semantics><mo>≥</mo><annotation encoding="application/x-tex">\geq</annotation></semantics></math>100)</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="A9.T7.1.1.1.3"><span class="ltx_text ltx_font_bold" id="A9.T7.1.1.1.3.1">Middle (10–99)</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="A9.T7.1.1.1.4"><span class="ltx_text ltx_font_bold" id="A9.T7.1.1.1.4.1">Long Tail (2–9)</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="A9.T7.1.1.1.5"><span class="ltx_text ltx_font_bold" id="A9.T7.1.1.1.5.1">Once (1)</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="A9.T7.1.1.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="A9.T7.1.1.2.1.1">Hard</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A9.T7.1.1.2.1.2">19 (0.3%)</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A9.T7.1.1.2.1.3">223 (3.3%)</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A9.T7.1.1.2.1.4">2358 (35.2%)</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="A9.T7.1.1.2.1.5">4099 (61.2%)</td>
+</tr>
+<tr class="ltx_tr" id="A9.T7.1.1.3.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="A9.T7.1.1.3.2.1">Soft</th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="A9.T7.1.1.3.2.2">28 (0.6%)</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="A9.T7.1.1.3.2.3">260 (5.7%)</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="A9.T7.1.1.3.2.4">1958 (42.7%)</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="A9.T7.1.1.3.2.5">2341 (51.0%)</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2603.25568v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>

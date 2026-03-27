@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">衡量什么是重要的，或者什么是方便的？：基于 LLM 的评分系统构建不相关因素的稳健性</span><span class="original-text">Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 3 月 26 日星期四 17:28:09 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Thu Mar 26 17:28:09 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2603.25674" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2603.25674" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">描述：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2603.25674v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2603.25674v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<a class="header-button color-tog" href="javascript:toggleColorScheme();" title="Toggle dark/light mode">
+<label class="toggle-icon automatic-tog" title="Switch to light mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon light-tog" title="Switch to dark mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon dark-tog" title="Switch to system preference">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+</a>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Methods</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S2.SS1" title="In 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.1 </span>Source Data</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S2.SS1.SSS1" title="In 2.1 Source Data ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.1.1 </span>Assessment</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S2.SS1.SSS2" title="In 2.1 Source Data ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.1.2 </span>Automated Scoring System</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS2" title="In 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.2 </span>Data Selection</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S2.SS3" title="In 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.3 </span>Experiments</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S2.SS3.SSS1" title="In 2.3 Experiments ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.3.1 </span>Experiment 1: Meaningless Text</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S2.SS3.SSS2" title="In 2.3 Experiments ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.3.2 </span>Experiment 2: Writing Sophistication</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S2.SS3.SSS3" title="In 2.3 Experiments ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.3.3 </span>Experiment 3: Off-Topic Responses</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Results and Discussion</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In 3 Results and Discussion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Experiment 1: Meaningless Text</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S3.SS2" title="In 3 Results and Discussion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Experiment 2: Writing Sophistication</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS1" title="In 3.2 Experiment 2: Writing Sophistication ‣ 3 Results and Discussion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2.1 </span>Spelling Errors</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS2" title="In 3.2 Experiment 2: Writing Sophistication ‣ 3 Results and Discussion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2.2 </span>Reading Level</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS3" title="In 3 Results and Discussion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.3 </span>Experiment 3: Off-Topic Responses</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Conclusion</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S4.SS1" title="In 4 Conclusion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>Limitations and Future Work</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS1.SSS1" title="In 4.1 Limitations and Future Work ‣ 4 Conclusion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1.1 </span>Acknowledgements</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS1.SSS2" title="In 4.1 Limitations and Future Work ‣ 4 Conclusion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1.2 </span><span class="ltx_ERROR undefined">\discintname</span></span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2603.25674v1 [cs.CL] 2026 年 3 月 26 日</span><span class="original-text">arXiv:2603.25674v1 [cs.CL] 26 Mar 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line"><span class="ltx_note ltx_role_institutetext" id="id1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type"><span class="translated-text">机构文本：</span><span class="original-text">institutetext:</span></span><span class="translated-text">Acuity Insights Inc.，加拿大安大略省多伦多</span><span class="original-text">Acuity Insights Inc., Toronto, ON, Canada</span><br class="ltx_break"/><span class="ltx_note ltx_role_email" id="id1.1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type"><span class="translated-text">电子邮件：</span><span class="original-text">email:</span></span><span class="translated-text">{cwalsh，rivan}@acuityinsights.com</span><span class="original-text">{cwalsh,rivan}@acuityinsights.com</span></span></span></span></span></span></span>
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">衡量什么是重要的，或者什么是方便的？：基于 LLM 的评分系统构建不相关因素的稳健性</span><span class="original-text">Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Cole Walsh
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Rodica Ivan
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">自动化系统已在教育考试行业广泛采用，用于开放式回答评估和论文评分。这些系统通常达到与训练有素的人类评估者相当或更好的性能水平，但经常被证明容易受到与结构无关的因素（即与评估的结构无关的响应特征）和对抗条件的影响。鉴于大型语言模型在自动评分系统中的使用不断增加，人们重新关注“幻觉”以及这些基于法学硕士的自动评分方法对构建无关因素的稳健性。本研究调查了结构无关因素对基于双架构法学硕士的评分系统的影响，该评分系统旨在对情境判断测试中的短文式开放式回答项目进行评分。研究发现，评分系统对于用无意义的文本、拼写错误和书写复杂性填充响应通常具有鲁棒性。平均而言，重复大段文本会导致系统预测的分数较低，这与之前基于非法学硕士的评分系统的研究结果相矛盾，而偏离主题的回答会受到评分系统的严重惩罚。这些结果为未来基于 LLM 的评分系统在设计时考虑到结构相关性的稳健性提供了令人鼓舞的支持。</span><span class="original-text">Automated systems have been widely adopted across the educational testing industry for open-response assessment and essay scoring. These systems commonly achieve performance levels comparable to or superior than trained human raters, but have frequently been demonstrated to be vulnerable to the influence of construct-irrelevant factors (i.e., features of responses that are unrelated to the construct assessed) and adversarial conditions. Given the rising usage of large language models in automated scoring systems, there is a renewed focus on “hallucinations” and the robustness of these LLM-based automated scoring approaches to construct-irrelevant factors. This study investigates the effects of construct-irrelevant factors on a dual-architecture LLM-based scoring system designed to score short essay-like open-response items in a situational judgment test. It was found that the scoring system was generally robust to padding responses with meaningless text, spelling errors, and writing sophistication. Duplicating large passages of text resulted in lower scores predicted by the system, on average, contradicting results from previous studies of non-LLM-based scoring systems, while off-topic responses were heavily penalized by the scoring system. These results provide encouraging support for the robustness of future LLM-based scoring systems when designed with construct relevance in mind.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">开放式回答文本（包括简答题和论文）的自动评估是自然语言处理和人工智能（AI）在教育领域最早、探索最广泛的应用之一。随着时间的推移，自动评估书面作品的方法已经从使用手工特征（例如，类型标记比率、词性标记）和简单模型演变而来</span><span class="original-text">Automatic evaluation of open-response text, including short-answer responses and essays, is one of the earliest and most widely explored applications of natural language processing and artificial intelligence (AI) in education. Over time, methods for automatically evaluating written work have evolved from using handcrafted features (e.g., type-token ratios, part-of-speech tagging) and simple models</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="Automated evaluation of writing–50 years and counting">10</a>]</cite><span class="translated-text">更复杂的方法，包括神经网络和基于变压器的模型</span><span class="original-text">to more complex approaches including neural networks and transformer-based models</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="Automated evaluation of writing–50 years and counting">10</a>, <a class="ltx_ref" href="#bib.bib5" title="Investigating adversarial robustness in LLM-based AES">15</a>]</cite><span class="translated-text">。随着每一个新的发展，自动评分系统始终表现出与人类评分者的强烈一致性</span><span class="original-text">. With each new development automated scoring systems have consistently demonstrated strong alignment with human raters</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="Automated evaluation of writing–50 years and counting">10</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">尽管其整体性能强劲且被成功采用，但研究表明，许多自动评分系统对构造无关因素（即与评估的构造无关的响应特征）很敏感，无论底层架构如何。这些与结构无关的因素中最主要的是文本长度。涉及简单模型的早期研究表明，在文章中重复句子或整个段落可能会人为地抬高这些模型预测的分数</span><span class="original-text">Despite their strong overall performance and successful adoptions, studies have demonstrated the susceptibility of many automated scoring systems to construct-irrelevant factors (i.e., features of responses that are unrelated to the construct assessed) regardless of underlying architecture. Chief among these construct-irrelevant factors is text length; early studies involving simple models demonstrated that repeating sentences or entire paragraphs within an essay could artificially inflate scores predicted by these models</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="Stumping e-rater: challenging the validity of automated essay scoring">14</a>]</cite><span class="translated-text">，而最近的研究表明，即使在基于变压器的评分系统中，这个问题仍然存在</span><span class="original-text">, while more recent studies have demonstrated that this issue persists even in transformer-based scoring systems</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib5" title="Investigating adversarial robustness in LLM-based AES">15</a>]</cite><span class="translated-text">。其他研究已经证明注入特定单词或短语的巨大影响（例如，“从一个角度”、“另一方面”、“最终分析”）</span><span class="original-text">. Other studies have demonstrated outsized impacts of injecting particular words or phrases (e.g., “from one perspective”, “on the other hand”, “in the final analysis”)</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="Stumping e-rater: challenging the validity of automated essay scoring">14</a>]</cite><span class="translated-text">并包括题外话</span><span class="original-text">and including off-topic text</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="Stumping e-rater: challenging the validity of automated essay scoring">14</a>, <a class="ltx_ref" href="#bib.bib9" title="Evaluating the advisory flags and machine scoring difficulty in the e-rater® automated scoring engine">18</a>]</cite><span class="translated-text">。在这种对抗性条件下，现有自动评分系统的脆弱性破坏了人们对这些系统准确测量预期结构而不是可利用代理的信任。</span><span class="original-text">. The fragility of existing automated scoring systems under such adversarial conditions undermines trust in these systems to accurately measure the intended construct rather than exploitable proxies.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">近年来，自动评分研究开始关注直接采用大型语言模型 (LLM) 的系统</span><span class="original-text">In recent years, automated scoring research has begun to focus on systems employing large language models (LLMs) either directly</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib12" title="Applying large language models and chain-of-thought for automatic scoring">11</a>]</cite><span class="translated-text">或作为更复杂的评分系统的一部分</span><span class="original-text">or as part of more complex scoring systems</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="Explainable writing scores via fine-grained, LLM-generated features">1</a>, <a class="ltx_ref" href="#bib.bib2" title="Using LLMs to identify features of personal and professional skills in an open-response situational judgment test">17</a>]</cite><span class="translated-text">。虽然这些系统在许多情况下尚未达到基于变压器的系统所达到的最先进的性能指标</span><span class="original-text">. While these systems have not yet met state-of-the-art performance metrics achieved by transformer-based systems in many cases</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="Explainable writing scores via fine-grained, LLM-generated features">1</a>, <a class="ltx_ref" href="#bib.bib13" title="Evaluating LLM-based automated essay scoring: accuracy, fairness, and validity">7</a>]</cite><span class="translated-text">，他们在准确性方面的牺牲可以通过其他方式来弥补：创建人类可解释的分数和反馈，减少所需的培训数据量，并简化技术含量较低的评估开发人员的采用。随着基于法学硕士的评分解决方案的兴起，人们重新关注这些系统在对抗条件下的稳健性，特别是公众普遍意识到底层技术的局限性（例如“幻觉”）</span><span class="original-text">, what they sacrifice in accuracy they make up for in other ways: creating human-interpretable scores and feedback, reducing the amount of required training data, and easing adoption by less technical assessment developers. With this rise in LLM-based scoring solutions, there is a renewed focus on the robustness of these systems under adversarial conditions, especially with widespread public awareness of the limitations in the underlying technology (e.g., “hallucinations”</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="Detecting hallucinations in large language models using semantic entropy">3</a>]</cite><span class="translated-text">），而先前的自动评分模式并非如此。</span><span class="original-text">), which was not the case with prior modes of automated scoring.</span></p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">这项研究通过调查以下因素如何影响此类系统产生的分数，有助于我们理解与结构无关的因素对基于 LLM 的评分系统的影响：</span><span class="original-text">This study contributes towards our understanding of the effects of construct-irrelevant factors on LLM-based scoring systems by investigating how the following factors influence scores produced by one such system:</span></p>
+<ol class="ltx_enumerate" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="translated-text">无意义的文字，</span><span class="original-text">Meaningless Text,</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="translated-text">写作的复杂性，以及</span><span class="original-text">Writing Sophistication, and</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1"><span class="translated-text">离题文本</span><span class="original-text">Off-Topic Texts</span></p>
+</div>
+</li>
+</ol>
+<p class="ltx_p" id="S1.p4.2"><span class="translated-text">通过写作或语言能力的评估，写作复杂性通常被视为与结构相关的因素</span><span class="original-text">Writing sophistication is often considered a construct-relevant factor by assessments of writing or language proficiency</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="Explainable writing scores via fine-grained, LLM-generated features">1</a>, <a class="ltx_ref" href="#bib.bib20" title="Duolingo english test: technical manual">13</a>]</cite><span class="translated-text">。正如将在第 2 节中更详细讨论的那样。</span><span class="original-text">. As will be discussed in greater detail in Sec.</span><a class="ltx_ref" href="#S2.SS1.SSS1" title="2.1.1 Assessment ‣ 2.1 Source Data ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">2.1.1</span></a><span class="translated-text">，我们构建了基于法学硕士的情境判断测试（SJT）评分系统，旨在衡量个人和专业技能（例如沟通、团队合作、解决问题和批判性思维）</span><span class="original-text">, we constructed our LLM-based scoring system for a situational judgment test (SJT) designed to measure personal and professional skills (e.g., communication, teamwork, problem-solving, and critical thinking)</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib15" title="Situational judgment tests, response instructions, and validity: a meta-analysis">12</a>]</cite><span class="translated-text">其中写作复杂性的元素（例如拼写、语法、结构和组织）被认为与结构无关。那么，本研究的第二个目的是调查构建自动评分系统的可行性，该系统测量与用于测量写作或语言能力的评分系统截然不同的结构。</span><span class="original-text">where elements of writing sophistication (e.g., spelling, grammar, structure, and organization) were considered construct-irrelevant. This study, then, serves a secondary purpose of investigating the feasibility of constructing automated scoring systems that measure distinctly different constructs from scoring systems employed for measuring writing or language proficiency.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">方法</span><span class="original-text">Methods</span></h2>
+<section class="ltx_subsection" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span><span class="translated-text">源数据</span><span class="original-text">Source Data</span></h3>
+<section class="ltx_subsubsection" id="S2.SS1.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.1.1 </span><span class="translated-text">评估</span><span class="original-text">Assessment</span></h4>
+<div class="ltx_para" id="S2.SS1.SSS1.p1">
+<p class="ltx_p" id="S2.SS1.SSS1.p1.1"><span class="translated-text">我们使用 30 项开放式响应 SJT 收集数据，旨在评估学生的个人和专业技能并提供反馈。该工具主要用于学习计划中的低风险形成性（而不是总结性）使用，从四个维度评估学生的技能</span><span class="original-text">We collected data using a 30 item open-response SJT designed to assess and provide feedback on students’ personal and professional skills. This instrument, intended primarily for low-stakes formative (as opposed to summative) usage within a program of study, assessed students’ skills along four dimensions</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="Formative sjt: developing student personal and professional competencies">8</a>]</cite>:</p>
+<ol class="ltx_enumerate" id="S2.I1">
+<li class="ltx_item" id="S2.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span>
+<div class="ltx_para" id="S2.I1.i1.p1">
+<p class="ltx_p" id="S2.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S2.I1.i1.p1.1.1"><span class="translated-text">人际交往能力：</span><span class="original-text">Intrapersonal skills:</span></span><span class="translated-text">通过认识情绪、偏见和行为来了解和调节自己，保持动力，适应挑战，并致力于终身学习以实现个人成长。</span><span class="original-text">Understanding and regulating oneself by recognizing emotions, biases, and behaviors, staying motivated, adapting to challenges, and committing to lifelong learning for personal growth.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span>
+<div class="ltx_para" id="S2.I1.i2.p1">
+<p class="ltx_p" id="S2.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S2.I1.i2.p1.1.1"><span class="translated-text">人际交往能力：</span><span class="original-text">Interpersonal skills:</span></span><span class="translated-text">通过清晰沟通、表现出同理心、为共同目标而合作以及激励他人取得积极成果，与他人建立有意义的联系并有效合作。</span><span class="original-text">Building meaningful connections and working effectively with others by communicating clearly, showing empathy, collaborating toward shared goals, and inspiring others towards positive outcomes.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span>
+<div class="ltx_para" id="S2.I1.i3.p1">
+<p class="ltx_p" id="S2.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S2.I1.i3.p1.1.1"><span class="translated-text">社会和道德责任</span><span class="original-text">Social and Ethical Responsibility</span></span><span class="translated-text">：承认并尊重人们的差异，坚持道德原则，通过负责任的行动为社会福祉做出贡献。</span><span class="original-text">: Recognizing and respecting people’s differences, upholding ethical principles, and contributing to the well-being of society through responsible actions.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">4.</span>
+<div class="ltx_para" id="S2.I1.i4.p1">
+<p class="ltx_p" id="S2.I1.i4.p1.1"><span class="ltx_text ltx_font_bold" id="S2.I1.i4.p1.1.1"><span class="translated-text">批判性思维和解决问题：</span><span class="original-text">Critical Thinking and Problem Solving:</span></span><span class="translated-text">收集信息、评估选项并找到有效的问题解决方案，同时有效管理资源和风险。</span><span class="original-text">Gathering information, evaluating options, and finding effective solutions to problems while efficiently managing resources and risks.</span></p>
+</div>
+</li>
+</ol>
+</div>
+<div class="ltx_para" id="S2.SS1.SSS1.p2">
+<p class="ltx_p" id="S2.SS1.SSS1.p2.1"><span class="translated-text">对于每个项目，学生都会看到一个假设的场景，并询问他们在这种情况下会如何反应。场景以两种格式之一呈现：</span><span class="original-text">For each item, students were presented with a hypothetical scenario and asked how they would respond given the situation. Scenarios were presented in one of two formats:</span><span class="ltx_text ltx_font_italic" id="S2.SS1.SSS1.p2.1.1"><span class="translated-text">基于文本的</span><span class="original-text">text-based</span></span><span class="translated-text">场景包括对情况的简短描述，同时</span><span class="original-text">scenarios included a short description of a situation, while</span><span class="ltx_text ltx_font_italic" id="S2.SS1.SSS1.p2.1.2"><span class="translated-text">基于视频的</span><span class="original-text">video-based</span></span><span class="translated-text">使用人工智能生成的化身来描绘场景。以下是向学生展示的一个基于文本的场景的摘要以及随附的项目（问题）：</span><span class="original-text">scenarios were depicted using AI-generated avatars enacting a situation. Below is a summary of one text-based scenario students were shown and an accompanying item (question):</span></p>
+<blockquote class="ltx_quote" id="S2.SS1.SSS1.p2.2">
+<p class="ltx_p" id="S2.SS1.SSS1.p2.2.1"><span class="ltx_text ltx_font_bold" id="S2.SS1.SSS1.p2.2.1.1"><span class="translated-text">场景：</span><span class="original-text">Scenario:</span></span><span class="translated-text">肯德拉和亚历克斯是两位共同领导一个大型团体项目的亲密朋友，他们因肯德拉推动严格的时间表以满足最后期限而发生冲突。亚历克斯希望团队对任务分配有更多的投入，并担心肯德拉的方法可能会破坏团队的信任并导致他们的友谊紧张。</span><span class="original-text">Kendra and Alex, two close friends co-leading a major group project, are clashing over Kendra pushing a strict schedule to meet deadlines. Alex wants more group input on task division and worries that Kendra’s approach could undermine team trust and strain their friendship.</span><br class="ltx_break"/><span class="ltx_text ltx_font_bold" id="S2.SS1.SSS1.p2.2.1.2"><span class="translated-text">项目：</span><span class="original-text">Item:</span></span><span class="translated-text">联合领导 Alex 和 Kendra 如何才能更有效地与团队合作制定清晰且切合实际的项目计划？</span><span class="original-text">How could the co-leads, Alex and Kendra, have collaborated more effectively with the group to create a clear and realistic project plan?</span></p>
+</blockquote>
+<p class="ltx_p" id="S2.SS1.SSS1.p2.3"><span class="translated-text">该项目旨在评估人际交往能力，更具体地说，评估协作能力。为了在这个项目上获得高分，学生应该在他们的回答中表现出与协作一致的行为，例如</span><span class="original-text">This item was meant to assess interpersonal skills and, more specifically, collaboration. To receive a high score on this item, students were expected to demonstrate behaviors consistent with collaboration in their responses such as</span><span class="ltx_text ltx_font_italic" id="S2.SS1.SSS1.p2.3.1"><span class="translated-text">提出管理分歧和解决冲突的方法</span><span class="original-text">suggesting approaches to managing differences and resolving conflict</span></span>.</p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S2.SS1.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.1.2 </span><span class="translated-text">自动评分系统</span><span class="original-text">Automated Scoring System</span></h4>
+<div class="ltx_para" id="S2.SS1.SSS2.p1">
+<p class="ltx_p" id="S2.SS1.SSS2.p1.1"><span class="translated-text">我们为此评估开发了一个自动评分系统，该系统使用双架构 LLM-as-a-Judge 特征提取组件以及类似于参考文献中描述的明盒回归算法。</span><span class="original-text">We developed an automated scoring system for this assessment that used a dual-architecture LLM-as-a-Judge feature extraction component together with clear-box regression algorithms similar to those described in Refs.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="Explainable writing scores via fine-grained, LLM-generated features">1</a>, <a class="ltx_ref" href="#bib.bib2" title="Using LLMs to identify features of personal and professional skills in an open-response situational judgment test">17</a>]</cite><span class="translated-text">。根据该工具评估的结构，我们设计了评分系统，以奖励与个人和专业技能（例如上面提到的协作相关行为）相关的更高级别特征，而不是语言熟练程度或内容掌握程度。我们构建这个系统使用</span><span class="original-text">. Aligning with the constructs assessed by the instrument, we designed the scoring system to reward higher-level features related to personal and professional skills (such as the collaboration-related behavior noted above) rather than language proficiency or content-mastery. We constructed this system using</span><math alttext="26,571" class="ltx_Math" display="inline" id="S2.SS1.SSS2.p1.1.m1" intent=":literal"><semantics><mrow><mn>26</mn><mo>,</mo><mn>571</mn></mrow><annotation encoding="application/x-tex">26,571</annotation></semantics></math><span class="translated-text">来自代表 6 所学校的 910 名学生的评估回复（涵盖所有 30 个项目）。这些学校混合了商业、工程、健康科学和医学课程。所有回答首先由训练有素的评估员使用 1-5 Likert 评分量表进行评估；这些评级用于训练和评估自动评分系统，该系统的性能可与人类评分者相媲美。</span><span class="original-text">assessment responses (spread across all 30 items) from 910 students representing six schools. These schools comprised a mixture of business, engineering, health sciences, and medicine programs. All responses were first evaluated by trained human raters using a 1–5 Likert rating scale; these ratings were used to train and evaluate the automated scoring system, which achieved performance comparable to the human raters.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span><span class="translated-text">数据选择</span><span class="original-text">Data Selection</span></h3>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.4"><span class="translated-text">在本研究中，我们从 318 名学生中选择了 545 份回复（分布在所有 30 个项目）中的子集。鉴于我们将执行大量涉及重新评分响应的实验，我们选择使用响应的子集而不是上述完整数据集，以最大限度地降低 LLM API 成本。通过使用不同样本量的模拟，我们发现一组至少 500 个响应将使我们能够可靠地计算配对 Cohen</span><span class="original-text">For this study, we selected a subset of 545 responses (spread across all 30 items) from 318 students. We chose to use a subset of responses rather than the full dataset described above to minimize LLM API costs given that we would be executing a number of experiments that involved re-scoring responses. Through simulations with varying sample sizes, we identified that a set of at least 500 responses would allow us to reliably calculate paired Cohen’s</span><math alttext="d" class="ltx_Math" display="inline" id="S2.SS2.p1.1.m1" intent=":literal"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math><span class="translated-text">具有我们所需精度的效应大小（95% 置信区间的宽度</span><span class="original-text">effect sizes with our desired precision (width of 95% confidence interval</span><math alttext="&lt;0.2" class="ltx_Math" display="inline" id="S2.SS2.p1.2.m2" intent=":literal"><semantics><mrow><mi></mi><mo>&lt;</mo><mn>0.2</mn></mrow><annotation encoding="application/x-tex">&lt;0.2</annotation></semantics></math><span class="translated-text">）；我们根据这种启发式方法制定了抽样策略。为了确保所有评估项目以及不同质量的响应都在采样数据集中得到体现，我们通过按项目和预测分数进行分层，从较大的数据集中选择了响应：我们使用可用评分范围 1-5 之间的 10 个等宽箱对预测得分进行分箱，然后从每个项目的每个评分箱中随机选择最多两个响应。这种抽样策略确保我们从所有 30 个评估项目中选择了各种低质量和高质量的答复。我们的自动评分系统不会在某些项目的某些评分箱中生成分数（例如，该模型可能不会预测某个项目在 (1.4, 1.8] 箱中的任何得分），因此我们的采样数据集包含的响应总数少于 600 个响应，而如果所有 30 个项目的所有评分箱均可达到，则预期的响应总数会少于 600 个。</span><span class="original-text">); we developed our sampling strategy with this heuristic in mind. To ensure all assessment items, as well as responses of varying quality, were represented in the sampled dataset, we selected responses from our larger dataset by stratifying by item and predicted score: we binned predicted scores using 10 equal width bins between the available scoring range of 1–5, then selected up to two responses at random from each scoring bin for each item. This sampling strategy ensured that we selected a diversity of low and high quality responses from all 30 assessment items. Our automated scoring system did not produce scores in certain scoring bins for certain items (e.g., the model may not have predicted any scores in the (1.4, 1.8] bin for an item), hence our sampled dataset included less than the total of 600 responses that would have been expected had all scoring bins been attainable for all 30 items.</span><span class="ltx_text ltx_font_italic" id="S2.SS2.p1.4.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S2.T1" title="Table 1 ‣ 2.2 Data Selection ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">1</span></a></span><span class="translated-text">包括为每个评分箱选择的答案数量的细目。抽样响应的平均预测得分为</span><span class="original-text">includes a breakdown of the number of responses selected for each scoring bin. The mean predicted score for sampled responses was</span><math alttext="3.11" class="ltx_Math" display="inline" id="S2.SS2.p1.3.m3" intent=":literal"><semantics><mn>3.11</mn><annotation encoding="application/x-tex">3.11</annotation></semantics></math><span class="translated-text">标准差为</span><span class="original-text">with a standard deviation of</span><math alttext="1.17" class="ltx_Math" display="inline" id="S2.SS2.p1.4.m4" intent=":literal"><semantics><mn>1.17</mn><annotation encoding="application/x-tex">1.17</annotation></semantics></math>.</p>
+</div>
+<figure class="ltx_table" id="S2.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Number of responses selected from each scoring bin. Our automated scoring system did not produce scores in certain scoring bins for certain items, hence not all scoring bins included the maximum 60 responses.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S2.T1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S2.T1.1.1.1">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t" id="S2.T1.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S2.T1.1.1.1.1.1">Scoring Bin</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S2.T1.1.1.1.2"><span class="ltx_text ltx_font_bold" id="S2.T1.1.1.1.2.1">N</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S2.T1.1.2.1">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t" id="S2.T1.1.2.1.1">[1, 1.4]</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S2.T1.1.2.1.2">60</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.3.2">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S2.T1.1.3.2.1">(1.4, 1.8]</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T1.1.3.2.2">42</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.4.3">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S2.T1.1.4.3.1">(1.8, 2.2]</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T1.1.4.3.2">48</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.5.4">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S2.T1.1.5.4.1">(2.2, 2.6]</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T1.1.5.4.2">50</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.6.5">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S2.T1.1.6.5.1">(2.6, 3.0]</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T1.1.6.5.2">55</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.7.6">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S2.T1.1.7.6.1">(3.0, 3.4]</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T1.1.7.6.2">56</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.8.7">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S2.T1.1.8.7.1">(3.4, 3.8]</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T1.1.8.7.2">55</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.9.8">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S2.T1.1.9.8.1">(3.8, 4.2]</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T1.1.9.8.2">60</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.10.9">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S2.T1.1.10.9.1">(4.2, 4.6]</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T1.1.10.9.2">60</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.11.10">
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r" id="S2.T1.1.11.10.1">(4.6, 5.0]</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S2.T1.1.11.10.2">59</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S2.SS2.p2">
+<p class="ltx_p" id="S2.SS2.p2.1"><span class="translated-text">学生同意将他们的评估和调查数据用于研究目的，接受</span><span class="original-text">Students consented to the use of their assessment and survey data for research purposes by accepting the</span><span class="ltx_text ltx_font_italic" id="S2.SS2.p2.1.1"><span class="translated-text">条款和条件</span><span class="original-text">Terms and Conditions</span></span><span class="translated-text">开始评估之前；学生被告知他们可以随时撤回同意。只有同意将其数据用于研究目的的学生才会被纳入本研究。所有完成评估的学生还可以在测试结束时完成可选的人口统计信息调查。</span><span class="original-text">before starting the assessment; students were informed that they may withdraw their consent at any time. Only students who consented to their data being used for research purposes were included in this study. All students who completed the assessment could also complete an optional demographic information survey at the end of the test.</span><span class="ltx_text ltx_font_italic" id="S2.SS2.p2.1.2"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S2.T2" title="Table 2 ‣ 2.2 Data Selection ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">2</span></a></span><span class="translated-text">提供了我们为本研究选择的学生的自我识别的人口统计特征的详细信息。</span><span class="original-text">provides a breakdown of the self-identified demographic characteristics for the students whose responses we selected for this study.</span></p>
+</div>
+<figure class="ltx_table" id="S2.T2">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Number of students included in this study from various demographic subgroups. To protect individual privacy, any subgroups with fewer than 5 individuals were included in ‘Other’ subcategories.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S2.T2.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S2.T2.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_l ltx_border_t" id="S2.T2.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S2.T2.1.1.1.1.1">Demographic Characteristic</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S2.T2.1.1.1.2"><span class="ltx_text ltx_font_bold" id="S2.T2.1.1.1.2.1">N</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S2.T2.1.1.1.3"><span class="ltx_text ltx_font_bold" id="S2.T2.1.1.1.3.1">Fraction</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S2.T2.1.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_t" id="S2.T2.1.2.1.1"><span class="ltx_text ltx_font_italic" id="S2.T2.1.2.1.1.1">English Proficiency</span></th>
+<td class="ltx_td ltx_border_t" id="S2.T2.1.2.1.2"></td>
+<td class="ltx_td ltx_border_r ltx_border_t" id="S2.T2.1.2.1.3"></td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.1.3.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l" id="S2.T2.1.3.2.1">Other</th>
+<td class="ltx_td ltx_align_center" id="S2.T2.1.3.2.2">5</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T2.1.3.2.3">1.6%</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.1.4.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l" id="S2.T2.1.4.3.1">Good</th>
+<td class="ltx_td ltx_align_center" id="S2.T2.1.4.3.2">14</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T2.1.4.3.3">4.4%</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.1.5.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l" id="S2.T2.1.5.4.1">Advanced</th>
+<td class="ltx_td ltx_align_center" id="S2.T2.1.5.4.2">44</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T2.1.5.4.3">13.8%</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.1.6.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l" id="S2.T2.1.6.5.1">Native/Funationally Native</th>
+<td class="ltx_td ltx_align_center" id="S2.T2.1.6.5.2">255</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T2.1.6.5.3">80.2%</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.1.7.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l" id="S2.T2.1.7.6.1"><span class="ltx_text ltx_font_italic" id="S2.T2.1.7.6.1.1">Gender</span></th>
+<td class="ltx_td" id="S2.T2.1.7.6.2"></td>
+<td class="ltx_td ltx_border_r" id="S2.T2.1.7.6.3"></td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.1.8.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l" id="S2.T2.1.8.7.1">Other</th>
+<td class="ltx_td ltx_align_center" id="S2.T2.1.8.7.2">1</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T2.1.8.7.3">0.3%</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.1.9.8">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l" id="S2.T2.1.9.8.1">Woman</th>
+<td class="ltx_td ltx_align_center" id="S2.T2.1.9.8.2">149</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T2.1.9.8.3">46.9%</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.1.10.9">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l" id="S2.T2.1.10.9.1">Man</th>
+<td class="ltx_td ltx_align_center" id="S2.T2.1.10.9.2">168</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T2.1.10.9.3">52.8%</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.1.11.10">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l" id="S2.T2.1.11.10.1"><span class="ltx_text ltx_font_italic" id="S2.T2.1.11.10.1.1">Race</span></th>
+<td class="ltx_td" id="S2.T2.1.11.10.2"></td>
+<td class="ltx_td ltx_border_r" id="S2.T2.1.11.10.3"></td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.1.12.11">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l" id="S2.T2.1.12.11.1">Other</th>
+<td class="ltx_td ltx_align_center" id="S2.T2.1.12.11.2">4</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T2.1.12.11.3">1.3%</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.1.13.12">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l" id="S2.T2.1.13.12.1">Southeast Asian</th>
+<td class="ltx_td ltx_align_center" id="S2.T2.1.13.12.2">12</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T2.1.13.12.3">3.8%</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.1.14.13">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l" id="S2.T2.1.14.13.1">Middle Eastern or Northern African</th>
+<td class="ltx_td ltx_align_center" id="S2.T2.1.14.13.2">13</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T2.1.14.13.3">4.1%</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.1.15.14">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l" id="S2.T2.1.15.14.1">East Asian</th>
+<td class="ltx_td ltx_align_center" id="S2.T2.1.15.14.2">20</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T2.1.15.14.3">6.3%</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.1.16.15">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l" id="S2.T2.1.16.15.1">Black, African, Caribbean, or African American</th>
+<td class="ltx_td ltx_align_center" id="S2.T2.1.16.15.2">29</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T2.1.16.15.3">9.1%</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.1.17.16">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l" id="S2.T2.1.17.16.1">South Asian</th>
+<td class="ltx_td ltx_align_center" id="S2.T2.1.17.16.2">31</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T2.1.17.16.3">9.7%</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.1.18.17">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l" id="S2.T2.1.18.17.1">Hispanic, Latinx, or Spanish origin</th>
+<td class="ltx_td ltx_align_center" id="S2.T2.1.18.17.2">46</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S2.T2.1.18.17.3">14.5%</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.1.19.18">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_l" id="S2.T2.1.19.18.1">White or European</th>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S2.T2.1.19.18.2">163</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S2.T2.1.19.18.3">51.3%</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section class="ltx_subsection" id="S2.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span><span class="translated-text">实验</span><span class="original-text">Experiments</span></h3>
+<div class="ltx_para" id="S2.SS3.p1">
+<p class="ltx_p" id="S2.SS3.p1.2"><span class="translated-text">我们进行了三项实验，研究与结构无关的因素对我们的自动评分系统预测的分数的影响：</span><span class="original-text">We conducted three experiments investigating the influence of construct-irrelevant factors on scores predicted by our automated scoring system:</span></p>
+<ol class="ltx_enumerate" id="S2.I2">
+<li class="ltx_item" id="S2.I2.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span>
+<div class="ltx_para" id="S2.I2.i1.p1">
+<p class="ltx_p" id="S2.I2.i1.p1.1"><span class="translated-text">添加无意义的文本，不会添加到响应的内容中</span><span class="original-text">Adding meaningless text that does not add to the content of the response</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I2.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span>
+<div class="ltx_para" id="S2.I2.i2.p1">
+<p class="ltx_p" id="S2.I2.i2.p1.1"><span class="translated-text">拼写错误、词汇和句子结构方面的写作复杂程度各不相同</span><span class="original-text">Varying writing sophistication in terms of spelling errors, vocabulary, and sentence structure</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I2.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span>
+<div class="ltx_para" id="S2.I2.i3.p1">
+<p class="ltx_p" id="S2.I2.i3.p1.1"><span class="translated-text">生成与项目不一致的偏离主题的响应</span><span class="original-text">Generating off-topic responses that are not aligned with the item</span></p>
+</div>
+</li>
+</ol>
+<p class="ltx_p" id="S2.SS3.p1.1"><span class="translated-text">我们在下面更详细地描述每个实验。在每种情况下，我们都生成了包含 545 个响应的新数据集，每个生成的响应都是我们基础数据集中原始响应之一的更改版本。我们使用自动评分系统对改变后的反应重新进行评分，然后计算新计算的分数的统计数据，包括配对的科恩分数</span><span class="original-text">We describe each experiment in greater detail below. In each case, we produced new datasets of 545 responses with each generated response as an altered version of one of the original responses from our base dataset. We re-scored the altered responses using our automated scoring system, then computed statistics over the newly computed scores including paired Cohen’s</span><math alttext="d" class="ltx_Math" display="inline" id="S2.SS3.p1.1.m1" intent=":literal"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math><span class="translated-text">使用原始预测分数作为配对比较的基线来估计效应大小。</span><span class="original-text">effect size estimates using the original predicted scores as a baseline for the paired comparisons.</span></p>
+</div>
+<section class="ltx_subsubsection" id="S2.SS3.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.3.1 </span><span class="translated-text">实验1：无意义的文本</span><span class="original-text">Experiment 1: Meaningless Text</span></h4>
+<div class="ltx_para" id="S2.SS3.SSS1.p1">
+<p class="ltx_p" id="S2.SS3.SSS1.p1.2"><span class="translated-text">我们测试了在原始响应中附加四种类型的无意义文本的影响：</span><span class="original-text">We tested the impact of appending four types of meaningless text to the original response:</span></p>
+<ol class="ltx_enumerate" id="S2.I3">
+<li class="ltx_item" id="S2.I3.ix1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">A.</span>
+<div class="ltx_para" id="S2.I3.ix1.p1">
+<p class="ltx_p" id="S2.I3.ix1.p1.1"><span class="translated-text">原始回复的副本</span><span class="original-text">A copy of the original response</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I3.ix2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">B.</span>
+<div class="ltx_para" id="S2.I3.ix2.p1">
+<p class="ltx_p" id="S2.I3.ix2.p1.1"><span class="translated-text">一个句子，说明该项目评估了哪些能力（例如，“这个问题旨在评估协作。”）</span><span class="original-text">A sentence stating what competency was assessed by the item (e.g., “This question is designed to assess collaboration.”)</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I3.ix3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">C.</span>
+<div class="ltx_para" id="S2.I3.ix3.p1">
+<p class="ltx_p" id="S2.I3.ix3.p1.1"><span class="translated-text">一句话重述了场景中发生的事情。请参阅第 2 节中的示例。</span><span class="original-text">A sentence rephrasing what happened in the scenario. See example in Sec.</span><a class="ltx_ref" href="#S2.SS1.SSS1" title="2.1.1 Assessment ‣ 2.1 Source Data ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">2.1.1</span></a>.</p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I3.ix4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">D.</span>
+<div class="ltx_para" id="S2.I3.ix4.p1">
+<p class="ltx_p" id="S2.I3.ix4.p1.1"><span class="translated-text">一句公式化的话：“我会以尊重、非对抗、非评判的方式处理这种情况。”</span><span class="original-text">A formulaic sentence: “I would approach the situation in a respectful, non-confrontational, and non-judgmental manner.”</span></p>
+</div>
+</li>
+</ol>
+<p class="ltx_p" id="S2.SS3.SSS1.p1.1"><span class="translated-text">虽然子实验 B 和 C 没有为原始响应引入有意义的附加内容，但子实验 A 旨在探索重复相同文本的特别对抗性条件，从而在没有任何附加内容的情况下增加响应长度。 Ravindran 和 Choi 之前发现，这种精确的改变导致预测分数的平均变化</span><span class="original-text">While sub-experiments B and C introduced no meaningful additional content to the original responses, sub-experiment A was meant to explore the particularly adversarial condition where the same text is repeated, inflating response length without any additional content. Ravindran &amp; Choi previously identified that this exact alteration led to an average change in predicted scores of</span><math alttext="0.93" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p1.1.m1" intent=":literal"><semantics><mn>0.93</mn><annotation encoding="application/x-tex">0.93</annotation></semantics></math><span class="translated-text">（1-6 级）使用基于 Transformer 的评分系统</span><span class="original-text">(on a 1–6 scale) using a transformer-based scoring system</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib5" title="Investigating adversarial robustness in LLM-based AES">15</a>]</cite><span class="translated-text">，所以我们想探讨这个结果是否可以转化为基于法学硕士的评分系统。子实验 D 确实引入了有意义的文本，但象征着在本实验和其他开放式响应 SJT 中经常观察到的那种记忆的、公式化的短语</span><span class="original-text">, so we wanted to explore whether this result translated to LLM-based scoring systems. Sub-experiment D does introduce meaningful text, but is emblematic of the kind of memorized, formulaic phrases often observed in this and other open-response SJTs</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib19" title="Evaluating factors that impact scoring an open response situational judgment test: a mixed methods approach">9</a>]</cite>.</p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S2.SS3.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.3.2 </span><span class="translated-text">实验2：写作的复杂性</span><span class="original-text">Experiment 2: Writing Sophistication</span></h4>
+<div class="ltx_para" id="S2.SS3.SSS2.p1">
+<p class="ltx_p" id="S2.SS3.SSS2.p1.1"><span class="translated-text">我们测试了对原始回复的两种类型的更改，这些更改会影响回复的整体书面质量和复杂程度：</span><span class="original-text">We tested two types of alterations to the original responses affecting the overall written quality and sophistication of the responses:</span></p>
+<ol class="ltx_enumerate" id="S2.I4">
+<li class="ltx_item" id="S2.I4.ix1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">A.</span>
+<div class="ltx_para" id="S2.I4.ix1.p1">
+<p class="ltx_p" id="S2.I4.ix1.p1.1"><span class="translated-text">引入拼写错误</span><span class="original-text">Introducing spelling errors</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I4.ix2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">B.</span>
+<div class="ltx_para" id="S2.I4.ix2.p1">
+<p class="ltx_p" id="S2.I4.ix2.p1.1"><span class="translated-text">调整理解响应所需的阅读水平</span><span class="original-text">Adjusting the reading level needed to understand the response</span></p>
+</div>
+</li>
+</ol>
+<p class="ltx_p" id="S2.SS3.SSS2.p1.2"><span class="translated-text">对于子实验 A，我们对固定概率范围为 5-50% 的响应引入了随机字符级编辑，步长为 5 个百分点。我们使用固定的编辑类型分布，其中 40% 的编辑是替换，30% 是删除，30% 是插入。对于替换和插入，插入的字符是从所有大写和小写英文字符中以相同的权重选择的。这个过程产生了“最坏情况”的结果，因为生成的错误没有可预测的模式，这与人类写作中常见的错误不同</span><span class="original-text">For sub-experiment A, we introduced random character-level edits to responses with fixed probabilities ranging from 5–50% in steps of five percentage points. We used a fixed distribution of edit types with 40% of edits being substitutions, 30% being deletions, and 30% being insertions. For substitutions and insertions, inserted characters were selected from all upper and lowercase english characters with equal weighting. This procedure produced a “worst-case” result as there was no predictable pattern in generated errors unlike those typically seen in human writing</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib16" title="The influence of spelling errors on content scoring performance">6</a>]</cite><span class="translated-text">;因此，该实验的结果应被解释为评分系统对拼写错误的鲁棒性的下限。之前针对更一般任务的 LLM 准确性的研究发现，LLM 对这些类型错误的鲁棒性与模型能力存在差异，更高级的模型通常对提示中的拼写错误表现出卓越的鲁棒性</span><span class="original-text">; the results of this experiment should therefore be interpreted as a lower bound on the robustness of the scoring system to spelling errors. Previous studies of LLM accuracy for more general tasks found disparities in the robustness of LLMs to these types of errors along the lines of model capability, with more advanced models generally showing superior robustness to spelling errors in a prompt</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib21" title="Reasoning robustness of llms to adversarial typographical errors">4</a>]</cite><span class="translated-text">。我们在此研究的评分系统使用 GPT-5.X 模型，因此我们假设它对拼写错误同样具有鲁棒性。</span><span class="original-text">. The scoring system we investigated here used GPT-5.X models, so we hypothesized that it would be similarly robust to spelling errors.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS3.SSS2.p2">
+<p class="ltx_p" id="S2.SS3.SSS2.p2.1"><span class="translated-text">对于子实验 B，我们使用 LLM（GPT-5 mini）以更高或更低年级的阅读水平重新表述每个答案，同时保持答案的原始含义。我们使用 Flesch-Kincaid 阅读等级 (RGL) 测量了原始答案和修改后的答案的阅读水平</span><span class="original-text">For sub-experiment B, we used an LLM (GPT-5 mini) to rephrase each response at a higher or lower grade reading level while maintaining the original meaning of the response. We measured the reading level of the original and altered responses using the Flesch–Kincaid Reading Grade Level (RGL)</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="Test-retest and inter-analyst reliability of the automated readability index, flesch reading ease score, and the fog count">16</a>]</cite><span class="translated-text">。该指数认为每个单词的音节较多、每个句子的单词较多的文本更难阅读，需要更多的教育才能理解。虽然对写作复杂程度的衡量并不完美，但该指数为衡量文本结构的低水平差异提供了有用的启发式方法，使我们能够调查更复杂的单词和句子是否以及在多大程度上影响预测分数。</span><span class="original-text">. This index considers texts with more syllables per word and more words per sentence as more difficult to read and requiring more education to understand. While an imperfect measure of writing sophistication, this index provides a useful heuristic for measuring low-level differences in text structures, allowing us to investigate whether and to what extent more complex words and sentences influence predicted scores.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS3.SSS2.p3">
+<p class="ltx_p" id="S2.SS3.SSS2.p3.1"><span class="translated-text">诸如此类的写作质量特征与传统写作和语言能力评估结构相关（例如，参见参考文献 1）。</span><span class="original-text">Features of writing quality, such as these, are construct-relevant for traditional writing and language proficiency assessments (see, for example, Refs.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="Explainable writing scores via fine-grained, LLM-generated features">1</a>, <a class="ltx_ref" href="#bib.bib20" title="Duolingo english test: technical manual">13</a>]</cite><span class="translated-text">），但不是 SJT。那么，这个实验对于衡量我们的自动评分系统是否有效地评估预期的结构而不是与写作熟练程度相关的结构尤为重要。</span><span class="original-text">), but not SJTs. This experiment is particularly important, then, for gauging whether our automated scoring system is effectively evaluating the intended constructs and not constructs related to writing proficiency.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S2.SS3.SSS3">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.3.3 </span><span class="translated-text">实验 3：离题反应</span><span class="original-text">Experiment 3: Off-Topic Responses</span></h4>
+<div class="ltx_para" id="S2.SS3.SSS3.p1">
+<p class="ltx_p" id="S2.SS3.SSS3.p1.1"><span class="translated-text">在这个实验中，我们研究了我们的自动评分系统如何解释偏离主题的回答（即没有解决向学生提出的场景和问题的回答）。为此，我们从原始数据集中创建了项目-响应组合的随机排列，以便每个响应仍然只表示一次并且与其原始项目不匹配。我们进行了这个实验的两个版本：</span><span class="original-text">In this experiment we investigated how off-topic responses (i.e., responses that did not address the scenario and question presented to the student) were interpreted by our automated scoring system. To do this we created random permutations of item-response combinations from our original dataset such that each response was still represented exactly once and was not matched with its original item. We conducted two versions of this experiment:</span></p>
+<ol class="ltx_enumerate" id="S2.I5">
+<li class="ltx_item" id="S2.I5.ix1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">A.</span>
+<div class="ltx_para" id="S2.I5.ix1.p1">
+<p class="ltx_p" id="S2.I5.ix1.p1.1"><span class="translated-text">响应与评估项目相匹配</span><span class="original-text">Responses were matched with an item assessing a</span><span class="ltx_text ltx_font_italic" id="S2.I5.ix1.p1.1.1"><span class="translated-text">不同的</span><span class="original-text">different</span></span><span class="translated-text">作为原始项目的能力</span><span class="original-text">competency as the original item</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I5.ix2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">B.</span>
+<div class="ltx_para" id="S2.I5.ix2.p1">
+<p class="ltx_p" id="S2.I5.ix2.p1.1"><span class="translated-text">响应与评估项目相匹配</span><span class="original-text">Responses were matched with an item assessing the</span><span class="ltx_text ltx_font_italic" id="S2.I5.ix2.p1.1.1"><span class="translated-text">一样</span><span class="original-text">same</span></span><span class="translated-text">作为原始项目的能力</span><span class="original-text">competency as the original item</span></p>
+</div>
+</li>
+</ol>
+<p class="ltx_p" id="S2.SS3.SSS3.p1.2"><span class="translated-text">然而，对于评估相同能力（例如协作）的项目，我们的自动评分系统旨在评估相同的基础特征（尽管在评分时可能对它们进行不同的权重），但评估不同能力的项目中评估的特征之间不存在重叠。因此，我们假设，仍然表现出与能力相关的高质量回答所预期的相关特征的离题回答将比表现出与能力无关的特征的离题回答获得更高的分数。</span><span class="original-text">Whereas for items assessing the same competency (e.g., collaboration), our automated scoring system was designed to evaluate the same underlying features (though potentially weight them differently in scoring), there was no overlap between features evaluated in items assessing different competencies. We therefore hypothesized that off-topic responses that still exhibited relevant features expected of high quality responses for the competency would receive higher scores than off-topic responses that exhibited features unrelated to the competency.</span></p>
+</div>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">结果与讨论</span><span class="original-text">Results and Discussion</span></h2>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">实验1：无意义的文本</span><span class="original-text">Experiment 1: Meaningless Text</span></h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.4"><span class="ltx_text ltx_font_italic" id="S3.SS1.p1.4.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S3.T3" title="Table 3 ‣ 3.1 Experiment 1: Meaningless Text ‣ 3 Results and Discussion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">3</span></a></span><span class="translated-text">显示每个子实验中评估的答案的平均字数以及我们的自动评分系统分配的分数的平均值和标准差 (SD)。我们还包括用于比较的基线（未改变）数据集和配对的科恩数据集</span><span class="original-text">shows the mean word count of the responses evaluated in each sub-experiment as well as the mean and standard deviation (SD) of scores assigned by our automated scoring system. We also include the the baseline (unaltered) dataset for comparison and the paired Cohen’s</span><math alttext="d" class="ltx_Math" display="inline" id="S3.SS1.p1.1.m1" intent=":literal"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math><span class="translated-text">分配给基线响应和每个子实验中的响应的分数之间的效应大小估计。与 Ravindran 和 Choi 的研究结果相反</span><span class="original-text">effect size estimate between scores assigned to the baseline responses and responses in each sub-experiment. Contrary to the findings by Ravindran &amp; Choi</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib5" title="Investigating adversarial robustness in LLM-based AES">15</a>]</cite><span class="translated-text">，我们发现通常简单地复制响应</span><span class="original-text">, we find that simply duplicating a response generally</span><span class="ltx_text ltx_font_italic" id="S3.SS1.p1.4.2"><span class="translated-text">减少</span><span class="original-text">decreases</span></span><span class="translated-text">我们的自动评分系统分配的分数有少量（科恩的</span><span class="original-text">the score assigned by our automated scoring system by a small amount (Cohen’s</span><math alttext="d=-0.24" class="ltx_Math" display="inline" id="S3.SS1.p1.2.m2" intent=":literal"><semantics><mrow><mi>d</mi><mo>=</mo><mrow><mo>−</mo><mn>0.24</mn></mrow></mrow><annotation encoding="application/x-tex">d=-0.24</annotation></semantics></math><span class="translated-text">）。另一方面，添加其他类型的无意义文本，例如项目测试的能力陈述（子实验 B）或场景的改写（子实验 C）对分数的影响可以忽略不计（</span><span class="original-text">). On the other hand, adding other kinds of meaningless text like a statement of the competency tested by the item (sub-experiment B) or a rephrasing of the scenario (sub-experiment C) has negligible impact on scores (</span><math alttext="|d|\leq 0.01" class="ltx_Math" display="inline" id="S3.SS1.p1.3.m3" intent=":literal"><semantics><mrow><mrow><mo stretchy="false">|</mo><mi>d</mi><mo stretchy="false">|</mo></mrow><mo>≤</mo><mn>0.01</mn></mrow><annotation encoding="application/x-tex">|d|\leq 0.01</annotation></semantics></math><span class="translated-text">）。然而，我们确实发现，添加某些公式化短语（子实验 D）可能会对我们的评分系统产生积极的影响，从而分配更高的分数，尽管（至少在这里检查的情况下）这些影响非常小（</span><span class="original-text">). We did find, however, that adding certain formulaic phrases (sub-experiment D) could positively bias our scoring system to assign higher scores, though (at least in the case examined here) those effects are very small (</span><math alttext="d=0.16" class="ltx_Math" display="inline" id="S3.SS1.p1.4.m4" intent=":literal"><semantics><mrow><mi>d</mi><mo>=</mo><mn>0.16</mn></mrow><annotation encoding="application/x-tex">d=0.16</annotation></semantics></math>).</p>
+</div>
+<figure class="ltx_table" id="S3.T3">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 3: </span>Summary of responses evaluated in our baseline dataset and each sub-experiment in Experiment 1 including mean word count of the responses evaluated, the mean and standard deviation (SD) of scores assigned by our automated scoring system, and paired Cohen’s <math alttext="d" class="ltx_Math" display="inline" id="S3.T3.2.m1" intent=":literal"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math> effect size estimates between scores assigned in each sub-experiment with the baseline dataset.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T3.3">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T3.3.1">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t" id="S3.T3.3.1.2"><span class="ltx_text ltx_font_bold" id="S3.T3.3.1.2.1">Sub-Experiment</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T3.3.1.3"><span class="ltx_text ltx_font_bold" id="S3.T3.3.1.3.1">Mean Word Count</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T3.3.1.4"><span class="ltx_text ltx_font_bold" id="S3.T3.3.1.4.1">Mean Score (SD)</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T3.3.1.1"><span class="ltx_text ltx_font_bold" id="S3.T3.3.1.1.1">Cohen’s <math alttext="d" class="ltx_Math" display="inline" id="S3.T3.3.1.1.1.m1" intent=":literal"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math> (95% CI)</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T3.3.2.1">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t" id="S3.T3.3.2.1.1">Baseline</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T3.3.2.1.2">54.0</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T3.3.2.1.3">3.11 (1.17)</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T3.3.2.1.4">—</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.3.3.2">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S3.T3.3.3.2.1">A</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.3.3.2.2">107.4</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.3.3.2.3">2.82 (1.12)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.3.3.2.4">-0.24 (-0.33, -0.16)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.3.4.3">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S3.T3.3.4.3.1">B</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.3.4.3.2">61.6</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.3.4.3.3">3.09 (1.15)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.3.4.3.4">-0.01 (-0.10, 0.07)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.3.5.4">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S3.T3.3.5.4.1">C</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.3.5.4.2">95.7</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.3.5.4.3">3.12 (1.14)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.3.5.4.4">0.01 (-0.08, 0.09)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.3.6.5">
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r" id="S3.T3.3.6.5.1">D</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S3.T3.3.6.5.2">66.0</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S3.T3.3.6.5.3">3.28 (1.02)</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S3.T3.3.6.5.4">0.16 (0.08, 0.24)</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S3.SS1.p2">
+<p class="ltx_p" id="S3.SS1.p2.1"><span class="translated-text">这些结果表明，增加文本冗长而不有意义地添加文本内容不太可能对我们的自动评分系统分配的分数产生积极影响。通过添加有关项目测试的能力的声明或重新表述项目中呈现的场景，我们能够分别将平均响应长度增加 14% 和 77%，而分配的平均分数实际上为零变化。添加通过重复原始响应而降低整体响应清晰度的文本甚至会导致分配的分数总体出现负变化，这再次表明精确响应相对于那些过于冗长的响应的重要性。在回答中添加文本可以对我们的评分系统分配的分数产生积极影响，但前提是该文本包含有意义的新信息，正如我们在子实验 D 中发现的那样。该子实验的结果表明，添加记忆的公式化短语可能只会对分配的分数产生非常小的影响，尽管需要更深入地研究这些短语单独和组合的使用，以了解影响的全部范围。</span><span class="original-text">These results indicate that increasing text verbosity without meaningfully adding to the content of the text is unlikely to positively influence scores assigned by our automated scoring system. By adding a statement about the competency tested by the item or a rephrasing of the scenario presented in the item we were able to increase mean response length by 14% and 77%, respectively, with effectively zero change in the mean scores assigned. Adding text that detracted from the clarity of the overall response by duplicating the original response even led to negative overall shifts in scores assigned, again pointing to the importance of precise responses over those that are extraneously verbose. Adding text to responses can positively influence scores assigned by our scoring system, but only when that text contains meaningful and new information, as we found in sub-experiment D. The results of that sub-experiment indicate that adding memorized, formulaic phrases may only have very small effects on assigned scores, though more in-depth investigation of the use of such phrases on their own and in combination would be needed to understand the full scope of the effects.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span><span class="translated-text">实验2：写作的复杂性</span><span class="original-text">Experiment 2: Writing Sophistication</span></h3>
+<section class="ltx_subsubsection" id="S3.SS2.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.1 </span><span class="translated-text">拼写错误</span><span class="original-text">Spelling Errors</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS1.p1">
+<p class="ltx_p" id="S3.SS2.SSS1.p1.1"><span class="ltx_text ltx_font_italic" id="S3.SS2.SSS1.p1.1.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S3.T4" title="Table 4 ‣ 3.2.1 Spelling Errors ‣ 3.2 Experiment 2: Writing Sophistication ‣ 3 Results and Discussion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">4</span></a></span><span class="translated-text">显示在不同字符错误率 (CER) 的每个模拟中分配给响应的平均分数。我们还包括用于比较的基线（未更改）数据集以及分配给基线响应和每次模拟中的响应的分数之间的配对 Cohen d 效应大小估计。我们发现拼写错误的影响非常小或可以忽略不计，CER 约为 30%，而 CER 为 35% 时，可观察到的影响很小。当 CER 达到 40% 及以上时，当文本开始与随机字符串无法区分时，就会出现较大或非常大的效果。</span><span class="original-text">shows the mean score assigned to responses in each simulation with different character error rates (CERs). We also include the baseline (unaltered) dataset for comparison and the paired Cohen’s d effect size estimate between scores assigned to the baseline responses and responses in each simulation. We find very small or negligible effects of spelling errors up to a CER of about 30% with small observable effects showing up at a CER of 35%. Large or very large effects appear at CERs of 40% and beyond as the texts begin to become indistinguishable from random strings.</span><span class="ltx_text ltx_font_italic" id="S3.SS2.SSS1.p1.1.2"><span class="translated-text">图。</span><span class="original-text">Fig.</span><a class="ltx_ref" href="#S3.F1" title="Figure 1 ‣ 3.2.1 Spelling Errors ‣ 3.2 Experiment 2: Writing Sophistication ‣ 3 Results and Discussion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">1</span></a></span><span class="translated-text">还说明了我们的自动评分系统预测的平均分数作为 CER 的函数，其中平均预测分数的下降可以更清楚地观察到。</span><span class="original-text">illustrates the average score predicted by our automated scoring system as a function of CER as well, where this drop-off in mean predicted scores is more clearly observable.</span></p>
+</div>
+<figure class="ltx_table" id="S3.T4">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 4: </span>Summary of simulations introducing spelling errors into responses. The character error rate (CER) denotes the probability of any character in a response being edited (substitution, deletion, insertion). Compared to our baseline dataset with no artificial spelling errors introduced, there are very small or negligible differences in scores assigned by our automated scoring system, on average, up to a CER of about 30%.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T4.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T4.1.1">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t" id="S3.T4.1.1.2">Character Error Rate</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T4.1.1.3">Mean Predicted Score (SD)</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T4.1.1.1">Cohen’s <math alttext="d" class="ltx_Math" display="inline" id="S3.T4.1.1.1.m1" intent=":literal"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math> (95% CI)</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T4.1.2.1">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t" id="S3.T4.1.2.1.1">Baseline</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T4.1.2.1.2">3.11 (1.17)</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T4.1.2.1.3">—</td>
+</tr>
+<tr class="ltx_tr" id="S3.T4.1.3.2">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S3.T4.1.3.2.1">5%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.3.2.2">3.06 (1.10)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.3.2.3">-0.04 (-0.12, 0.05)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T4.1.4.3">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S3.T4.1.4.3.1">10%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.4.3.2">3.21 (1.13)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.4.3.3">0.09 (0.01, 0.18)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T4.1.5.4">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S3.T4.1.5.4.1">15%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.5.4.2">3.14 (1.15)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.5.4.3">0.03 (-0.05, 0.12)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T4.1.6.5">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S3.T4.1.6.5.1">20%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.6.5.2">3.08 (1.20)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.6.5.3">-0.02 (-0.10, 0.06)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T4.1.7.6">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S3.T4.1.7.6.1">25%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.7.6.2">3.00 (1.21)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.7.6.3">-0.09 (-0.18, -0.01)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T4.1.8.7">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S3.T4.1.8.7.1">30%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.8.7.2">2.98 (1.18)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.8.7.3">-0.11 (-0.19, -0.2)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T4.1.9.8">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S3.T4.1.9.8.1">35%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.9.8.2">2.80 (1.24)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.9.8.3">-0.25 (-0.34, -0.17)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T4.1.10.9">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S3.T4.1.10.9.1">40%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.10.9.2">2.24 (1.29)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.10.9.3">-0.70 (-0.79, -0.60)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T4.1.11.10">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S3.T4.1.11.10.1">45%</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.11.10.2">1.98 (1.15)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.1.11.10.3">-0.97 (-1.07, -0.87)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T4.1.12.11">
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r" id="S3.T4.1.12.11.1">50%</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S3.T4.1.12.11.2">1.70 (1.01)</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S3.T4.1.12.11.3">-1.28 (-1.40, -1.17)</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S3.SS2.SSS1.p2">
+<p class="ltx_p" id="S3.SS2.SSS1.p2.1"><span class="translated-text">这些结果表明我们的评分系统对拼写错误具有鲁棒性。为了说明这一点，在上一句中模拟 30% CER 会产生以下结果：“These esflts indicape thst ofur ecsrind sytv ails rnobstOo speloiVg errgprs。”这个改变的句子对于人类读者来说可能难以辨认，但作为我们评分系统一部分的法学硕士似乎能够根据所提供的说明充分解释这些回答。这是我们的评估和自动评分系统所期望的行为，因为它允许学生在完成评估时不必专注于拼写。</span><span class="original-text">These results indicate that our scoring system is robust to spelling errors. To illustrate, simulating a 30% CER in the previous sentence produces the following result: “These esflts indicape thst ofur ecsrind sytv ails rnobstOo speloiVg errgprs.” This altered sentence may be barely legible for a human reader, but the LLMs used as part of our scoring system appear to be able to interpret these responses sufficiently in regards to the provided instructions. This is a desired behavior of our assessment and automated scoring system as it allows students to not focus on spelling while completing the assessment.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F1"><img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="495" id="S3.F1.g1" src="https://arxiv.org/html/2603.25674v1/x1.png" width="660"/>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Mean score predicted by our automated scoring system for simulations of different character error rates (CER) in responses. The effects of spelling errors on the scoring system only become meaningful at CERs of 35% and above. Error bars represent the 95% confidence interval for the mean predicted score. The shaded region represents the 95% confidence interval on the mean score assigned to responses in the baseline dataset.</figcaption>
+</figure>
+</section>
+<section class="ltx_subsubsection" id="S3.SS2.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.2 </span><span class="translated-text">阅读水平</span><span class="original-text">Reading Level</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS2.p1">
+<p class="ltx_p" id="S3.SS2.SSS2.p1.1"><span class="ltx_text ltx_font_italic" id="S3.SS2.SSS2.p1.1.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S3.T5" title="Table 5 ‣ 3.2.2 Reading Level ‣ 3.2 Experiment 2: Writing Sophistication ‣ 3 Results and Discussion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">5</span></a></span><span class="translated-text">提供了对原始响应的 RGL 进行不同程度调整的六项模拟研究的总结。虽然字数在模拟中保持相对稳定，但随着我们改变响应以包含更少、但更长、更复杂的句子，每个句子的平均单词数在模拟中逐渐增加。我们还观察到，当我们用更复杂的单词替换更简单的单词时，每个单词的平均音节数在模拟中稳步增加。综合起来，这些改变平均会产生更高 RGL 的响应。</span><span class="original-text">provides a summary of six simulation studies adjusting the RGL of the original responses to varying degrees. While the word count remains relatively stable across simulations, the average number of words per sentence increases progressively over the simulations as we alter the responses to include fewer, but longer and more complex, sentences. We also observe that the average number of syllables per word increases steadily over the simulations as we replace simpler words with more complex ones. Combined, these alterations produce responses with higher RGLs, on average.</span></p>
+</div>
+<figure class="ltx_table" id="S3.T5">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 5: </span>Summary of simulations adjusting original responses to reflect different Flesch-Kincaid Reading Grade Levels (RGLs), which accounts for the average number of words per sentence and syllables per word in a text. Texts with higher RGLs can be interpreted as requiring more education to understand. Results from the baseline dataset where responses were not altered are italicized. We find very small or negligible differences in scores assigned to sets of responses with mean RGLs spanning up to six points.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T5.3">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T5.3.4.1">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t" colspan="6" id="S3.T5.3.4.1.1"><span class="ltx_text ltx_font_bold" id="S3.T5.3.4.1.1.1">Mean Value</span></th>
+<th class="ltx_td ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T5.3.4.1.2"></th>
+</tr>
+<tr class="ltx_tr" id="S3.T5.3.3">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t" id="S3.T5.3.3.4">
+<span class="ltx_rule" style="width:0.0pt;height:11.4pt;--ltx-bg-color:black;display:inline-block;"></span><span class="ltx_text ltx_font_bold" id="S3.T5.3.3.4.1">RGL</span>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T5.3.3.5"><span class="ltx_text ltx_font_bold" id="S3.T5.3.3.5.1">N(words)</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T5.3.3.6"><span class="ltx_text ltx_font_bold" id="S3.T5.3.3.6.1">N(sentences)</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T5.1.1.1"><math alttext="\frac{\text{{words}}}{\text{{sentence}}}" class="ltx_Math" display="inline" id="S3.T5.1.1.1.m1" intent=":literal"><semantics><mfrac><mtext class="ltx_mathvariant_bold">words</mtext><mtext class="ltx_mathvariant_bold">sentence</mtext></mfrac><annotation encoding="application/x-tex">\frac{\text{{words}}}{\text{{sentence}}}</annotation></semantics></math></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T5.2.2.2"><math alttext="\frac{\text{{syllables}}}{\text{{word}}}" class="ltx_Math" display="inline" id="S3.T5.2.2.2.m1" intent=":literal"><semantics><mfrac><mtext class="ltx_mathvariant_bold">syllables</mtext><mtext class="ltx_mathvariant_bold">word</mtext></mfrac><annotation encoding="application/x-tex">\frac{\text{{syllables}}}{\text{{word}}}</annotation></semantics></math></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T5.3.3.7"><span class="ltx_text ltx_font_bold" id="S3.T5.3.3.7.1">Score (SD)</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r" id="S3.T5.3.3.3">
+<math alttext="\mathbf{d}" class="ltx_Math" display="inline" id="S3.T5.3.3.3.m1" intent=":literal"><semantics><mi>𝐝</mi><annotation encoding="application/x-tex">\mathbf{d}</annotation></semantics></math> <span class="ltx_text ltx_font_bold" id="S3.T5.3.3.3.1">(95% CI)</span> <span class="ltx_rule" style="width:0.0pt;height:0.0pt;position:relative; bottom:-5.7pt;--ltx-bg-color:black;display:inline-block;"></span>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T5.3.5.1">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t" id="S3.T5.3.5.1.1">3.2</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T5.3.5.1.2">42.3</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T5.3.5.1.3">4.2</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T5.3.5.1.4">10.4</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T5.3.5.1.5">1.2</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T5.3.5.1.6">2.89 (1.13)</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T5.3.5.1.7">-0.19 (-0.27, -0.10)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T5.3.6.2">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S3.T5.3.6.2.1">4.7</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.6.2.2">47.1</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.6.2.3">3.7</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.6.2.4">12.9</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.6.2.5">1.3</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.6.2.6">3.00 (1.14)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.6.2.7">-0.09 (-0.17, 0.00)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T5.3.7.3">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S3.T5.3.7.3.1">6.5</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.7.3.2">48.9</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.7.3.3">3.2</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.7.3.4">15.6</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.7.3.5">1.3</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.7.3.6">3.05 (1.14)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.7.3.7">-0.05 (-0.14, 0.03)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T5.3.8.4">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S3.T5.3.8.4.1">7.6</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.8.4.2">48.2</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.8.4.3">2.9</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.8.4.4">16.8</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.8.4.5">1.4</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.8.4.6">3.10 (1.16)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.8.4.7">-0.01 (-0.09, 0.08)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T5.3.9.5">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S3.T5.3.9.5.1">8.6</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.9.5.2">47.7</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.9.5.3">2.7</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.9.5.4">17.8</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.9.5.5">1.5</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.9.5.6">3.08 (1.14)</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.9.5.7">-0.02 (-0.11, 0.06)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T5.3.10.6">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S3.T5.3.10.6.1"><span class="ltx_text ltx_font_italic" id="S3.T5.3.10.6.1.1">10.5</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.10.6.2"><span class="ltx_text ltx_font_italic" id="S3.T5.3.10.6.2.1">54.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.10.6.3"><span class="ltx_text ltx_font_italic" id="S3.T5.3.10.6.3.1">2.6</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.10.6.4"><span class="ltx_text ltx_font_italic" id="S3.T5.3.10.6.4.1">21.7</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.10.6.5"><span class="ltx_text ltx_font_italic" id="S3.T5.3.10.6.5.1">1.5</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.10.6.6"><span class="ltx_text ltx_font_italic" id="S3.T5.3.10.6.6.1">3.11 (1.17)</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T5.3.10.6.7">—</td>
+</tr>
+<tr class="ltx_tr" id="S3.T5.3.11.7">
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r" id="S3.T5.3.11.7.1">13.2</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S3.T5.3.11.7.2">48.9</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S3.T5.3.11.7.3">2.4</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S3.T5.3.11.7.4">20.9</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S3.T5.3.11.7.5">1.8</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S3.T5.3.11.7.6">3.22 (1.15)</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S3.T5.3.11.7.7">0.10 (0.02, 0.19)</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S3.SS2.SSS2.p2">
+<p class="ltx_p" id="S3.SS2.SSS2.p2.9"><span class="translated-text">我们发现，平均 RGL 相差大约 6 分的响应组的预测分数差异非常小或可以忽略不计。例如，我们的基线数据集中的响应的平均 RGL 为</span><span class="original-text">We find very small or negligible differences in predicted scores for sets of responses with mean RGLs up to roughly six points apart. For instance, responses in our baseline dataset had a mean RGL of</span><math alttext="10.5" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p2.1.m1" intent=":literal"><semantics><mn>10.5</mn><annotation encoding="application/x-tex">10.5</annotation></semantics></math><span class="translated-text">，而在一项模拟中，我们产生了改变的响应，平均 RGL 为</span><span class="original-text">, while in one simulation we produced altered responses with mean RGL of</span><math alttext="4.7" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p2.2.m2" intent=":literal"><semantics><mn>4.7</mn><annotation encoding="application/x-tex">4.7</annotation></semantics></math><span class="translated-text">;配对的科恩</span><span class="original-text">; the paired Cohen’s</span><math alttext="d" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p2.3.m3" intent=":literal"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math><span class="translated-text">分配给这两组响应的分数之间的效应大小是</span><span class="original-text">effect size between scores assigned to these two sets of responses was</span><math alttext="0.09" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p2.4.m4" intent=":literal"><semantics><mn>0.09</mn><annotation encoding="application/x-tex">0.09</annotation></semantics></math><span class="translated-text">。在另外两个模拟中，我们生成了一组响应，其平均 RGL 为</span><span class="original-text">. In two other simulations we produced sets of responses with mean RGLs of</span><math alttext="7.6" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p2.5.m5" intent=":literal"><semantics><mn>7.6</mn><annotation encoding="application/x-tex">7.6</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="13.2" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p2.6.m6" intent=":literal"><semantics><mn>13.2</mn><annotation encoding="application/x-tex">13.2</annotation></semantics></math><span class="translated-text">;配对的科恩</span><span class="original-text">; the paired Cohen’s</span><math alttext="d" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p2.7.m7" intent=":literal"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math><span class="translated-text">分配给这两组响应的分数之间的效应大小是</span><span class="original-text">effect size between scores assigned to these two sets of responses was</span><math alttext="0.11" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p2.8.m8" intent=":literal"><semantics><mn>0.11</mn><annotation encoding="application/x-tex">0.11</annotation></semantics></math><span class="translated-text">。我们可以通过一个例子来说明 RGL 的差异如何在响应中体现出来；以下是对 Sec 项目的响应示例。</span><span class="original-text">. We can illustrate how differences in RGLs manifest in responses with an example; below is a sample response to the item from Sec.</span><a class="ltx_ref" href="#S2.SS1.SSS1" title="2.1.1 Assessment ‣ 2.1 Source Data ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">2.1.1</span></a><span class="translated-text">RGL 为</span><span class="original-text">with an RGL of</span><math alttext="11.7" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p2.9.m9" intent=":literal"><semantics><mn>11.7</mn><annotation encoding="application/x-tex">11.7</annotation></semantics></math>:</p>
+<blockquote class="ltx_quote" id="S3.SS2.SSS2.p2.12">
+<p class="ltx_p" id="S3.SS2.SSS2.p2.12.1"><span class="ltx_text ltx_font_italic" id="S3.SS2.SSS2.p2.12.1.1"><span class="translated-text">亚历克斯和肯德拉可以通过首先概述粗略的时间表，然后召开简短的小组会议来共同调整，从而将结构与输入结合起来。这将使项目继续前进，同时仍然让成员有参与感。肯德拉对最后期限的关注和亚历克斯对信任的担忧都是有道理的，并且承认公开可能有助于平衡效率与协作。</span><span class="original-text">Alex and Kendra could have combined structure with input by first outlining a rough timeline and then holding a short group meeting to adjust it together. This would keep the project moving while still allowing members to feel involved. Kendra’s focus on deadlines and Alex’s concern about trust are both valid, and acknowledging that openly could have helped balance efficiency with collaboration.</span></span></p>
+</blockquote>
+<p class="ltx_p" id="S3.SS2.SSS2.p2.10"><span class="translated-text">在一次模拟中，我们将此响应编辑为 RGL</span><span class="original-text">In one simulation, we edited this response to an RGL of</span><math alttext="2.5" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p2.10.m1" intent=":literal"><semantics><mn>2.5</mn><annotation encoding="application/x-tex">2.5</annotation></semantics></math>:</p>
+<blockquote class="ltx_quote" id="S3.SS2.SSS2.p2.13">
+<p class="ltx_p" id="S3.SS2.SSS2.p2.13.1"><span class="ltx_text ltx_font_italic" id="S3.SS2.SSS2.p2.13.1.1"><span class="translated-text">亚历克斯和肯德拉可以制定计划并请求小组提供帮助。首先，他们可以制定一个带有日期的简单计划。然后他们可以召开一个简短的团队会议来共同改变计划。这可以让工作继续进行并让人们提供帮助。肯德拉关心完成日期。亚历克斯担心信任。两者都是对的。大声说出来可以帮助他们快速工作并协同工作。</span><span class="original-text">Alex and Kendra could make a plan and ask the group to help. First they can make a simple plan with dates. Then they can have a short team meeting to change the plan together. This keeps the work moving and lets people help. Kendra cares about finish dates. Alex worries about trust. Both are right. Saying this out loud can help them work fast and work together.</span></span></p>
+</blockquote>
+<p class="ltx_p" id="S3.SS2.SSS2.p2.11"><span class="translated-text">编辑后的回复稍长（68 个单词，而原始单词为 62 个），包含更简单的句子，并删除了更复杂的单词（例如“概述”、“允许”、“确认”、“效率”、“协作”）。尽管有这些变化，编辑后的回复仍然保持了原始回复的语气和内容；我们的自动评分系统给出的分数为</span><span class="original-text">The edited response is slightly longer (68 words compared to 62 in the original), contains simpler sentences, and does away with more complex words (e.g., “outlining”, “allowing”, “acknowledging”, “efficiency”, “collaboration”). Despite these changes, the edited response still maintains the tone and content of the original response; our automated scoring system assigned a score of</span><math alttext="4.6" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p2.11.m1" intent=":literal"><semantics><mn>4.6</mn><annotation encoding="application/x-tex">4.6</annotation></semantics></math><span class="translated-text">对这两个回应。</span><span class="original-text">to both responses.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS2.p3">
+<p class="ltx_p" id="S3.SS2.SSS2.p3.1"><span class="translated-text">这些结果表明，句子结构和词汇等低级写作特征对于我们的自动评分系统来说在很大程度上是无关紧要的。结合我们观察到的评分系统对上述拼写错误的鲁棒性，我们有强有力的证据表明，我们的系统通常忽略了写作质量和复杂性。鉴于迄今为止的自动评分系统主要是为了准确测量这些类型的特征而设计的，这一结果证实了我们的系统确实捕捉到了不同的东西，将其与其他测量写作或语言熟练程度的评分系统区分开来。</span><span class="original-text">These results indicate that low-level writing features like sentence structure and vocabulary are largely inconsequential to our automated scoring system. Taken together with the observed robustness of our scoring system to spelling errors noted above, we have strong evidence that writing quality and sophistication are generally ignored by our system. Given that automated scoring systems to date have predominantly been designed to measure exactly these kinds of features, this result affirms that our system is indeed capturing something different, distinguishing it from other scoring systems measuring writing or language proficiency.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span><span class="translated-text">实验 3：离题反应</span><span class="original-text">Experiment 3: Off-Topic Responses</span></h3>
+<div class="ltx_para" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.7"><span class="translated-text">我们发现，偏离主题的回答会受到我们的评分系统的适当惩罚。与评估不同能力的不同随机项目相匹配的响应（例如，对目标项目的响应）</span><span class="original-text">We find that off-topic responses are appropriately penalized by our scoring system. Responses matched with a different, random item assessing a different competency (e.g., a response to an item targeting</span><span class="ltx_text ltx_font_italic" id="S3.SS3.p1.7.1"><span class="translated-text">合作</span><span class="original-text">collaboration</span></span><span class="translated-text">与不同的随机项目匹配</span><span class="original-text">was matched with a different random item</span><span class="ltx_text ltx_font_italic" id="S3.SS3.p1.7.2"><span class="translated-text">不</span><span class="original-text">not</span></span><span class="translated-text">瞄准</span><span class="original-text">targeting</span><span class="ltx_text ltx_font_italic" id="S3.SS3.p1.7.3"><span class="translated-text">合作</span><span class="original-text">collaboration</span></span><span class="translated-text">）获得平均分</span><span class="original-text">) received an average score of</span><math alttext="1.69" class="ltx_Math" display="inline" id="S3.SS3.p1.1.m1" intent=":literal"><semantics><mn>1.69</mn><annotation encoding="application/x-tex">1.69</annotation></semantics></math><span class="translated-text">与正确匹配原始项目的相同答案相比，其平均得分为</span><span class="original-text">compared to the same responses when correctly matched with their original items, which received an average score of</span><math alttext="3.11" class="ltx_Math" display="inline" id="S3.SS3.p1.2.m2" intent=":literal"><semantics><mn>3.11</mn><annotation encoding="application/x-tex">3.11</annotation></semantics></math><span class="translated-text">（科恩的</span><span class="original-text">(Cohen’s</span><math alttext="d=-1.33" class="ltx_Math" display="inline" id="S3.SS3.p1.3.m3" intent=":literal"><semantics><mrow><mi>d</mi><mo>=</mo><mrow><mo>−</mo><mn>1.33</mn></mrow></mrow><annotation encoding="application/x-tex">d=-1.33</annotation></semantics></math><span class="translated-text">）。与评估相同能力的不同随机项目相匹配的响应（例如，对针对目标的项目的响应）</span><span class="original-text">). Responses matched with a different, random item assessing the same competency (e.g., a response to an item targeting</span><span class="ltx_text ltx_font_italic" id="S3.SS3.p1.7.4"><span class="translated-text">合作</span><span class="original-text">collaboration</span></span><span class="translated-text">与不同的随机项目匹配</span><span class="original-text">was matched with a different random item</span><span class="ltx_text ltx_font_italic" id="S3.SS3.p1.7.5"><span class="translated-text">还有</span><span class="original-text">also</span></span><span class="translated-text">瞄准</span><span class="original-text">targeting</span><span class="ltx_text ltx_font_italic" id="S3.SS3.p1.7.6"><span class="translated-text">合作</span><span class="original-text">collaboration</span></span><span class="translated-text">) 收到分数</span><span class="original-text">) received scores of</span><math alttext="2.38" class="ltx_Math" display="inline" id="S3.SS3.p1.4.m4" intent=":literal"><semantics><mn>2.38</mn><annotation encoding="application/x-tex">2.38</annotation></semantics></math><span class="translated-text">，平均而言（科恩的</span><span class="original-text">, on average (Cohen’s</span><math alttext="d=-0.62" class="ltx_Math" display="inline" id="S3.SS3.p1.5.m5" intent=":literal"><semantics><mrow><mi>d</mi><mo>=</mo><mrow><mo>−</mo><mn>0.62</mn></mrow></mrow><annotation encoding="application/x-tex">d=-0.62</annotation></semantics></math><span class="translated-text">与分配给与原始项目正确匹配的答案的分数进行比较）。我们的评分系统还返回了最低可能分数</span><span class="original-text">compared to scores assigned to responses correctly matched with their original items). Our scoring system also returned the minimum possible score of</span><math alttext="1.0" class="ltx_Math" display="inline" id="S3.SS3.p1.6.m6" intent=":literal"><semantics><mn>1.0</mn><annotation encoding="application/x-tex">1.0</annotation></semantics></math><span class="translated-text">当响应与项目不一致时更常见。在我们的基线数据集中，我们的评分系统分配了 20 个分数</span><span class="original-text">more often when the response was not aligned with the item. In our baseline dataset, our scoring system assigned 20 scores of</span><math alttext="1.0" class="ltx_Math" display="inline" id="S3.SS3.p1.7.m7" intent=":literal"><semantics><mn>1.0</mn><annotation encoding="application/x-tex">1.0</annotation></semantics></math><span class="translated-text">(3.7%)；当答案与评估相同能力的不同项目匹配时，这个数字上升到 72 (13.2%)；当与评估不同能力的不同项目匹配时，这个数字上升到 191 (35.0%)。</span><span class="original-text">(3.7%); this number rises to 72 (13.2%) when responses are matched with different items assessing the same competency and 191 (35.0%) when matched with different items assessing a different competency.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.p2">
+<p class="ltx_p" id="S3.SS3.p2.1"><span class="translated-text">这些结果提供了两个主要见解。首先，与任务不相符的强烈反应会被我们的评分系统视为不利，并可能导致可达到的最低分数。其次，我们的评分系统适当地考虑了不同项目的不同能力。如果我们的评分系统奖励不同项目的相似回答特征，我们预计会在此处进行的两个版本的实验中看到相似的结果。我们没有指出我们的评分系统按预期工作：它奖励某些项目的响应的某些特征以及其他项目的其他特征。</span><span class="original-text">These results provide two main insights. First, an otherwise strong response that is misaligned with the task is considered unfavorably by our scoring system and is likely to result in the lowest attainable score. Second, our scoring system appropriately considers different competencies in responses for different items. If our scoring system rewarded similar features of responses across different items we would have expected to see similar results in both versions of the experiment conducted here. That we did not points to our scoring system working as expected: it rewards certain features of responses for certain items and other features for other items.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">本研究调查了基于法学硕士的自动评分系统对构建无关因素的敏感性。我们的结果表明，所调查的评分系统对于用无意义的文本填充响应长度具有鲁棒性，无论是说明项目评估的能力还是重新表述所提供的场景提示。我们还发现，与之前对非 LLM 评分系统的研究结果相比，重复文本通常会对评分系统预测的分数产生有害影响</span><span class="original-text">This study investigated the susceptibility of an LLM-based automated scoring system to construct-irrelevant factors. Our results indicated that the scoring system investigated was robust to padding response length with meaningless text either in the form of stating what competency was assessed by an item or rephrasing the scenario prompt provided. We also found that duplicating text generally had deleterious effects on scores predicted by the scoring system, in contrast to results from previous studies of non-LLM-based scoring systems</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="Stumping e-rater: challenging the validity of automated essay scoring">14</a>, <a class="ltx_ref" href="#bib.bib5" title="Investigating adversarial robustness in LLM-based AES">15</a>]</cite><span class="translated-text">重复的文本会夸大预测分数。鉴于这些结果，基于法学硕士的评分解决方案可能会提供一种克服现有系统对文本长度过度索引的限制的途径。</span><span class="original-text">where duplicated text inflated predicted scores. Given these results, LLM-based scoring solutions may offer an avenue for overcoming limitations of existing systems that over-index on text length.</span></p>
+</div>
+<div class="ltx_para" id="S4.p2">
+<p class="ltx_p" id="S4.p2.1"><span class="translated-text">我们还发现，所调查的评分系统对于写作复杂性而言相对稳健。当字符错误率超过 30% 时，拼写错误才开始显着影响系统预测的分数，这一结果与之前对自动内容评分（而非写作或语言能力）稳健性的研究结果一致</span><span class="original-text">We also found that the investigated scoring system was relatively robust to writing sophistication. Spelling errors only began to noticeably affect scores predicted by the system at character error rates greater than 30%, a result aligned with previous studies of robustness of automatic content scoring (not writing or language proficiency)</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib16" title="The influence of spelling errors on content scoring performance">6</a>]</cite><span class="translated-text">。同样，词汇量和反应结构对预测分数的影响很小或没有影响；使用更短和更简单的单词和句子的回答通常获得与使用更复杂和多样化的单词和句子结构的回答相当的分数。相比之下，之前使用人类评分者的研究发现，有拼写错误和没有拼写错误的文本的评分存在很大差异</span><span class="original-text">. Vocabulary and response structure, similarly, had very little or no impact on predicted scores; responses employing shorter and simpler words and sentences generally received comparable scores to those using more complex and diverse word and sentence structure. In contrast, previous studies which made use of human raters found large differences in scoring for texts with and without spelling errors</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib17" title="The impact of spelling errors on trained raters’ scoring decisions">2</a>]</cite><span class="translated-text">。那么，基于人工智能的评分系统可能会在忽略拼写错误和写作复杂性方面提供优于人类评分的优势，这对于 SJT 和其他复杂结构的评估来说是一个特别重要的结论，其中写作复杂性通常与结构无关。</span><span class="original-text">. AI-based scoring systems may, then, offer advantages over human rating in ignoring spelling errors and writing sophistication, a particularly important conclusion for SJTs and other assessments of complex constructs where writing sophistication is typically construct-irrelevant.</span></p>
+</div>
+<div class="ltx_para" id="S4.p3">
+<p class="ltx_p" id="S4.p3.1"><span class="translated-text">最后，我们发现偏离主题的回答（即与所问问题的内容无关的回答）通常会受到评分系统的严厉处罚，并且经常被分配尽可能低的分数。虽然这不是本研究的主要目的，但我们也发现了这样的说法，即这里研究的评分系统考虑了不同项目的不同能力相关特征：在一个项目上获得高分的回答类型不一定会在评估不同特征的另一个项目上获得高分。</span><span class="original-text">Lastly, we found that off-topic responses (i.e., responses that did not relate to the content of the question asked) generally received large penalties from the scoring system and were frequently assigned the lowest possible score. Though not the main purpose of this study, we also found support for the claim that the scoring system investigated here considers different competency-related features for different items: the kinds of responses that would receive a high score for one item will not necessarily receive a high score for a different item where different features are evaluated.</span></p>
+</div>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span><span class="translated-text">局限性和未来的工作</span><span class="original-text">Limitations and Future Work</span></h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.1"><span class="translated-text">本研究仅针对一项评估研究了一种基于法学硕士的评分系统。我们建议将这项工作扩展到其他基于法学硕士的评分系统，特别是那些以不同能力使用法学硕士的评分系统。特别是，这里研究的系统使用了双架构系统，该系统采用 LLM 进行特征提取，并保留传统的回归技术进行特征加权。例如，我们发现，该评分系统对于评估有拼写错误的答案非常稳健，这一结果与之前的研究结果一致</span><span class="original-text">This study only investigated one LLM-based scoring system for one assessment. We suggest extending this work to other LLM-based scoring systems, particularly those that use LLMs in different capacities. In particular, the system investigated here used a dual-architecture system employing LLMs for feature extraction and maintaining traditional regression techniques for feature weighting. We found, for instance, that this scoring system was robust to the evaluation of responses with spelling errors, a result that aligned with previous research</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib21" title="Reasoning robustness of llms to adversarial typographical errors">4</a>, <a class="ltx_ref" href="#bib.bib16" title="The influence of spelling errors on content scoring performance">6</a>]</cite><span class="translated-text">。然而，这些研究提供的证据表明，我们的结论可能不会扩展到采用能力较差模型的基于 LLM 的系统（我们在这里使用 GPT-5.X 模型）</span><span class="original-text">. Those same studies provide evidence, however, that our conclusions may not extend to LLM-based systems employing less capable models (we used GPT-5.X models here)</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib21" title="Reasoning robustness of llms to adversarial typographical errors">4</a>]</cite><span class="translated-text">。将这项研究扩展到其他系统可以进一步了解各种基于 LLM 的评分技术的优点和局限性。我们还建议所有自动评分系统的开发人员（不仅仅是那些基于法学硕士的开发人员）采用与此处演示的方法类似的方法来调查和分类与结构无关的因素对自动评分系统的影响，以建立公众对这些系统的信任。</span><span class="original-text">. Extending this research to other systems can further our understanding of the advantages and limitations of various LLM-based scoring techniques. We also suggest all developers of automated scoring systems (not just those that are LLM-based) adopt a similar approach to the one demonstrated here to investigate and categorize the influence of construct-irrelevant factors on automated scoring systems to build public trust in those systems.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p2">
+<p class="ltx_p" id="S4.SS1.p2.1"><span class="translated-text">在这项研究中，我们确实注意到了一个与结构无关的特定因素，它可能会影响我们的自动评分系统的行为：使用记忆的公式化短语。我们在这里只研究了一个这样的短语，发现对预测分数的影响非常小。我们之前注意到，这类短语本身可能包含一些与结构相关的信息，但如果频繁、肤浅地使用，可能表明考生有恶意行为。未来的工作应该更深入地研究公式短语在我们的评估和评分系统中的使用，以了解这些短语对评分系统预测的影响程度。</span><span class="original-text">In this study, we did note one particular construct-irrelevant factor that could influence the behavior of our automated scoring system: using memorized, formulaic phrases. We only investigated one such phrase here and found only a very small influence on predicted scores. We noted previously that these kinds of phrases on their own may contain some construct-relevant information, but when used frequently and superficially may be indicative of a test taker acting in bad-faith. Future work should more deeply investigate the use of formulaic phrases for our assessment and scoring system to understand the extent that these phrases can influence the predictions of the scoring system.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p3">
+<p class="ltx_p" id="S4.SS1.p3.1"><span class="translated-text">即使自动评分系统可以被证明对某些与结构无关的因素具有鲁棒性，开发系统来标记“异常”反应仍然有价值</span><span class="original-text">Even when automated scoring systems can be demonstrated to be robust to certain construct-irrelevant factors, there is still value in developing systems to flag “unusual” responses</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib11" title="Identifying off-topic student essays without topic-specific training data">5</a>, <a class="ltx_ref" href="#bib.bib9" title="Evaluating the advisory flags and machine scoring difficulty in the e-rater® automated scoring engine">18</a>]</cite><span class="translated-text">。例如，虽然我们的评分系统经常为偏离主题的回答分配最低的可用分数，但它并没有为所有此类回答分配最低的可用分数。因此，虽然提供偏离主题的回答通常对考生没有好处，但我们可能希望具体识别此类回答，以确保为他们分配特定的分数或为决策者提供额外的背景信息。</span><span class="original-text">. While our scoring system frequently assigned the lowest available score to off-topic responses, for instance, it did not assign all such responses the lowest available score. So while it would generally not be advantageous to a test taker to provide an off-topic response, we might wish to specifically identify such responses either to ensure they are assigned a specific score or to provide additional context for decision-makers.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p4">
+<span class="ltx_ERROR undefined" id="S4.SS1.p4.1"><span class="translated-text">{学分}</span><span class="original-text">{credits}</span></span>
+</div>
+<section class="ltx_subsubsection" id="S4.SS1.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.1.1 </span><span class="translated-text">致谢</span><span class="original-text">Acknowledgements</span></h4>
+<div class="ltx_para" id="S4.SS1.SSS1.p1">
+<p class="ltx_p" id="S4.SS1.SSS1.p1.1"><span class="translated-text">我们要感谢 Colleen Robb、Gill Sitarenios 和 Josh Moskowitz 对本文的反馈。</span><span class="original-text">We would like to acknowledge Colleen Robb, Gill Sitarenios, and Josh Moskowitz for feedback on this paper.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S4.SS1.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.1.2 </span><span class="ltx_ERROR undefined" id="S4.SS1.SSS2.1.1"><span class="translated-text">\区分名称</span><span class="original-text">\discintname</span></span>
+</h4>
+<div class="ltx_para" id="S4.SS1.SSS2.p1">
+<p class="ltx_p" id="S4.SS1.SSS2.p1.1"><span class="translated-text">两位作者都是 Acuity Insights 的员工，该公司负责管理本研究中用于数据收集的评估。</span><span class="original-text">Both authors are employees of Acuity Insights, which administers the assessment used for data collection in this study.</span></p>
+</div>
+</section>
+</section>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib3">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. V. Bruno and L. Becker</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Explainable writing scores via fine-grained, LLM-generated features</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the Artificial Intelligence in Measurement and Education Conference (AIME-Con): Works in Progress</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S1.p4.2" title="1 Introduction ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS1.SSS2.p1.1" title="2.1.2 Automated Scoring System ‣ 2.1 Source Data ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§2.1.2</span></a>,
+<a class="ltx_ref" href="#S2.SS3.SSS2.p3.1" title="2.3.2 Experiment 2: Writing Sophistication ‣ 2.3 Experiments ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§2.3.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib17">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">I. Choi and Y. Cho</span><span class="ltx_text ltx_bib_year"> (2018)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">The impact of spelling errors on trained raters’ scoring decisions</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Language Education &amp; Assessment</span> <span class="ltx_text ltx_bib_volume">1</span> (<span class="ltx_text ltx_bib_number">2</span>), <span class="ltx_text ltx_bib_pages"> pp. 45–58</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.p2.1" title="4 Conclusion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§4</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib14">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Farquhar, J. Kossen, L. Kuhn, and Y. Gal</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Detecting hallucinations in large language models using semantic entropy</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Nature</span> <span class="ltx_text ltx_bib_volume">630</span> (<span class="ltx_text ltx_bib_number">8017</span>), <span class="ltx_text ltx_bib_pages"> pp. 625–630</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib21">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">E. Gan, Y. Zhao, L. Cheng, M. Yancan, A. Goyal, K. Kawaguchi, M. Kan, and M. Shieh</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Reasoning robustness of llms to adversarial typographical errors</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 10449–10459</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.SSS2.p1.2" title="2.3.2 Experiment 2: Writing Sophistication ‣ 2.3 Experiments ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§2.3.2</span></a>,
+<a class="ltx_ref" href="#S4.SS1.p1.1" title="4.1 Limitations and Future Work ‣ 4 Conclusion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§4.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib11">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D. Higgins, J. Burstein, and Y. Attali</span><span class="ltx_text ltx_bib_year"> (2006)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Identifying off-topic student essays without topic-specific training data</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Natural Language Engineering</span> <span class="ltx_text ltx_bib_volume">12</span> (<span class="ltx_text ltx_bib_number">2</span>), <span class="ltx_text ltx_bib_pages"> pp. 145–159</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.SS1.p3.1" title="4.1 Limitations and Future Work ‣ 4 Conclusion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§4.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib16">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Horbach, Y. Ding, and T. Zesch</span><span class="ltx_text ltx_bib_year"> (2017)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">The influence of spelling errors on content scoring performance</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 4th workshop on natural language processing techniques for educational applications (nlptea 2017)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 45–53</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.SSS2.p1.2" title="2.3.2 Experiment 2: Writing Sophistication ‣ 2.3 Experiments ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§2.3.2</span></a>,
+<a class="ltx_ref" href="#S4.SS1.p1.1" title="4.1 Limitations and Future Work ‣ 4 Conclusion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§4.1</span></a>,
+<a class="ltx_ref" href="#S4.p2.1" title="4 Conclusion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§4</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib13">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Huang and J. Wilson</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Evaluating LLM-based automated essay scoring: accuracy, fairness, and validity</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the Artificial Intelligence in Measurement and Education Conference (AIME-Con): Works in Progress</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib1">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Z. Iqbal, R. Ivan, K. Bynkoski, K. Archbell, C. Richard, and K. H. Petersen</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Formative sjt: developing student personal and professional competencies</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">The Score</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.SSS1.p1.1" title="2.1.1 Assessment ‣ 2.1 Source Data ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§2.1.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib19">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Z. Iqbal, R. Ivan, C. Robb, and J. Derby</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Evaluating factors that impact scoring an open response situational judgment test: a mixed methods approach</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Frontiers in Medicine</span> <span class="ltx_text ltx_bib_volume">11</span>, <span class="ltx_text ltx_bib_pages"> pp. 1525156</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.SSS1.p1.1" title="2.3.1 Experiment 1: Meaningless Text ‣ 2.3 Experiments ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§2.3.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib7">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">B. B. Klebanov and N. Madnani</span><span class="ltx_text ltx_bib_year"> (2020)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Automated evaluation of writing–50 years and counting</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 58th annual meeting of the association for computational linguistics</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 7796–7810</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib12">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">G. Lee, E. Latif, X. Wu, N. Liu, and X. Zhai</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Applying large language models and chain-of-thought for automatic scoring</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Computers and Education: Artificial Intelligence</span> <span class="ltx_text ltx_bib_volume">6</span>, <span class="ltx_text ltx_bib_pages"> pp. 100213</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib15">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. A. McDaniel, N. S. Hartman, D. L. Whetzel, and W. L. GRUBB III</span><span class="ltx_text ltx_bib_year"> (2007)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Situational judgment tests, response instructions, and validity: a meta-analysis</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Personnel psychology</span> <span class="ltx_text ltx_bib_volume">60</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 63–91</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p4.2" title="1 Introduction ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_report" id="bib.bib20">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">B. Naismith, R. Cardwell, G. T. LaFlair, S. Nydick, and M. Kostromitina</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Duolingo english test: technical manual</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_type">Technical report</span>
+</span>
+<span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">Duolingo, Inc.</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p4.2" title="1 Introduction ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS3.SSS2.p3.1" title="2.3.2 Experiment 2: Writing Sophistication ‣ 2.3 Experiments ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§2.3.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib8">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D. E. Powers, J. C. Burstein, M. Chodorow, M. E. Fowles, and K. Kukich</span><span class="ltx_text ltx_bib_year"> (2002)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Stumping e-rater: challenging the validity of automated essay scoring</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Computers in Human Behavior</span> <span class="ltx_text ltx_bib_volume">18</span> (<span class="ltx_text ltx_bib_number">2</span>), <span class="ltx_text ltx_bib_pages"> pp. 103–134</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S4.p1.1" title="4 Conclusion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§4</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib5">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">R. Ravindran and I. Choi</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Investigating adversarial robustness in LLM-based AES</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the Artificial Intelligence in Measurement and Education Conference (AIME-Con): Coordinated Session Papers</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS3.SSS1.p1.1" title="2.3.1 Experiment 1: Meaningless Text ‣ 2.3 Experiments ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§2.3.1</span></a>,
+<a class="ltx_ref" href="#S3.SS1.p1.4" title="3.1 Experiment 1: Meaningless Text ‣ 3 Results and Discussion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§3.1</span></a>,
+<a class="ltx_ref" href="#S4.p1.1" title="4 Conclusion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§4</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib6">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">G. Thomas, R. D. Hartley, and J. P. Kincaid</span><span class="ltx_text ltx_bib_year"> (1975)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Test-retest and inter-analyst reliability of the automated readability index, flesch reading ease score, and the fog count</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Journal of Reading Behavior</span> <span class="ltx_text ltx_bib_volume">7</span> (<span class="ltx_text ltx_bib_number">2</span>), <span class="ltx_text ltx_bib_pages"> pp. 149–154</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.SSS2.p2.1" title="2.3.2 Experiment 2: Writing Sophistication ‣ 2.3 Experiments ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§2.3.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib2">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">C. Walsh, R. Ivan, M. Z. Iqbal, and C. Robb</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Using LLMs to identify features of personal and professional skills in an open-response situational judgment test</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the Artificial Intelligence in Measurement and Education Conference (AIME-Con): Full Papers</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS1.SSS2.p1.1" title="2.1.2 Automated Scoring System ‣ 2.1 Source Data ‣ 2 Methods ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§2.1.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib9">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Zhang, J. Chen, and C. Ruan</span><span class="ltx_text ltx_bib_year"> (2016)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Evaluating the advisory flags and machine scoring difficulty in the e-rater® automated scoring engine</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">ETS Research Report Series</span> <span class="ltx_text ltx_bib_volume">2016</span> (<span class="ltx_text ltx_bib_number">2</span>), <span class="ltx_text ltx_bib_pages"> pp. 1–14</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S4.SS1.p3.1" title="4.1 Limitations and Future Work ‣ 4 Conclusion ‣ Measuring What Matters—or What’s Convenient?: Robustness of LLM-Based Scoring Systems to Construct-Irrelevant Factors"><span class="ltx_text ltx_ref_tag">§4.1</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2603.25674v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
