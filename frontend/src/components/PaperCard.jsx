@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ExternalLink, FileText, BookOpen, Github, Code } from 'lucide-react'
 import { getCatCss, CAT_CONFIG } from '../utils/helpers'
+import { useI18n } from '../contexts/I18nContext'
 
 // ── 评分条 ──────────────────────────────────────────────
 function ScoreBar({ value, color, label, icon }) {
@@ -25,6 +26,7 @@ function CatTag({ cat }) {
 
 // ── 论文卡片 ─────────────────────────────────────────────
 export default function PaperCard({ paper, rank, translationIndex }) {
+  const { t, lang } = useI18n()
   const [expanded, setExpanded] = useState(false)
   const safeId = paper.arxiv_id.replace('/', '_')
   const translationInfo = translationIndex[safeId]
@@ -48,7 +50,7 @@ export default function PaperCard({ paper, rank, translationIndex }) {
 
         {/* Main */}
         <div className="card-main">
-          <div className="paper-title">{paper.title}</div>
+          <div className="paper-title">{paper.title_zh && lang === 'zh' ? paper.title_zh : paper.title}</div>
           <div className="paper-meta">
             <CatTag cat={paper.primary_category} />
             <span className="paper-date">{paper.published_date}</span>
@@ -57,7 +59,7 @@ export default function PaperCard({ paper, rank, translationIndex }) {
             <div className="metric">
               <span className="metric-icon">📚</span>
               <span className="metric-value">{(paper.citation_count || 0).toLocaleString()}</span>
-              <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>引用</span>
+              <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>{t('citation')}</span>
               {paper.citation_delta_7d > 0 && (
                 <span className="metric-delta">+{paper.citation_delta_7d}</span>
               )}
@@ -71,7 +73,7 @@ export default function PaperCard({ paper, rank, translationIndex }) {
             {paper.has_code && (
               <div className="metric">
                 <span className="metric-icon">💻</span>
-                <span className="metric-value">{paper.github_stars > 0 ? `⭐${paper.github_stars.toLocaleString()}` : '有代码'}</span>
+                <span className="metric-value">{paper.github_stars > 0 ? `⭐${paper.github_stars.toLocaleString()}` : t('hasCode')}</span>
               </div>
             )}
             {paper.hn_buzz > 0 && (
@@ -87,7 +89,7 @@ export default function PaperCard({ paper, rank, translationIndex }) {
         {/* Score */}
         <div className="score-section">
           <div className="score-value">{(paper.score * 100).toFixed(1)}</div>
-          <div className="score-label">热度分</div>
+          <div className="score-label">{t('hotScore')}</div>
         </div>
       </div>
 
@@ -95,11 +97,11 @@ export default function PaperCard({ paper, rank, translationIndex }) {
       {expanded && (
         <div className="expanded-content" onClick={e => e.stopPropagation()}>
           {paper.abstract && (
-            <p className="abstract-text">{paper.abstract}</p>
+            <p className="abstract-text">{paper.abstract_zh && lang === 'zh' ? paper.abstract_zh : paper.abstract}</p>
           )}
           {paper.authors && paper.authors.length > 0 && (
             <p className="authors-text">
-              ✍️ {paper.authors.slice(0, 5).join(', ')}{paper.authors.length > 5 ? ` 等 ${paper.authors.length} 人` : ''}
+              ✍️ {paper.authors.slice(0, 5).join(', ')}{paper.authors.length > 5 ? ` ${t('etAl')} ${paper.authors.length} ${t('people')}` : ''}
             </p>
           )}
           <div className="action-btns">
@@ -139,7 +141,7 @@ export default function PaperCard({ paper, rank, translationIndex }) {
                 rel="noopener noreferrer"
                 title="保留图片、公式、表格的高保真中文翻译"
               >
-                <BookOpen size={13} /> 🔬 保真翻译
+                <BookOpen size={13} /> {t('translationHighFi')}
               </a>
             ) : translationType === 'pdf' ? (
               <a
@@ -150,7 +152,7 @@ export default function PaperCard({ paper, rank, translationIndex }) {
                 rel="noopener noreferrer"
                 title="基于 PDF 提取的纯文本翻译版"
               >
-                <BookOpen size={13} /> 📝 简版翻译
+                <BookOpen size={13} /> {t('translationBasic')}
               </a>
             ) : (
               <span
@@ -158,7 +160,7 @@ export default function PaperCard({ paper, rank, translationIndex }) {
                 style={{ background: 'rgba(100, 116, 139, 0.08)', color: '#475569', borderColor: 'rgba(100, 116, 139, 0.15)', cursor: 'not-allowed', opacity: 0.5 }}
                 title="翻译暂未生成，系统每天 14:00 自动翻译"
               >
-                <BookOpen size={13} /> 暂无翻译
+                <BookOpen size={13} /> {t('translationNone')}
               </span>
             )}
           </div>
@@ -166,15 +168,15 @@ export default function PaperCard({ paper, rank, translationIndex }) {
           {/* 评分拆解 — 8维度 */}
           {paper.score_breakdown && (
             <div style={{ marginTop: 14, padding: '12px', background: 'rgba(0,0,0,0.2)', borderRadius: 8 }}>
-              <div style={{ fontSize: '0.72rem', color: '#4a5568', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>评分拆解</div>
+              <div style={{ fontSize: '0.72rem', color: '#4a5568', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('scoreBreakdown')}</div>
               <div className="breakdown-list">
-                <ScoreBar value={paper.score_breakdown.velocity_norm} color="#6366f1" label="引用速度" icon="📈" />
-                <ScoreBar value={paper.score_breakdown.mass_norm} color="#22d3ee" label="引用总量" icon="📚" />
-                <ScoreBar value={paper.score_breakdown.author_norm} color="#f59e0b" label="作者影响" icon="👤" />
-                <ScoreBar value={paper.score_breakdown.code_norm} color="#22c55e" label="有代码" icon="💻" />
+                <ScoreBar value={paper.score_breakdown.velocity_norm} color="#6366f1" label={t('citationSpeed')} icon="📈" />
+                <ScoreBar value={paper.score_breakdown.mass_norm} color="#22d3ee" label={t('citationTotal')} icon="📚" />
+                <ScoreBar value={paper.score_breakdown.author_norm} color="#f59e0b" label={t('authorImpact')} icon="👤" />
+                <ScoreBar value={paper.score_breakdown.code_norm} color="#22c55e" label={t('hasCode')} icon="💻" />
                 <ScoreBar value={paper.score_breakdown.stars_norm} color="#eab308" label="GitHub ⭐" icon="⭐" />
-                <ScoreBar value={paper.score_breakdown.freshness_norm} color="#a78bfa" label="新鲜度" icon="🕐" />
-                <ScoreBar value={paper.score_breakdown.buzz_norm} color="#f472b6" label="社区讨论" icon="💬" />
+                <ScoreBar value={paper.score_breakdown.freshness_norm} color="#a78bfa" label={t('freshness')} icon="🕐" />
+                <ScoreBar value={paper.score_breakdown.buzz_norm} color="#f472b6" label={t('buzz')} icon="💬" />
               </div>
             </div>
           )}

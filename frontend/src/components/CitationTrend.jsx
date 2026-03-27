@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { TrendingUp } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { useI18n } from '../contexts/I18nContext'
 
 function CustomTooltip({ active, payload, label }) {
   if (active && payload && payload.length) {
@@ -17,6 +18,7 @@ function CustomTooltip({ active, payload, label }) {
 }
 
 export default function CitationTrend({ papers }) {
+  const { t } = useI18n()
   const data = useMemo(() => {
     return papers
       .slice(0, 10)
@@ -30,7 +32,7 @@ export default function CitationTrend({ papers }) {
 
   return (
     <div className="sidebar-card">
-      <div className="sidebar-title"><TrendingUp size={14} /> Top 10 引用量</div>
+      <div className="sidebar-title"><TrendingUp size={14} /> {t('top10Citations')}</div>
       <div className="chart-wrapper" style={{ height: 200 }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical" margin={{ left: 0, right: 20, top: 0, bottom: 0 }}>
@@ -42,7 +44,7 @@ export default function CitationTrend({ papers }) {
               tick={{ fontSize: 10, fill: '#4a5568' }}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="citations" name="引用量" fill="#6366f1" radius={[0, 3, 3, 0]} />
+            <Bar dataKey="citations" name={t('citation')} fill="#6366f1" radius={[0, 3, 3, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

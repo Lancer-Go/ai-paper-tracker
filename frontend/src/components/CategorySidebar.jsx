@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { Layers } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { getCatColor } from '../utils/helpers'
+import { useI18n } from '../contexts/I18nContext'
 
 function CustomTooltip({ active, payload, label }) {
   if (active && payload && payload.length) {
@@ -18,6 +19,7 @@ function CustomTooltip({ active, payload, label }) {
 }
 
 export default function CategorySidebar({ papers }) {
+  const { t } = useI18n()
   const catStats = useMemo(() => {
     const counts = {}
     papers.forEach(p => {
@@ -37,7 +39,7 @@ export default function CategorySidebar({ papers }) {
 
   return (
     <div className="sidebar-card">
-      <div className="sidebar-title"><Layers size={14} /> 领域分布</div>
+      <div className="sidebar-title"><Layers size={14} /> {t('domainDist')}</div>
 
       {/* Pie 图 */}
       {pieData.length > 0 && (

@@ -7,4 +7,9 @@ export default defineConfig({
   // 如果部署到 GitHub Pages 子路径，把 base 改为仓库名
   // 例如：base: '/ai-paper-tracker/'
   base: './',
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/tests/setup.js',
+  }
 })

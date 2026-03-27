@@ -5,6 +5,9 @@ import { CAT_CONFIG, CAT_ALL } from './utils/helpers'
 import PaperCard from './components/PaperCard'
 import CategorySidebar from './components/CategorySidebar'
 import CitationTrend from './components/CitationTrend'
+import { I18nToggle } from './components/I18nToggle'
+import { AnalyticsWidget } from './components/AnalyticsWidget'
+import { useI18n } from './contexts/I18nContext'
 import './index.css'
 
 export default function App() {
@@ -12,6 +15,8 @@ export default function App() {
     papers, availableDates, selectedDate, setSelectedDate,
     loading, error, dataInfo, translationIndex,
   } = usePapers()
+  
+  const { t } = useI18n()
 
   const [search, setSearch] = useState('')
   const [catFilter, setCatFilter] = useState(CAT_ALL)
@@ -31,35 +36,36 @@ export default function App() {
   return (
     <div className="app">
       {/* Header */}
-      <header className="header">
+      <header className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div className="header-logo">
           <div className="header-logo-icon">🤖</div>
-          AI 论文热榜
+          {t('appTitle')}
         </div>
-        <div className="header-meta">
+        <div className="header-meta" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {dataInfo.date && <span>📅 {dataInfo.date}</span>}
-          <span className="header-badge">每日更新</span>
+          <span className="header-badge">{t('dailyUpdate')}</span>
+          <I18nToggle />
         </div>
       </header>
 
       {/* Hero */}
       <section className="hero">
-        <h1 className="hero-title">AI 学术热度追踪</h1>
-        <p className="hero-subtitle">基于学术引用量，每日自动聚合 arXiv 最新 AI 论文热榜</p>
+        <h1 className="hero-title">{t('heroTitle')}</h1>
+        <p className="hero-subtitle">{t('heroSub')}</p>
 
         {!loading && papers.length > 0 && (
           <div className="stats-bar">
             <div className="stat-item">
               <div className="stat-value">{papers.length}</div>
-              <div className="stat-label">今日论文</div>
+              <div className="stat-label">{t('statToday')}</div>
             </div>
             <div className="stat-item">
               <div className="stat-value">{totalCitations.toLocaleString()}</div>
-              <div className="stat-label">总引用量</div>
+              <div className="stat-label">{t('statCitation')}</div>
             </div>
             <div className="stat-item">
               <div className="stat-value">{Object.keys(CAT_CONFIG).length}</div>
-              <div className="stat-label">覆盖领域</div>
+              <div className="stat-label">{t('statDomain')}</div>
             </div>
           </div>
         )}
@@ -70,7 +76,7 @@ export default function App() {
         <div className="search-box">
           <Search size={14} className="search-icon" />
           <input
-            placeholder="搜索论文标题、关键词..."
+            placeholder={t('searchPh')}
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -80,7 +86,7 @@ export default function App() {
           <button
             className={`filter-btn ${catFilter === CAT_ALL ? 'active' : ''}`}
             onClick={() => setCatFilter(CAT_ALL)}
-          >全部</button>
+          >{t('filterAll')}</button>
           {Object.keys(CAT_CONFIG).map(cat => (
             <button
               key={cat}
@@ -108,14 +114,14 @@ export default function App() {
         {loading ? (
           <div className="loading-state">
             <div className="spinner" />
-            <p>正在加载热榜数据...</p>
+            <p>{t('loading')}</p>
           </div>
         ) : error ? (
           <div className="empty-state">
             <div className="empty-icon">📭</div>
             <p style={{ fontWeight: 600, marginBottom: 8 }}>{error}</p>
             <p style={{ fontSize: '0.85rem', color: '#4a5568' }}>
-              运行 <code style={{ background: '#1a2235', padding: '2px 8px', borderRadius: 4 }}>python run.py</code> 开始采集
+              {t('emptyError')}
             </p>
           </div>
         ) : (
@@ -125,7 +131,7 @@ export default function App() {
               {filtered.length === 0 ? (
                 <div className="empty-state">
                   <div className="empty-icon">🔍</div>
-                  <p>没有找到匹配的论文</p>
+                  <p>{t('emptySearch')}</p>
                 </div>
               ) : (
                 <div className="paper-list">
@@ -145,8 +151,11 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="footer">
-        数据来源：arXiv API · Semantic Scholar API &nbsp;|&nbsp; 每日 UTC 06:00 自动更新
+      <footer className="footer" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', paddingBottom: '32px' }}>
+        <div>{t('dataSource')}</div>
+        <div style={{ width: '100%', maxWidth: '400px' }}>
+          <AnalyticsWidget todayVisitors={423} hasError={false} />
+        </div>
       </footer>
     </div>
   )

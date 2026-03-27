@@ -1,26 +1,38 @@
-# api/export.py — 每日 JSON 数据导出，供前端消费
-
 import json
 import logging
 from datetime import date
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
+
+# Try to import for title/abstract translations
+try:
+    from deep_translator import GoogleTranslator
+except ImportError:
+    GoogleTranslator = None
 
 from src.config import EXPORT_DIR, TOP_N
 from src.storage.db import get_top_papers
 
 logger = logging.getLogger(__name__)
 
+def translate_field(text: str) -> str:
+    if not text or not GoogleTranslator: return ""
+    try:
+        if len(text) > 4000: text = text[:4000]
+        return GoogleTranslator(source='auto', target='zh-CN').translate(text)
+    except Exception:
+        return ""
+
+def _translate_paper(p):
+    if "title_zh" not in p or not p["title_zh"]:
+        p["title_zh"] = translate_field(p.get("title", ""))
+    if "abstract_zh" not in p or not p["abstract_zh"]:
+        p["abstract_zh"] = translate_field(p.get("abstract", ""))
+    return p
 
 def export_daily_json(rank_date: str = None, top_n: int = TOP_N) -> str:
     """
     导出某天热榜数据为 JSON 文件。
-
-    Args:
-        rank_date: 日期 YYYY-MM-DD，默认今天
-        top_n: 导出 Top N 篇
-
-    Returns:
-        导出文件路径
     """
     rank_date = rank_date or date.today().isoformat()
 
@@ -29,6 +41,12 @@ def export_daily_json(rank_date: str = None, top_n: int = TOP_N) -> str:
     export_dir.mkdir(parents=True, exist_ok=True)
 
     papers = get_top_papers(rank_date=rank_date, limit=top_n)
+
+    # Translate missing titles and abstracts
+    if GoogleTranslator:
+        logger.info(f"[导出] 正在补充 {len(papers)} 篇论文的标题与摘要翻译...")
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            papers = list(executor.map(_translate_paper, papers))
 
     output = {
         "date": rank_date,
