@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">长视机器人桌面游戏中保持内部状态一致性的系统设计</span><span class="original-text">System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 3 月 26 日星期四 12:47:40 生成 http://dlmf.nist.gov/LaTeXML/。</span><span class="original-text">Generated on Thu Mar 26 12:47:40 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2603.25405" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2603.25405" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2603.25405v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2603.25405v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<a class="header-button color-tog" href="javascript:toggleColorScheme();" title="Toggle dark/light mode">
+<label class="toggle-icon automatic-tog" title="Switch to light mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon light-tog" title="Switch to dark mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon dark-tog" title="Switch to system preference">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+</a>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title">摘要</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">I </span><span class="ltx_text ltx_font_smallcaps">Introduction</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">II </span><span class="ltx_text ltx_font_smallcaps">Related Work</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS1" title="In II Related Work ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-A</span> </span><span class="ltx_text ltx_font_italic">Robotic tabletop and board-game systems</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS2" title="In II Related Work ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-B</span> </span><span class="ltx_text ltx_font_italic">Partitioning perception, reasoning, and control in integrated robotic systems</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS3" title="In II Related Work ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-C</span> </span><span class="ltx_text ltx_font_italic">Game-playing agents and rule reasoning</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">III </span><span class="ltx_text ltx_font_smallcaps">Problem Formulation: Internal State Consistency in Tabletop Games</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In III Problem Formulation: Internal State Consistency in Tabletop Games ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-A</span> </span><span class="ltx_text ltx_font_italic">Tabletop Games as Long-Horizon Executable Systems</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS2" title="In III Problem Formulation: Internal State Consistency in Tabletop Games ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-B</span> </span><span class="ltx_text ltx_font_italic">Definition of Internal State Consistency</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S4" title="In System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">IV </span><span class="ltx_text ltx_font_smallcaps">System Design for Maintaining State Consistency</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S5" title="In System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">V </span><span class="ltx_text ltx_font_smallcaps">Results</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS1" title="In V Results ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-A</span> </span><span class="ltx_text ltx_font_italic">Long-Horizon Executability</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S5.SS2" title="In V Results ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-B</span> </span><span class="ltx_text ltx_font_italic">Game Performance</span></span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S5.SS2.SSS0.Px1" title="In V-B Game Performance ‣ V Results ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title">Impact of State Inconsistency</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS3" title="In V Results ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-C</span> </span><span class="ltx_text ltx_font_italic">Architectural Trade-offs</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS4" title="In V Results ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-D</span> </span><span class="ltx_text ltx_font_italic">Perception and Interaction Monitoring Performance</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S6" title="In System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">VI </span><span class="ltx_text ltx_font_smallcaps">Discussion and Limitations</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S6.SS1" title="In VI Discussion and Limitations ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">VI-A</span> </span><span class="ltx_text ltx_font_italic">Failure Case Analysis</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S6.SS2" title="In VI Discussion and Limitations ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">VI-B</span> </span><span class="ltx_text ltx_font_italic">Hardware as a Reliability Bottleneck</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S6.SS3" title="In VI Discussion and Limitations ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">VI-C</span> </span><span class="ltx_text ltx_font_italic">Limitations</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title">References</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#A0.SS4" title="In System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">-D</span> </span><span class="ltx_text ltx_font_italic">Training Pipeline for Strategic Reasoning</span></span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：arXiv.org 永久非独占许可证</span><span class="original-text">License: arXiv.org perpetual non-exclusive license</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2603.25405v1 [cs.RO] 2026 年 3 月 26 日</span><span class="original-text">arXiv:2603.25405v1 [cs.RO] 26 Mar 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_font_bold ltx_title_document"><span class="translated-text">长视机器人桌面游戏中保持内部状态一致性的系统设计</span><span class="original-text">System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Guangyu Zhao<sup class="ltx_sup" id="id24.24.id1"><span class="ltx_text ltx_font_italic" id="id24.24.id1.1">1,2</span></sup>, Ceyao Zhang<sup class="ltx_sup" id="id25.25.id2"><span class="ltx_text ltx_font_italic" id="id25.25.id2.1">1,2</span></sup>, Chengdong Ma<sup class="ltx_sup" id="id26.26.id3"><span class="ltx_text ltx_font_italic" id="id26.26.id3.1">1</span></sup>, Tao Wu<sup class="ltx_sup" id="id27.27.id4"><span class="ltx_text ltx_font_italic" id="id27.27.id4.1">2,3</span></sup>, Yiyang Song<sup class="ltx_sup" id="id28.28.id5"><span class="ltx_text ltx_font_italic" id="id28.28.id5.1">1,2</span></sup>, Haoxuan Ru<sup class="ltx_sup" id="id29.29.id6"><span class="ltx_text ltx_font_italic" id="id29.29.id6.1">1,2</span></sup>, Yifan Zhong<sup class="ltx_sup" id="id30.30.id7"><span class="ltx_text ltx_font_italic" id="id30.30.id7.1">1,2</span></sup>, 
+<br class="ltx_break"/>Ruilin Yan<sup class="ltx_sup" id="id31.31.id8"><span class="ltx_text ltx_font_italic" id="id31.31.id8.1">2</span></sup>, Lingfeng Li<sup class="ltx_sup" id="id32.32.id9"><span class="ltx_text ltx_font_italic" id="id32.32.id9.1">1,2</span></sup>, Ruochong Li<sup class="ltx_sup" id="id33.33.id10"><span class="ltx_text ltx_font_italic" id="id33.33.id10.1">2,4</span></sup>, Yu Li<sup class="ltx_sup" id="id34.34.id11"><span class="ltx_text ltx_font_italic" id="id34.34.id11.1">1,2</span></sup>, Xuyuan Han<sup class="ltx_sup" id="id35.35.id12"><span class="ltx_text ltx_font_italic" id="id35.35.id12.1">4</span></sup>, Yun Ding<sup class="ltx_sup" id="id36.36.id13"><span class="ltx_text ltx_font_italic" id="id36.36.id13.1">4</span></sup>, Ruizhang Jiang<sup class="ltx_sup" id="id37.37.id14"><span class="ltx_text ltx_font_italic" id="id37.37.id14.1">1,2</span></sup>, 
+<br class="ltx_break"/>Xiaochuan Zhang<sup class="ltx_sup" id="id38.38.id15"><span class="ltx_text ltx_font_italic" id="id38.38.id15.1">4</span></sup>, Yichao Li<sup class="ltx_sup" id="id39.39.id16"><span class="ltx_text ltx_font_italic" id="id39.39.id16.1">4</span></sup>, Yuanpei Chen<sup class="ltx_sup" id="id40.40.id17"><span class="ltx_text ltx_font_italic" id="id40.40.id17.1">1,2,4∗</span></sup>, Yaodong Yang<sup class="ltx_sup" id="id41.41.id18"><span class="ltx_text ltx_font_italic" id="id41.41.id18.1">1,2,4∗</span></sup>, Yitao Liang<sup class="ltx_sup" id="id42.42.id19"><span class="ltx_text ltx_font_italic" id="id42.42.id19.1">1,2,4∗</span></sup>
+</span><span class="ltx_author_notes"><sup class="ltx_sup" id="id43.43.id1"><span class="ltx_text ltx_font_italic" id="id43.43.id1.1">1</span></sup> Peking University. <sup class="ltx_sup" id="id44.44.id2"><span class="ltx_text ltx_font_italic" id="id44.44.id2.1">2</span></sup> PKU-PsiBot Joint Lab. <sup class="ltx_sup" id="id45.45.id3"><span class="ltx_text ltx_font_italic" id="id45.45.id3.1">3</span></sup> Nanyang Technological University. <sup class="ltx_sup" id="id46.46.id4"><span class="ltx_text ltx_font_italic" id="id46.46.id4.1">4</span></sup> PsiBot.</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract">摘要</h6>
+<p class="ltx_p"><span class="translated-text">长视野桌面游戏对机器人技术提出了独特的系统挑战：小的感知或执行错误可能会使累积的任务状态无效，在决策模块中传播，并最终破坏交互。本文研究如何通过深思熟虑的系统设计而不是孤立的组件改进来维持回合制多人机器人桌面游戏的内部状态一致性。使用麻将作为代表性的长视野设置，我们提出了一个集成架构，该架构显式地维护感知、执行和交互状态，将高级语义推理与时间关键的感知和控制分开，并将经过验证的动作原语与触觉触发的恢复相结合，以防止过早的状态损坏。我们进一步引入交互级监控机制来检测威胁执行假设的轮次违规和隐藏信息泄露。除了演示完整的游戏操作之外，我们还提供了故障模式、恢复有效性、跨模块错误传播以及部署期间观察到的硬件算法权衡的经验特征。我们的结果表明，显式分区、受监控的状态转换和恢复机制对于在扩展游戏中维持可执行一致性至关重要，而整体或未经验证的管道会导致端到端可靠性明显下降。所提出的系统可作为研究长视野、回合制交互中的系统级设计原理的实证平台。</span><span class="original-text">Long-horizon tabletop games pose a distinct systems challenge for robotics: small perceptual or execution errors can invalidate accumulated task state, propagate across decision-making modules, and ultimately derail interaction. This paper studies how to maintain internal state consistency in turn-based, multi-human robotic tabletop games through deliberate system design rather than isolated component improvement. Using Mahjong as a representative long-horizon setting, we present an integrated architecture that explicitly maintains perceptual, execution, and interaction state, partitions high-level semantic reasoning from time-critical perception and control, and incorporates verified action primitives with tactile-triggered recovery to prevent premature state corruption. We further introduce interaction-level monitoring mechanisms to detect turn violations and hidden-information breaches that threaten execution assumptions. Beyond demonstrating complete-game operation, we provide an empirical characterization of failure modes, recovery effectiveness, cross-module error propagation, and hardware–algorithm trade-offs observed during deployment. Our results show that explicit partitioning, monitored state transitions, and recovery mechanisms are critical for sustaining executable consistency over extended play, whereas monolithic or unverified pipelines lead to measurable degradation in end-to-end reliability. The proposed system serves as an empirical platform for studying system-level design principles in long-horizon, turn-based interaction.</span></p>
+</div>
+<section class="ltx_section ltx_indent_first" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span class="ltx_text ltx_font_smallcaps" id="S1.1.1"><span class="translated-text">简介</span><span class="original-text">Introduction</span></span>
+</h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">桌面游戏为机器人系统提供了结构化但要求较高的设置</span><span class="original-text">Tabletop games provide a structured yet demanding setting for robotic systems</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">openchess</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">jenga</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">chinesepokerrobot</span>]</cite><span class="translated-text">。它们需要对小物体的重复操纵、紧密的感知-行动循环、严格的轮流结构以及长期的持续操作，通常是在多个人类参与者在场的情况下</span><span class="original-text">. They require repeated manipulation of small objects, tight perception–action loops, strict turn-taking structure, and sustained operation over long horizons, often in the presence of multiple human participants</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">gamesmanros</span>]</cite><span class="translated-text">。麻将是此类中特别具有挑战性的一个例子：游戏时间较长，物体排列密集，执行过程在感知、决策和操纵之间反复交替</span><span class="original-text">. Mahjong is a particularly challenging instance of this class: gameplay is prolonged, objects are densely arranged, and execution repeatedly alternates between perception, decision-making, and manipulation</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">mahjongrobot</span>]</cite><span class="translated-text">。在这种设置中，小的感知或执行错误不是孤立的事件，而是可以跨组件传播，导致状态不一致，最终破坏游戏玩法</span><span class="original-text">. In such settings, small perception or execution errors are not isolated events but can propagate across components, leading to state inconsistency that ultimately derails gameplay</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">levine2012monitoring</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">bohne2023execution</span>]</cite><span class="translated-text">。这使得错误恢复和状态维护成为系统级问题，而不是组件级问题。</span><span class="original-text">. This makes error recovery and state maintenance a system-level concern rather than a component-level one.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">本文解决了一个系统级的研究问题：</span><span class="original-text">This paper addresses a system-level research question:</span><em class="ltx_emph ltx_font_italic" id="S1.p2.1.1"><span class="translated-text">哪些系统设计选择使机器人系统能够在与多人进行长视野、回合制桌面交互期间保持可执行状态的一致性和可恢复性？</span><span class="original-text">what system design choices enable a robotic system to maintain executable state consistency and recoverability during long-horizon, turn-based tabletop interactions with multiple humans?</span></em><span class="translated-text">在物理桌面游戏中，成功的部署还需要不平凡的游戏能力：可靠地执行动作但与随机游戏没有区别的系统在实践中不太可能被接受。我们不是以最佳博弈论性能或详尽的规则执行为目标，而是专注于在现实物理和交互条件下持续、稳健的操作，将可执行状态一致性视为有意义（尽管不一定是最佳）游戏性能的先决条件。因此，回答这个问题需要将感知、决策、操纵、恢复和交互集成到一个闭环系统中，该系统能够在没有持续人类监督的情况下容忍错误。图</span><span class="original-text">In physical tabletop games, successful deployment further requires non-trivial game competence: a system that executes actions reliably but behaves indistinguishably from random play is unlikely to be acceptable in practice. Rather than aiming for optimal game-theoretic performance or exhaustive rule enforcement, we focus on sustained, robust operation under realistic physical and interactional conditions, treating executable state consistency as a prerequisite for meaningful, though not necessarily optimal, game performance. Answering this question therefore requires integrating perception, decision-making, manipulation, recovery, and interaction into a single closed-loop system capable of tolerating errors without constant human supervision. Figure</span><span class="ltx_ref ltx_missing_label ltx_ref_self">LABEL:fig:overview</span><span class="translated-text">提供完整系统的概述。</span><span class="original-text">provides an overview of the complete system.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">早期的系统原型揭示了现实世界桌面交互中常见的部署驱动的约束。人类玩家在进行游戏过程中经常需要澄清机器人的行动和决策，并且在游戏中期经常出现与规则相关的问题，从而扰乱回合结构和执行流程。为了减少歧义并避免长视野操作过程中的临时干预，系统提供了两个辅助接口：记录结构化决策轨迹以供游戏结束后进行事后检查，并在出现问题时支持游戏内规则查询。我们没有将这些部署驱动的观察视为以人为中心的建模或行为研究问题，而是将它们合并为部署的系统级要求。</span><span class="original-text">Early system prototyping revealed deployment-driven constraints that are common in real-world tabletop interactions. Human players often needed clarification of the robot’s actions and decisions during ongoing gameplay, and rule-related questions frequently arose mid-game, disrupting turn structure and execution flow. To reduce ambiguity and avoid ad-hoc interventions during long-horizon operation, the system provides two auxiliary interfaces: it records structured decision traces for post-hoc inspection after gameplay, and supports in-game rule queries when questions arise. Rather than treating these deployment-driven observations as human-centered modeling or behavioral research questions, we incorporate them as system-level requirements for deployment.</span></p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">为了满足物理游戏的执行时间有效性和鲁棒性需求，我们采用了混合系统架构。视觉语言模型用于高级推理、策略选择、规则解释和语义交互，而专门的感知和控制模块则处理时间关键的任务，例如小物体检测、分割、姿态估计和基于触觉的故障检测。对于依赖于游戏上下文和回合结构的交互级感知，我们发现高级视觉语言推理在实践中比纯粹的视觉分类器更可靠，尽管时间分辨率较低。这种划分反映了系统开发过程中观察到的实际权衡：虽然基础模型提供了灵活性和语义理解，但小型物理对象的可靠执行需要针对延迟和准确性进行优化的专用组件。我们的评估表明，违反此分区</span><span class="original-text">To address the execution-time validity and robustness demands of physical gameplay, we adopt a hybrid system architecture. A vision–language model is used for high-level reasoning, strategy selection, rule interpretation, and semantic interaction, while specialized perception and control modules handle time-critical tasks such as small-object detection, segmentation, pose estimation, and tactile-based failure detection. For interaction-level perception that depends on game context and turn structure, we found high-level vision–language reasoning to be more reliable in practice than purely visual classifiers, despite lower temporal resolution. This partitioning reflects practical trade-offs observed during system development: while foundation models provide flexibility and semantic understanding, reliable execution with small physical objects requires dedicated components optimized for latency and accuracy. Our evaluation shows that violating this partition</span><span class="ltx_ERROR undefined" id="S1.p4.1.1"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S1.p4.1.2"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94例如，通过依赖跨语义推理和时间关键感知的单一模型</span><span class="original-text">0”80”94for example by relying on a single model across both semantic reasoning and time-critical perception</span><span class="ltx_ERROR undefined" id="S1.p4.1.3"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S1.p4.1.4"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94 会导致端到端系统可靠性明显下降。</span><span class="original-text">0”80”94leads to measurable degradation in end-to-end system reliability.</span></p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">人机交互给维护内部系统状态带来了额外的挑战。我们不是尝试全面的规则执行或对抗行为检测，而是专注于一组最小的交互级别事件</span><span class="original-text">Human interaction introduces additional challenges for maintaining internal system state. Rather than attempting comprehensive rule enforcement or adversarial behavior detection, we focus on a minimal set of interaction-level events</span><span class="ltx_ERROR undefined" id="S1.p5.1.1"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S1.p5.1.2"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94具体来说，不按顺序进行游戏以及未经授权检查其他玩家的手牌</span><span class="original-text">0”80”94specifically, out-of-turn play and unauthorized inspection of other players’ hands</span><span class="ltx_ERROR undefined" id="S1.p5.1.3"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S1.p5.1.4"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94直接违反了机器人的执行假设，可以通过检测、警报和结构化日志记录来处理。这些机制向人类参与者展示潜在的状态不一致，同时保留人类对规则解释和解决的权威，反映了桌面游戏固有的社会本质。系统不会在游戏过程中中断执行流程或尝试强制执行结果，而是记录足够的上下文以供事后检查。其他形式的不当行为，例如对机器人或其物体的直接物理干扰，被认为可以通过环境设计和社会协议来减轻，这在部署的机器人系统中很常见。</span><span class="original-text">0”80”94that directly violate the robot’s execution assumptions and can be handled through detection, alerting, and structured logging. These mechanisms surface potential state inconsistencies to human participants while preserving human authority over rule interpretation and resolution, reflecting the inherently social nature of tabletop games. The system does not interrupt execution flow or attempt to enforce outcomes during gameplay, but instead records sufficient context for post-hoc inspection. Other forms of misconduct, such as direct physical interference with the robot or its objects, are assumed to be mitigated through environmental design and social protocols, as is common in deployed robotic systems.</span></p>
+</div>
+<div class="ltx_para" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1"><span class="translated-text">我们在完整的游戏中评估所提出的系统。除了系统可执行性之外，我们还将游戏性能作为部署级可接受性信号而不是优化目标进行评估。机器人以最少的人为干预完成了完整的游戏（例如，超过 122 场游戏，机器人在没有任何人为干预的情况下完成了 89.3% 的完整游戏），并通过触觉触发恢复保持稳健的操作（例如，恢复后抓取成功率为 99.8%）。我们进一步研究如何违反可执行状态一致性</span><span class="original-text">We evaluate the proposed system across complete games. In addition to system executability, we assess game performance as a deployment-level acceptability signal rather than an optimization objective. The robot completes full games with minimal human intervention (e.g., over 122 games, the robot completed 89.3% full games without any human intervention) and maintains robust manipulation through tactile-triggered recovery (e.g., 99.8% grasp success after recovery). We further examine how violations of executable state consistency</span><span class="ltx_ERROR undefined" id="S1.p6.1.1"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S1.p6.1.2"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94如感知或执行错误未成功恢复</span><span class="original-text">0”80”94such as perception or execution errors that are not successfully recovered</span><span class="ltx_ERROR undefined" id="S1.p6.1.3"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S1.p6.1.4"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">尽管游戏策略不变，0”80”94 仍会导致游戏结果明显下降。除了总体成功指标之外，我们还报告了系统级测量，这些测量阐明了将基础模型推理与时间关键的感知和控制分开的实际权衡。这些测量旨在公开系统级行为，而不是单独对各个组件进行基准测试。</span><span class="original-text">0”80”94lead to measurable degradation in game outcomes, despite unchanged game strategy. Beyond aggregate success metrics, we report system-level measurements that clarify practical trade-offs in partitioning foundation-model reasoning from time-critical perception and control. These measurements are intended to expose system-level behavior rather than to benchmark individual components in isolation.</span></p>
+</div>
+<div class="ltx_para" id="S1.p7">
+<p class="ltx_p" id="S1.p7.1"><span class="translated-text">总的来说，这项工作有助于：（i）长视野、回合制桌面机器人游戏中故障模式和恢复机制的经验表征； (ii) 有证据表明，将基础模型推理与时间关键的感知和控制分开，在实践中对于维持小物体操纵任务的状态一致性至关重要； (iii) 部署的机器人桌面游戏系统，作为研究长视野、回合制人机桌面交互中系统级设计权衡的实证工具。</span><span class="original-text">Overall, this work contributes: (i) an empirical characterization of failure modes and recovery mechanisms in long-horizon, turn-based tabletop robot games; (ii) evidence that partitioning foundation-model reasoning from time-critical perception and control is critical in practice to sustain state consistency in small-object manipulation tasks; and (iii) a deployed robotic tabletop game system that serves as an empirical vehicle for studying system-level design trade-offs in long-horizon, turn-based human–robot tabletop interactions.</span></p>
+</div>
+</section>
+<section class="ltx_section ltx_indent_first" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span class="ltx_text ltx_font_smallcaps" id="S2.1.1"><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></span>
+</h2>
+<section class="ltx_subsection ltx_indent_first" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S2.SS1.5.1.1"><span class="translated-text">Ⅱ-A</span><span class="original-text">II-A</span></span> </span><span class="ltx_text ltx_font_italic" id="S2.SS1.6.2"><span class="translated-text">机器人桌面和棋盘游戏系统</span><span class="original-text">Robotic tabletop and board-game systems</span></span>
+</h3>
+<div class="ltx_para" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.1"><span class="translated-text">机器人桌面游戏构成了一个结构化的应用领域，其中感知、操作和交互必须在严格的轮流和重复的决策执行循环下集成</span><span class="original-text">Robotic tabletop games constitute a structured application domain in which perception, manipulation, and interaction must be integrated under strict turn-taking and repeated decision–execution cycles</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">chinesepokerrobot</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">openchess</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">jenga</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">mahjongrobot</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">gamesmanros</span>]</cite><span class="translated-text">。现有系统展示了棋盘上的自主或半自主游戏</span><span class="original-text">. Prior systems demonstrate autonomous or semi-autonomous play in board</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">openchess</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">chessdevelopment</span>]</cite><span class="translated-text">和卡</span><span class="original-text">and card</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">chinesepokerrobot</span>]</cite><span class="translated-text">通过将状态感知与机器人控制相结合来模拟游戏，强调规则控制的桌面交互对物理执行和感知提出了不平凡的要求。其他系统强调与人类玩家的交互，平衡游戏能力与回合结构、节奏和社会可接受性，并且通常通过端到端自主或面向用户的措施而不是孤立的组件指标来评估性能</span><span class="original-text">games by combining state perception with robotic control, highlighting that rule-governed tabletop interactions place nontrivial demands on physical execution and sensing. Other systems emphasize interaction with human players, balancing game competence with turn structure, pacing, and social acceptability, and often evaluate performance through end-to-end autonomy or user-facing measures rather than isolated component metrics</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">zarkowski2019multi</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">robots-in-games</span>]</cite><span class="translated-text">。以框架为导向的工作进一步探索了如何在多个桌面游戏中重用共同的感知、决策和驱动组件。</span><span class="original-text">. Framework-oriented efforts further explore how common perception, decision-making, and actuation components can be reused across multiple tabletop games.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS1.p2">
+<p class="ltx_p" id="S2.SS1.p2.1"><span class="translated-text">虽然这些系统建立了物理游戏机器人的可行性，但它们通常强调短视距操作或在游戏过程中假设可靠的状态可观察性。相比之下，我们的工作使用麻将作为一种长时间的、基于回合的桌面设置，其中任何感知或执行错误都可能立即导致内部状态不一致。显式状态维护和可恢复性是维持跨多个回合和参与者的完整游戏操作的核心系统要求。</span><span class="original-text">While these systems establish the feasibility of physical game-playing robots, they typically emphasize short-horizon operation or assume reliable state observability during gameplay. In contrast, our work uses Mahjong as a prolonged, turn-based tabletop setting in which any perceptual or execution error can immediately induce internal state inconsistency. Explicit state maintenance and recoverability are central system requirements for sustaining complete-game operation across multiple turns and participants.</span></p>
+</div>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S2.SS2.5.1.1"><span class="translated-text">Ⅱ-B</span><span class="original-text">II-B</span></span> </span><span class="ltx_text ltx_font_italic" id="S2.SS2.6.2"><span class="translated-text">集成机器人系统中的感知、推理和控制的划分</span><span class="original-text">Partitioning perception, reasoning, and control in integrated robotic systems</span></span>
+</h3>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.1"><span class="translated-text">集成机器人系统越来越依赖感知、推理和控制之间的显式划分，以平衡语义灵活性与反应式执行，特别是在支持基础模型的部署中</span><span class="original-text">Integrated robotic systems increasingly rely on explicit partitioning between perception, reasoning, and control to balance semantic flexibility with reactive execution, especially in foundation-model-enabled deployments</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">fmreview</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">llmrobotics</span>]</cite><span class="translated-text">。
+许多最新的系统将高级语言或视觉语言推理融入模块化感知和控制组件中，将语义决策转化为可执行的动作，同时保留对感官反馈的响应能力</span><span class="original-text">.
+Many recent systems ground high-level language or vision–language reasoning in modular perception and control components, translating semantic decisions into executable actions while preserving responsiveness to sensory feedback</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">plan-seq-learn</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">mon2025embodied</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">fmreview</span>]</cite><span class="translated-text">。
+这种架构分离还为违反系统假设时的执行监控、诊断和故障定位提供了显式接口</span><span class="original-text">.
+This architectural separation also provides explicit interfaces for execution monitoring, diagnosis, and localization of failures when system assumptions are violated</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">willibald2025hierarchical</span>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p2">
+<p class="ltx_p" id="S2.SS2.p2.1"><span class="translated-text">最近的方法研究了如何在技能或任务段的粒度上检测和纠正执行偏差，从而在不破坏下游决策逻辑的情况下实现结构化恢复</span><span class="original-text">Recent approaches study how execution deviations can be detected and corrected at the granularity of skills or task segments, enabling structured recovery without corrupting downstream decision logic</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">willibald2025hierarchical</span>]</cite><span class="translated-text">。
+然而，许多评估仍然强调本地恢复有效性，而在实际部署中，跨感知、决策和交互循环的未恢复或部分恢复错误的系统级后果仍未得到充分探索</span><span class="original-text">.
+However, many evaluations still emphasize local recovery effectiveness, while the system-level consequences of unrecovered or partially recovered errors across perception, decision-making, and interaction loops remain underexplored in real deployments</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">fmreview</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">mon2025embodied</span>]</cite><span class="translated-text">。
+在基于回合的交互设置中，即使单个操作在本地看来成功，这种跨模块传播也可能使下游决策无效，从而激发明确的系统级状态一致性考虑</span><span class="original-text">.
+In turn-based interaction settings, such cross-module propagation can invalidate downstream decisions even when individual actions appear locally successful, motivating explicit system-level state-consistency considerations</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">willibald2025hierarchical</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">mon2025embodied</span>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p3">
+<p class="ltx_p" id="S2.SS2.p3.1"><span class="translated-text">最近的系统越来越多地利用大型语言模型和视觉语言模型来扩展具体任务中的语义推理和泛化</span><span class="original-text">Recent systems increasingly leverage large language models and vision–language models to expand semantic reasoning and generalization in embodied tasks</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">geminirobotics</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">helix</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">scaling_helix</span>]</cite><span class="translated-text">。
+一些方法通过使用基础模型进行高层规划来保持模块化，同时将时间关键的感知和控制委托给专门的组件</span><span class="original-text">.
+Some approaches preserve modularity by using foundation models for high-level planning while delegating time-critical perception and control to specialized components</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">dexgraspvla</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">memer</span>]</cite><span class="translated-text">，而其他人则追求从多模式观测直接到行动的更统一的映射</span><span class="original-text">, whereas others pursue more unified mappings from multimodal observations directly to actions</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">openvla</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">pi0</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">pi05</span>]</cite><span class="translated-text">。
+在实践中，这种分离对于时间关键的循环和精确接地变得特别重要：面向接地的中间表示（例如掩模）可以提高低级操作保真度，而端到端 VLA 模型则为了简单性而牺牲了模块化可诊断性</span><span class="original-text">.
+In practice, this separation becomes particularly important for time-critical loops and precise grounding: grounding-oriented intermediate representations (e.g., masks) can improve low-level manipulation fidelity, while end-to-end VLA models trade modular diagnosability for simplicity</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">gondola</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">roboground</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">openvla</span>]</cite><span class="translated-text">。
+我们的工作通过研究故意分区如何支持长期、回合制桌面交互中的可执行状态一致性和恢复来补充这些努力。具体来说，我们研究架构分离、受保护的状态转换和受监控的执行如何共同限制错误传播并在扩展的范围内保持内部状态的有效性。</span><span class="original-text">.
+Our work complements these efforts by examining how deliberate partitioning supports executable state consistency and recovery in long-horizon, turn-based tabletop interaction. Specifically, we study how architectural separation, guarded state transitions, and monitored execution jointly constrain error propagation and preserve internal state validity over extended horizons.</span></p>
+</div>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S2.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S2.SS3.5.1.1"><span class="translated-text">Ⅱ-C</span><span class="original-text">II-C</span></span> </span><span class="ltx_text ltx_font_italic" id="S2.SS3.6.2"><span class="translated-text">博弈代理和规则推理</span><span class="original-text">Game-playing agents and rule reasoning</span></span>
+</h3>
+<div class="ltx_para" id="S2.SS3.p1">
+<p class="ltx_p" id="S2.SS3.p1.1"><span class="translated-text">棋盘和纸牌游戏的游戏代理通过在正式规则和明确定义的状态表示下优化决策，取得了出色的性能</span><span class="original-text">Game-playing agents for board and card games have achieved strong performance by optimizing decision-making under formal rules and well-defined state representations</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">alphago</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">texaspoker</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">suphx</span>]</cite><span class="translated-text">。在这些设置中，游戏状态通常被假设为可准确观察或以数字方式表示，从而允许学习和搜索方法专注于策略推理和最佳游戏</span><span class="original-text">. In these settings, the game state is typically assumed to be accurately observable or digitally represented, allowing learning and search methods to focus on strategic reasoning and optimal play</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">chessgpt</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">unoarena</span>]</cite><span class="translated-text">。我们的重点不同之处在于，游戏能力被视为物理机器人系统中的部署级别约束，该系统在不完美的感知、操作不确定性和多人交互下运行。我们不是针对最先进的游戏性能进行优化或详尽地执行所有规则变体，而是研究机器人系统如何通过保持可执行状态的一致性、识别威胁系统假设的交互级事件以及在无需持续人工干预的情况下支持恢复来维持长期执行。</span><span class="original-text">. Our focus differs in that game competence is treated as a deployment-level constraint within a physical robotic system operating under imperfect perception, manipulation uncertainty, and multi-human interaction. Rather than optimizing for state-of-the-art game performance or exhaustively enforcing all rule variants, we study how a robotic system can sustain long-horizon execution by maintaining executable state consistency, identifying interaction-level events that threaten system assumptions, and supporting recovery without continuous human intervention.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section ltx_indent_first" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section"><span class="translated-text">三、</span><span class="original-text">III</span></span><span class="ltx_text ltx_font_smallcaps" id="S3.1.1"><span class="translated-text">问题表述：桌面游戏中的内部状态一致性</span><span class="original-text">Problem Formulation: Internal State Consistency in Tabletop Games</span></span>
+</h2>
+<section class="ltx_subsection ltx_indent_first" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS1.5.1.1"><span class="translated-text">Ⅲ-A</span><span class="original-text">III-A</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS1.6.2"><span class="translated-text">作为长期可执行系统的桌面游戏</span><span class="original-text">Tabletop Games as Long-Horizon Executable Systems</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">桌面游戏构成了一类独特的具体机器人任务，与传统的操作或短视距交互场景有着根本的不同。虽然个人行动</span><span class="original-text">Tabletop games constitute a distinct class of embodied robotic tasks that differ fundamentally from conventional manipulation or short-horizon interaction scenarios. While individual actions</span><span class="ltx_ERROR undefined" id="S3.SS1.p1.1.1"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S3.SS1.p1.1.2"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94例如抓握、放置或推动物体</span><span class="original-text">0”80”94such as grasping, placing, or pushing objects</span><span class="ltx_ERROR undefined" id="S3.SS1.p1.1.3"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S3.SS1.p1.1.4"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94 可能类似于标准的桌面操作，游戏玩法作为一个结构化的执行过程展开，由轮流、持久状态和与多个人类参与者的重复交互控制。每个动作不仅可以通过其物理结果来解释，还可以通过其对不断发展的游戏状态的影响来解释，这些状态必须在感知、决策和交互中保持一致。</span><span class="original-text">0”80”94may resemble standard tabletop manipulation, gameplay unfolds as a structured execution process governed by turn-taking, persistent state, and repeated interaction with multiple human participants. Each action is interpreted not only by its physical outcome, but also by its implications for the evolving game state, which must remain consistent across perception, decision-making, and interaction over extended horizons.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p2">
+<p class="ltx_p" id="S3.SS1.p2.1"><span class="translated-text">桌面游戏作为长视野可执行系统的三个特征使其与众不同。首先，轮流施加了严格的时间和因果结构：一个动作的有效性取决于轮到谁、之前发生了什么动作以及接下来预计会发生什么状态转换。其次，游戏玩法依赖于必须跨回合维持的持久任务级状态。对象身份、所有权和计数（例如，每个玩家持有的图块）不是瞬时观察，而是必须在多个回合中准确维护。第三，桌面游戏本质上是多人游戏。人类参与者自主行动，可能表现出意想不到的行为，并且经常依赖隐含的社会惯例而不是明确的信号。因此，交互相关事件可能会在没有明确的机器可读提示的情况下发生，从而违反执行假设并使状态维护复杂化。</span><span class="original-text">Three characteristics distinguish tabletop games as long-horizon executable systems. First, turn-taking imposes a strict temporal and causal structure: the validity of an action depends on whose turn it is, what actions have occurred previously, and what state transitions are expected next. Second, gameplay relies on persistent task-level state that must be maintained across turns. Object identities, ownership, and counts (e.g., tiles held by each player) are not transient observations but must be maintained accurately across many turns. Third, tabletop games are inherently multi-human. Human participants act autonomously, may behave unexpectedly, and often rely on implicit social conventions rather than explicit signaling. As a result, interaction-relevant events may occur without explicit machine-readable cues, violating execution assumptions and complicating state maintenance.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p3">
+<p class="ltx_p" id="S3.SS1.p3.1"><span class="translated-text">在此类设置中，错误不会保留在其产生的组件中。单个感知、执行或交互错误可能会使有关游戏状态的共享假设失效并在模块之间传播。例如，错误识别图块、由于感知延迟而错过状态转换或未能执行抓取可能会立即破坏机器人的游戏内部表示，使后续决策无效，即使后来的感知和控制成功。这些故障在游戏的执行逻辑中通常是不可逆转的：如果没有明确的检测和恢复，则无法纠正不正确的手数或回合假设。因此，维持长期运作需要保持内部状态的一致性，而不仅仅是最大化局部行动的成功。</span><span class="original-text">In such settings, errors do not remain localized to the component in which they originate. A single perceptual, execution, or interaction error can invalidate shared assumptions about the game state and propagate across modules. For example, misidentifying a tile, missing a state transition due to sensing latency, or failing to execute a grasp can immediately corrupt the robot’s internal representation of the game, rendering subsequent decisions invalid even if later perception and control succeed. These failures are often irreversible within the execution logic of the game: an incorrect hand count or turn assumption cannot be corrected without explicit detection and recovery. As a result, sustaining long-horizon operation requires maintaining the consistency of internal state, rather than merely maximizing local action success.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p4">
+<p class="ltx_p" id="S3.SS1.p4.1"><span class="translated-text">我们使用麻将作为该问题类的代表实例。麻将涉及小物体的密集排列、长时间的回合互动以及感知、决策和操作之间的反复转换。尽管我们的系统采用了一些实用的限制</span><span class="original-text">We use Mahjong as a representative instance of this problem class. Mahjong involves dense arrangements of small objects, prolonged turn-based interaction, and repeated transitions between perception, decision-making, and manipulation. Although our system adopts several pragmatic constraints</span><span class="ltx_ERROR undefined" id="S3.SS1.p4.1.1"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S3.SS1.p4.1.2"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94包括简化的评分规则和特定于任务的交互约定</span><span class="original-text">0”80”94including simplified scoring rules, and task-specific interaction conventions</span><span class="ltx_ERROR undefined" id="S3.SS1.p4.1.3"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S3.SS1.p4.1.4"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94这些选择保留了与长期状态维护相关的执行结构。因此，这项工作的重点不是最佳游戏玩法或详尽的规则覆盖范围，而是理解机器人系统如何在现实的物理和交互条件下保持可执行状态的一致性。</span><span class="original-text">0”80”94these choices preserve the execution structure relevant to long-horizon state maintenance. The focus of this work is therefore not on optimal gameplay or exhaustive rule coverage, but on understanding how a robotic system can maintain executable state consistency under realistic physical and interactional conditions.</span></p>
+</div>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS2.5.1.1"><span class="translated-text">Ⅲ-B</span><span class="original-text">III-B</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS2.6.2"><span class="translated-text">内部状态一致性的定义</span><span class="original-text">Definition of Internal State Consistency</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">我们定义</span><span class="original-text">We define</span><em class="ltx_emph ltx_font_italic" id="S3.SS2.p1.1.1"><span class="translated-text">内部状态一致性</span><span class="original-text">internal state consistency</span></em><span class="translated-text">随着游戏展开，机器人所维护的游戏内部表示与桌面环境的实际物理和交互状态之间的一致性。内部状态包括多个相互依赖的组件，包括（i）编码手牌、丢弃牌和游戏历史的感知状态，（ii）跟踪已完成和待处理动作的执行状态，以及（iii）编码回合结构和人类行为的交互状态。一致性要求这些表示保持相互一致并扎根于物理世界。</span><span class="original-text">as the alignment between the robot’s maintained internal representation of the game and the actual physical and interaction state of the tabletop environment as gameplay unfolds. The internal state comprises multiple interdependent components, including (i) a perceptual state encoding hand tiles, discarding tile and game history, (ii) an execution state tracking completed and pending actions, and (iii) an interaction state encoding turn structure and human behavior. Consistency requires that these representations remain mutually coherent and grounded in the physical world.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.p2">
+<p class="ltx_p" id="S3.SS2.p2.1"><span class="translated-text">当一个或多个组件偏离现实或彼此偏离时，就会出现不一致。我们区分了三种常见的不一致类别。</span><span class="original-text">Inconsistencies arise when one or more components diverge from reality or from each other. We distinguish three common classes of inconsistency.</span><em class="ltx_emph ltx_font_italic" id="S3.SS2.p2.1.1"><span class="translated-text">感知不一致</span><span class="original-text">Perceptual inconsistencies</span></em><span class="translated-text">当由于传感错误或延迟而错误估计或错过对象身份或计数时，就会发生这种情况，从而导致游戏状态更新不正确。</span><span class="original-text">occur when object identities or counts are misestimated or missed due to sensing errors or latency, leading to incorrect updates of the game state.</span><em class="ltx_emph ltx_font_italic" id="S3.SS2.p2.1.2"><span class="translated-text">执行不一致</span><span class="original-text">Execution inconsistencies</span></em><span class="translated-text">当身体动作失败或产生意外结果时出现</span><span class="original-text">arise when physical actions fail or produce unintended outcomes</span><span class="ltx_ERROR undefined" id="S3.SS2.p2.1.3"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S3.SS2.p2.1.4"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94例如掉落或放错地方的物体</span><span class="original-text">0”80”94such as dropped or misplaced objects</span><span class="ltx_ERROR undefined" id="S3.SS2.p2.1.5"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S3.SS2.p2.1.6"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94导致游戏的假设状态和实际状态之间存在差异。</span><span class="original-text">0”80”94causing discrepancies between the assumed and actual state of the game.</span><em class="ltx_emph ltx_font_italic" id="S3.SS2.p2.1.7"><span class="translated-text">交互不一致</span><span class="original-text">Interaction inconsistencies</span></em><span class="translated-text">当人类行为违反机器人的执行假设时，例如通过不按顺序进行游戏或未经授权检查隐藏信息、破坏回合结构和状态期望，就会发生这种情况。</span><span class="original-text">occur when human actions violate the robot’s execution assumptions, for example through out-of-turn play or unauthorized inspection of hidden information, disrupting turn structure and state expectations.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="476" id="S3.F2.g1" src="https://arxiv.org/html/2603.25405v1/images/failure_propagation.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">图 2: </span><span class="ltx_text ltx_font_bold" id="S3.F2.2.1">Cross-module error propagation in long-horizon tabletop gameplay.</span> Perceptual, execution, or interaction errors can propagate through the maintained game history and internal state, corrupting downstream reasoning and actions if not detected and recovered. The red dashed lines represent propagation paths that could immediately create visible insecurity.</figcaption>
+</figure>
+<div class="ltx_para" id="S3.SS2.p3">
+<p class="ltx_p" id="S3.SS2.p3.1"><span class="translated-text">至关重要的是，这些不一致会在模块之间传播，而不是保持孤立。感知错误可能会破坏记忆，进而使下游策略推理失效；执行失败可能会永久改变手数，从而消除可行的游戏结果；交互违规可能会使回合假设无效，从而导致非法行为。图</span><span class="original-text">Crucially, these inconsistencies propagate across modules rather than remaining isolated. A perceptual error may corrupt memory, which in turn invalidates downstream strategy reasoning; an execution failure may permanently alter hand counts, eliminating feasible game outcomes; an interaction violation may invalidate turn assumptions, leading to illegal actions. Figure</span><a class="ltx_ref" href="#S3.F2" title="图 2 ‣ III-B Definition of Internal State Consistency ‣ III Problem Formulation: Internal State Consistency in Tabletop Games ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">说明了典型的传播路径，显示了源自感知、执行或交互的错误如何通过内部状态更新级联并影响后续决策和行动。</span><span class="original-text">illustrates typical propagation pathways, showing how errors originating in perception, execution, or interaction can cascade through internal state updates and affect subsequent decisions and actions.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.p4">
+<p class="ltx_p" id="S3.SS2.p4.1"><span class="translated-text">这项工作将内部状态一致性视为必须主动维护和恢复的系统级属性，而不是隐含的假设。我们的系统设计、监控机制和评估是围绕识别、容忍状态不一致并从中恢复来组织的，以实现持续的长期游戏玩法。虽然某些设置步骤（例如，初始图块排列）和任务简化是在外部处理的，但它们不会影响游戏过程中的一致性动态，这是我们分析的重点。</span><span class="original-text">This work treats internal state consistency as a system-level property that must be actively maintained and recovered, rather than an implicit assumption. Our system design, monitoring mechanisms, and evaluation are organized around identifying, tolerating, and recovering from state inconsistencies to enable sustained long-horizon gameplay. While certain setup steps (e.g., initial tile arrangement) and task simplifications are handled externally, they do not affect the consistency dynamics during gameplay, which is the focus of our analysis.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section ltx_indent_first" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span class="ltx_text ltx_font_smallcaps" id="S4.1.1"><span class="translated-text">保持状态一致性的系统设计</span><span class="original-text">System Design for Maintaining State Consistency</span></span>
+</h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">在长视野桌面游戏中保持状态一致性需要感知、推理、操作和恢复之间的明确协调。在麻将中，每一个物理动作都会改变物体数量、回合结构和未来的决策空间。未检测到的故障可能会破坏所维护的内部状态并使后续推理无效。因此，后续具体系统设计的重点都在于减少错误、减少延迟、错误恢复。</span><span class="original-text">Maintaining state consistency in long-horizon tabletop gameplay requires explicit coordination between perception, reasoning, manipulation, and recovery. In Mahjong, every physical action alters object counts, turn structure, and future decision space. An undetected failure can corrupt the maintained internal state and invalidate subsequent reasoning. Therefore, the key points of the following specific system design all lie in reducing errors, reducing delays, and error recovery.</span></p>
+</div>
+<div class="ltx_para" id="S4.p2">
+<p class="ltx_p" id="S4.p2.1"><span class="ltx_text ltx_font_bold" id="S4.p2.1.1"><span class="translated-text">建筑分区。</span><span class="original-text">Architectural partitioning.</span></span><span class="translated-text">最终系统有意将高级语义推理与时间关键的识别和控制分开。视觉-语言模型</span><span class="original-text">The final system deliberately separates high-level semantic reasoning from time-critical recognition and control. A vision–language model</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">qwen25vl</span>]</cite><span class="translated-text">通过 SFT、单步 RL 和自我对弈进行微调，执行战略决策、规则解释、回合验证和上下文相关的视觉判断。这些操作发生的频率相对较低，并且在维护的游戏历史记录中运行。相比之下，延迟敏感的任务</span><span class="original-text">fine-tuned by SFT, single-step RL and self-play, performs strategic decision-making, rule interpretation, turn validation, and context-dependent visual judgment. These operations occur at relatively low frequency and operate over the maintained game history. In contrast, latency-sensitive tasks</span><span class="ltx_ERROR undefined" id="S4.p2.1.2"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S4.p2.1.3"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94包括图块检测、分割和抓取姿势估计</span><span class="original-text">0”80”94including tile detection, segmentation, and grasp pose estimation</span><span class="ltx_ERROR undefined" id="S4.p2.1.4"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S4.p2.1.5"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94由专门的组件处理：YOLO</span><span class="original-text">0”80”94are handled by specialized components: YOLO</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">yolo</span>]</cite><span class="translated-text">用于实时瓷砖检测，SAM</span><span class="original-text">for real-time tile detection, SAM</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">sam</span>]</cite><span class="translated-text">和基础姿势</span><span class="original-text">and FoundationPose</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">foundationpose</span>]</cite><span class="translated-text">用于姿势估计。触觉传感用于抓握验证。这种划分反映了部署驱动的约束：虽然基础模型为上下文变化提供了语义灵活性和鲁棒性，但小对象检测和重复操作需要确定性延迟和空间精度。将这些职责分配给单独的模块可以减少跨组件干扰并将故障模式定位在可解释的边界内。</span><span class="original-text">for pose estimation. Tactile sensing is used for grasp verification. This partition reflects deployment-driven constraints: while foundation models provide semantic flexibility and robustness to contextual variation, small-object detection and repeated manipulation demand deterministic latency and spatial precision. Assigning these responsibilities to separate modules reduces cross-component interference and localizes failure modes within interpretable boundaries.</span></p>
+</div>
+<div class="ltx_para" id="S4.p3">
+<p class="ltx_p" id="S4.p3.1"><span class="ltx_text ltx_font_bold" id="S4.p3.1.1"><span class="translated-text">状态条件动作原语。</span><span class="original-text">State-conditioned action primitives.</span></span><span class="translated-text">游戏玩法被分解为原子动作原语（绘制、放置、丢弃和融合）。每个原语都作为受保护的状态转换执行，包括：（i）针对维护的交互和执行状态的前提条件验证，（ii）目标图块的感知基础，（iii）姿势估计和运动执行，（iv）通过触觉和力反馈进行后条件验证，然后才进行（v）内部状态更新。至关重要的是，如果执行失败，将触发恢复过程而不提交状态更改。这种设计可以防止过早更新，否则会在后续回合中传播不一致的情况。</span><span class="original-text">Gameplay is decomposed into atomic action primitives (draw, place, discard, and meld). Each primitive is executed as a guarded state transition consisting of: (i) precondition validation against the maintained interaction and execution state, (ii) perceptual grounding of the target tile, (iii) pose estimation and motion execution, (iv) post-condition verification via tactile and force feedback, and only then (v) internal state update. Crucially, if execution fails, recovery procedures are triggered without committing state changes. This design prevents premature updates that would otherwise propagate inconsistencies across subsequent turns.</span></p>
+</div>
+<div class="ltx_para" id="S4.p4">
+<p class="ltx_p" id="S4.p4.1"><span class="ltx_text ltx_font_bold" id="S4.p4.1.1"><span class="translated-text">故障检测和恢复。</span><span class="original-text">Failure detection and recovery.</span></span><span class="translated-text">如图</span><span class="original-text">As shown in Figure</span><a class="ltx_ref" href="#S3.F2" title="图 2 ‣ III-B Definition of Internal State Consistency ‣ III Problem Formulation: Internal State Consistency in Tabletop Games ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">，物理操作错误是不一致的最不安全的来源。我们发现，集成触觉传感来检测手闭合过程中不完整的抓握可以降低错误率。检测到故障后，使用分段跟踪重新定位目标图块</span><span class="original-text">, physical manipulation errors are the most unsafe source of inconsistency. We found that integrating tactile sensing to detect incomplete grasps during hand closure can reduce the error rate. Upon failure detection, the target tile is re-localized using segmentation tracking</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">cutie</span>]</cite><span class="translated-text">，并估计新的抓取姿势。在整个过程中，内部状态变量</span><span class="original-text">, and a new grasp pose is estimated. Throughout this process, internal state variables</span><span class="ltx_ERROR undefined" id="S4.p4.1.2"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S4.p4.1.3"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94例如瓷砖计数和回合进度</span><span class="original-text">0”80”94such as tile counts and turn progression</span><span class="ltx_ERROR undefined" id="S4.p4.1.4"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S4.p4.1.5"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94 保持不变。通过将执行尝试与状态承诺解耦，执行失败从不可逆的状态损坏转换为可恢复的事件。</span><span class="original-text">0”80”94remain unchanged. By decoupling execution attempts from state commitment, excecution failures are converted from irreversible state corruption into recoverable events.</span></p>
+</div>
+<div class="ltx_para" id="S4.p5">
+<p class="ltx_p" id="S4.p5.1"><span class="ltx_text ltx_font_bold" id="S4.p5.1.1"><span class="translated-text">交互级监控。</span><span class="original-text">Interaction-level monitoring.</span></span><span class="translated-text">多人游戏会引入违反执行假设的事件。该系统不是强制执行全面的规则合规性，而是监视直接威胁内部一致性的两个交互级别条件：不按顺序进行游戏和未经授权检查隐藏的图块。这些事件是使用以维持的转弯状态为条件的视觉语言推理来评估的。一旦检测到，它们就会被记录下来并呈现给参与者，而不会强行中断游戏。这保留了人类在规则解释方面的权威，同时保持了潜在状态不一致的透明度。因此，监控机制的作用是一致性保障，而不是规则执行机构。</span><span class="original-text">Multi-human gameplay introduces events that violate execution assumptions. Rather than enforcing comprehensive rule compliance, the system monitors two interaction-level conditions that directly threaten internal consistency: out-of-turn play and unauthorized inspection of hidden tiles. These events are evaluated using vision–language reasoning conditioned on the maintained turn state. When detected, they are logged and surfaced to participants without forcibly interrupting gameplay. This preserves human authority in rule interpretation while maintaining transparency regarding potential state inconsistencies. The monitoring mechanism thus functions as a consistency safeguard rather than a rule-enforcement authority.</span></p>
+</div>
+</section>
+<section class="ltx_section ltx_indent_first" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span class="ltx_text ltx_font_smallcaps" id="S5.1.1"><span class="translated-text">结果</span><span class="original-text">Results</span></span>
+</h2>
+<figure class="ltx_figure" id="S5.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="549" id="S5.F3.g1" src="https://arxiv.org/html/2603.25405v1/images/playing.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">图 3: </span>
+<span class="ltx_text ltx_font_bold" id="S5.F3.2.1">Representative deployment environments and gameplay settings.</span> Including
+1) Top-down views of the Mahjong table layout and per-player tile walls.
+2) Close-up of manipulation during discarding and claiming.
+3) Multi-human turn-based gameplay in laboratory conditions.
+4) Public exhibition deployment with multiple participants.
+</figcaption>
+</figure>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">我们在持续的多人游戏条件下，在涉及真实人类参与者和自主机器人操作的完整麻将游戏中评估系统。实验在实验室和公共部署环境中进行，多个参与者围绕共享桌面设置进行交互，如图所示</span><span class="original-text">We evaluate the system across complete Mahjong games involving real human participants and autonomous robot operation under sustained, multi-human gameplay conditions. Experiments were conducted in both laboratory and public deployment environments, with multiple participants interacting around a shared tabletop setup, as illustrated in Figure</span><a class="ltx_ref" href="#S5.F3" title="图 3 ‣ V Results ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">。这些设置反映了本工作中研究的长视野、基于回合的交互环境，包括密集的小对象操纵、不完美的信息和人类驱动的回合动态。</span><span class="original-text">. These settings reflect the long-horizon, turn-based interaction context studied in this work and include dense small-object manipulation, imperfect information, and human-driven turn dynamics.</span></p>
+</div>
+<div class="ltx_para" id="S5.p2">
+<p class="ltx_p" id="S5.p2.1"><span class="translated-text">我们的评估重点是系统级可执行性、竞技游戏性能、感知可靠性和架构权衡。我们不是单独报告孤立的组件基准，而是提供端到端的测量，揭示感知、推理、执行和恢复如何在更广泛的范围内交互，以及故障如何传播或包含在闭环系统中。</span><span class="original-text">Our evaluation focuses on system-level executability, competitive game performance, perception reliability, and architectural trade-offs. Rather than reporting isolated component benchmarks alone, we present end-to-end measurements that expose how perception, reasoning, execution, and recovery interact over extended horizons, and how failures propagate or are contained within the closed-loop system.</span></p>
+</div>
+<section class="ltx_subsection ltx_indent_first" id="S5.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS1.5.1.1">V-A</span> </span><span class="ltx_text ltx_font_italic" id="S5.SS1.6.2"><span class="translated-text">长期可执行性</span><span class="original-text">Long-Horizon Executability</span></span>
+</h3>
+<div class="ltx_para" id="S5.SS1.p1">
+<p class="ltx_p" id="S5.SS1.p1.1"><span class="translated-text">在 122 场完整的游戏中，机器人成功地维持了涉及重复感知-动作循环的扩展回合序列的游戏玩法。其中，109 款游戏是在没有任何人工干预的情况下完成的，相当于完全自主完成率的 89.3%。在没有干预的情况下无法完成的 13 场比赛中，只有 3 场出现了无法恢复的失败。另外 10 个只需要少量的人为干预（例如，手动重新定位图块），之后就能够继续完成。在 122 场完整比赛中，系统执行了 2596 个动作原语并尝试了 1000 多次抓取。原始单次尝试抓取成功率为99.2%。启用触觉触发恢复后，整体抓取成功率提高到 99.8%。</span><span class="original-text">Across 122 complete games, the robot successfully sustained gameplay for extended turn sequences involving repeated perception–action loops. Of these, 109 games were completed without any human intervention, corresponding to 89.3% fully autonomous completion. Of the 13 games that did not complete without intervention, only 3 exhibited unrecoverable failures. The other 10 required only minor human intervention (e.g., manual tile repositioning) and were able to continue to completion thereafter. During the 122 full games, the system executed 2596 action primitives and attempted more than 1000 grasps. The raw single-attempt grasp success rate was 99.2%. After enabling tactile-triggered recovery, overall grasp success increased to 99.8%.</span></p>
+</div>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S5.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS2.5.1.1">V-B</span> </span><span class="ltx_text ltx_font_italic" id="S5.SS2.6.2"><span class="translated-text">游戏性能</span><span class="original-text">Game Performance</span></span>
+</h3>
+<div class="ltx_para" id="S5.SS2.p1">
+<p class="ltx_p" id="S5.SS2.p1.1"><span class="translated-text">在与人类玩家的 122 场比赛中，机器人取得了 34 场胜利，胜率为 27.9%，是麻将桌上四个位置中最高的。我们采用角色互换的配对比赛来减少位置偏差。对于每个初始图块配置，两个游戏都会交换座位位置。只有当一名经纪人赢得两场比赛时，配对比赛才算获胜；否则，记为平局。在此协议下，在与 GPT-5.2 的 40 场配对比赛中，我们的系统取得了 23 场胜利，GPT-5.2 取得了 3 场胜利，14 场配对比赛取得了平局。</span><span class="original-text">Against human players, the robot achieved 34 wins over the 122 games, corresponding to a win rate of 27.9%, the highest among the four positions on the mahjong table. We adopt paired matches with role reversal to reduce positional bias. For each initial tile configuration, two games are played with swapped seating positions. A paired match is counted as a win only if one agent wins both games; otherwise, it is recorded as a draw. Under this protocol, across 40 paired matches against GPT-5.2, our system achieved 23 wins, GPT-5.2 achieved 3 wins, and 14 paired matches resulted in draws.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS2.p2">
+<p class="ltx_p" id="S5.SS2.p2.1"><span class="translated-text">尽管最佳发挥不是这项工作的主要目标，但持续的竞争表现可以作为部署级别的可接受性信号。值得注意的是，当执行不一致仍未恢复时，即使战略推理保持不变，胜率也会显着下降。</span><span class="original-text">Although optimal play is not the primary objective of this work, sustained competitive performance serves as a deployment-level acceptability signal. Notably, win rates degrade measurably when execution inconsistencies remain unrecovered, even though strategic reasoning remains unchanged.</span></p>
+</div>
+<figure class="ltx_table" id="S5.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">表 I: </span>
+<span class="ltx_text ltx_font_bold" id="S5.T1.8.1">Human evaluation of decision traces on a Likert scale.</span>
+Fluency measures grammatical correctness and naturalness;
+Independence assesses whether the reasoning appears like human thought rather than tool-assisted;
+Rigor evaluates logical soundness and evidential support (including appropriate use of quantification and certainty);
+Interpretability measures whether the final decision is stepwise explainable and rule-consistent;
+Correctness assesses the strategic quality of the chosen action;
+Overall reflects the perceived human-likeness of the reasoning style.
+We randomly sampled 300 game states from 40 matches and distributed all model outputs evenly to six blinded annotators; five samples were incomplete.
+Values are reported as mean <math alttext="\pm" class="ltx_Math" display="inline" id="S5.T1.3.m1" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math> standard deviation, and <math alttext="n" class="ltx_Math" display="inline" id="S5.T1.4.m2" intent=":literal"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math> denotes the number of evaluated states per model and decision context.
+</figcaption>
+<table class="ltx_tabular ltx_centering ltx_align_middle" id="S5.T1.6">
+<tr class="ltx_tr" id="S5.T1.6.2">
+<td class="ltx_td ltx_align_left ltx_border_tt" id="S5.T1.6.2.3" rowspan="2"><span class="ltx_text" id="S5.T1.6.2.3.1">Decision Context</span></td>
+<td class="ltx_td ltx_align_left ltx_border_tt" id="S5.T1.6.2.4" rowspan="2"><span class="ltx_text" id="S5.T1.6.2.4.1">Model</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S5.T1.5.1.1" rowspan="2"><span class="ltx_text" id="S5.T1.5.1.1.1"><math alttext="n" class="ltx_Math" display="inline" id="S5.T1.5.1.1.1.m1" intent=":literal"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math></span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" colspan="6" id="S5.T1.6.2.2">Evaluation Metrics (mean <math alttext="\pm" class="ltx_Math" display="inline" id="S5.T1.6.2.2.m1" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math> std)</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.6.3">
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.3.1">Fluency</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.3.2">Independence</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.3.3">Rigor</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.3.4">Interpretability</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.3.5">Correctness</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.3.6">Overall</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.6.4">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S5.T1.6.4.1" rowspan="2"><span class="ltx_text" id="S5.T1.6.4.1.1">Discard (Missing Suit)</span></td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S5.T1.6.4.2">GPT-5.2</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.4.3">74</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.4.4">4.230.91</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.4.5">4.051.16</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.4.6">4.051.08</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.4.7">3.821.28</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.4.8">4.720.67</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.4.9">3.911.09</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.6.5">
+<td class="ltx_td ltx_align_left" id="S5.T1.6.5.1">Ours</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.6.5.2">85</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.6.5.3"><span class="ltx_text ltx_font_bold" id="S5.T1.6.5.3.1">4.381.05</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T1.6.5.4"><span class="ltx_text ltx_font_bold" id="S5.T1.6.5.4.1">4.271.13</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T1.6.5.5"><span class="ltx_text ltx_font_bold" id="S5.T1.6.5.5.1">4.271.15</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T1.6.5.6"><span class="ltx_text ltx_font_bold" id="S5.T1.6.5.6.1">4.01.23</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T1.6.5.7"><span class="ltx_text ltx_font_bold" id="S5.T1.6.5.7.1">4.850.45</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T1.6.5.8"><span class="ltx_text ltx_font_bold" id="S5.T1.6.5.8.1">4.311.03</span></td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.6.6">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S5.T1.6.6.1" rowspan="2"><span class="ltx_text" id="S5.T1.6.6.1.1">Discard (no Missing Suit)</span></td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S5.T1.6.6.2">GPT-5.2</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.6.3">55</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.6.4">3.761.13</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.6.5">3.61.43</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.6.6">3.531.44</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.6.7">3.41.43</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.6.8">3.981.39</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.6.9">3.491.26</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.6.7">
+<td class="ltx_td ltx_align_left" id="S5.T1.6.7.1">Ours</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.6.7.2">44</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.6.7.3"><span class="ltx_text ltx_font_bold" id="S5.T1.6.7.3.1">4.231.13</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T1.6.7.4"><span class="ltx_text ltx_font_bold" id="S5.T1.6.7.4.1">4.271.12</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T1.6.7.5"><span class="ltx_text ltx_font_bold" id="S5.T1.6.7.5.1">4.111.21</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T1.6.7.6"><span class="ltx_text ltx_font_bold" id="S5.T1.6.7.6.1">4.091.28</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T1.6.7.7"><span class="ltx_text ltx_font_bold" id="S5.T1.6.7.7.1">4.570.86</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T1.6.7.8"><span class="ltx_text ltx_font_bold" id="S5.T1.6.7.8.1">4.20.94</span></td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.6.8">
+<td class="ltx_td ltx_align_left ltx_border_bb ltx_border_t" id="S5.T1.6.8.1" rowspan="2"><span class="ltx_text" id="S5.T1.6.8.1.1">Claiming Decision</span></td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S5.T1.6.8.2">GPT-5.2</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.8.3">15</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.8.4">3.471.02</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.8.5">3.01.41</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.8.6">2.81.56</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.8.7">2.41.58</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.8.8">3.131.5</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.6.8.9">2.531.36</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.6.9">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S5.T1.6.9.1">Ours</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T1.6.9.2">22</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T1.6.9.3"><span class="ltx_text ltx_font_bold" id="S5.T1.6.9.3.1">4.091.04</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T1.6.9.4"><span class="ltx_text ltx_font_bold" id="S5.T1.6.9.4.1">4.50.72</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T1.6.9.5"><span class="ltx_text ltx_font_bold" id="S5.T1.6.9.5.1">4.231.24</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T1.6.9.6"><span class="ltx_text ltx_font_bold" id="S5.T1.6.9.6.1">4.181.03</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T1.6.9.7"><span class="ltx_text ltx_font_bold" id="S5.T1.6.9.7.1">4.860.34</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T1.6.9.8"><span class="ltx_text ltx_font_bold" id="S5.T1.6.9.8.1">3.951.02</span></td>
+</tr>
+</table>
+</figure>
+<div class="ltx_para" id="S5.SS2.p3">
+<p class="ltx_p" id="S5.SS2.p3.1"><span class="translated-text">为了评估记录的决策轨迹的可解释性和事后有用性，我们进行了人工评估，将我们系统的轨迹与 GPT-5.2 在相同游戏状态下生成的轨迹进行比较。人类评估员沿着五个维度对每条轨迹进行评分</span><span class="original-text">To assess interpretability and post-hoc usefulness of the recorded decision traces, we conducted a human evaluation comparing our system’s traces with those generated by GPT-5.2 under identical game states. Human evaluators rated each trace along five dimensions</span><span class="ltx_ERROR undefined" id="S5.SS2.p3.1.1"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S5.SS2.p3.1.2"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94流畅、自然、严谨、正确、综合素质。结果总结于表中</span><span class="original-text">0”80”94fluency, naturalness, rigor, correctness, and overall quality. Results are summarized in Table</span><a class="ltx_ref" href="#S5.T1" title="表 I ‣ V-B Game Performance ‣ V Results ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_tag">I</span></a>.</p>
+</div>
+<section class="ltx_paragraph ltx_indentfirst" id="S5.SS2.SSS0.Px1">
+<h5 class="ltx_title ltx_title_paragraph"><span class="translated-text">状态不一致的影响</span><span class="original-text">Impact of State Inconsistency</span></h5>
+<div class="ltx_para" id="S5.SS2.SSS0.Px1.p1">
+<p class="ltx_p" id="S5.SS2.SSS0.Px1.p1.1"><span class="translated-text">我们进一步检查执行不一致未成功恢复的游戏。总共观察了 8 场此类比赛，其中机器人只赢了 1 场（胜率 12.5%）。尽管样本量有限并且不允许强有力的统计声明，但观察到的趋势表明未恢复的错位</span><span class="original-text">We further examine games in which execution inconsistencies were not successfully recovered. A total of 8 such games were observed, among which the robot won only 1 game (12.5% win rate). Although the sample size is limited and does not permit strong statistical claims, the observed trend suggests that unrecovered misalignments</span><span class="ltx_ERROR undefined" id="S5.SS2.SSS0.Px1.p1.1.1"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S5.SS2.SSS0.Px1.p1.1.2"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94例如不正确的瓷砖计数或回合假设</span><span class="original-text">0”80”94such as incorrect tile counts or turn assumptions</span><span class="ltx_ERROR undefined" id="S5.SS2.SSS0.Px1.p1.1.3"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S5.SS2.SSS0.Px1.p1.1.4"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0”80”94 大幅降低下游游戏性能。</span><span class="original-text">0”80”94substantially degrade downstream game performance.</span></p>
+</div>
+<figure class="ltx_table" id="S5.T2">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">表 II: </span>
+Distribution of winning outcomes under two gameplay configurations.
+In the <span class="ltx_text ltx_font_bold" id="S5.T2.8.1">Characters</span> mode, used during debugging, the robot records the declared missing suit of all players as Characters.
+The <span class="ltx_text ltx_font_bold" id="S5.T2.9.2">Normal</span> mode corresponds to the full system described earlier, where each player’s declared missing suit is determined through speech interaction and perception.
+Columns <em class="ltx_emph ltx_font_italic" id="S5.T2.10.3">Right</em>, <em class="ltx_emph ltx_font_italic" id="S5.T2.11.4">Opp.</em>, and <em class="ltx_emph ltx_font_italic" id="S5.T2.12.5">Left</em> denote the three human players relative to the robot<span class="ltx_ERROR undefined" id="S5.T2.13.6">\CJK@punctchar</span><span class="ltx_ERROR undefined" id="S5.T2.14.7">\CJK@uniPunct</span>0”80”99s seating position.
+Multiple players may win from the same discard, so the sum of wins across players can exceed the number of games.
+</figcaption>
+<table class="ltx_tabular ltx_centering ltx_align_middle" id="S5.T2.15">
+<tr class="ltx_tr" id="S5.T2.15.1">
+<td class="ltx_td ltx_align_left ltx_border_tt" id="S5.T2.15.1.1"><span class="ltx_text ltx_font_bold" id="S5.T2.15.1.1.1">Mode</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S5.T2.15.1.2"><span class="ltx_text ltx_font_bold" id="S5.T2.15.1.2.1">Games</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S5.T2.15.1.3">Robot</td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S5.T2.15.1.4">Right</td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S5.T2.15.1.5">Opp.</td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S5.T2.15.1.6">Left</td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S5.T2.15.1.7">Draw</td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.15.2">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S5.T2.15.2.1">Characters</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.15.2.2">46</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.15.2.3">1</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.15.2.4">19</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.15.2.5">14</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.15.2.6">8</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.15.2.7">4</td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.15.3">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S5.T2.15.3.1">Normal</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T2.15.3.2">122</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T2.15.3.3">34</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T2.15.3.4">29</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T2.15.3.5">27</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T2.15.3.6">22</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T2.15.3.7">13</td>
+</tr>
+</table>
+</figure>
+<div class="ltx_para" id="S5.SS2.SSS0.Px1.p2">
+<p class="ltx_p" id="S5.SS2.SSS0.Px1.p2.1"><span class="translated-text">此外，在系统调试过程中，我们偶尔会禁用检测每个玩家声明的缺失花色的功能。在这些运行中，机器人将所有玩家声明的缺失花色记录为所有游戏的角色。在这种简化的配置下，进行了 46 场完整的比赛，其中机器人只赢了一次。这种对比表明，在语音交互和声明缺失花色感知中保持状态一致性在整体游戏表现中发挥着重要作用。表</span><span class="original-text">In addition, during system debugging we occasionally disabled detecting each player’s declared missing suit. In these runs, the robot recorded the declared missing suit of all players as Characters for all games. Under this simplified configuration, 46 complete games were played, in which the robot won only once. This contrast suggests that maintaining state consistency in speech interaction and declared-missing-suit perception plays a nontrivial role in overall game performance. Table</span><a class="ltx_ref" href="#S5.T2" title="表 II ‣ Impact of State Inconsistency ‣ V-B Game Performance ‣ V Results ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_tag">II</span></a><span class="translated-text">总结了两种配置下获胜结果的分布。</span><span class="original-text">summarizes the distribution of winning outcomes under both configurations.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S5.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS3.5.1.1"><span class="translated-text">电压-C</span><span class="original-text">V-C</span></span> </span><span class="ltx_text ltx_font_italic" id="S5.SS3.6.2"><span class="translated-text">架构权衡</span><span class="original-text">Architectural Trade-offs</span></span>
+</h3>
+<div class="ltx_para" id="S5.SS3.p1">
+<p class="ltx_p" id="S5.SS3.p1.1"><span class="translated-text">在最终确定系统架构之前，我们进行了验证实验，以确定视觉语言模型（VLM）和专门感知模块之间的职责分配。</span><span class="original-text">Before finalizing the system architecture, we conducted validation experiments to determine the allocation of responsibilities between the vision–language model (VLM) and specialized perception modules.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS3.p2">
+<p class="ltx_p" id="S5.SS3.p2.1"><span class="ltx_text ltx_font_bold" id="S5.SS3.p2.1.1"><span class="translated-text">瓷砖感知。</span><span class="original-text">Tile perception.</span></span><span class="translated-text">对于全帧麻将牌识别，YOLO 实现了 98.9% 的图像级准确率，推理延迟为 15</span><span class="original-text">For full-frame Mahjong tile recognition, YOLO achieved 98.9% image-level accuracy with an inference latency of 15</span><math alttext="\pm" class="ltx_Math" display="inline" id="S5.SS3.p2.1.m1" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math><span class="translated-text">每帧 2 毫秒。相比之下，基于 VLM 的单个图块识别精度较低，并且每个图像至少需要 380 毫秒。考虑到抽取和丢弃操作期间紧密的感知-动作循环，仅延迟间隙就使得仅 VLM 的检测对于持续的游戏玩法来说是不切实际的。</span><span class="original-text">2 ms per frame. In contrast, VLM-based recognition of individual tiles yielded lower accuracy and required at least 380 ms per image. Given the tight perception–action loop during draw and discard operations, the latency gap alone renders VLM-only detection impractical for sustained gameplay.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS3.p3">
+<p class="ltx_p" id="S5.SS3.p3.1"><span class="ltx_text ltx_font_bold" id="S5.SS3.p3.1.1"><span class="translated-text">交互级违规检测。</span><span class="original-text">Interaction-level violation detection.</span></span><span class="translated-text">我们进一步将基于 VLM 的推理与 DINO-v3 进行比较</span><span class="original-text">We further compared VLM-based reasoning with a DINO-v3</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">dinov3</span>]</cite><span class="translated-text">特征提取器后跟监督分类器，用于检测（i）未经授权的检查和（ii）转向归因。结果总结于表中</span><span class="original-text">feature extractor followed by a supervised classifier for detecting (i) unauthorized inspection and (ii) turn attribution. Results are summarized in Table</span><a class="ltx_ref" href="#S5.T3" title="表 III ‣ V-C Architectural Trade-offs ‣ V Results ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_tag">III</span></a><span class="translated-text">。基于 VLM 的推理表现出更高的性能，VLM 从未对正样本中检查玩家的身份进行错误分类，而基于 DINO 的分类器表现出 3.0% 的交叉身份错误率。</span><span class="original-text">. VLM-based reasoning demonstrated higher performance, VLM never misclassified the identity of the inspecting player within positive samples, whereas the DINO-based classifier exhibited a 3.0% cross-identity error rate.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS3.p4">
+<p class="ltx_p" id="S5.SS3.p4.1"><span class="translated-text">这些发现表明，时间关键的小物体感知受益于针对延迟进行优化的轻量级检测器，而需要上下文解释的交互级推理则受益于语义建模。因此，最终的架构反映了经验划分而不是任意的模块化设计。</span><span class="original-text">These findings indicate that time-critical small-object perception benefits from lightweight detectors optimized for latency, whereas interaction-level reasoning requiring contextual interpretation benefits from semantic modeling. The resulting architecture therefore reflects empirical partitioning rather than arbitrary modular design.</span></p>
+</div>
+<figure class="ltx_table" id="S5.T3">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">表 III: </span>
+Comparison of architectural alternatives for tile perception and interaction-level violation detection. VLM achieves 94.3% per-tile recognition accuracy rather than per-image. Latency is measured per image. Precision/Recall are reported for positive-class detection.
+</figcaption>
+<table class="ltx_tabular ltx_centering ltx_align_middle" id="S5.T3.3">
+<tr class="ltx_tr" id="S5.T3.3.4">
+<td class="ltx_td ltx_align_left ltx_border_tt" id="S5.T3.3.4.1"><span class="ltx_text ltx_font_bold" id="S5.T3.3.4.1.1">Task</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S5.T3.3.4.2"><span class="ltx_text ltx_font_bold" id="S5.T3.3.4.2.1">VLM</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S5.T3.3.4.3"><span class="ltx_text ltx_font_bold" id="S5.T3.3.4.3.1">YOLO / DINO</span></td>
+</tr>
+<tr class="ltx_tr" id="S5.T3.1.1">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S5.T3.1.1.2">Tile recognition accuracy</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T3.1.1.1"><math alttext="&lt;94.3\%" class="ltx_Math" display="inline" id="S5.T3.1.1.1.m1" intent=":literal"><semantics><mrow><mi></mi><mo>&lt;</mo><mrow><mn>94.3</mn><mo>%</mo></mrow></mrow><annotation encoding="application/x-tex">&lt;94.3\%</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T3.1.1.3">98.9% (YOLO)</td>
+</tr>
+<tr class="ltx_tr" id="S5.T3.3.3">
+<td class="ltx_td ltx_align_left" id="S5.T3.3.3.3">Latency (ms)</td>
+<td class="ltx_td ltx_align_center" id="S5.T3.2.2.1">
+<math alttext="\geq" class="ltx_Math" display="inline" id="S5.T3.2.2.1.m1" intent=":literal"><semantics><mo>≥</mo><annotation encoding="application/x-tex">\geq</annotation></semantics></math>380</td>
+<td class="ltx_td ltx_align_center" id="S5.T3.3.3.2">15<math alttext="\pm" class="ltx_Math" display="inline" id="S5.T3.3.3.2.m1" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math>2 (YOLO)</td>
+</tr>
+<tr class="ltx_tr" id="S5.T3.3.5">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S5.T3.3.5.1">Inspection P/R</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T3.3.5.2">0.967 / 0.989</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T3.3.5.3">0.956 / 0.960 (DINO)</td>
+</tr>
+<tr class="ltx_tr" id="S5.T3.3.6">
+<td class="ltx_td ltx_align_left" id="S5.T3.3.6.1">Turn attribution P/R</td>
+<td class="ltx_td ltx_align_center" id="S5.T3.3.6.2">0.937 / 0.976</td>
+<td class="ltx_td ltx_align_center" id="S5.T3.3.6.3">0.949 / 0.931 (DINO)</td>
+</tr>
+<tr class="ltx_tr" id="S5.T3.3.7">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S5.T3.3.7.1">Cross-identity error</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T3.3.7.2">0%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T3.3.7.3">3.0% (DINO)</td>
+</tr>
+</table>
+</figure>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S5.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS4.5.1.1"><span class="translated-text">维-D</span><span class="original-text">V-D</span></span> </span><span class="ltx_text ltx_font_italic" id="S5.SS4.6.2"><span class="translated-text">感知和交互监控性能</span><span class="original-text">Perception and Interaction Monitoring Performance</span></span>
+</h3>
+<div class="ltx_para" id="S5.SS4.p1">
+<p class="ltx_p" id="S5.SS4.p1.1"><span class="translated-text">在 122 个真实游戏中，基于 YOLO 的图块识别仅产生 5 次误检，支持在游戏过程中可靠地实时检测小物体。转弯违规检测的精度为 0.872，召回率为 0.867，而未经授权的检查检测的精度为 0.724，召回率为 0.945。然而，这两项任务的阴性预测值 (NPV) 和特异性均超过 0.999。这主要是由于在部署过程中观察到的类别不平衡，其中负样本的数量大大超过正样本，导致数据分布与训练集和保留的测试集不同。</span><span class="original-text">Across 122 real games, YOLO-based tile recognition produced only 5 misdetections, supporting reliable real-time detection of small objects during gameplay. Turn violation detection achieved a precision of 0.872 and a recall of 0.867, while unauthorized inspection detection achieved a precision of 0.724 and a recall of 0.945. However, the negative predictive value (NPV) and specificity exceed 0.999 for both tasks. This is primarily due to the class imbalance observed during deployment, where negative samples substantially outnumber positive ones, resulting in a data distribution that differs from the training and held-out test sets.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section ltx_indent_first" id="S6">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">VI </span><span class="ltx_text ltx_font_smallcaps" id="S6.1.1"><span class="translated-text">讨论和限制</span><span class="original-text">Discussion and Limitations</span></span>
+</h2>
+<section class="ltx_subsection ltx_indent_first" id="S6.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S6.SS1.5.1.1"><span class="translated-text">六一A</span><span class="original-text">VI-A</span></span> </span><span class="ltx_text ltx_font_italic" id="S6.SS1.6.2"><span class="translated-text">故障案例分析</span><span class="original-text">Failure Case Analysis</span></span>
+</h3>
+<div class="ltx_para" id="S6.SS1.p1">
+<p class="ltx_p" id="S6.SS1.p1.1"><span class="translated-text">在所有评估的游戏中，观察到三个致命故障，导致游戏不可逆转地终止。其中一个案例是由语音识别错误引起的，错误地检测到玩家已宣布获胜，从而提前终止了游戏。其余两起案例均源于YOLO的视觉误判：其中一例误判了棋子，导致系统执行了非法的碰击；在另一起案件中，错误分类导致了非法隐藏的“孔”。这些失败表明，长期游戏玩法很容易受到跨模块错误传播的影响。在某些情况下，一个组件中的故障可能会级联到其他组件，从而影响下游操作的执行并降低内部状态的一致性。</span><span class="original-text">Across all evaluated games, three fatal failures were observed that led to irreversible game termination. One case was caused by an error in speech recognition, which incorrectly detected that a player had declared a winning hand, prematurely terminating the game. The remaining two cases originated from visual misidentification by YOLO: in one instance, a tile was misdetected, leading the system to execute an illegal pung; in another, a misclassification resulted in an illegal concealed kong. These failures illustrate that long-horizon gameplay is vulnerable to cross-module error propagation. In certain cases, a fault in one component can cascade into others, influencing downstream action execution and degrading internal state consistency.</span></p>
+</div>
+<div class="ltx_para" id="S6.SS1.p2">
+<p class="ltx_p" id="S6.SS1.p2.1"><span class="translated-text">因此，抓取和融合执行过程中的触觉反馈在防止此类致命结果方面发挥着关键作用。当抓取验证或放置确认失败时，系统延迟内部状态更新并触发恢复。如果没有这个验证步骤，错误的抓握或意外的棋子移动将直接破坏手牌构图，导致后续回合中出现不可逆转的不一致。</span><span class="original-text">As a result, tactile feedback during grasping and meld execution plays a critical role in preventing such fatal outcomes. When grasp verification or placement confirmation fails, the system delays internal state updates and triggers recovery. Without this verification step, erroneous grasps or unintended tile movements would directly corrupt hand composition, leading to irreversible inconsistencies across subsequent turns.</span></p>
+</div>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S6.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S6.SS2.5.1.1"><span class="translated-text">六-B</span><span class="original-text">VI-B</span></span> </span><span class="ltx_text ltx_font_italic" id="S6.SS2.6.2"><span class="translated-text">硬件是可靠性瓶颈</span><span class="original-text">Hardware as a Reliability Bottleneck</span></span>
+</h3>
+<div class="ltx_para" id="S6.SS2.p1">
+<p class="ltx_p" id="S6.SS2.p1.1"><span class="translated-text">虽然人们通常认为实体游戏中的系统可靠性主要受到算法或软件性能的限制，但我们的经验观察表明了不同的情况。在所有记录的故障中，9 起事件可归因于感知或推理错误，而 11 起故障与硬件相关的不稳定有关，包括抓取闭合差异和驱动不精确。</span><span class="original-text">While it is often assumed that system reliability in embodied game playing is primarily limited by algorithmic or software performance, our empirical observations suggest a different picture. Across all recorded failures, 9 incidents were attributable to perception or reasoning errors, whereas 11 failures were associated with hardware-related instability, including grasp closure variance and actuation imprecision.</span></p>
+</div>
+<figure class="ltx_figure" id="S6.F4"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="182" id="S6.F4.g1" src="https://arxiv.org/html/2603.25405v1/images/error_rate.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">图 4: </span>Smoothed hardware error probability as a function of continuous operation time. Error frequency increases noticeably after approximately 20,000 seconds of sustained execution.</figcaption>
+</figure>
+<div class="ltx_para" id="S6.SS2.p2">
+<p class="ltx_p" id="S6.SS2.p2.1"><span class="translated-text">为了进一步分析这种影响，图</span><span class="original-text">To further analyze this effect, Figure</span><a class="ltx_ref" href="#S6.F4" title="图 4 ‣ VI-B Hardware as a Reliability Bottleneck ‣ VI Discussion and Limitations ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">将硬件引起的小错误的频率绘制为一天内连续运行时间的函数。我们观察到持续运行约 20,000 秒后硬件错误率明显增加，表明长时间使用后性能下降。</span><span class="original-text">plots the frequency of hardware-induced minor errors as a function of continuous operation time within a single day. We observe a noticeable increase in hardware error rate after approximately 20,000 seconds of sustained operation, indicating performance degradation under prolonged use.</span></p>
+</div>
+<div class="ltx_para" id="S6.SS2.p3">
+<p class="ltx_p" id="S6.SS2.p3.1"><span class="translated-text">这些结果表明，一旦感知和状态估计达到中等鲁棒性，机械一致性和驱动稳定性就成为端到端系统可靠性的主导因素，特别是在长视野桌面交互中。</span><span class="original-text">These results suggest that once perception and state estimation reach moderate robustness, mechanical consistency and actuation stability become a dominant factor in end-to-end system reliability, particularly in long-horizon tabletop interaction.</span></p>
+</div>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S6.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S6.SS3.5.1.1"><span class="translated-text">六-C</span><span class="original-text">VI-C</span></span> </span><span class="ltx_text ltx_font_italic" id="S6.SS3.6.2"><span class="translated-text">局限性</span><span class="original-text">Limitations</span></span>
+</h3>
+<div class="ltx_para" id="S6.SS3.p1">
+<p class="ltx_p" id="S6.SS3.p1.1"><span class="translated-text">该系统依赖于部分结构化的环境假设，包括校准的工作空间几何形状，这限制了其对任意设置的适应性。仅监控交互级别违规的最小子集，并且全面的规则执行以及对抗稳健性超出了当前的范围。此外，虽然该系统凭经验描述了故障传播和恢复的特征，但它并没有提供所有意外情况下状态一致性的正式保证。因此，研究结果应被解释为部署驱动的系统见解，而不是理论保证。
+尽管 VLM 可以生成可解释的推理轨迹，帮助人类理解机器人</span><span class="original-text">The system relies on partially structured environmental assumptions, including calibrated workspace geometry, which limits its adaptability to arbitrary setups. Only a minimal subset of interaction-level violations is monitored, and comprehensive rule enforcement as well as adversarial robustness are beyond the current scope. Furthermore, while the system empirically characterizes failure propagation and recovery, it does not provide formal guarantees of state consistency under all contingencies. The findings should therefore be interpreted as deployment-driven system insights rather than theoretical guarantees.
+Although the VLM can generate interpretable reasoning traces that help humans understand the robot</span><span class="ltx_ERROR undefined" id="S6.SS3.p1.1.1"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S6.SS3.p1.1.2"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0“80”99的决策，其认知辅助尚无法动态调整以匹配用户需求。这个限制限制了机器人</span><span class="original-text">0”80”99s decisions, its cognitive assistance cannot yet be dynamically adjusted to match user needs. This limitation restricts the robot</span><span class="ltx_ERROR undefined" id="S6.SS3.p1.1.3"><span class="translated-text">\中日韩@punctchar</span><span class="original-text">\CJK@punctchar</span></span><span class="ltx_ERROR undefined" id="S6.SS3.p1.1.4"><span class="translated-text">\中日韩@uniPunct</span><span class="original-text">\CJK@uniPunct</span></span><span class="translated-text">0“80”99 能够为逐步技能发展提供渐进式帮助，或者在需要更轻松的体验时减少挑战。此外，大型模型生成的决策轨迹在多大程度上促进赛后反思或提供有意义的教育价值尚未得到系统评估。</span><span class="original-text">0”80”99s ability to provide progressive assistance for gradual skill development or to reduce challenge when a more relaxed experience is desired. In addition, the extent to which the decision traces generated by large models facilitate post-game reflection or provide meaningful educational value has not yet been systematically evaluated.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+</ul>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="A0.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="A0.SS4.5.1.1">-D</span> </span><span class="ltx_text ltx_font_italic" id="A0.SS4.6.2"><span class="translated-text">战略推理培训渠道</span><span class="original-text">Training Pipeline for Strategic Reasoning</span></span>
+</h3>
+<figure class="ltx_figure" id="A0.F5"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="298" id="A0.F5.g1" src="https://arxiv.org/html/2603.25405v1/images/training.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">图 5: </span>
+<span class="ltx_text ltx_font_bold" id="A0.F5.2.1">Training pipeline for strategic reasoning.</span>
+Stage 1 distills a conventional RL-trained policy into the VLM via supervised fine-tuning with LLM-synthesized reasoning traces.
+Stage 2 applies single-step RL (GRPO) to optimize decision quality beyond imitation.
+Stage 3 uses self-play with DPO to discover strategies that surpass the original teacher policy.
+</figcaption>
+</figure>
+<div class="ltx_para" id="A0.SS4.p1">
+<p class="ltx_p" id="A0.SS4.p1.1"><span class="translated-text">图多模态语义理解模块</span><span class="original-text">The multimodal semantic understanding module in Figure</span><span class="ltx_ref ltx_missing_label ltx_ref_self">LABEL:fig:overview</span><span class="translated-text">采用 Qwen-2.5-VL-7B</span><span class="original-text">employs Qwen-2.5-VL-7B</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">qwen25vl</span>]</cite><span class="translated-text">作为骨干视觉语言模型（VLM）。
+对于战略推理，该模型接收当前游戏状态和历史的自然语言描述，并产生明确的思想链原理和最终的行动决策。
+我们开发了一个三阶段训练管道——监督微调（SFT）、单步强化学习（RL）和自我对弈优化——逐步提高游戏性能，同时保留人类可读的推理痕迹。
+整体流程如图所示</span><span class="original-text">as the backbone vision–language model (VLM).
+For strategic reasoning, the model receives a natural language description of the current game state and history, and produces both an explicit chain-of-thought rationale and a final action decision.
+We developed a three-stage training pipeline—supervised fine-tuning (SFT), single-step reinforcement learning (RL), and self-play optimization—that progressively improves game performance while preserving human-readable reasoning traces.
+The overall pipeline is illustrated in Figure</span><a class="ltx_ref" href="#A0.F5" title="图 5 ‣ -D Training Pipeline for Strategic Reasoning ‣ System Design for Maintaining Internal State Consistency in Long-Horizon Robotic Tabletop Games"><span class="ltx_text ltx_ref_tag">5</span></a>.</p>
+</div>
+<section class="ltx_subsubsection ltx_indentfirst" id="A0.SS4.SSSx1">
+<h4 class="ltx_title ltx_title_subsubsection"><span class="translated-text">第一阶段：监督微调</span><span class="original-text">Stage 1: Supervised Fine-Tuning</span></h4>
+<div class="ltx_para" id="A0.SS4.SSSx1.p1">
+<p class="ltx_p" id="A0.SS4.SSSx1.p1.5"><span class="translated-text">我们首先训练传统的基于 MLP 和 CNN 的麻将策略</span><span class="original-text">We first train a conventional MLP-and-CNN-based Mahjong policy</span><math alttext="\pi_{\text{AI}}" class="ltx_Math" display="inline" id="A0.SS4.SSSx1.p1.1.m1" intent=":literal"><semantics><msub><mi>π</mi><mtext>AI</mtext></msub><annotation encoding="application/x-tex">\pi_{\text{AI}}</annotation></semantics></math><span class="translated-text">使用近端策略优化 (PPO)</span><span class="original-text">using Proximal Policy Optimization (PPO)</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">ppo</span>]</cite><span class="translated-text">通过自我对弈。
+该教师策略生成状态-动作对的数据集</span><span class="original-text">via self-play.
+This teacher policy generates a dataset of state–action pairs</span><math alttext="\mathcal{D}_{0}=\{(s_{i},a_{i})\}_{i=1}^{N}" class="ltx_Math" display="inline" id="A0.SS4.SSSx1.p1.2.m2" intent=":literal"><semantics><mrow><msub><mi class="ltx_font_mathcaligraphic">𝒟</mi><mn>0</mn></msub><mo>=</mo><msubsup><mrow><mo stretchy="false">{</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>i</mi></msub><mo>,</mo><msub><mi>a</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow><mo stretchy="false">}</mo></mrow><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></msubsup></mrow><annotation encoding="application/x-tex">\mathcal{D}_{0}=\{(s_{i},a_{i})\}_{i=1}^{N}</annotation></semantics></math><span class="translated-text">，其中每个状态</span><span class="original-text">, where each state</span><math alttext="s_{i}" class="ltx_Math" display="inline" id="A0.SS4.SSSx1.p1.3.m3" intent=":literal"><semantics><msub><mi>s</mi><mi>i</mi></msub><annotation encoding="application/x-tex">s_{i}</annotation></semantics></math><span class="translated-text">对玩家的手牌、可见的弃牌和推断的缺失花色信息进行编码，以及</span><span class="original-text">encodes the player’s hand tiles, visible discards, and inferred missing-suit information, and</span><math alttext="a_{i}" class="ltx_Math" display="inline" id="A0.SS4.SSSx1.p1.4.m4" intent=":literal"><semantics><msub><mi>a</mi><mi>i</mi></msub><annotation encoding="application/x-tex">a_{i}</annotation></semantics></math><span class="translated-text">是由选择的动作</span><span class="original-text">is the action selected by</span><math alttext="\pi_{\text{AI}}" class="ltx_Math" display="inline" id="A0.SS4.SSSx1.p1.5.m5" intent=":literal"><semantics><msub><mi>π</mi><mtext>AI</mtext></msub><annotation encoding="application/x-tex">\pi_{\text{AI}}</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="A0.SS4.SSSx1.p2">
+<p class="ltx_p" id="A0.SS4.SSSx1.p2.4"><span class="translated-text">为了让 VLM 具备显式推理能力，我们使用 DeepSeek-R1</span><span class="original-text">To equip the VLM with explicit reasoning capabilities, we use DeepSeek-R1</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">deepseek-r1</span>]</cite><span class="translated-text">综合每个状态-动作对的思想链（CoT）解释。
+给定</span><span class="original-text">to synthesize chain-of-thought (CoT) explanations for each state–action pair.
+Given</span><math alttext="(s_{i},a_{i})" class="ltx_Math" display="inline" id="A0.SS4.SSSx1.p2.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>i</mi></msub><mo>,</mo><msub><mi>a</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(s_{i},a_{i})</annotation></semantics></math><span class="translated-text">，LLM生成自然语言推理轨迹</span><span class="original-text">, the LLM generates a natural language reasoning trace</span><math alttext="T_{i}" class="ltx_Math" display="inline" id="A0.SS4.SSSx1.p2.2.m2" intent=":literal"><semantics><msub><mi>T</mi><mi>i</mi></msub><annotation encoding="application/x-tex">T_{i}</annotation></semantics></math><span class="translated-text">阐明行动背后的战略考虑</span><span class="original-text">that articulates the strategic considerations behind action</span><math alttext="a_{i}" class="ltx_Math" display="inline" id="A0.SS4.SSSx1.p2.3.m3" intent=":literal"><semantics><msub><mi>a</mi><mi>i</mi></msub><annotation encoding="application/x-tex">a_{i}</annotation></semantics></math><span class="translated-text">。
+这会产生一个增强的数据集</span><span class="original-text">.
+This yields an augmented dataset</span><math alttext="\widetilde{\mathcal{D}}=\{(s_{i},T_{i},a_{i})\}_{i=1}^{N}" class="ltx_Math" display="inline" id="A0.SS4.SSSx1.p2.4.m4" intent=":literal"><semantics><mrow><mover accent="true"><mi class="ltx_font_mathcaligraphic">𝒟</mi><mo>~</mo></mover><mo>=</mo><msubsup><mrow><mo stretchy="false">{</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>i</mi></msub><mo>,</mo><msub><mi>T</mi><mi>i</mi></msub><mo>,</mo><msub><mi>a</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow><mo stretchy="false">}</mo></mrow><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></msubsup></mrow><annotation encoding="application/x-tex">\widetilde{\mathcal{D}}=\{(s_{i},T_{i},a_{i})\}_{i=1}^{N}</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="A0.SS4.SSSx1.p3">
+<p class="ltx_p" id="A0.SS4.SSSx1.p3.1"><span class="translated-text">我们对 VLM 进行微调</span><span class="original-text">We fine-tune the VLM on</span><math alttext="\widetilde{\mathcal{D}}" class="ltx_Math" display="inline" id="A0.SS4.SSSx1.p3.1.m1" intent=":literal"><semantics><mover accent="true"><mi class="ltx_font_mathcaligraphic">𝒟</mi><mo>~</mo></mover><annotation encoding="application/x-tex">\widetilde{\mathcal{D}}</annotation></semantics></math><span class="translated-text">通过最小化标准负对数似然：</span><span class="original-text">by minimizing the standard negative log-likelihood:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="A0.E1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{L}_{\text{SFT}}(\theta)=-\,\mathbb{E}_{(x,\,T,\,a)\,\sim\,\widetilde{\mathcal{D}}}\!\Big[\,\log\,p_{\theta}(T,a\mid x)\,\Big]," class="ltx_Math" display="block" id="A0.E1.m1" intent=":literal"><semantics><mrow><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mtext>SFT</mtext></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>θ</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mo>−</mo><mrow><msub><mi>𝔼</mi><mrow><mrow><mo stretchy="false">(</mo><mi>x</mi><mo rspace="0.337em">,</mo><mi>T</mi><mo rspace="0.337em">,</mo><mi>a</mi><mo rspace="0.170em" stretchy="false">)</mo></mrow><mo rspace="0.448em">∼</mo><mover accent="true"><mi class="ltx_font_mathcaligraphic">𝒟</mi><mo>~</mo></mover></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="1.600em" minsize="1.600em" rspace="0.170em">[</mo><mrow><mrow><mi>log</mi><mo lspace="0.337em">⁡</mo><msub><mi>p</mi><mi>θ</mi></msub></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>T</mi><mo>,</mo><mrow><mi>a</mi><mo>∣</mo><mi>x</mi></mrow><mo rspace="0.170em" stretchy="false">)</mo></mrow></mrow><mo maxsize="1.600em" minsize="1.600em">]</mo></mrow></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathcal{L}_{\text{SFT}}(\theta)=-\,\mathbb{E}_{(x,\,T,\,a)\,\sim\,\widetilde{\mathcal{D}}}\!\Big[\,\log\,p_{\theta}(T,a\mid x)\,\Big],</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="A0.SS4.SSSx1.p3.5"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\theta" class="ltx_Math" display="inline" id="A0.SS4.SSSx1.p3.2.m1" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math><span class="translated-text">表示VLM参数。
+得到的模型</span><span class="original-text">denotes the VLM parameters.
+The resulting model</span><math alttext="\pi_{\text{VLM}}^{\text{SFT}}" class="ltx_Math" display="inline" id="A0.SS4.SSSx1.p3.3.m2" intent=":literal"><semantics><msubsup><mi>π</mi><mtext>VLM</mtext><mtext>SFT</mtext></msubsup><annotation encoding="application/x-tex">\pi_{\text{VLM}}^{\text{SFT}}</annotation></semantics></math><span class="translated-text">学习产生格式良好、推理合理的输出。
+当评估时</span><span class="original-text">learns to produce well-formatted, reasoned outputs.
+When evaluated against</span><math alttext="\pi_{\text{AI}}" class="ltx_Math" display="inline" id="A0.SS4.SSSx1.p3.4.m3" intent=":literal"><semantics><msub><mi>π</mi><mtext>AI</mtext></msub><annotation encoding="application/x-tex">\pi_{\text{AI}}</annotation></semantics></math><span class="translated-text">在四人游戏中，</span><span class="original-text">in four-player games,</span><math alttext="\pi_{\text{VLM}}^{\text{SFT}}" class="ltx_Math" display="inline" id="A0.SS4.SSSx1.p3.5.m4" intent=":literal"><semantics><msubsup><mi>π</mi><mtext>VLM</mtext><mtext>SFT</mtext></msubsup><annotation encoding="application/x-tex">\pi_{\text{VLM}}^{\text{SFT}}</annotation></semantics></math><span class="translated-text">胜率达到28%。</span><span class="original-text">achieves a win rate of 28%.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection ltx_indentfirst" id="A0.SS4.SSSx2">
+<h4 class="ltx_title ltx_title_subsubsection"><span class="translated-text">第二阶段：单步强化学习</span><span class="original-text">Stage 2: Single-Step Reinforcement Learning</span></h4>
+<div class="ltx_para" id="A0.SS4.SSSx2.p1">
+<p class="ltx_p" id="A0.SS4.SSSx2.p1.1"><span class="translated-text">SFT 阶段教导模型生成结构化的、人类可读的输出，但最大似然目标平等对待所有标记，并且不会直接优化决策质量。
+为了提高游戏性能，我们应用GRPO</span><span class="original-text">The SFT stage teaches the model to generate structured, human-readable outputs, but the maximum-likelihood objective treats all tokens equally and does not directly optimize for decision quality.
+To improve gameplay performance, we apply GRPO</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">deepseek-r1</span>]</cite><span class="translated-text">通过维尔</span><span class="original-text">by VERL</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">hybridflow</span>]</cite><span class="translated-text">作为单步 RL 过程，使用</span><span class="original-text">as a single-step RL procedure, using</span><math alttext="\pi_{\text{AI}}" class="ltx_Math" display="inline" id="A0.SS4.SSSx2.p1.1.m1" intent=":literal"><semantics><msub><mi>π</mi><mtext>AI</mtext></msub><annotation encoding="application/x-tex">\pi_{\text{AI}}</annotation></semantics></math><span class="translated-text">作为奖励信号。</span><span class="original-text">as a reward signal.</span></p>
+</div>
+<div class="ltx_para" id="A0.SS4.SSSx2.p2">
+<p class="ltx_p" id="A0.SS4.SSSx2.p2.4"><span class="translated-text">对于每个州</span><span class="original-text">For each state</span><math alttext="s" class="ltx_Math" display="inline" id="A0.SS4.SSSx2.p2.1.m1" intent=":literal"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math><span class="translated-text">（按提示描述</span><span class="original-text">(described by prompt</span><math alttext="x" class="ltx_Math" display="inline" id="A0.SS4.SSSx2.p2.2.m2" intent=":literal"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math><span class="translated-text">），当前策略生成</span><span class="original-text">), the current policy generates</span><math alttext="G" class="ltx_Math" display="inline" id="A0.SS4.SSSx2.p2.3.m3" intent=":literal"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math><span class="translated-text">候选人的反应</span><span class="original-text">candidate responses</span><math alttext="\{(T_{i},a_{i})\}_{i=1}^{G}" class="ltx_Math" display="inline" id="A0.SS4.SSSx2.p2.4.m4" intent=":literal"><semantics><msubsup><mrow><mo stretchy="false">{</mo><mrow><mo stretchy="false">(</mo><msub><mi>T</mi><mi>i</mi></msub><mo>,</mo><msub><mi>a</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow><mo stretchy="false">}</mo></mrow><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>G</mi></msubsup><annotation encoding="application/x-tex">\{(T_{i},a_{i})\}_{i=1}^{G}</annotation></semantics></math><span class="translated-text">并行。
+每个响应都通过综合奖励进行评分：</span><span class="original-text">in parallel.
+Each response is scored by a composite reward:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="A0.E2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="R_{i}=R_{\text{format}}(T_{i},a_{i})+\,R_{\text{accuracy}}(s,a_{i})," class="ltx_Math" display="block" id="A0.E2.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>R</mi><mi>i</mi></msub><mo>=</mo><mrow><mrow><msub><mi>R</mi><mtext>format</mtext></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>T</mi><mi>i</mi></msub><mo>,</mo><msub><mi>a</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo rspace="0.392em">+</mo><mrow><msub><mi>R</mi><mtext>accuracy</mtext></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><msub><mi>a</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">R_{i}=R_{\text{format}}(T_{i},a_{i})+\,R_{\text{accuracy}}(s,a_{i}),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="A0.SS4.SSSx2.p2.6"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="R_{\text{format}}(T_{i},a_{i})\in\{0,1\}" class="ltx_Math" display="inline" id="A0.SS4.SSSx2.p2.5.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>R</mi><mtext>format</mtext></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>T</mi><mi>i</mi></msub><mo>,</mo><msub><mi>a</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>∈</mo><mrow><mo stretchy="false">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">R_{\text{format}}(T_{i},a_{i})\in\{0,1\}</annotation></semantics></math><span class="translated-text">指示输出是否满足预定义的格式约束（可解析的结构、有效的操作标记），</span><span class="original-text">indicates whether the output satisfies predefined formatting constraints (parseable structure, valid action token),</span><math alttext="R_{\text{accuracy}}(s,a_{i})=\pi_{\text{AI}}(a_{i}\mid s)" class="ltx_Math" display="inline" id="A0.SS4.SSSx2.p2.6.m2" intent=":literal"><semantics><mrow><mrow><msub><mi>R</mi><mtext>accuracy</mtext></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><msub><mi>a</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><msub><mi>π</mi><mtext>AI</mtext></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><msub><mi>a</mi><mi>i</mi></msub><mo>∣</mo><mi>s</mi></mrow><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">R_{\text{accuracy}}(s,a_{i})=\pi_{\text{AI}}(a_{i}\mid s)</annotation></semantics></math><span class="translated-text">是教师策略分配给所选动作的概率。</span><span class="original-text">is the probability assigned by the teacher policy to the chosen action.</span></p>
+</div>
+<div class="ltx_para" id="A0.SS4.SSSx2.p3">
+<p class="ltx_p" id="A0.SS4.SSSx2.p3.1"><span class="translated-text">集团层面的优势</span><span class="original-text">The group-level advantage for the</span><math alttext="i" class="ltx_Math" display="inline" id="A0.SS4.SSSx2.p3.1.m1" intent=":literal"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math><span class="translated-text">-th 响应计算如下：</span><span class="original-text">-th response is computed as:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="A0.E3">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="A_{i}=\frac{R_{i}-\mu_{\mathcal{G}}}{\sigma_{\mathcal{G}}}," class="ltx_Math" display="block" id="A0.E3.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>A</mi><mi>i</mi></msub><mo>=</mo><mfrac><mrow><msub><mi>R</mi><mi>i</mi></msub><mo>−</mo><msub><mi>μ</mi><mi class="ltx_font_mathcaligraphic">𝒢</mi></msub></mrow><msub><mi>σ</mi><mi class="ltx_font_mathcaligraphic">𝒢</mi></msub></mfrac></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">A_{i}=\frac{R_{i}-\mu_{\mathcal{G}}}{\sigma_{\mathcal{G}}},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="A0.SS4.SSSx2.p3.4"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\mu_{\mathcal{G}}" class="ltx_Math" display="inline" id="A0.SS4.SSSx2.p3.2.m1" intent=":literal"><semantics><msub><mi>μ</mi><mi class="ltx_font_mathcaligraphic">𝒢</mi></msub><annotation encoding="application/x-tex">\mu_{\mathcal{G}}</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="\sigma_{\mathcal{G}}" class="ltx_Math" display="inline" id="A0.SS4.SSSx2.p3.3.m2" intent=":literal"><semantics><msub><mi>σ</mi><mi class="ltx_font_mathcaligraphic">𝒢</mi></msub><annotation encoding="application/x-tex">\sigma_{\mathcal{G}}</annotation></semantics></math><span class="translated-text">是组内奖励的平均值和标准差</span><span class="original-text">are the mean and standard deviation of rewards within the group of</span><math alttext="G" class="ltx_Math" display="inline" id="A0.SS4.SSSx2.p3.4.m3" intent=":literal"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math><span class="translated-text">回应。</span><span class="original-text">responses.</span></p>
+</div>
+<div class="ltx_para" id="A0.SS4.SSSx2.p4">
+<p class="ltx_p" id="A0.SS4.SSSx2.p4.2"><span class="translated-text">表示重要性采样比</span><span class="original-text">Denoting the importance-sampling ratio</span><math alttext="r_{i}(\theta)=\frac{\pi_{\theta}(T_{i},a_{i}\mid x)}{\pi_{\text{ref}}(T_{i},a_{i}\mid x)}" class="ltx_Math" display="inline" id="A0.SS4.SSSx2.p4.1.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>r</mi><mi>i</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>θ</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mfrac><mrow><msub><mi>π</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>T</mi><mi>i</mi></msub><mo>,</mo><mrow><msub><mi>a</mi><mi>i</mi></msub><mo>∣</mo><mi>x</mi></mrow><mo stretchy="false">)</mo></mrow></mrow><mrow><msub><mi>π</mi><mtext>ref</mtext></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>T</mi><mi>i</mi></msub><mo>,</mo><mrow><msub><mi>a</mi><mi>i</mi></msub><mo>∣</mo><mi>x</mi></mrow><mo stretchy="false">)</mo></mrow></mrow></mfrac></mrow><annotation encoding="application/x-tex">r_{i}(\theta)=\frac{\pi_{\theta}(T_{i},a_{i}\mid x)}{\pi_{\text{ref}}(T_{i},a_{i}\mid x)}</annotation></semantics></math><span class="translated-text">有参考政策</span><span class="original-text">with reference policy</span><math alttext="\pi_{\text{ref}}=\pi_{\text{VLM}}^{\text{SFT}}" class="ltx_Math" display="inline" id="A0.SS4.SSSx2.p4.2.m2" intent=":literal"><semantics><mrow><msub><mi>π</mi><mtext>ref</mtext></msub><mo>=</mo><msubsup><mi>π</mi><mtext>VLM</mtext><mtext>SFT</mtext></msubsup></mrow><annotation encoding="application/x-tex">\pi_{\text{ref}}=\pi_{\text{VLM}}^{\text{SFT}}</annotation></semantics></math><span class="translated-text">，GRPO 的目标是：</span><span class="original-text">, the GRPO objective is:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="A0.E4">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\begin{split}\mathcal{L}_{\text{GRPO}}(\theta)=-\,\frac{1}{G}\sum_{i=1}^{G}\min\!\Big(\,r_{i}(\theta)\,A_{i},\;\\
+\mathrm{clip}\big(r_{i}(\theta),\,1{-}\varepsilon,\,1{+}\varepsilon\big)\,A_{i}\,\Big)+\beta\,D_{\mathrm{KL}}\!\big[\pi_{\theta}\|\pi_{\text{ref}}\big]\end{split}" class="ltx_Math" display="block" id="A0.E4.m1" intent=":literal"><semantics><mtable displaystyle="true" rowspacing="0pt"><mtr><mtd class="ltx_align_right" columnalign="right"><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mtext>GRPO</mtext></msub><mrow><mo stretchy="false">(</mo><mi>θ</mi><mo stretchy="false">)</mo></mrow><mo rspace="0em">=</mo><mo lspace="0em" rspace="0.392em">−</mo><mfrac><mn>1</mn><mi>G</mi></mfrac><munderover><mo movablelimits="false">∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>G</mi></munderover><mpadded style="width:1.653em;" width="1.653em"><mi>min</mi></mpadded><mrow><mo maxsize="1.600em" minsize="1.600em" rspace="0.170em">(</mo><msub><mi>r</mi><mi>i</mi></msub><mrow><mo stretchy="false">(</mo><mi>θ</mi><mo rspace="0.170em" stretchy="false">)</mo></mrow><msub><mi>A</mi><mi>i</mi></msub><mo>,</mo></mrow></mrow></mtd></mtr><mtr><mtd class="ltx_align_right" columnalign="right"><mrow><mi>clip</mi><mrow><mo maxsize="1.200em" minsize="1.200em">(</mo><msub><mi>r</mi><mi>i</mi></msub><mrow><mo stretchy="false">(</mo><mi>θ</mi><mo stretchy="false">)</mo></mrow><mo>,</mo><mn> 1</mn><mo>−</mo><mi>ε</mi><mo>,</mo><mn> 1</mn><mo>+</mo><mi>ε</mi><mo maxsize="1.200em" minsize="1.200em" rspace="0.170em">)</mo></mrow><msub><mi>A</mi><mi>i</mi></msub><mo maxsize="1.600em" minsize="1.600em">)</mo><mo>+</mo><mi>β</mi><mi>D</mi><msub><mi></mi><mi>KL</mi></msub><mo maxsize="1.200em" minsize="1.200em">[</mo><msub><mi>π</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0.167em">∥</mo><msub><mi>π</mi><mtext>ref</mtext></msub><mo maxsize="1.200em" minsize="1.200em">]</mo></mrow></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{split}\mathcal{L}_{\text{GRPO}}(\theta)=-\,\frac{1}{G}\sum_{i=1}^{G}\min\!\Big(\,r_{i}(\theta)\,A_{i},\;\\
+\mathrm{clip}\big(r_{i}(\theta),\,1{-}\varepsilon,\,1{+}\varepsilon\big)\,A_{i}\,\Big)+\beta\,D_{\mathrm{KL}}\!\big[\pi_{\theta}\|\pi_{\text{ref}}\big]\end{split}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="A0.SS4.SSSx2.p4.4"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\varepsilon" class="ltx_Math" display="inline" id="A0.SS4.SSSx2.p4.3.m1" intent=":literal"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math><span class="translated-text">是限幅阈值并且</span><span class="original-text">is the clipping threshold and</span><math alttext="\beta" class="ltx_Math" display="inline" id="A0.SS4.SSSx2.p4.4.m2" intent=":literal"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math><span class="translated-text">控制KL惩罚强度。</span><span class="original-text">controls the KL penalty strength.</span></p>
+</div>
+<div class="ltx_para" id="A0.SS4.SSSx2.p5">
+<p class="ltx_p" id="A0.SS4.SSSx2.p5.2"><span class="translated-text">在此阶段，模型直接从游戏状态生成原理，而不依赖于预先写入的痕迹，并且仅根据最终动作和输出格式计算奖励。
+得到的模型</span><span class="original-text">During this stage, the model generates rationales directly from the game state without relying on pre-written traces, and rewards are computed solely based on the final action and output format.
+The resulting model</span><math alttext="\pi_{\text{VLM}}^{\text{RL}}" class="ltx_Math" display="inline" id="A0.SS4.SSSx2.p5.1.m1" intent=":literal"><semantics><msubsup><mi>π</mi><mtext>VLM</mtext><mtext>RL</mtext></msubsup><annotation encoding="application/x-tex">\pi_{\text{VLM}}^{\text{RL}}</annotation></semantics></math><span class="translated-text">胜率达到44%</span><span class="original-text">achieves a win rate of 44% against</span><math alttext="\pi_{\text{AI}}" class="ltx_Math" display="inline" id="A0.SS4.SSSx2.p5.2.m2" intent=":literal"><semantics><msub><mi>π</mi><mtext>AI</mtext></msub><annotation encoding="application/x-tex">\pi_{\text{AI}}</annotation></semantics></math><span class="translated-text">，比 SFT 基线有显着改进。</span><span class="original-text">, a substantial improvement over the SFT baseline.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection ltx_indentfirst" id="A0.SS4.SSSx3">
+<h4 class="ltx_title ltx_title_subsubsection"><span class="translated-text">第三阶段：自我对战优化</span><span class="original-text">Stage 3: Self-Play Optimization</span></h4>
+<div class="ltx_para" id="A0.SS4.SSSx3.p1">
+<p class="ltx_p" id="A0.SS4.SSSx3.p1.1"><span class="translated-text">使模型能够发现教师策略之外的策略</span><span class="original-text">To enable the model to discover strategies beyond those captured by the teacher policy</span><math alttext="\pi_{\text{AI}}" class="ltx_Math" display="inline" id="A0.SS4.SSSx3.p1.1.m1" intent=":literal"><semantics><msub><mi>π</mi><mtext>AI</mtext></msub><annotation encoding="application/x-tex">\pi_{\text{AI}}</annotation></semantics></math><span class="translated-text">，我们使用直接偏好优化（DPO）进行自我对弈优化</span><span class="original-text">, we perform self-play optimization using Direct Preference Optimization (DPO)</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">dpo</span>]</cite>.</p>
+</div>
+<div class="ltx_para" id="A0.SS4.SSSx3.p2">
+<p class="ltx_p" id="A0.SS4.SSSx3.p2.2"><span class="translated-text">我们将自玩游戏分为几组</span><span class="original-text">We organize self-play games into groups of</span><math alttext="G" class="ltx_Math" display="inline" id="A0.SS4.SSSx3.p2.1.m1" intent=":literal"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math><span class="translated-text">游戏，其中一组内的所有游戏对所有四名玩家共享相同的初始墙布置和起手牌。
+因此，不同的轨迹仅由不同的决策序列产生。
+全部完成后</span><span class="original-text">games, where all games within a group share the identical initial wall arrangement and starting hands for all four players.
+Divergent trajectories therefore arise solely from different decision sequences.
+After completing all</span><math alttext="G" class="ltx_Math" display="inline" id="A0.SS4.SSSx3.p2.2.m2" intent=":literal"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math><span class="translated-text">对于一组游戏，我们在它们的轨迹上构建一个特里树：每个节点对应一个状态-动作对，每个根到叶路径代表一个完整的游戏。
+每个节点都会记录通过它的所有游戏的经验胜率。</span><span class="original-text">games in a group, we construct a trie over their trajectories: each node corresponds to a state–action pair, and each root-to-leaf path represents one complete game.
+Every node records its empirical win rate across all games that pass through it.</span></p>
+</div>
+<div class="ltx_para" id="A0.SS4.SSSx3.p3">
+<p class="ltx_p" id="A0.SS4.SSSx3.p3.4"><span class="translated-text">我们从具有多个子节点的节点中提取偏好对，即状态</span><span class="original-text">We extract preference pairs from nodes that have multiple children, i.e., states where</span><math alttext="\pi_{\text{VLM}}^{\text{RL}}" class="ltx_Math" display="inline" id="A0.SS4.SSSx3.p3.1.m1" intent=":literal"><semantics><msubsup><mi>π</mi><mtext>VLM</mtext><mtext>RL</mtext></msubsup><annotation encoding="application/x-tex">\pi_{\text{VLM}}^{\text{RL}}</annotation></semantics></math><span class="translated-text">在游戏中选择不同的动作。
+孩子们根据他们的经验获胜率进行排名；获胜率较高的行动被视为首选，而获胜率较低的行动则被视为不受欢迎。
+对于每个这样的对比对，我们从每个子节点中采样一个推理轨迹，产生首选响应</span><span class="original-text">selected different actions across games.
+Children are ranked by their empirical win rates; higher-win-rate actions are treated as preferred and lower-win-rate actions as dispreferred.
+For each such contrastive pair, we sample one reasoning trace from each child node, yielding a preferred response</span><math alttext="(T^{+},a^{+})" class="ltx_Math" display="inline" id="A0.SS4.SSSx3.p3.2.m2" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><msup><mi>T</mi><mo>+</mo></msup><mo>,</mo><msup><mi>a</mi><mo>+</mo></msup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(T^{+},a^{+})</annotation></semantics></math><span class="translated-text">和不受欢迎的回应</span><span class="original-text">and a dispreferred response</span><math alttext="(T^{-},a^{-})" class="ltx_Math" display="inline" id="A0.SS4.SSSx3.p3.3.m3" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><msup><mi>T</mi><mo>−</mo></msup><mo>,</mo><msup><mi>a</mi><mo>−</mo></msup><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(T^{-},a^{-})</annotation></semantics></math><span class="translated-text">以相同的状态描述为条件</span><span class="original-text">conditioned on the same state description</span><math alttext="x" class="ltx_Math" display="inline" id="A0.SS4.SSSx3.p3.4.m4" intent=":literal"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="A0.SS4.SSSx3.p4">
+<p class="ltx_p" id="A0.SS4.SSSx3.p4.3"><span class="translated-text">然后使用 DPO 损失优化模型：</span><span class="original-text">The model is then optimized with the DPO loss:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="A0.E5">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\begin{split}\mathcal{L}_{\text{DPO}}(\theta)=-\log\sigma\!\Bigg(\beta_{\text{sp}}\bigg[\log\frac{\pi_{\theta}(T^{+},a^{+}\mid x)}{\pi_{\text{VLM}}^{\text{RL}}(T^{+},a^{+}\mid x)}\\
+-\log\frac{\pi_{\theta}(T^{-},a^{-}\mid x)}{\pi_{\text{VLM}}^{\text{RL}}(T^{-},a^{-}\mid x)}\bigg]\ \!\Bigg)\end{split}" class="ltx_Math" display="block" id="A0.E5.m1" intent=":literal"><semantics><mtable displaystyle="true" rowspacing="0pt"><mtr><mtd class="ltx_align_right" columnalign="right"><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mtext>DPO</mtext></msub><mrow><mo stretchy="false">(</mo><mi>θ</mi><mo stretchy="false">)</mo></mrow><mo rspace="0em">=</mo><mo lspace="0em">−</mo><mi>log</mi><mpadded style="width:0.437em;" width="0.437em"><mi>σ</mi></mpadded><mrow><mo maxsize="2.600em" minsize="2.600em">(</mo><msub><mi>β</mi><mtext>sp</mtext></msub><mrow><mo maxsize="2.100em" minsize="2.100em">[</mo><mi>log</mi><mfrac><mrow><msub><mi>π</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msup><mi>T</mi><mo>+</mo></msup><mo>,</mo><mrow><msup><mi>a</mi><mo>+</mo></msup><mo>∣</mo><mi>x</mi></mrow><mo stretchy="false">)</mo></mrow></mrow><mrow><msubsup><mi>π</mi><mtext>VLM</mtext><mtext>RL</mtext></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msup><mi>T</mi><mo>+</mo></msup><mo>,</mo><mrow><msup><mi>a</mi><mo>+</mo></msup><mo>∣</mo><mi>x</mi></mrow><mo stretchy="false">)</mo></mrow></mrow></mfrac></mrow></mrow></mrow></mtd></mtr><mtr><mtd class="ltx_align_right" columnalign="right"><mrow><mrow><mo>−</mo><mi>log</mi><mfrac><mrow><msub><mi>π</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msup><mi>T</mi><mo>−</mo></msup><mo>,</mo><mrow><msup><mi>a</mi><mo>−</mo></msup><mo>∣</mo><mi>x</mi></mrow><mo stretchy="false">)</mo></mrow></mrow><mrow><msubsup><mi>π</mi><mtext>VLM</mtext><mtext>RL</mtext></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msup><mi>T</mi><mo>−</mo></msup><mo>,</mo><mrow><msup><mi>a</mi><mo>−</mo></msup><mo>∣</mo><mi>x</mi></mrow><mo stretchy="false">)</mo></mrow></mrow></mfrac><mo maxsize="2.100em" minsize="2.100em" rspace="0.330em">]</mo></mrow><mo maxsize="2.600em" minsize="2.600em">)</mo></mrow></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{split}\mathcal{L}_{\text{DPO}}(\theta)=-\log\sigma\!\Bigg(\beta_{\text{sp}}\bigg[\log\frac{\pi_{\theta}(T^{+},a^{+}\mid x)}{\pi_{\text{VLM}}^{\text{RL}}(T^{+},a^{+}\mid x)}\\
+-\log\frac{\pi_{\theta}(T^{-},a^{-}\mid x)}{\pi_{\text{VLM}}^{\text{RL}}(T^{-},a^{-}\mid x)}\bigg]\ \!\Bigg)\end{split}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(5)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="A0.SS4.SSSx3.p4.2"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\pi_{\text{VLM}}^{\text{RL}}" class="ltx_Math" display="inline" id="A0.SS4.SSSx3.p4.1.m1" intent=":literal"><semantics><msubsup><mi>π</mi><mtext>VLM</mtext><mtext>RL</mtext></msubsup><annotation encoding="application/x-tex">\pi_{\text{VLM}}^{\text{RL}}</annotation></semantics></math><span class="translated-text">作为参考政策和</span><span class="original-text">serves as the reference policy and</span><math alttext="\beta_{\text{sp}}" class="ltx_Math" display="inline" id="A0.SS4.SSSx3.p4.2.m2" intent=":literal"><semantics><msub><mi>β</mi><mtext>sp</mtext></msub><annotation encoding="application/x-tex">\beta_{\text{sp}}</annotation></semantics></math><span class="translated-text">控制KL惩罚强度，确保模型保留早期阶段获得的推理能力。</span><span class="original-text">controls the KL penalty strength, ensuring the model retains reasoning capabilities acquired in earlier stages.</span></p>
+</div>
+<div class="ltx_para" id="A0.SS4.SSSx3.p5">
+<p class="ltx_p" id="A0.SS4.SSSx3.p5.1"><span class="translated-text">通过迭代轮次的自我对弈数据收集和DPO更新，最终模型对教师策略取得了48%的胜率</span><span class="original-text">Through iterative rounds of self-play data collection and DPO updates, the final model achieves a win rate of 48% against the teacher policy</span><math alttext="\pi_{\text{AI}}" class="ltx_Math" display="inline" id="A0.SS4.SSSx3.p5.1.m1" intent=":literal"><semantics><msub><mi>π</mi><mtext>AI</mtext></msub><annotation encoding="application/x-tex">\pi_{\text{AI}}</annotation></semantics></math><span class="translated-text">。
+这表明自我对弈阶段使 VLM 能够超越其原始老师，发现蒸馏数据中不存在的策略。</span><span class="original-text">.
+This demonstrates that the self-play stage enables the VLM to surpass its original teacher, discovering strategies that were not present in the distillation data.</span></p>
+</div>
+</section>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2603.25405v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
