@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">只需放大：通过自回归缩放进行跨视图地理定位</span><span class="original-text">Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 3 月 26 日星期四 17:29:53 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Thu Mar 26 17:29:53 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2603.25686" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2603.25686" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2603.25686v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2603.25686v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<a class="header-button color-tog" href="javascript:toggleColorScheme();" title="Toggle dark/light mode">
+<label class="toggle-icon automatic-tog" title="Switch to light mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon light-tog" title="Switch to dark mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon dark-tog" title="Switch to system preference">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+</a>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S1" title="In Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S1.SS0.SSS0.Px1" title="In 1 Introduction ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title">Scope and comparability.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S1.SS0.SSS0.Px2" title="In 1 Introduction ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title">Contributions.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S2" title="In Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Related Works</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Method</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S3.SS1" title="In 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Multi-Scale Satellite and Street-View Dataset</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS1.SSS1" title="In 3.1 Multi-Scale Satellite and Street-View Dataset ‣ 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1.1 </span>Street-view processing.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS1.SSS2" title="In 3.1 Multi-Scale Satellite and Street-View Dataset ‣ 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1.2 </span>Satellite-view processing.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S3.SS2" title="In 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Just Zoom In</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS1" title="In 3.2 Just Zoom In ‣ 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2.1 </span>Vision Encoder.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS2" title="In 3.2 Just Zoom In ‣ 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2.2 </span>Autoregressive Geo-Localization Decoder.</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Experiments</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In 4 Experiments ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>Metrics</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS2" title="In 4 Experiments ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2 </span>Implementation Details</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS3" title="In 4 Experiments ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3 </span>Comparison with Contrastive Baselines</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS4" title="In 4 Experiments ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.4 </span>Ablation Study</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S5" title="In Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Conclusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2603.25686v1 [cs.CV] 2026 年 3 月 26 日</span><span class="original-text">arXiv:2603.25686v1 [cs.CV] 26 Mar 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line"><span class="ltx_note ltx_role_institutetext" id="id1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type"><span class="translated-text">机构文本：</span><span class="original-text">institutetext:</span></span><span class="translated-text">俄亥俄州立大学摄影测量计算机视觉实验室</span><span class="original-text">Photogrammetric Computer Vision Lab, The Ohio State University</span><br class="ltx_break"/><span class="ltx_note ltx_role_email" id="id1.1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type"><span class="translated-text">电子邮件：</span><span class="original-text">email:</span></span>{erzurumlu.1,kwag.3,yilmaz.15}@osu.edu</span></span></span>
+</span></span></span>
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">只需放大：通过自回归缩放进行跨视图地理定位</span><span class="original-text">Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Yunus Talha Erzurumlu
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Jiyong Kwag
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Alper Yilmaz
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">跨视图地理定位 (CVGL) 是通过将街景图像与地理参考俯视图像进行匹配来估计摄像机位置的任务，从而实现 GPS 拒绝的定位和导航。现有方法几乎普遍将 CVGL 视为对比训练的嵌入空间中的图像检索问题。这种表述将性能与大批量和硬负挖掘联系在一起，并且忽略了地图的几何结构以及街景和俯视图像之间的覆盖范围不匹配。特别是，从街景中可见的显着地标可能会落在固定卫星作物之外，从而使检索目标模糊不清并限制地图上的显式空间推断。
+我们建议</span><span class="original-text">Cross-view geo-localization (CVGL) is the task of estimating a camera’s location by matching a street-view image to geo-referenced overhead imagery, enabling GPS-denied localization and navigation. Existing methods almost universally pose CVGL as an image-retrieval problem in a contrastively trained embedding space. This formulation ties performance to large batches and hard negative mining, and it ignores both the geometric structure of maps and the coverage mismatch between street-view and overhead imagery. In particular, salient landmarks visible from the street-view can fall outside a fixed satellite crop, making retrieval targets ambiguous and limiting explicit spatial inference over the map.
+We propose</span><span class="ltx_text ltx_font_bold"><span class="translated-text">只需放大</span><span class="original-text">Just Zoom In</span></span><span class="translated-text">, 一个</span><span class="original-text">, an</span><em class="ltx_emph ltx_font_italic"><span class="translated-text">另类</span><span class="original-text">alternative</span></em><span class="translated-text">通过在城市规模俯视图上进行自回归缩放来执行 CVGL 的公式。该模型从粗略的卫星视图开始，采取一系列简短的放大决策来选择</span><span class="original-text">formulation that performs CVGL via autoregressive zooming over a city-scale overhead map. Starting from a coarse satellite view, the model takes a short sequence of zoom-in decisions to select a</span><em class="ltx_emph ltx_font_italic"><span class="translated-text">终端卫星小区</span><span class="original-text">terminal satellite cell</span></em><span class="translated-text">以目标分辨率，没有对比损失或硬负挖掘。我们进一步引入了一个现实的基准，包括众包街景和高分辨率卫星图像，反映真实的捕获条件。在此基准测试中，Just Zoom In 实现了最先进的性能，提高了</span><span class="original-text">at a target resolution, without contrastive losses or hard negative mining. We further introduce a realistic benchmark with crowd-sourced street views and high-resolution satellite imagery, reflecting real capture conditions. On this benchmark, Just Zoom In achieves state-of-the-art performance, improving</span><span class="ltx_text ltx_font_bold"><span class="translated-text">召回@1</span><span class="original-text">Recall@1</span><math alttext="&lt;" class="ltx_Math" display="inline" intent=":literal"><semantics><mo>&lt;</mo><annotation encoding="application/x-tex">&lt;</annotation></semantics></math> 50m</span> by <span class="ltx_text ltx_font_bold">5.5%</span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_bold"><span class="translated-text">召回@1</span><span class="original-text">Recall@1</span><math alttext="&lt;" class="ltx_Math" display="inline" intent=":literal"><semantics><mo>&lt;</mo><annotation encoding="application/x-tex">&lt;</annotation></semantics></math> 100m</span> by <span class="ltx_text ltx_font_bold">9.6%</span><span class="translated-text">在最强的对比检索基线上，证明了顺序从粗到细的空间推理对于跨视图地理定位的有效性。</span><span class="original-text">over the strongest contrastive-retrieval baseline, demonstrating the effectiveness of sequential coarse-to-fine spatial reasoning for cross-view geo-localization.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">视觉定位通过将捕获的图像与已知环境进行匹配来估计相机的位置。具体来说，跨视图地理定位（CVGL）通过使用地理参考卫星图像来定位街景查询图像来解决这个问题</span><span class="original-text">Visual localization estimates a camera’s location by matching a captured image to a known environment. Specifically, cross-view geo-localization (CVGL) tackles this problem by using geo-referenced satellite imagery to localize a street-view query image</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Lin2014CVGL</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Workman2015WideArea</span>]</cite><span class="translated-text">。卫星图像可提供密集、大范围的室外环境覆盖，并广泛应用于许多地区，这使得 CVGL 对于 GPS 无法实现的定位和导航具有吸引力。 CVGL 的核心困难是弥合街景和卫星图像之间的极端视点差异。</span><span class="original-text">. Satellite imagery offers dense, large-scale coverage of outdoor environments and is widely available for many regions, making CVGL attractive for GPS-denied localization and navigation. The core difficulty in CVGL is bridging the extreme viewpoint differences between street-view and satellite imagery.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">为了处理这些观点差异，现代 CVGL 系统主要依赖于对比训练的检索模型；给定街景图像，系统从大型 GPS 标记参考数据库中检索最相似的卫星图块</span><span class="original-text">To handle these viewpoint differences, modern CVGL systems predominantly rely on contrastively trained retrieval models; given a street-view image, the system retrieves the most similar satellite tile from a large GPS-tagged reference database</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Shi2019SAFA</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Deuser2023Sample4Geo</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Zhu2021VIGOR</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Zhu2022TransGeo</span>]</cite><span class="translated-text">。在实践中，他们学习一个嵌入空间，其中街景查询和卫星图块如果对应于同一位置，则被拉在一起，否则被分开，通常依赖于许多信息负数（通过大的有效批量大小和/或硬负数挖掘）。在推理时，通过在大型卫星数据库的嵌入空间中进行最近邻搜索来执行定位，如图所示</span><span class="original-text">. In practice, they learn a single embedding space in which street-view queries and satellite tiles are pulled together if they correspond to the same location and pushed apart otherwise, commonly relying on many informative negatives (via large effective batch sizes and/or hard negative mining). At inference time, localization is performed by nearest-neighbor search in the embedding space over a large satellite database shown in Figure</span><a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">1</span></a>.a.</p>
+</div>
+<figure class="ltx_figure" id="S1.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="352" id="S1.F1.g1" src="https://arxiv.org/html/2603.25686v1/figures/arvsretrieval.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S1.F1.4.1.1" style="font-size:90%;">Figure 1</span>: </span><span class="ltx_text ltx_font_bold" id="S1.F1.5.2" style="font-size:90%;">Two paradigms for cross-view geo-localization.<span class="ltx_text ltx_font_medium" id="S1.F1.5.2.1">
+(a) Retrieval-based approaches maintain a large GPS-tagged reference database and use a contrastively trained encoder to perform nearest-neighbor search at query time.
+(b) <em class="ltx_emph ltx_font_italic" id="S1.F1.5.2.1.1">Autoregressive geo-localization</em> (ours) replaces global retrieval with sequential, coarse-to-fine zoom-in decisions over multi-scale satellite imagery, dramatically reducing dependence on exhaustive database search.</span></span></figcaption>
+</figure>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">尽管性能强劲，但这种对比检索公式对于可扩展、真实的 CVGL 来说存在三个实际限制。
+首先，对比检索性能通常受益于许多信息丰富的负例，这些负例是通过大有效批次和/或硬负例挖掘 (HNM) 实现的</span><span class="original-text">Despite strong performance, this contrastive–retrieval formulation has three practical limitations for scalable, realistic CVGL.
+First, contrastive retrieval performance often benefits from many informative negatives, implemented via large effective batches and/or hard negative mining (HNM)</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Deuser2023Sample4Geo</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Zhu2022TransGeo</span>]</cite><span class="translated-text">。维护和刷新硬底片会显着增加训练计算和工程复杂性</span><span class="original-text">. Maintaining and refreshing hard negatives can add significant training compute and engineering complexity</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Berton2022CosPlace</span>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">其次，基于检索的 CVGL 必须在推理时存储和搜索带有 GPS 标签的大型参考数据库。城市规模区域的细粒度定位需要许多密集采样的卫星图块，因此内存占用量与图块数量大致呈线性增长</span><span class="original-text">Second, retrieval-based CVGL must store and search a large GPS-tagged reference database at inference time. Fine-grained localization over a city-scale region requires many densely sampled satellite tiles, so memory footprint grows roughly linearly with the number of tiles</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Zhu2021VIGOR</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Zhu2022TransGeo</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Deuser2023Sample4Geo</span>]</cite><span class="translated-text">，使得扩展到更大区域的成本高昂。</span><span class="original-text">, making it expensive to extend to larger areas.</span></p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">第三，检索公式将地图视为独立的固定大小图块的非结构化集合，相邻区域之间或较粗的缩放级别之间没有明确的链接。这种以图块为中心的视图忽略了底层的地理层次结构，可能会加剧</span><span class="original-text">Third, the retrieval formulation treats the map as an unstructured collection of independent, fixed-size tiles, without explicit links between neighboring regions or coarser zoom levels. This tile-centric view ignores the underlying geographic hierarchy and can exacerbate a</span><em class="ltx_emph ltx_font_italic" id="S1.p5.1.1"><span class="translated-text">覆盖范围不匹配</span><span class="original-text">coverage mismatch</span></em><span class="translated-text">模式之间：由于透视和平铺框架/错位，街景图像中可见的歧视性上下文可能位于候选卫星补丁之外，即使该补丁在地理位置上很接近（图</span><span class="original-text">between modalities: due to perspective and tile framing/misalignment, discriminative context visible in the street-view image may lie outside a candidate satellite patch even when the patch is geographically close (Figure</span><a class="ltx_ref" href="#S1.F2" title="Figure 2 ‣ 1 Introduction ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">）。因此，现有方法被优化以对孤立的斑块进行排名，而不是对卫星图像中的空间背景和多尺度结构进行推理。</span><span class="original-text">). As a result, existing methods are optimized to rank isolated patches rather than to reason over spatial context and multi-scale structure in the satellite imagery.</span></p>
+</div>
+<figure class="ltx_figure" id="S1.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="259" id="S1.F2.g1" src="https://arxiv.org/html/2603.25686v1/figures/small_sat_patch_is_not_enough.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S1.F2.3.1.1" style="font-size:90%;">Figure 2</span>: </span><span class="ltx_text ltx_font_bold" id="S1.F2.4.2" style="font-size:90%;">Coverage mismatch.<span class="ltx_text ltx_font_medium" id="S1.F2.4.2.1"> In the street-view image (a), the stadium and its distinctive gate are clearly visible. In the satellite crop (b) from the same region, this landmark falls outside of the patch, illustrating how small tiles can miss critical cues present in the street-view. Images sourced from Google Street View and Google Maps <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">google_maps_static_api</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">google_streetview_static_api</span>]</cite>.</span></span></figcaption>
+</figure>
+<div class="ltx_para" id="S1.p6">
+<p class="ltx_p" id="S1.p6.2"><span class="translated-text">为了解决这些限制，我们将跨视图地理定位重新表述为</span><span class="original-text">To address these limitations, we reformulate cross-view geo-localization as</span><em class="ltx_emph ltx_font_italic" id="S1.p6.2.1"><span class="translated-text">自回归缩放</span><span class="original-text">autoregressive zooming</span></em><span class="translated-text">而不是从平面数据库中进行单次检索。我们的方法，</span><span class="original-text">rather than single-shot retrieval from a flat database. Our method,</span><em class="ltx_emph ltx_font_italic" id="S1.p6.2.2"><span class="translated-text">只需放大</span><span class="original-text">Just Zoom In</span></em><span class="translated-text">（图</span><span class="original-text">(Figure</span><a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">.b)，通过在多比例卫星地图上生成短序列的放大操作来定位地面查询，从粗略视图开始并细化预测直到最终分辨率。受 NLP 中一维自回归预测的启发，我们将每个缩放决策作为一个分类标记：在每个</span><span class="original-text">.b), localizes a ground query by producing a short sequence of zoom-in actions over a multi-scale satellite map, starting from a coarse view and refining the prediction until a terminal resolution. Motivated by 1D autoregressive prediction in NLP, we cast each zoom decision as a categorical token: at each of the</span><math alttext="N" class="ltx_Math" display="inline" id="S1.p6.1.m1" intent=":literal"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math><span class="translated-text">缩放级别，当前卫星图块细分为</span><span class="original-text">zoom levels, the current satellite tile is subdivided into</span><math alttext="K^{2}" class="ltx_Math" display="inline" id="S1.p6.2.m2" intent=":literal"><semantics><msup><mi>K</mi><mn>2</mn></msup><annotation encoding="application/x-tex">K^{2}</annotation></semantics></math><span class="translated-text">候选者，模型根据街景图像和之前的决策预测下一个补丁索引。我们使用现成的视觉编码器和 Transformer 解码器实例化该框架</span><span class="original-text">candidates, and the model predicts the next patch index conditioned on the street-view image and previous decisions. We instantiate this framework with an off-the-shelf visual encoder and a Transformer decoder</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Vaswani2017Attention</span>]</cite><span class="translated-text">训练有素</span><span class="original-text">trained with</span><em class="ltx_emph ltx_font_italic" id="S1.p6.2.3"><span class="translated-text">因果关系</span><span class="original-text">causal</span></em><span class="translated-text">掩蔽和有监督的下一步行动（下一个索引）预测目标，避免对比损失、显式硬负挖掘和大的有效批量大小。由此产生的从粗到细的过程明确遵循地图的地理层次结构：早期步骤利用广域背景，而后期步骤则侧重于局部细节，有助于减轻街道级别和卫星图像之间的覆盖范围不匹配。由于每个步骤仅将查询与少数候选者进行比较，因此推理成本与缩放步骤数而不是城市规模数据库中的图块总数成比例，从而减少了对昂贵的最近邻搜索的依赖，同时在实际捕获条件下实现了强大的定位精度。</span><span class="original-text">masking and a supervised next-action (next-index) prediction objective, avoiding contrastive losses, explicit hard-negative mining, and large effective batch sizes. The resulting coarse-to-fine process explicitly follows the geographic hierarchy of the map: early steps leverage wide-area context, while later steps focus on local detail, helping mitigate coverage mismatch between street-level and satellite imagery. Since each step compares the query to only a few candidates, inference cost scales with the number of zoom steps rather than the total number of tiles in a city-scale database, reducing reliance on expensive nearest-neighbor search while achieving strong localization accuracy under realistic capture conditions.</span></p>
+</div>
+<div class="ltx_para" id="S1.p7">
+<p class="ltx_p" id="S1.p7.1"><span class="translated-text">这种顺序表述需要一个适合多尺度推理的基准。
+为了评估自回归缩放，我们需要具有明确的分辨率层次结构的卫星图像和类似于真实捕获条件的街景，例如有限的视场 (FoV)、未知的方向和不同的质量。
+现有数据集</span><span class="original-text">This sequential formulation calls for a benchmark tailored to multi-scale reasoning.
+To evaluate autoregressive zooming, we require satellite imagery with an explicit resolution hierarchy and street-views that resemble real capture conditions, such as limited field-of-view (FoV), unknown orientation, and diverse quality.
+Existing datasets</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Workman2015WideArea</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Liu2019CVACT</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Zhu2021VIGOR</span>]</cite><span class="translated-text">然而，仅提供单比例卫星图像与已知方向和固定内在特征的标准化 360° 全景图配对，这简化了任务并偏离了典型的第一人称或行车记录仪图像。最近的工作进一步表明，当从这些理想化的方向对齐协议转向未知方向和有限视场设置时，性能可能会大幅下降</span><span class="original-text">, however, provide only single-scale satellite images paired with standardized 360° panoramas of known orientation and fixed intrinsics, which simplifies the task and departs from typical first-person or dash-cam imagery. Recent work further shows that performance can degrade substantially when moving from these idealized, orientation-aligned protocols to unknown-orientation and limited-FoV settings</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Mi2024ConGeo</span>]</cite><span class="translated-text">。
+因此，我们利用多尺度卫星图像和在不同条件下捕获的随机定向、有限视场街景构建了一个新的基准，如图所示</span><span class="original-text">.
+We therefore construct a new benchmark with multi-scale satellite images and randomly oriented, limited FoV street views captured under diverse conditions shown in Figure</span><a class="ltx_ref" href="#S3.F3" title="Figure 3 ‣ 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">，以便两种模式都满足现实的多尺度放大设置的需求。</span><span class="original-text">, so that both modalities match the demands of a realistic multi-scale zoom-in setting.</span></p>
+</div>
+<section class="ltx_paragraph" id="S1.SS0.SSS0.Px1">
+<h5 class="ltx_title ltx_title_paragraph"><span class="translated-text">范围和可比性。</span><span class="original-text">Scope and comparability.</span></h5>
+<div class="ltx_para" id="S1.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S1.SS0.SSS0.Px1.p1.1"><span class="translated-text">我们的目标是</span><span class="original-text">We target the</span><em class="ltx_emph ltx_font_italic" id="S1.SS0.SSS0.Px1.p1.1.1"><span class="translated-text">检索阶段</span><span class="original-text">retrieval stage</span></em><span class="translated-text">城市/AOI 规模的 CVGL：给定地面查询和大的开销搜索区域，目标是选择正确的开销</span><span class="original-text">of city-/AOI-scale CVGL: given a ground query and a large overhead search region, the goal is to select the correct overhead</span><em class="ltx_emph ltx_font_italic" id="S1.SS0.SSS0.Px1.p1.1.2"><span class="translated-text">细胞</span><span class="original-text">cell</span></em><span class="translated-text">以目标分辨率（秒）</span><span class="original-text">at a target resolution (Sec.</span><a class="ltx_ref" href="#S4.SS1" title="4.1 Metrics ‣ 4 Experiments ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">4.1</span></a><span class="translated-text">）。与交叉视图不同</span><span class="original-text">). Unlike cross-view</span><em class="ltx_emph ltx_font_italic" id="S1.SS0.SSS0.Px1.p1.1.3"><span class="translated-text">度量姿态估计</span><span class="original-text">metric pose estimation</span></em><span class="translated-text">，它假设一个粗略的位置先验（例如，20-50m），然后细化 3-DoF 姿态，我们假设没有这样的先验，并输出一个粗略的单元，旨在</span><span class="original-text">, which assumes a coarse location prior (e.g., 20–50m) and then refines 3-DoF pose, we assume no such prior and output a coarse cell intended to</span><em class="ltx_emph ltx_font_italic" id="S1.SS0.SSS0.Px1.p1.1.4"><span class="translated-text">提供</span><span class="original-text">provide</span></em><span class="translated-text">下游细化之前</span><span class="original-text">that prior for downstream refinement</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Sarlin2023OrienterNet</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Wu2024MapLocNet</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Lentsch2023SliceMatch</span>]</cite><span class="translated-text">。我们进一步将我们的目标与</span><span class="original-text">. We further distinguish our goal from</span><em class="ltx_emph ltx_font_italic" id="S1.SS0.SSS0.Px1.p1.1.5"><span class="translated-text">等级制度</span><span class="original-text">hierarchical</span></em><span class="translated-text">在单个系统中将粗略检索与度量细化结合起来的端到端管道：我们的方法针对并增强了此类管道所依赖的检索组件，并且可以用作其前端</span><span class="original-text">end-to-end pipelines that couple coarse retrieval with metric refinement in a single system: our method targets and strengthens the retrieval component that such pipelines depend on, and can be used as their front-end</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Song2025UnifyGeo</span>]</cite><span class="translated-text">。
+我们还脱离了常见的检索式 CVGL 协议，该协议依赖于 360° 全景图和已知/标准化方向（例如，北对齐），这可以充当捷径； ConGeo 显示性能可能急剧下降，特别是在有限视场、未知航向和跨区域评估下，这凸显出许多模型无法转换为真实的用户图像</span><span class="original-text">.
+We also depart from common retrieval-style CVGL protocols that rely on 360° panoramas and known/normalized orientation (e.g., North alignment), which can act as shortcuts; ConGeo shows performance can drop sharply, especially under limited-FoV, unknown-heading, and cross-area evaluation, highlighting that many models do not transfer to realistic user imagery</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Mi2024ConGeo</span>]</cite><span class="translated-text">。我们的重点是</span><span class="original-text">. Our focus is the</span><em class="ltx_emph ltx_font_italic" id="S1.SS0.SSS0.Px1.p1.1.6"><span class="translated-text">AOI 内（同一区域）</span><span class="original-text">within-AOI (same-area)</span></em><span class="translated-text">设置在训练期间监督定位区域的位置，从而能够在多尺度开销层次结构上进行特定于区域的学习。推广到</span><span class="original-text">setting where the localization region is supervised during training, enabling region-specific learning over a multi-scale overhead hierarchy. Generalizing to</span><em class="ltx_emph ltx_font_italic" id="S1.SS0.SSS0.Px1.p1.1.7"><span class="translated-text">未知领域</span><span class="original-text">unknown areas</span></em><span class="translated-text">在现实的限制下仍然更加困难；最近活跃的地理定位工作探索了这个方向，通常是在更小的 AOI/更粗的离散化和更重的训练机器（十亿级预训练模型和 RL）上，而我们表明，具有标准视觉主干的监督式下一步动作缩放在 AOI 内的监督机制中具有竞争力</span><span class="original-text">under realistic constraints remains substantially harder; recent active geo-localization work explores this direction, typically on smaller AOIs/coarser discretizations and with much heavier training machinery (billion-scale pretrained models and RL), whereas we show that supervised next-action zooming with a standard vision backbone is competitive in the supervised within-AOI regime</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Sarkar2024GOMAA</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Mi2025GeoExplorer</span>]</cite>.</p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S1.SS0.SSS0.Px2">
+<h5 class="ltx_title ltx_title_paragraph"><span class="translated-text">贡献。</span><span class="original-text">Contributions.</span></h5>
+<div class="ltx_para" id="S1.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="S1.SS0.SSS0.Px2.p1.1"><span class="translated-text">我们的主要贡献是：</span><span class="original-text">Our main contributions are:</span></p>
+<ul class="ltx_itemize" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i1.p1.1.1"><span class="translated-text">重新制定 CVGL。</span><span class="original-text">Reformulating CVGL.</span></span><span class="translated-text">受所解决的限制的激励，我们将跨视图地理定位重新表述为</span><span class="original-text">Motivated by the addressed limitations we reformulate cross-view geo-localization as</span><em class="ltx_emph ltx_font_italic" id="S1.I1.i1.p1.1.2"><span class="translated-text">自回归缩放</span><span class="original-text">autoregressive zooming</span></em>.</p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i2.p1.1.1"><span class="translated-text">自回归放大模型。</span><span class="original-text">An autoregressive zoom-in model.</span></span><span class="translated-text">我们建议</span><span class="original-text">We propose</span><span class="ltx_text ltx_font_bold" id="S1.I1.i2.p1.1.2"><span class="translated-text">只需放大</span><span class="original-text">Just Zoom In</span></span><span class="translated-text">，一个通过监督下一步动作预测训练的自回归 CVGL 变压器。我们的设计实现了计算效率，同时明确利用从粗略到精细卫星尺度的分层视觉线索。</span><span class="original-text">, an autoregressive CVGL transformer trained via supervised next-action prediction. Our design achieves computational efficiency while explicitly leveraging hierarchical visual cues from coarse to fine satellite scales.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i3.p1.1.1"><span class="translated-text">一个现实的、多尺度的基准。</span><span class="original-text">A realistic, multi-scale benchmark.</span></span><span class="translated-text">我们引入了一个跨视图数据集，它将多尺度卫星图像与众包街景图像配对，这些图像表现出未知的方向、有限和可变的视场以及不同的外观条件。我们的方法在此基准上实现了最先进的性能，</span><span class="original-text">We introduce a cross-view dataset that pairs multi-scale satellite imagery with crowd-sourced street-view images exhibiting unknown orientation, limited and variable FoV, and diverse appearance conditions. Our approach achieves state-of-the-art performance on this benchmark, with</span><span class="ltx_text ltx_font_bold" id="S1.I1.i3.p1.1.2">+5.50%</span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_bold" id="S1.I1.i3.p1.1.3">+9.63%</span><span class="translated-text">R@50m 和 R@100m 的绝对增益</span><span class="original-text">absolute gains at R@50m and R@100m over the</span><em class="ltx_emph ltx_font_italic" id="S1.I1.i3.p1.1.4"><span class="translated-text">最先进的</span><span class="original-text">state-of-the-art</span></em><span class="translated-text">对比检索基线。</span><span class="original-text">contrastive-retrieval baseline.</span></p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">相关作品</span><span class="original-text">Related Works</span></h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="ltx_text ltx_font_bold" id="S2.p1.1.1"><span class="translated-text">主导检索范式。</span><span class="original-text">The Dominant Retrieval Paradigm.</span></span><span class="translated-text">跨视图地理定位通过利用地理参考卫星图像来解决视觉定位问题，卫星图像因其广泛的全球覆盖范围、货币和可访问性而受到重视。该领域的早期研究使用对比学习和图像检索目标来阐述该问题</span><span class="original-text">Cross-view geo-localization addresses visual localization by leveraging geo-referenced satellite imagery, which is valued for its extensive global coverage, currency, and accessibility. Early studies in this area formulated the problem using contrastive learning and image-retrieval objectives</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Lin2014CVGL</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Workman2015WideArea</span>]</cite><span class="translated-text">。迄今为止，这种表述仍然是文献中的主导方法</span><span class="original-text">. This formulation remains the dominant approach in the literature to date</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Hu2018CVMNet</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Cai2019Ground2Aerial</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Shi2019SAFA</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Regmi2019Bridging</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Liu2019CVACT</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Zhu2021VIGOR</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Zhu2022TransGeo</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Deuser2023Sample4Geo</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Zhu2023SAIG</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Shugaev2024ArcGeo</span>]</cite><span class="translated-text">。由于卫星视图和街道视图存在显着差异，因此该任务需要强大的特征提取</span><span class="original-text">. Because satellite and street-level views differ dramatically, the task requires robust feature extraction</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Workman2015WideArea</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Zhu2022TransGeo</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Zhu2023SAIG</span>]</cite><span class="translated-text">, 原则聚合</span><span class="original-text">, principled aggregation</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Arandjelovic2015NetVLAD</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Shi2019SAFA</span>]</cite><span class="translated-text">，以及精心设计的抽样</span><span class="original-text">, and well-designed sampling</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Cai2019Ground2Aerial</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Deuser2023Sample4Geo</span>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="translated-text">在特征提取方面，Workman</span><span class="original-text">On the feature-extraction front, Workman</span><em class="ltx_emph ltx_font_italic" id="S2.p2.1.1"><span class="translated-text">等人</span><span class="original-text">et al</span></em>.<span class="ltx_text" id="S2.p2.1.2"></span> <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Workman2015WideArea</span>]</cite><span class="translated-text">表明 CNN 学习到的特征</span><span class="original-text">showed that CNN-learned features</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Krizhevsky2012AlexNet</span>]</cite><span class="translated-text">优于手工制作的描述符</span><span class="original-text">outperform hand-crafted descriptors</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Lin2014CVGL</span>]</cite><span class="translated-text">。在此基础上，TransGeo</span><span class="original-text">. Building on this, TransGeo</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Zhu2022TransGeo</span>]</cite><span class="translated-text">报告称通过使用 Vision Transformers 获得了进一步的收益</span><span class="original-text">reported further gains by employing Vision Transformers</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Dosovitskiy2021ViT</span>]</cite><span class="translated-text">和 Sample4Geo</span><span class="original-text">, and Sample4Geo</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Deuser2023Sample4Geo</span>]</cite><span class="translated-text">采用ConvNeXt</span><span class="original-text">adopted ConvNeXt</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Liu2022ConvNeXt</span>]</cite><span class="translated-text">。关于聚合器，CVMNet</span><span class="original-text">. Regarding aggregators, CVMNet</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Hu2018CVMNet</span>]</cite><span class="translated-text">利用 NetVLAD</span><span class="original-text">leverages NetVLAD</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Arandjelovic2015NetVLAD</span>]</cite><span class="translated-text">;南非航空协会</span><span class="original-text">; SAFA</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Shi2019SAFA</span>]</cite><span class="translated-text">引入定制的空间特征聚合器；和SAIG</span><span class="original-text">introduces a customized spatial feature aggregator; and SAIG</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Zhu2023SAIG</span>]</cite><span class="translated-text">使用 MLP 混合器</span><span class="original-text">utilizes an MLP-Mixer</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Tolstikhin2021MLPMixer</span>]</cite><span class="translated-text">架构。最大的性能提升源于采样：事实证明，HNM 具有变革性。特别是 Sample4Geo</span><span class="original-text">architecture. The largest performance boosts have stemmed from sampling: HNM proved transformative. In particular, Sample4Geo</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Deuser2023Sample4Geo</span>]</cite><span class="translated-text">展示了其抽样方法的显着改进。然而，HNM 使得训练既需要大量计算又需要大量内存，这凸显了对比学习的一个核心局限性。相比之下，我们的配方无需专门采样即可达到最先进的性能。一些研究试图通过极坐标变换来缩小观点差距</span><span class="original-text">demonstrated marked improvements in its sampling approach. However, HNM makes training both compute-heavy and memory-hungry, highlighting a central limitation of contrastive learning. In contrast, our formulation attains state-of-the-art performance without specialized sampling. Some studies attempted to close the view-point gap through polar transforms</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Shi2019SAFA</span>]</cite><span class="translated-text">或生成方法</span><span class="original-text">or generative methods</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Toker2021ComingDown</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Regmi2019Bridging</span>]</cite><span class="translated-text">，但由于不切实际的假设，特别是需要知道卫星图像中相机位置的要求，几乎没有被采用。</span><span class="original-text">, but received little uptake owing to unrealistic assumptions, particularly the requirement that the camera position in the satellite imagery be known.</span></p>
+</div>
+<figure class="ltx_table" id="S2.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S2.T1.13.1.1" style="font-size:90%;">Table 1</span>: </span><span class="ltx_text ltx_font_bold" id="S2.T1.14.2" style="font-size:90%;">Dataset comparisons for cross-view geo-localization.<span class="ltx_text ltx_font_medium" id="S2.T1.14.2.1"> We compare our proposed multi-scale benchmark against prior datasets under key capture and supervision attributes. <span class="ltx_text ltx_font_italic" id="S2.T1.14.2.1.1">SV GPS</span>: <em class="ltx_emph ltx_font_italic" id="S2.T1.14.2.1.2">Aligned</em> = center-aligned one-to-one pairing; <em class="ltx_emph ltx_font_italic" id="S2.T1.14.2.1.3">Arbitrary</em> = query location not constrained to the tile center. <span class="ltx_text ltx_font_italic" id="S2.T1.14.2.1.4">Gnd FoV</span>: <em class="ltx_emph ltx_font_italic" id="S2.T1.14.2.1.5">360° pano</em> = panorama queries; <em class="ltx_emph ltx_font_italic" id="S2.T1.14.2.1.6">Crops</em> = crops from panoramas; <em class="ltx_emph ltx_font_italic" id="S2.T1.14.2.1.7">Perspective</em> = native non-panoramic images. <span class="ltx_text ltx_font_italic" id="S2.T1.14.2.1.8">Heading</span>: <em class="ltx_emph ltx_font_italic" id="S2.T1.14.2.1.9">Fixed</em> = known/normalized orientation; <em class="ltx_emph ltx_font_italic" id="S2.T1.14.2.1.10">Arbitrary</em> = unknown or random orientation.</span></span></figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="S2.T1.15" style="width:433.6pt;height:54.8pt;vertical-align:-25.8pt;"><span class="ltx_transformed_inner" style="transform:translate(-123.3pt,15.6pt) scale(0.6374776149901,0.6374776149901) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S2.T1.15.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S2.T1.15.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S2.T1.15.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S2.T1.15.1.1.1.1.1">Dataset</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S2.T1.15.1.1.1.2"><span class="ltx_text ltx_font_bold" id="S2.T1.15.1.1.1.2.1"># Photos</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S2.T1.15.1.1.1.3"><span class="ltx_text ltx_font_bold" id="S2.T1.15.1.1.1.3.1">Multi-Scale</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="3" id="S2.T1.15.1.1.1.4"><span class="ltx_text ltx_font_bold" id="S2.T1.15.1.1.1.4.1">Ground / Pairing Protocol</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="4" id="S2.T1.15.1.1.1.5"><span class="ltx_text ltx_font_bold" id="S2.T1.15.1.1.1.5.1">Domain Types</span></th>
+</tr>
+<tr class="ltx_tr" id="S2.T1.15.1.2.2">
+<th class="ltx_td ltx_th ltx_th_row" id="S2.T1.15.1.2.2.1"></th>
+<th class="ltx_td ltx_th ltx_th_column" id="S2.T1.15.1.2.2.2"></th>
+<th class="ltx_td ltx_th ltx_th_column" id="S2.T1.15.1.2.2.3"></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S2.T1.15.1.2.2.4"><span class="ltx_text ltx_font_bold" id="S2.T1.15.1.2.2.4.1">SV GPS</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S2.T1.15.1.2.2.5"><span class="ltx_text ltx_font_bold" id="S2.T1.15.1.2.2.5.1">Gnd FoV</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S2.T1.15.1.2.2.6"><span class="ltx_text ltx_font_bold" id="S2.T1.15.1.2.2.6.1">Heading</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S2.T1.15.1.2.2.7"><span class="ltx_text ltx_font_bold" id="S2.T1.15.1.2.2.7.1">Urban</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S2.T1.15.1.2.2.8"><span class="ltx_text ltx_font_bold" id="S2.T1.15.1.2.2.8.1">Suburban</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S2.T1.15.1.2.2.9"><span class="ltx_text ltx_font_bold" id="S2.T1.15.1.2.2.9.1">Rural</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S2.T1.15.1.2.2.10"><span class="ltx_text ltx_font_bold" id="S2.T1.15.1.2.2.10.1">Offroad</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S2.T1.15.1.3.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S2.T1.15.1.3.1.1">CVUSA <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Workman2015WideArea</span>]</cite>
+</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.15.1.3.1.2">44K</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.15.1.3.1.3">✗</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.15.1.3.1.4">Aligned</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.15.1.3.1.5">360° pano</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.15.1.3.1.6">Fixed</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.15.1.3.1.7">✓</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.15.1.3.1.8">✓</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.15.1.3.1.9">✓</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.15.1.3.1.10">✓</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.15.1.4.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.15.1.4.2.1">CVACT <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Liu2019CVACT</span>]</cite>
+</th>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.4.2.2">128K</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.4.2.3">✗</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.4.2.4">Aligned</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.4.2.5">360° pano</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.4.2.6">Fixed</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.4.2.7">✓</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.4.2.8">✓</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.4.2.9">✗</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.4.2.10">✗</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.15.1.5.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.15.1.5.3.1">Vo &amp; Hayes <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">VoHays2016Localizing</span>]</cite>
+</th>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.5.3.2">450K</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.5.3.3">✗</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.5.3.4">Aligned</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.5.3.5">Crops</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.5.3.6">Arbitrary</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.5.3.7">✓</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.5.3.8">✓</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.5.3.9">✗</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.5.3.10">✗</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.15.1.6.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.15.1.6.4.1">VIGOR <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Zhu2021VIGOR</span>]</cite>
+</th>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.6.4.2">105K</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.6.4.3">✗</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.6.4.4">Arbitrary</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.6.4.5">360° pano</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.6.4.6">Fixed</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.6.4.7">✓</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.6.4.8">✗</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.6.4.9">✗</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.15.1.6.4.10">✗</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.15.1.7.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t" id="S2.T1.15.1.7.5.1">Ours</th>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S2.T1.15.1.7.5.2">300K</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S2.T1.15.1.7.5.3">✓</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S2.T1.15.1.7.5.4">Arbitrary</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S2.T1.15.1.7.5.5">Perspective</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S2.T1.15.1.7.5.6">Arbitrary</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S2.T1.15.1.7.5.7">✓</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S2.T1.15.1.7.5.8">✓</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S2.T1.15.1.7.5.9">✓</td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S2.T1.15.1.7.5.10">✓</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+<div class="ltx_para" id="S2.p3">
+<p class="ltx_p" id="S2.p3.1"><span class="ltx_text ltx_font_bold" id="S2.p3.1.1"><span class="translated-text">基准和数据集限制。</span><span class="original-text">Benchmark and Dataset Limitations.</span></span><span class="translated-text">这项任务的另一个重要方面是数据集和基准的真实性。早期数据集，例如 CVUSA</span><span class="original-text">Another crucial aspect of this task is the dataset and the realism of the benchmarks. Early datasets such as CVUSA</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Workman2015WideArea</span>]</cite><span class="translated-text">和CVACT</span><span class="original-text">and CVACT</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Liu2019CVACT</span>]</cite><span class="translated-text">使用一对一配对来生成数据，即在每个卫星图块的中心采样单个街景图像。这使得该任务既微不足道又不切实际：参考数据库在测试区域变得稀疏，阻碍了新照片的本地化。活力</span><span class="original-text">used one-to-one pairing for data generation, i.e., a single street-view image sampled at the center of each satellite tile. This renders the task both trivial and unrealistic: the reference database becomes sparsely populated over the test region, hindering the localization of novel photos. VIGOR</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Zhu2021VIGOR</span>]</cite><span class="translated-text">通过提出多对一采样解决了这一限制，其中从每个卫星图块内的随机位置对多个街景图像进行采样。此设置更加真实，因为街景捕获的确切位置未知，并且提供了更好的覆盖范围。然而，在 VIGOR 和其他数据集中，街景方向是已知的，并且 FoV 为 360</span><span class="original-text">addressed this limitation by proposing many-to-one sampling, in which multiple street-view images are sampled from random locations within each satellite tile. This setting is more realistic since the exact location of the street view capture is unknown and provides better coverage. However, in VIGOR and other datasets, the street-view orientations are known, and the FoVs are 360</span><sup class="ltx_sup" id="S2.p3.1.2">∘</sup><span class="translated-text">，这简化了任务并再次偏离了现实世界的条件。此外，该数据集是单一来源且高度标准化的，这可能会产生对分布外数据泛化能力较差的模型，并使基准测试变得更容易。相比之下，虽然我们也采用多对一采样，但我们使用随机方向和有限的、随机选择的视场，并且我们从不同来源、一天中的时间、季节、天气条件和质量水平绘制街景图像，从而产生更具挑战性和现实的基准，如图所示</span><span class="original-text">, which simplifies the task and again departs from real-world conditions. Moreover, the dataset is single-sourced and highly standardized, which can yield models that generalize poorly to out-of-distribution data and make the benchmark easier. By contrast, while we also adopt many-to-one sampling, we use random orientations and limited, randomly selected FoVs, and we draw street-view images from diverse sources, times of day, seasons, weather conditions, and quality levels, resulting in a more challenging and realistic benchmark as illustrated in Figure</span><a class="ltx_ref" href="#S3.F3" title="Figure 3 ‣ 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">。最近的工作考虑了有限的视场和未知的方向</span><span class="original-text">. Recent work considers limited FoV and unknown orientation</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Shugaev2024ArcGeo</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Mi2024ConGeo</span>]</cite><span class="translated-text">，但很大程度上依赖于具有模拟 FoV/航向的全景训练数据，而我们的基准测试使用非全景、随机方向、有限 FoV 图像，因此设置不能直接比较。</span><span class="original-text">, but largely relies on panoramic training data with simulated FoV/heading, whereas our benchmark uses non-panoramic, randomly oriented, limited FoV images, hence the settings are not directly comparable.</span></p>
+</div>
+<div class="ltx_para" id="S2.p4">
+<p class="ltx_p" id="S2.p4.1"><span class="ltx_text ltx_font_bold" id="S2.p4.1.1"><span class="translated-text">跨视图姿势估计。</span><span class="original-text">Cross-View Pose Estimation.</span></span><span class="translated-text">与 CVGL 并行的工作是交叉视图位姿估计，其中可以使用先验的粗略位置（通常为 20-50m），目标是恢复亚米级精度的 3-DoF 相机位姿</span><span class="original-text">A parallel line of work to CVGL is cross-view pose estimation, where a coarse location prior (typically 20–50m) is available, and the goal is to recover a 3-DoF camera pose with sub-meter accuracy</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Sarlin2023OrienterNet</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Wu2024MapLocNet</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Lentsch2023SliceMatch</span>]</cite><span class="translated-text">。尽管最近的方法针对此设置</span><span class="original-text">. Although recent methods target this setting</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">tong2025geodistill</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Lee2025PIDLoc</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">Xia2025FG2</span>]</cite><span class="translated-text">，它的实用性取决于可靠的 CVGL 组件，以提供粗略的先验和强大的交叉视图匹配 - 这正是我们的方法旨在提供的。</span><span class="original-text">, its practicality hinges on a reliable CVGL component to furnish the coarse prior and robust cross-view matches-precisely what our approach aims to provide.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">方法</span><span class="original-text">Method</span></h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="translated-text">在本节中，我们将讨论如何策划高质量的多尺度数据集，</span><span class="original-text">In this section we will discuss how we curated high quality multi-scale dataset,</span><a class="ltx_ref" href="#S3.SS1" title="3.1 Multi-Scale Satellite and Street-View Dataset ‣ 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">3.1</span></a><span class="translated-text">，以及理论和架构细节</span><span class="original-text">, and the theoretical and architectural details of</span><em class="ltx_emph ltx_font_italic" id="S3.p1.1.1"><span class="translated-text">只需放大</span><span class="original-text">Just Zoom In</span></em><span class="translated-text">型号,</span><span class="original-text">Model,</span><a class="ltx_ref" href="#S3.SS2" title="3.2 Just Zoom In ‣ 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">3.2</span></a>.</p>
+</div>
+<figure class="ltx_figure" id="S3.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="166" id="S3.F3.g1" src="https://arxiv.org/html/2603.25686v1/figures/dataset_diversity.jpg" width="476"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F3.4.1.1" style="font-size:90%;">Figure 3</span>: </span><span class="ltx_text ltx_font_bold" id="S3.F3.5.2" style="font-size:90%;">Dataset examples.<span class="ltx_text ltx_font_medium" id="S3.F3.5.2.1"> Street-view samples from our cross-view image localization corpus illustrating the two defining characteristics: (i) <em class="ltx_emph ltx_font_italic" id="S3.F3.5.2.1.1">limited FoV</em> typical of first-person and dash-cam capture; and (ii) broad diversity across time of day, seasonal appearance, weather, scene type , and capture platforms . This variability-together with viewpoint changes, occlusions, and motion blur-widens the appearance gap to overhead imagery and makes cross-view matching more challenging.</span></span></figcaption>
+</figure>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">多尺度卫星和街景数据集</span><span class="original-text">Multi-Scale Satellite and Street-View Dataset</span></h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">我们的自回归地理定位框架的开发需要一个满足两个关键标准的定制数据集：（1）街景图像的真实可变性（</span><span class="original-text">The development of our autoregressive geo-localization framework requires a bespoke dataset that satisfies two key criteria: (1) realistic variability in street-view imagery (</span><a class="ltx_ref" href="#S3.SS1.SSS1" title="3.1.1 Street-view processing. ‣ 3.1 Multi-Scale Satellite and Street-View Dataset ‣ 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">3.1.1</span></a><span class="translated-text">）和（2）多尺度、高分辨率卫星图像（</span><span class="original-text">), and (2) multi-scale, high-resolution satellite imagery (</span><a class="ltx_ref" href="#S3.SS1.SSS2" title="3.1.2 Satellite-view processing. ‣ 3.1 Multi-Scale Satellite and Street-View Dataset ‣ 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">3.1.2</span></a><span class="translated-text">）。由于现有的开源跨视图地理定位基准没有满足这些要求，因此我们通过结合来自 Mapillary 的众包街景图像构建了专用数据集</span><span class="original-text">). Since no existing open-source cross-view geo-localization benchmark meets these requirements, we constructed a dedicated dataset by combining crowd-sourced street-view imagery from Mapillary</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">mapillary</span>]</cite><span class="translated-text">使用政府提供的高分辨率航空正射摄影</span><span class="original-text">with government-sourced high-resolution aerial orthophotography</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">opendatadc</span>]</cite>.</p>
+</div>
+<section class="ltx_subsubsection" id="S3.SS1.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.1.1 </span><span class="translated-text">街景处理。</span><span class="original-text">Street-view processing.</span></h4>
+<div class="ltx_para" id="S3.SS1.SSS1.p1">
+<p class="ltx_p" id="S3.SS1.SSS1.p1.1"><span class="translated-text">毛细管</span><span class="original-text">Mapillary</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">mapillary</span>]</cite><span class="translated-text">由于其固有的野外视觉变化表现，被选为街景查询图像的来源。 Mapillary 是一个经 CC BY-SA 许可的大型众包公共数据集，包含超过 20 亿张图像。该平台提供了异构设备在不同环境条件下捕获的一系列视野的图像，包括不同的天气、季节、一天中的时间和相机型号，如图所示</span><span class="original-text">is selected as the source of street-view query images due to its inherent representation of in-the-wild visual variability. Mapillary is a large-scale crowd-sourced public dataset licensed under CC BY-SA, containing more than 2 billion images. The platform provides images that span a range of fields of view captured by heterogeneous devices under diverse environmental conditions, including varying weather, seasons, time of day, and camera models shown in Figure</span><a class="ltx_ref" href="#S3.F3" title="Figure 3 ‣ 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">。这种多样性引入了真实的外观变化，而这些变化在策划或专有数据集中通常不存在，使其成为强大的跨视图本地化的合适测试平台。我们从华盛顿特区收集数据，涵盖密集的城市中心和周边农村地区，产生大约 30 万张街景图像。更多详细信息包含在附录中。</span><span class="original-text">. This diversity introduces realistic appearance changes that are often absent in curated or proprietary datasets, making it a suitable testbed for robust cross-view localization. We collect data from the Washington D.C. area, covering both dense urban centers and surrounding rural regions, resulting in approximately 300k street-view images. More details are included in the Appendix.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.SSS1.p2">
+<p class="ltx_p" id="S3.SS1.SSS1.p2.1"><span class="translated-text">Mapillary 的众包性质引入了噪音，例如低分辨率、过时或重复的图像。为了将原始序列转换为干净且地理上可靠的数据集，我们采用受 Map It Anywhere 启发的多级过滤管道</span><span class="original-text">The crowd-sourced nature of Mapillary introduces noise such as low-resolution, outdated, or duplicate imagery. To convert raw sequences into a clean and geographically reliable dataset, we adopt a multi-stage filtering pipeline inspired by Map It Anywhere</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">ho2024map</span>]</cite><span class="translated-text">。首先，我们丢弃初始 GPS 坐标显着偏离其运动结构 (SfM) 精化姿势的图像，从而删除地面实况位置不准确的样本。其次，为了促进空间多样性，我们通过仅保留关键帧来强制执行最小空间分离约束，确保没有两个连续图像彼此之间的距离在 4.0 米以内。第三，我们根据时间和设备元数据过滤图像，以排除过时或不可靠的相机源，增加所代表的环境和季节条件的多样性。最后，我们按照 Map It Anywhere 流程执行质量筛选，丢弃具有运动模糊、镜头失真、严重遮挡或反射的图像。非全景图像的分辨率标准化为</span><span class="original-text">. First, we discard images whose initial GPS coordinates significantly deviate from their Structure-from-Motion (SfM) refined poses, removing samples with inaccurate ground-truth locations. Second, to promote spatial diversity, we enforce a minimum spatial separation constraint by retaining only key frames, ensuring that no two consecutive images are within 4.0 meters of each other. Third, we filter images based on temporal and device metadata to exclude outdated or unreliable camera sources, increasing the diversity of environmental and seasonal conditions represented. Finally, we perform quality screening following the Map It Anywhere pipeline, discarding images with motion blur, lens distortion, heavy occlusion, or reflections. Non-panoramic images are standardized to a resolution of</span><math alttext="512\times 384" class="ltx_Math" display="inline" id="S3.SS1.SSS1.p2.1.m1" intent=":literal"><semantics><mrow><mn>512</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>384</mn></mrow><annotation encoding="application/x-tex">512\times 384</annotation></semantics></math>.</p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS1.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.1.2 </span><span class="translated-text">卫星视图处理。</span><span class="original-text">Satellite-view processing.</span></h4>
+<div class="ltx_para" id="S3.SS1.SSS2.p1">
+<p class="ltx_p" id="S3.SS1.SSS2.p1.1"><span class="translated-text">对于航空参考数据，我们使用公开的政府来源的正射影像</span><span class="original-text">For aerial reference data, we use publicly available government-sourced orthophotos</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">opendatadc</span>]</cite><span class="translated-text">。这些数据集提供在许可的 CC BY 4.0 许可下分发的高分辨率图像，确保可重复性和可扩展性。华盛顿特区的航空数据是从类似于 Fervers 的官方开放政府数据门户获得的</span><span class="original-text">. These datasets provide high-resolution imagery distributed under the permissive CC BY 4.0 license, ensuring reproducibility and scalability. The aerial data for the Washington D.C. region is obtained from the official open government data portal similar to Fervers</span><em class="ltx_emph ltx_font_italic" id="S3.SS1.SSS2.p1.1.1"><span class="translated-text">等人</span><span class="original-text">et al</span></em>.<span class="ltx_text" id="S3.SS1.SSS2.p1.1.2"></span> <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">fervers2024statewide</span>]</cite><span class="translated-text">，覆盖一个</span><span class="original-text">, covering a</span><math alttext="10\,\mathrm{km}\times 10\,\mathrm{km}" class="ltx_Math" display="inline" id="S3.SS1.SSS2.p1.1.m1" intent=":literal"><semantics><mrow><mrow><mrow><mn>10</mn><mo lspace="0.170em" rspace="0em">​</mo><mi>km</mi></mrow><mo lspace="0.222em" rspace="0.222em">×</mo><mn>10</mn></mrow><mo lspace="0.170em" rspace="0em">​</mo><mi>km</mi></mrow><annotation encoding="application/x-tex">10\,\mathrm{km}\times 10\,\mathrm{km}</annotation></semantics></math><span class="translated-text">与 Mapillary 街景图像的空间分布相对应的区域。</span><span class="original-text">area that corresponds to the spatial distribution of street-view images from Mapillary.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.SSS2.p2">
+<p class="ltx_p" id="S3.SS1.SSS2.p2.8"><span class="translated-text">为了支持从粗到细的缩放，我们将卫星图像组织成图块层次结构。在每个缩放级别，我们将当前图块细分为固定网格</span><span class="original-text">To support coarse-to-fine zooming, we organize the satellite imagery into a hierarchy of tiles. At each zoom level we subdivide the current tile into a fixed grid of</span><math alttext="K\times K=4\times 4" class="ltx_Math" display="inline" id="S3.SS1.SSS2.p2.1.m1" intent=":literal"><semantics><mrow><mrow><mi>K</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>K</mi></mrow><mo>=</mo><mrow><mn>4</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>4</mn></mrow></mrow><annotation encoding="application/x-tex">K\times K=4\times 4</annotation></semantics></math><span class="translated-text">面片，模型选择一个面片进行放大。在所有实验中我们使用</span><span class="original-text">patches, and the model chooses one patch to zoom into. In all experiments we use</span><math alttext="N=4" class="ltx_Math" display="inline" id="S3.SS1.SSS2.p2.2.m2" intent=":literal"><semantics><mrow><mi>N</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">N=4</annotation></semantics></math><span class="translated-text">缩放步骤（即四个操作），对应于标称图块足迹</span><span class="original-text">zoom steps (i.e., four actions), which correspond to nominal tile footprints of</span><math alttext="10\,\mathrm{km}\times 10\,\mathrm{km}" class="ltx_Math" display="inline" id="S3.SS1.SSS2.p2.3.m3" intent=":literal"><semantics><mrow><mrow><mrow><mn>10</mn><mo lspace="0.170em" rspace="0em">​</mo><mi>km</mi></mrow><mo lspace="0.222em" rspace="0.222em">×</mo><mn>10</mn></mrow><mo lspace="0.170em" rspace="0em">​</mo><mi>km</mi></mrow><annotation encoding="application/x-tex">10\,\mathrm{km}\times 10\,\mathrm{km}</annotation></semantics></math>,
+<math alttext="2.5\,\mathrm{km}\times 2.5\,\mathrm{km}" class="ltx_Math" display="inline" id="S3.SS1.SSS2.p2.4.m4" intent=":literal"><semantics><mrow><mrow><mrow><mn>2.5</mn><mo lspace="0.170em" rspace="0em">​</mo><mi>km</mi></mrow><mo lspace="0.222em" rspace="0.222em">×</mo><mn>2.5</mn></mrow><mo lspace="0.170em" rspace="0em">​</mo><mi>km</mi></mrow><annotation encoding="application/x-tex">2.5\,\mathrm{km}\times 2.5\,\mathrm{km}</annotation></semantics></math>,
+<math alttext="625\,\mathrm{m}\times 625\,\mathrm{m}" class="ltx_Math" display="inline" id="S3.SS1.SSS2.p2.5.m5" intent=":literal"><semantics><mrow><mrow><mrow><mn>625</mn><mo lspace="0.170em" rspace="0em">​</mo><mi mathvariant="normal">m</mi></mrow><mo lspace="0.222em" rspace="0.222em">×</mo><mn>625</mn></mrow><mo lspace="0.170em" rspace="0em">​</mo><mi mathvariant="normal">m</mi></mrow><annotation encoding="application/x-tex">625\,\mathrm{m}\times 625\,\mathrm{m}</annotation></semantics></math><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="156.25\,\mathrm{m}\times 156.25\,\mathrm{m}" class="ltx_Math" display="inline" id="S3.SS1.SSS2.p2.6.m6" intent=":literal"><semantics><mrow><mrow><mrow><mn>156.25</mn><mo lspace="0.170em" rspace="0em">​</mo><mi mathvariant="normal">m</mi></mrow><mo lspace="0.222em" rspace="0.222em">×</mo><mn>156.25</mn></mrow><mo lspace="0.170em" rspace="0em">​</mo><mi mathvariant="normal">m</mi></mrow><annotation encoding="application/x-tex">156.25\,\mathrm{m}\times 156.25\,\mathrm{m}</annotation></semantics></math><span class="translated-text">。
+最终缩放决定后，我们取中心</span><span class="original-text">.
+After the final zoom decision, we take the center</span><math alttext="39.06\,\mathrm{m}\times 39.06\,\mathrm{m}" class="ltx_Math" display="inline" id="S3.SS1.SSS2.p2.7.m7" intent=":literal"><semantics><mrow><mrow><mrow><mn>39.06</mn><mo lspace="0.170em" rspace="0em">​</mo><mi mathvariant="normal">m</mi></mrow><mo lspace="0.222em" rspace="0.222em">×</mo><mn>39.06</mn></mrow><mo lspace="0.170em" rspace="0em">​</mo><mi mathvariant="normal">m</mi></mrow><annotation encoding="application/x-tex">39.06\,\mathrm{m}\times 39.06\,\mathrm{m}</annotation></semantics></math><span class="translated-text">所选区域内的区域</span><span class="original-text">region inside the selected</span><math alttext="156.25\,\mathrm{m}" class="ltx_Math" display="inline" id="S3.SS1.SSS2.p2.8.m8" intent=":literal"><semantics><mrow><mn>156.25</mn><mo lspace="0.170em" rspace="0em">​</mo><mi mathvariant="normal">m</mi></mrow><annotation encoding="application/x-tex">156.25\,\mathrm{m}</annotation></semantics></math><span class="translated-text">平铺作为用于评估的输出单元。这种最精细的比例仅用于定义预测足迹和计算测地距离；它不会作为输入图像提供给模型。</span><span class="original-text">tile as the output cell used for evaluation. This finest scale is only used to define the prediction footprint and to compute geodesic distances; it is not supplied to the model as an input image.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.SSS2.p3">
+<p class="ltx_p" id="S3.SS1.SSS2.p3.1"><span class="translated-text">我们在表中提供了新数据集与现有数据集的比较</span><span class="original-text">We provide a comparison with our new dataset with existing ones at Table</span><a class="ltx_ref" href="#S2.T1" title="Table 1 ‣ 2 Related Works ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+</div>
+<figure class="ltx_figure" id="S3.F4"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="164" id="S3.F4.g1" src="https://arxiv.org/html/2603.25686v1/figures/overveiw.png" width="476"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F4.24.10.1" style="font-size:90%;">Figure 4</span>: </span><span class="ltx_text" id="S3.F4.18.9" style="font-size:90%;">Overview of <em class="ltx_emph ltx_font_italic" id="S3.F4.18.9.1">Just Zoom In</em>. (a) <span class="ltx_text ltx_font_bold" id="S3.F4.18.9.2">Image encoding.</span> A shared, off-the-shelf vision encoder maps the street-view image <math alttext="I_{g}" class="ltx_Math" display="inline" id="S3.F4.10.1.m1" intent=":literal"><semantics><msub><mi>I</mi><mi>g</mi></msub><annotation encoding="application/x-tex">I_{g}</annotation></semantics></math> and the multi-scale satellite maps <math alttext="\{M_{t}\}" class="ltx_Math" display="inline" id="S3.F4.11.2.m2" intent=":literal"><semantics><mrow><mo stretchy="false">{</mo><msub><mi>M</mi><mi>t</mi></msub><mo stretchy="false">}</mo></mrow><annotation encoding="application/x-tex">\{M_{t}\}</annotation></semantics></math> to global representation tokens <math alttext="e_{g}" class="ltx_Math" display="inline" id="S3.F4.12.3.m3" intent=":literal"><semantics><msub><mi>e</mi><mi>g</mi></msub><annotation encoding="application/x-tex">e_{g}</annotation></semantics></math> and <math alttext="e_{t}" class="ltx_Math" display="inline" id="S3.F4.13.4.m4" intent=":literal"><semantics><msub><mi>e</mi><mi>t</mi></msub><annotation encoding="application/x-tex">e_{t}</annotation></semantics></math>, single token per image. (b) <span class="ltx_text ltx_font_bold" id="S3.F4.18.9.3">Autoregressive action modeling.</span> The image tokens, interleaved with previously chosen action tokens, are fed to a causal transformer that predicts a distribution over the next zoom-in action <math alttext="a_{t}" class="ltx_Math" display="inline" id="S3.F4.14.5.m5" intent=":literal"><semantics><msub><mi>a</mi><mi>t</mi></msub><annotation encoding="application/x-tex">a_{t}</annotation></semantics></math> at each step. (c) <span class="ltx_text ltx_font_bold" id="S3.F4.18.9.4">Sample / zoom-in sequence.</span> Beginning from <math alttext="M_{0}" class="ltx_Math" display="inline" id="S3.F4.15.6.m6" intent=":literal"><semantics><msub><mi>M</mi><mn>0</mn></msub><annotation encoding="application/x-tex">M_{0}</annotation></semantics></math>, the model selects the most probable patch, zooms to obtain <math alttext="M_{t+1}" class="ltx_Math" display="inline" id="S3.F4.16.7.m7" intent=":literal"><semantics><msub><mi>M</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><annotation encoding="application/x-tex">M_{t+1}</annotation></semantics></math>, and iterates until a terminal patch <math alttext="M_{N}" class="ltx_Math" display="inline" id="S3.F4.17.8.m8" intent=":literal"><semantics><msub><mi>M</mi><mi>N</mi></msub><annotation encoding="application/x-tex">M_{N}</annotation></semantics></math>; the center of <math alttext="M_{N}" class="ltx_Math" display="inline" id="S3.F4.18.9.m9" intent=":literal"><semantics><msub><mi>M</mi><mi>N</mi></msub><annotation encoding="application/x-tex">M_{N}</annotation></semantics></math> is taken as the location estimate.</span></figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span><span class="translated-text">只需放大</span><span class="original-text">Just Zoom In</span></h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.4"><span class="translated-text">自回归缩放过程被建模为顺序决策问题。给定一张街景图像</span><span class="original-text">The autoregressive zooming process is modeled as a sequential decision-making problem. Given a street-view image</span><math alttext="I_{g}" class="ltx_Math" display="inline" id="S3.SS2.p1.1.m1" intent=":literal"><semantics><msub><mi>I</mi><mi>g</mi></msub><annotation encoding="application/x-tex">I_{g}</annotation></semantics></math><span class="translated-text">，目标是预测正确的卫星补丁</span><span class="original-text">, the goal is to predict the correct satellite patch</span><math alttext="M_{N}" class="ltx_Math" display="inline" id="S3.SS2.p1.2.m2" intent=":literal"><semantics><msub><mi>M</mi><mi>N</mi></msub><annotation encoding="application/x-tex">M_{N}</annotation></semantics></math><span class="translated-text">通过学习政策在每个规模上</span><span class="original-text">at each scale by learning a policy</span><math alttext="\pi" class="ltx_Math" display="inline" id="S3.SS2.p1.3.m3" intent=":literal"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math><span class="translated-text">产生一个序列</span><span class="original-text">that produces a sequence of</span><math alttext="N" class="ltx_Math" display="inline" id="S3.SS2.p1.4.m4" intent=":literal"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math><span class="translated-text">放大动作。我们的自回归地理定位框架由两个主要部分组成。首先，如图所示</span><span class="original-text">zoom-in actions. Our autoregressive geo-localization framework consists of two main components. First, as shown in</span><a class="ltx_ref" href="#S3.F4" title="Figure 4 ‣ 3.1.2 Satellite-view processing. ‣ 3.1 Multi-Scale Satellite and Street-View Dataset ‣ 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">.a 共享权重视觉编码器弥合了街景和卫星图像之间的域差距，将它们投影到统一的特征空间中。二、自回归解码器</span><span class="original-text">.a the shared-weight vision encoder bridges the domain gap between street-view and satellite images, projecting them into a unified feature space. Second, the autoregressive decoder</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Vaswani2017Attention</span>]</cite><span class="translated-text">接收街景特征以及多尺度卫星特征，并在因果掩蔽策略下，逐步预测下一个缩放动作，如图所示</span><span class="original-text">receives the street-view feature along with multi-scale satellite features and, under a causal masking strategy, predicts the next zoom action step-by-step, as illustrated in</span><a class="ltx_ref" href="#S3.F4" title="Figure 4 ‣ 3.1.2 Satellite-view processing. ‣ 3.1 Multi-Scale Satellite and Street-View Dataset ‣ 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">。我们将在以下部分中更详细地讨论这些组件。</span><span class="original-text">. We will discuss these components in more detail in the following sections.</span></p>
+</div>
+<section class="ltx_subsubsection" id="S3.SS2.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.1 </span><span class="translated-text">视觉编码器。</span><span class="original-text">Vision Encoder.</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS1.p1">
+<p class="ltx_p" id="S3.SS2.SSS1.p1.1"><span class="translated-text">我们模型的第一阶段负责弥合街景视图和卫星视图之间的显着域差距。为了解决这个问题，我们采用 DINOv2-Base 模型</span><span class="original-text">The first stage of our model is responsible for bridging the significant domain gap between street-view and satellite views. To tackle this, we employ the DINOv2-Base model</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Oquab2023dinov2</span>]</cite><span class="translated-text">作为我们的视觉编码器骨干。 DINOv2 是一个强大的基础模型，使用自我监督学习进行预训练，用于通用视觉表示。我们使用共享权重 DINOv2 编码器来处理街景图像和所有多尺度卫星图像。这种权重共享编码器将两种模态投影到一个公共嵌入空间中，有效地减少了因剧烈视点差异而导致的域间隙。</span><span class="original-text">as our vision encoder backbone. DINOv2 is a powerful foundation model pre-trained using self-supervised learning for general-purpose visual representations. We use a shared-weight DINOv2 encoder to process both the street-view image and all multi-scale satellite images. This weight sharing encoder projects both modalities into a common embedding space, effectively reducing the domain gap caused by drastic viewpoint differences.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS1.p2">
+<p class="ltx_p" id="S3.SS2.SSS1.p2.1"><span class="translated-text">对于每个街景或卫星图像，我们仅提取</span><span class="original-text">For each street-view or satellite image, we extract only the</span><span class="ltx_text ltx_font_typewriter" id="S3.SS2.SSS1.p2.1.1">[CLS]</span><span class="translated-text">令牌嵌入作为输出表示。的</span><span class="original-text">token embedding as the output representation. The</span><span class="ltx_text ltx_font_typewriter" id="S3.SS2.SSS1.p2.1.2">[CLS]</span><span class="translated-text">令牌旨在将整个图像的全局信息聚合到一个紧凑的向量中。街景和多尺度卫星图像被编码并连接形成</span><span class="original-text">token is designed to aggregate global information from the entire image into a compact vector. Street-view and multi-scale satellite images are encoded and concatenated to form</span><math alttext="[I_{g},M_{0},M_{1},\dots,M_{N}]" class="ltx_Math" display="inline" id="S3.SS2.SSS1.p2.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><msub><mi>I</mi><mi>g</mi></msub><mo>,</mo><msub><mi>M</mi><mn>0</mn></msub><mo>,</mo><msub><mi>M</mi><mn>1</mn></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>M</mi><mi>N</mi></msub><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[I_{g},M_{0},M_{1},\dots,M_{N}]</annotation></semantics></math><span class="translated-text">用于自回归模型输入。为了保留强大的预先训练的视觉知识，同时允许适应我们的特定任务领域，我们采用了部分微调策略。编码器使用预先训练的 DINOv2 权重进行初始化，并且在训练期间只有最后四个变换器块被解冻和微调，这是一种参数高效的传输方法，对于定位任务来说是有效的</span><span class="original-text">for autoregressive model input. To preserve the strong pre-trained visual knowledge while allowing adaptation to our specific task domain, we employ a partial fine-tuning strategy. The encoder is initialized with pre-trained DINOv2 weights, and only the last four transformer blocks are unfrozen and fine-tuned during training, a parameter-efficient transfer approach shown to be effective for localization tasks</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">izquierdo2024optimal</span>]</cite>.</p>
+</div>
+<figure class="ltx_table" id="S3.T2">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S3.T2.18.3.1" style="font-size:90%;">Table 2</span>: </span><span class="ltx_text ltx_font_bold" id="S3.T2.4.2" style="font-size:90%;">Cross-view geo-localization results on our proposed dataset.<span class="ltx_text ltx_font_medium" id="S3.T2.4.2.2"> We reproduce all contrastive-based baselines using their official implementations. Our coarse-to-fine autoregressive approach outperforms retrieval-based methods across all evaluation thresholds. <span class="ltx_text ltx_font_italic" id="S3.T2.3.1.1.1">R@<math alttext="\tau" class="ltx_Math" display="inline" id="S3.T2.3.1.1.1.m1" intent=":literal"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math>m</span> denotes Recall@1 within <math alttext="\tau" class="ltx_Math" display="inline" id="S3.T2.4.2.2.m1" intent=":literal"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math> meters. <span class="ltx_text ltx_font_italic" id="S3.T2.4.2.2.2">Inf. Mem. (GB)</span> reports the peak memory required to store and search the reference database at inference time, <span class="ltx_text ltx_font_italic" id="S3.T2.4.2.2.3">Train. Time (GPU hours)</span> is the approximate end-to-end training time on one NVIDIA A6000 GPU, and <span class="ltx_text ltx_font_italic" id="S3.T2.4.2.2.4">HNM</span> indicates whether the method relies on hard negative mining during training.</span></span></figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="S3.T2.12" style="width:433.6pt;height:61.6pt;vertical-align:-29.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-84.3pt,12.0pt) scale(0.720046950219683,0.720046950219683) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S3.T2.12.8">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T2.9.5.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="S3.T2.9.5.5.6"><span class="ltx_text ltx_font_bold" id="S3.T2.9.5.5.6.1">Method</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T2.5.1.1.1">
+<span class="ltx_text ltx_font_bold" id="S3.T2.5.1.1.1.1">R@40m</span> <math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T2.5.1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T2.6.2.2.2">
+<span class="ltx_text ltx_font_bold" id="S3.T2.6.2.2.2.1">R@50m</span> <math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T2.6.2.2.2.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T2.7.3.3.3">
+<span class="ltx_text ltx_font_bold" id="S3.T2.7.3.3.3.1">R@100m</span> <math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T2.7.3.3.3.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T2.8.4.4.4">
+<span class="ltx_text ltx_font_bold" id="S3.T2.8.4.4.4.1">Inf. Mem. (GB)</span> <math alttext="\downarrow" class="ltx_Math" display="inline" id="S3.T2.8.4.4.4.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T2.9.5.5.5">
+<span class="ltx_text ltx_font_bold" id="S3.T2.9.5.5.5.1">Train. Time</span> <math alttext="\downarrow" class="ltx_Math" display="inline" id="S3.T2.9.5.5.5.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T2.9.5.5.7"><span class="ltx_text ltx_font_bold" id="S3.T2.9.5.5.7.1">HNM</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T2.10.6.6">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S3.T2.10.6.6.2">SAIG-D <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Zhu2023SAIG</span>]</cite>
+</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.10.6.6.3">39.36</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.10.6.6.4">47.52</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.10.6.6.5">64.17</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.10.6.6.6">18</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.10.6.6.1"><math alttext="&gt;90" class="ltx_Math" display="inline" id="S3.T2.10.6.6.1.m1" intent=":literal"><semantics><mrow><mi></mi><mo>&gt;</mo><mn>90</mn></mrow><annotation encoding="application/x-tex">&gt;90</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.10.6.6.7">✓</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.11.7.7">
+<td class="ltx_td ltx_align_left" id="S3.T2.11.7.7.2">TransGeo <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Zhu2022TransGeo</span>]</cite>
+</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.11.7.7.3">45.97</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.11.7.7.4">54.55</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.11.7.7.5">67.61</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.11.7.7.6">11</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.11.7.7.1"><math alttext="&gt;90" class="ltx_Math" display="inline" id="S3.T2.11.7.7.1.m1" intent=":literal"><semantics><mrow><mi></mi><mo>&gt;</mo><mn>90</mn></mrow><annotation encoding="application/x-tex">&gt;90</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.11.7.7.7">✓</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.12.8.8">
+<td class="ltx_td ltx_align_left" id="S3.T2.12.8.8.2">Sample4Geo <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Deuser2023Sample4Geo</span>]</cite>
+</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.8.8.3">52.85</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.8.8.4">60.81</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.8.8.5">71.30</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.8.8.6">16</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.8.8.1"><math alttext="&gt;90" class="ltx_Math" display="inline" id="S3.T2.12.8.8.1.m1" intent=":literal"><semantics><mrow><mi></mi><mo>&gt;</mo><mn>90</mn></mrow><annotation encoding="application/x-tex">&gt;90</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.8.8.7">✓</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.12.8.9.1">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S3.T2.12.8.9.1.1">Ours (BS. = 32)</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.12.8.9.1.2">51.08</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.12.8.9.1.3">61.49</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.12.8.9.1.4">77.43</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.12.8.9.1.5"><span class="ltx_text ltx_font_bold" id="S3.T2.12.8.9.1.5.1">9</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.12.8.9.1.6">61</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.12.8.9.1.7">✗</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.12.8.10.2">
+<td class="ltx_td ltx_align_left" id="S3.T2.12.8.10.2.1">Ours (BS. = 64)</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.8.10.2.2">54.10</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.8.10.2.3">64.74</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.8.10.2.4">79.74</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.8.10.2.5"><span class="ltx_text ltx_font_bold" id="S3.T2.12.8.10.2.5.1">9</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.8.10.2.6">58</td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.8.10.2.7">✗</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.12.8.11.3">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S3.T2.12.8.11.3.1">Ours (BS. = 128)</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.12.8.11.3.2"><span class="ltx_text ltx_font_bold" id="S3.T2.12.8.11.3.2.1">55.74</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.12.8.11.3.3"><span class="ltx_text ltx_font_bold" id="S3.T2.12.8.11.3.3.1">66.31</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.12.8.11.3.4"><span class="ltx_text ltx_font_bold" id="S3.T2.12.8.11.3.4.1">80.93</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.12.8.11.3.5"><span class="ltx_text ltx_font_bold" id="S3.T2.12.8.11.3.5.1">9</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.12.8.11.3.6"><span class="ltx_text ltx_font_bold" id="S3.T2.12.8.11.3.6.1">52</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.12.8.11.3.7">✗</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+</section>
+<section class="ltx_subsubsection" id="S3.SS2.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.2 </span><span class="translated-text">自回归地理定位解码器。</span><span class="original-text">Autoregressive Geo-Localization Decoder.</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS2.p1">
+<p class="ltx_p" id="S3.SS2.SSS2.p1.5"><span class="translated-text">该模型预测离散的缩放动作序列</span><span class="original-text">The model predicts a discrete zoom-action sequence</span><math alttext="Y=\{y_{0},\dots,y_{N-1}\}" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p1.1.m1" intent=":literal"><semantics><mrow><mi>Y</mi><mo>=</mo><mrow><mo stretchy="false">{</mo><msub><mi>y</mi><mn>0</mn></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>y</mi><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">Y=\{y_{0},\dots,y_{N-1}\}</annotation></semantics></math><span class="translated-text">，其中每个</span><span class="original-text">, where each</span><math alttext="y_{t}\in\{0,\dots,K^{2}-1\}" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p1.2.m2" intent=":literal"><semantics><mrow><msub><mi>y</mi><mi>t</mi></msub><mo>∈</mo><mrow><mo stretchy="false">{</mo><mn>0</mn><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><mrow><msup><mi>K</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">y_{t}\in\{0,\dots,K^{2}-1\}</annotation></semantics></math><span class="translated-text">选择其中之一</span><span class="original-text">selects one of the</span><math alttext="K^{2}" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p1.3.m3" intent=":literal"><semantics><msup><mi>K</mi><mn>2</mn></msup><annotation encoding="application/x-tex">K^{2}</annotation></semantics></math><span class="translated-text">缩放步长的子图块</span><span class="original-text">child tiles at zoom step</span><math alttext="t" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p1.4.m4" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math><span class="translated-text">。
+我们用教师强制进行训练，最大化每一步的真实动作的可能性（相当于，最小化交叉熵）</span><span class="original-text">.
+We train with teacher forcing, maximizing the likelihood of the ground-truth action at each step (equivalently, minimizing cross-entropy over the</span><math alttext="K^{2}" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p1.5.m5" intent=":literal"><semantics><msup><mi>K</mi><mn>2</mn></msup><annotation encoding="application/x-tex">K^{2}</annotation></semantics></math><span class="translated-text">动作类）：</span><span class="original-text">action classes):</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{L}=-\sum_{t=0}^{N-1}\log P\!\left(y_{t}^{*}\mid I_{g},M_{0},y_{0}^{*},\dots,M_{t}\right)," class="ltx_Math" display="block" id="S3.E1.m1" intent=":literal"><semantics><mrow><mrow><mi class="ltx_font_mathcaligraphic">ℒ</mi><mo>=</mo><mrow><mo>−</mo><mrow><munderover><mo movablelimits="false">∑</mo><mrow><mi>t</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></munderover><mrow><mrow><mi>log</mi><mo lspace="0.167em">⁡</mo><mpadded style="width:0.611em;" width="0.611em"><mi>P</mi></mpadded></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo>(</mo><mrow><msubsup><mi>y</mi><mi>t</mi><mo>∗</mo></msubsup><mo>∣</mo><mrow><msub><mi>I</mi><mi>g</mi></msub><mo>,</mo><msub><mi>M</mi><mn>0</mn></msub><mo>,</mo><msubsup><mi>y</mi><mn>0</mn><mo>∗</mo></msubsup><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>M</mi><mi>t</mi></msub></mrow></mrow><mo>)</mo></mrow></mrow></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathcal{L}=-\sum_{t=0}^{N-1}\log P\!\left(y_{t}^{*}\mid I_{g},M_{0},y_{0}^{*},\dots,M_{t}\right),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS2.SSS2.p1.7"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="(\cdot)^{*}" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p1.6.m1" intent=":literal"><semantics><msup><mrow><mo stretchy="false">(</mo><mo lspace="0em" rspace="0em">⋅</mo><mo stretchy="false">)</mo></mrow><mo>∗</mo></msup><annotation encoding="application/x-tex">(\cdot)^{*}</annotation></semantics></math><span class="translated-text">表示真实动作/标记。动作标记与多尺度卫星特征交织以形成输入序列</span><span class="original-text">denotes ground-truth actions/tokens. The action tokens are interleaved with multi-scale satellite features to form the input sequence</span><math alttext="[I_{g},M_{0},\allowbreak y_{0}^{*},\allowbreak M_{1},\allowbreak y_{1}^{*},\allowbreak\dots,\allowbreak M_{N-1}]" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p1.7.m2" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><msub><mi>I</mi><mi>g</mi></msub><mo>,</mo><msub><mi>M</mi><mn>0</mn></msub><mo>,</mo><msubsup><mi>y</mi><mn>0</mn><mo>∗</mo></msubsup><mo>,</mo><msub><mi>M</mi><mn>1</mn></msub><mo>,</mo><msubsup><mi>y</mi><mn>1</mn><mo>∗</mo></msubsup><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>M</mi><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[I_{g},M_{0},\allowbreak y_{0}^{*},\allowbreak M_{1},\allowbreak y_{1}^{*},\allowbreak\dots,\allowbreak M_{N-1}]</annotation></semantics></math><span class="translated-text">。这种交错设计确保每个缩放决策都以正确的补丁信息为条件，为后续预测提供更有力的指导。具有一维因果屏蔽的转换器解码器确保每个标记仅关注其自身和过去的元素，从而防止未来缩放步骤中的信息泄漏。</span><span class="original-text">. This interleaving design ensures that each zoom decision is conditioned on the correct patch information, providing stronger guidance for subsequent predictions. The transformer decoder with 1D causal masking ensures that each token attends only to itself and the past elements, preventing information leakage from future zoom steps.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS2.p2">
+<p class="ltx_p" id="S3.SS2.SSS2.p2.1"><span class="translated-text">在推理过程中，使用概率链式规则，联合目标分解为逐步条件概率：</span><span class="original-text">During inference, using the chain rule of probability, the joint objective factorizes into step-wise conditional probabilities:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="P(Y\mid I_{g},M_{0})=\prod_{t=0}^{N-1}P(y_{t}\mid I_{g},M_{0},y_{0},\dots,M_{t})." class="ltx_Math" display="block" id="S3.E2.m1" intent=":literal"><semantics><mrow><mrow><mrow><mi>P</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><mi>Y</mi><mo>∣</mo><mrow><msub><mi>I</mi><mi>g</mi></msub><mo>,</mo><msub><mi>M</mi><mn>0</mn></msub></mrow></mrow><mo stretchy="false">)</mo></mrow></mrow><mo rspace="0.111em">=</mo><mrow><munderover><mo movablelimits="false">∏</mo><mrow><mi>t</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>N</mi><mo>−</mo><mn>1</mn></mrow></munderover><mrow><mi>P</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><msub><mi>y</mi><mi>t</mi></msub><mo>∣</mo><mrow><msub><mi>I</mi><mi>g</mi></msub><mo>,</mo><msub><mi>M</mi><mn>0</mn></msub><mo>,</mo><msub><mi>y</mi><mn>0</mn></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>M</mi><mi>t</mi></msub></mrow></mrow><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">P(Y\mid I_{g},M_{0})=\prod_{t=0}^{N-1}P(y_{t}\mid I_{g},M_{0},y_{0},\dots,M_{t}).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS2.SSS2.p2.2"><span class="translated-text">自回归性质要求每个预测都以以前的历史决策为条件。这种设置的一个关键优点是搜索空间在每个缩放步骤中逐渐减小。图</span><span class="original-text">The autoregressive nature requires that each prediction be conditioned on previous history decisions. A key advantage of this setup is that the search space is progressively reduced at every zoom step. Figure</span><a class="ltx_ref" href="#S3.F4" title="Figure 4 ‣ 3.1.2 Satellite-view processing. ‣ 3.1 Multi-Scale Satellite and Street-View Dataset ‣ 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">.b 显示了顺序放大机制的概述。</span><span class="original-text">.b shows an overview of the sequential zoom-in mechanism.</span></p>
+</div>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">实验</span><span class="original-text">Experiments</span></h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">培训和评估是在我们在第 5 节中描述的精选数据集上进行的</span><span class="original-text">Training and evaluation are conducted on our curated dataset described in Section</span><a class="ltx_ref" href="#S3.SS1" title="3.1 Multi-Scale Satellite and Street-View Dataset ‣ 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">3.1</span></a>.</p>
+</div>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span><span class="translated-text">指标</span><span class="original-text">Metrics</span></h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.6"><span class="translated-text">与依赖基于排名的指标的标准图像检索任务不同，我们的迭代缩放方法产生单个最终位置预测。此外，简单的正确/不正确分类精度对于地理空间任务来说是不够的，因为预测邻近的补丁比预测遥远的补丁要准确得多。因此，我们使用基于距离的 Recall@1 (R@1</span><span class="original-text">Unlike standard image retrieval tasks that rely on rank-based metrics, our iterative zooming approach produces a single final location prediction. Furthermore, simple correct/incorrect classification accuracy is insufficient for geospatial tasks, since predicting a neighboring patch is considerably more accurate than predicting a distant one. Therefore, we evaluated performance using distance-based Recall@1 (R@1</span><math alttext="&lt;d" class="ltx_Math" display="inline" id="S4.SS1.p1.1.m1" intent=":literal"><semantics><mrow><mi></mi><mo>&lt;</mo><mi>d</mi></mrow><annotation encoding="application/x-tex">&lt;d</annotation></semantics></math><span class="translated-text">）。让</span><span class="original-text">). Let</span><math alttext="d(\hat{c}_{i},c_{i})" class="ltx_Math" display="inline" id="S4.SS1.p1.2.m2" intent=":literal"><semantics><mrow><mi>d</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mover accent="true"><mi>c</mi><mo>^</mo></mover><mi>i</mi></msub><mo>,</mo><msub><mi>c</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">d(\hat{c}_{i},c_{i})</annotation></semantics></math><span class="translated-text">表示预测中心之间的测地距离（以米为单位）</span><span class="original-text">denote the geodesic distance in meters between the predicted center</span><math alttext="\hat{c}_{i}" class="ltx_Math" display="inline" id="S4.SS1.p1.3.m3" intent=":literal"><semantics><msub><mover accent="true"><mi>c</mi><mo>^</mo></mover><mi>i</mi></msub><annotation encoding="application/x-tex">\hat{c}_{i}</annotation></semantics></math><span class="translated-text">和地面实况中心</span><span class="original-text">and the ground-truth center</span><math alttext="c_{i}" class="ltx_Math" display="inline" id="S4.SS1.p1.4.m4" intent=":literal"><semantics><msub><mi>c</mi><mi>i</mi></msub><annotation encoding="application/x-tex">c_{i}</annotation></semantics></math><span class="translated-text">样品</span><span class="original-text">for sample</span><math alttext="i" class="ltx_Math" display="inline" id="S4.SS1.p1.5.m5" intent=":literal"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math><span class="translated-text">。 The Recall@1 with a success radius</span><span class="original-text">. The Recall@1 with a success radius</span><math alttext="\tau\in\{40\text{m},\,50\text{m},\,100\text{m}\}" class="ltx_Math" display="inline" id="S4.SS1.p1.6.m6" intent=":literal"><semantics><mrow><mi>τ</mi><mo>∈</mo><mrow><mo stretchy="false">{</mo><mrow><mn>40</mn><mo lspace="0em" rspace="0em">​</mo><mtext>m</mtext></mrow><mo>,</mo><mrow><mn> 50</mn><mo lspace="0em" rspace="0em">​</mo><mtext>m</mtext></mrow><mo>,</mo><mrow><mn> 100</mn><mo lspace="0em" rspace="0em">​</mo><mtext>m</mtext></mrow><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">\tau\in\{40\text{m},\,50\text{m},\,100\text{m}\}</annotation></semantics></math><span class="translated-text">定义为：</span><span class="original-text">is defined as:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E3">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\text{R@}\tau\text{m}=\frac{1}{S}\sum_{i=1}^{S}\mathbf{1}\!\left(d(\hat{c}_{i},c_{i})\leq\tau\right)\times 100," class="ltx_Math" display="block" id="S4.E3.m1" intent=":literal"><semantics><mrow><mrow><mrow><mtext>R@</mtext><mo lspace="0em" rspace="0em">​</mo><mi>τ</mi><mo lspace="0em" rspace="0em">​</mo><mtext>m</mtext></mrow><mo>=</mo><mrow><mfrac><mn>1</mn><mi>S</mi></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><munderover><mo movablelimits="false">∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>S</mi></munderover><mrow><mrow><mpadded style="width:0.580em;" width="0.580em"><mn>𝟏</mn></mpadded><mo lspace="0em" rspace="0em">​</mo><mrow><mo>(</mo><mrow><mrow><mi>d</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mover accent="true"><mi>c</mi><mo>^</mo></mover><mi>i</mi></msub><mo>,</mo><msub><mi>c</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>≤</mo><mi>τ</mi></mrow><mo rspace="0.055em">)</mo></mrow></mrow><mo rspace="0.222em">×</mo><mn>100</mn></mrow></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\text{R@}\tau\text{m}=\frac{1}{S}\sum_{i=1}^{S}\mathbf{1}\!\left(d(\hat{c}_{i},c_{i})\leq\tau\right)\times 100,</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S4.SS1.p1.7"><span class="translated-text">哪里</span><span class="original-text">where</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E4">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathbf{1}(x)=\begin{cases}1,&amp;\text{if }x\text{ is true},\\
+0,&amp;\text{otherwise.}\end{cases}" class="ltx_Math" display="block" id="S4.E4.m1" intent=":literal"><semantics><mrow><mrow><mn>𝟏</mn><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mo>{</mo><mtable columnspacing="5pt" displaystyle="true" rowspacing="0pt"><mtr><mtd class="ltx_align_left" columnalign="left"><mrow><mn>1</mn><mo>,</mo></mrow></mtd><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mtext>if </mtext><mo lspace="0em" rspace="0em">​</mo><mi>x</mi><mo lspace="0em" rspace="0em">​</mo><mtext> is true</mtext></mrow><mo>,</mo></mrow></mtd></mtr><mtr><mtd class="ltx_align_left" columnalign="left"><mrow><mn>0</mn><mo>,</mo></mrow></mtd><mtd class="ltx_align_left" columnalign="left"><mtext>otherwise.</mtext></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">\mathbf{1}(x)=\begin{cases}1,&amp;\text{if }x\text{ is true},\\
+0,&amp;\text{otherwise.}\end{cases}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+</tr></tbody>
+</table>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span><span class="translated-text">实施细节</span><span class="original-text">Implementation Details</span></h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.4"><span class="translated-text">自回归变压器块是使用现代组件构建的，用于训练稳定性和性能。该模型的隐藏维度为</span><span class="original-text">The autoregressive transformer blocks are built using modern components for training stability and performance. The model operates with a hidden dimension of</span><math alttext="768" class="ltx_Math" display="inline" id="S4.SS2.p1.1.m1" intent=":literal"><semantics><mn>768</mn><annotation encoding="application/x-tex">768</annotation></semantics></math><span class="translated-text">，使用</span><span class="original-text">, using</span><math alttext="6" class="ltx_Math" display="inline" id="S4.SS2.p1.2.m2" intent=":literal"><semantics><mn>6</mn><annotation encoding="application/x-tex">6</annotation></semantics></math><span class="translated-text">层和</span><span class="original-text">layers and</span><math alttext="8" class="ltx_Math" display="inline" id="S4.SS2.p1.3.m3" intent=":literal"><semantics><mn>8</mn><annotation encoding="application/x-tex">8</annotation></semantics></math><span class="translated-text">注意头。我们采用 RMSNorm 的预归一化结构</span><span class="original-text">attention heads. We adopt a pre-normalization structure with RMSNorm</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Biao2019RMSNorm</span>]</cite><span class="translated-text">灵感源自 LLaMA-3 系列</span><span class="original-text">inspired by the LLaMA-3 family</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">grattafiori2024llama</span>]</cite><span class="translated-text">，其中标准化在注意力层和前馈层之前应用。 Rotary positional embeddings (RoPE)</span><span class="original-text">, where normalization is applied before the attention and feed-forward layers. Rotary positional embeddings (RoPE)</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">su2023roformerenhancedtransformerrotary</span>]</cite><span class="translated-text">应用于一维以强制预测过程的顺序结构。我们使用 AdamW</span><span class="original-text">are applied in 1D to enforce the sequential structure of the prediction process. We use AdamW</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">loshchilov2018decoupled</span>]</cite><span class="translated-text">优化器的学习率为</span><span class="original-text">optimizer with a learning rate of</span><math alttext="3\times 10^{-4}" class="ltx_Math" display="inline" id="S4.SS2.p1.4.m4" intent=":literal"><semantics><mrow><mn>3</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">3\times 10^{-4}</annotation></semantics></math><span class="translated-text">并应用范数阈值为 1.0 的梯度裁剪，以防止梯度爆炸。训练在两个 NVIDIA A6000 GPU 上进行，批量大小为 128，持续 30 个周期。</span><span class="original-text">and apply gradient clipping with a norm threshold of 1.0 to prevent exploding gradients. Training is conducted on two NVIDIA A6000 GPUs with a batch size of 128 for 30 epochs.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F5"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="254" id="S4.F5.g1" src="https://arxiv.org/html/2603.25686v1/figures/similarities.jpg" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F5.4.1.1" style="font-size:90%;">Figure 5</span>: </span><span class="ltx_text ltx_font_bold" id="S4.F5.5.2" style="font-size:90%;">Focus at different zoom levels.<span class="ltx_text ltx_font_medium" id="S4.F5.5.2.1"> We visualize similarity maps between street-view patch tokens and the satellite <span class="ltx_text ltx_font_typewriter" id="S4.F5.5.2.1.1">[CLS]</span> embedding (blue = low similarity, red = high similarity) across three zoom levels. At the coarsest level, high similarity concentrates on far-away regions, whereas at finer zoom levels it shifts toward nearby objects and road/building details, indicating that the model learns to exploit different scale-specific visual cues.</span></span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span><span class="translated-text">与对比基线的比较</span><span class="original-text">Comparison with Contrastive Baselines</span></h3>
+<div class="ltx_para" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S3.T2" title="Table 2 ‣ 3.2.1 Vision Encoder. ‣ 3.2 Just Zoom In ‣ 3 Method ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">比较了我们的自回归地理定位方法和标准的基于对比学习的基线</span><span class="original-text">presents a comparison between our autoregressive geo-localization approach and standard contrastive learning-based baselines with</span><math alttext="10\,\mathrm{km}\times 10\,\mathrm{km}" class="ltx_Math" display="inline" id="S4.SS3.p1.1.m1" intent=":literal"><semantics><mrow><mrow><mrow><mn>10</mn><mo lspace="0.170em" rspace="0em">​</mo><mi>km</mi></mrow><mo lspace="0.222em" rspace="0.222em">×</mo><mn>10</mn></mrow><mo lspace="0.170em" rspace="0em">​</mo><mi>km</mi></mrow><annotation encoding="application/x-tex">10\,\mathrm{km}\times 10\,\mathrm{km}</annotation></semantics></math><span class="translated-text">。所有基线均使用其官方实现进行复制，附录中提供了其他培训详细信息。我们的自回归框架在所有距离阈值上始终优于对比检索方法。值得注意的是，与之前的方法相比，我们的方法在 R@50m 方面实现了 +5.5% 的绝对改进</span><span class="original-text">. All baselines are reproduced using their official implementations, with additional training details provided in the Appendix. Our autoregressive framework consistently outperforms contrastive retrieval methods across all distance thresholds. Notably, our method achieves a +5.5% absolute improvement in R@50m compared to the</span><em class="ltx_emph ltx_font_italic" id="S4.SS3.p1.1.1"><span class="translated-text">最先进的</span><span class="original-text">state-of-the-art</span></em><span class="translated-text">样本4Geo</span><span class="original-text">Sample4Geo</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Deuser2023Sample4Geo</span>]</cite><span class="translated-text">基线只需一半的训练时间，无需 HNM。这种性能优势支持了这样一个核心前提：对于细粒度定位，迭代的、从粗到细的搜索策略比单次检索更有效。 By progressively narrowing the search space,</span><span class="original-text">baseline with half the training time without needing to HNM. This performance advantage supports the core premise that an iterative, coarse-to-fine search strategy is more effective than single-shot retrieval for fine-grained localization. By progressively narrowing the search space,</span><span class="ltx_text ltx_font_italic" id="S4.SS3.p1.1.2"><span class="translated-text">只需放大</span><span class="original-text">Just Zoom In</span></span><span class="translated-text">能够在适当的空间尺度上利用上下文线索，避免检索系统必须直接搜索大的地理区域时经常出现的“大海捞针”故障模式。 R@100m 时的可观裕度（比 Sample4Geo 近 +10%）</span><span class="original-text">is able to leverage contextual cues at the appropriate spatial scale, avoiding the “needle-in-a-haystack” failure mode that often arises when retrieval systems must search large geographic regions directly. The substantial margin at R@100m (nearly +10% over Sample4Geo</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Deuser2023Sample4Geo</span>]</cite><span class="translated-text">）进一步表明自回归地理定位具有高度鲁棒性，很少产生灾难性的位置错误，从而将预测置于完全错误的邻域中。另外，从图中我们可以看出</span><span class="original-text">) further indicates that autoregressive geo-localization is highly robust, rarely producing catastrophic location errors that place the prediction in entirely incorrect neighborhoods. Moreover, as we can see from Figure</span><a class="ltx_ref" href="#S4.F5" title="Figure 5 ‣ 4.2 Implementation Details ‣ 4 Experiments ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">，模型学习利用不同缩放级别的街景图像中的不同视觉线索，如预期的那样，有效地处理</span><span class="original-text">, model learns to utilize different visual cues from the street-view image at different zoom levels, as expected, effectively dealing with the</span><em class="ltx_emph ltx_font_italic" id="S4.SS3.p1.1.3"><span class="translated-text">覆盖范围不匹配</span><span class="original-text">coverage mismatch</span></em><span class="translated-text">对比检索方法中存在的问题。图</span><span class="original-text">problem present in the contrastive-retrieval methods. Figure</span><a class="ltx_ref" href="#S4.F6" title="Figure 6 ‣ 4.4 Ablation Study ‣ 4 Experiments ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">可视化一些结果和放大序列。</span><span class="original-text">visualizes some of the results and zoom-in sequences.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T3">
+<figcaption class="ltx_caption ltx_centering" style="font-size:80%;"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S4.T3.15.1.1" style="font-size:113%;">Table 3</span>: </span><span class="ltx_text ltx_font_bold" id="S4.T3.16.2" style="font-size:113%;">Vision encoder ablations.<span class="ltx_text ltx_font_medium" id="S4.T3.16.2.1"> </span>(a) Comparison of different vision backbones.<span class="ltx_text ltx_font_medium" id="S4.T3.16.2.2"> We evaluate different vision encoder backbones for our autoregressive geo-localization task. Overall, DINOv2 achieves the strongest performance, outperforming more recent architectures. </span>(b) Impact of partial backbone fine-tuning.<span class="ltx_text ltx_font_medium" id="S4.T3.16.2.3"> We evaluate different degrees of layer freezing in the vision encoder for our autoregressive geo-localization task. Overall, unfreezing the last 4 layers yields the best performance, outperforming both fully frozen and fully fine-tuned configurations.</span></span></figcaption><div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1">
+<p class="ltx_p ltx_figure_panel ltx_minipage ltx_align_center ltx_align_top" id="S4.T3.3.3" style="width:212.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T3.3.3.3" style="font-size:80%;">(a) Vision backbones.
+<br class="ltx_break"/>
+<span class="ltx_inline-block ltx_transformed_outer" id="S4.T3.3.3.3.3" style="width:433.6pt;height:76pt;vertical-align:-34.9pt;"><span class="ltx_transformed_inner" style="transform:translate(75.3pt,-13.2pt) scale(1.53211989622155,1.53211989622155) ;">
+<span class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S4.T3.3.3.3.3.3">
+<span class="ltx_thead">
+<span class="ltx_tr" id="S4.T3.3.3.3.3.3.3">
+<span class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T3.3.3.3.3.3.3.4" style="padding:0.2pt 3.0pt;"><span class="ltx_text" id="S4.T3.3.3.3.3.3.3.4.1">Method</span></span>
+<span class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T3.1.1.1.1.1.1.1" style="padding:0.2pt 3.0pt;"><span class="ltx_text" id="S4.T3.1.1.1.1.1.1.1.1">R@40m</span><span class="ltx_text ltx_font_medium" id="S4.T3.1.1.1.1.1.1.1.2"> </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T3.1.1.1.1.1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math></span>
+<span class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T3.2.2.2.2.2.2.2" style="padding:0.2pt 3.0pt;"><span class="ltx_text" id="S4.T3.2.2.2.2.2.2.2.1">R@50m</span><span class="ltx_text ltx_font_medium" id="S4.T3.2.2.2.2.2.2.2.2"> </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T3.2.2.2.2.2.2.2.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math></span>
+<span class="ltx_td ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T3.3.3.3.3.3.3.3" style="padding:0.2pt 3.0pt;"><span class="ltx_text" id="S4.T3.3.3.3.3.3.3.3.1">R@100m</span><span class="ltx_text ltx_font_medium" id="S4.T3.3.3.3.3.3.3.3.2"> </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T3.3.3.3.3.3.3.3.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math></span></span>
+</span>
+<span class="ltx_tbody">
+<span class="ltx_tr" id="S4.T3.3.3.3.3.3.4.1">
+<span class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T3.3.3.3.3.3.4.1.1" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.3.3.3.3.3.4.1.1.1">SigLIP2-B </span><cite class="ltx_cite ltx_citemacro_cite"><span class="ltx_text ltx_font_medium" id="S4.T3.3.3.3.3.3.4.1.1.2.1">[</span><span class="ltx_ref ltx_missing_citation ltx_ref_self">tschannen2025siglip2</span><span class="ltx_text ltx_font_medium" id="S4.T3.3.3.3.3.3.4.1.1.3.2">]</span></cite></span>
+<span class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.3.3.3.3.3.4.1.2" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.3.3.3.3.3.4.1.2.1">28.42</span></span>
+<span class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.3.3.3.3.3.4.1.3" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.3.3.3.3.3.4.1.3.1">33.23</span></span>
+<span class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T3.3.3.3.3.3.4.1.4" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.3.3.3.3.3.4.1.4.1">45.43</span></span></span>
+<span class="ltx_tr" id="S4.T3.3.3.3.3.3.5.2">
+<span class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T3.3.3.3.3.3.5.2.1" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.3.3.3.3.3.5.2.1.1">DINOv3-B </span><cite class="ltx_cite ltx_citemacro_cite"><span class="ltx_text ltx_font_medium" id="S4.T3.3.3.3.3.3.5.2.1.2.1">[</span><span class="ltx_ref ltx_missing_citation ltx_ref_self">simeoni2025dinov3</span><span class="ltx_text ltx_font_medium" id="S4.T3.3.3.3.3.3.5.2.1.3.2">]</span></cite></span>
+<span class="ltx_td ltx_align_center" id="S4.T3.3.3.3.3.3.5.2.2" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.3.3.3.3.3.5.2.2.1">63.88</span></span>
+<span class="ltx_td ltx_align_center" id="S4.T3.3.3.3.3.3.5.2.3" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.3.3.3.3.3.5.2.3.1">69.44</span></span>
+<span class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T3.3.3.3.3.3.5.2.4" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.3.3.3.3.3.5.2.4.1">79.74</span></span></span>
+<span class="ltx_tr" id="S4.T3.3.3.3.3.3.6.3">
+<span class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t" id="S4.T3.3.3.3.3.3.6.3.1" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.3.3.3.3.3.6.3.1.1">DINOv2-B </span><cite class="ltx_cite ltx_citemacro_cite"><span class="ltx_text ltx_font_medium" id="S4.T3.3.3.3.3.3.6.3.1.2.1">[</span><span class="ltx_ref ltx_missing_citation ltx_ref_self">Oquab2023dinov2</span><span class="ltx_text ltx_font_medium" id="S4.T3.3.3.3.3.3.6.3.1.3.2">]</span></cite></span>
+<span class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T3.3.3.3.3.3.6.3.2" style="padding:0.2pt 3.0pt;"><span class="ltx_text" id="S4.T3.3.3.3.3.3.6.3.2.1">64.13</span></span>
+<span class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T3.3.3.3.3.3.6.3.3" style="padding:0.2pt 3.0pt;"><span class="ltx_text" id="S4.T3.3.3.3.3.3.6.3.3.1">69.65</span></span>
+<span class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb ltx_border_t" id="S4.T3.3.3.3.3.3.6.3.4" style="padding:0.2pt 3.0pt;"><span class="ltx_text" id="S4.T3.3.3.3.3.3.6.3.4.1">79.95</span></span></span>
+</span>
+</span>
+</span></span></span><span class="ltx_text" id="S4.T3.3.3.4" style="font-size:80%;"></span></p>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<p class="ltx_p ltx_figure_panel ltx_minipage ltx_align_center ltx_align_top" id="S4.T3.6.3" style="width:212.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T3.6.3.3" style="font-size:80%;">(b) Partial backbone fine-tuning.
+<br class="ltx_break"/>
+<span class="ltx_inline-block ltx_transformed_outer" id="S4.T3.6.3.3.3" style="width:433.6pt;height:135.4pt;vertical-align:-63.3pt;"><span class="ltx_transformed_inner" style="transform:translate(118.8pt,-37.1pt) scale(2.21196582713416,2.21196582713416) ;">
+<span class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S4.T3.6.3.3.3.3">
+<span class="ltx_thead">
+<span class="ltx_tr" id="S4.T3.6.3.3.3.3.3">
+<span class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T3.6.3.3.3.3.3.4" style="padding:0.2pt 3.0pt;"><span class="ltx_text" id="S4.T3.6.3.3.3.3.3.4.1">Method</span></span>
+<span class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T3.4.1.1.1.1.1.1" style="padding:0.2pt 3.0pt;"><span class="ltx_text" id="S4.T3.4.1.1.1.1.1.1.1">R@40m</span><span class="ltx_text ltx_font_medium" id="S4.T3.4.1.1.1.1.1.1.2"> </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T3.4.1.1.1.1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math></span>
+<span class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T3.5.2.2.2.2.2.2" style="padding:0.2pt 3.0pt;"><span class="ltx_text" id="S4.T3.5.2.2.2.2.2.2.1">R@50m</span><span class="ltx_text ltx_font_medium" id="S4.T3.5.2.2.2.2.2.2.2"> </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T3.5.2.2.2.2.2.2.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math></span>
+<span class="ltx_td ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T3.6.3.3.3.3.3.3" style="padding:0.2pt 3.0pt;"><span class="ltx_text" id="S4.T3.6.3.3.3.3.3.3.1">R@100m</span><span class="ltx_text ltx_font_medium" id="S4.T3.6.3.3.3.3.3.3.2"> </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T3.6.3.3.3.3.3.3.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math></span></span>
+</span>
+<span class="ltx_tbody">
+<span class="ltx_tr" id="S4.T3.6.3.3.3.3.4.1">
+<span class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T3.6.3.3.3.3.4.1.1" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.6.3.3.3.3.4.1.1.1">Fully Frozen</span></span>
+<span class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.6.3.3.3.3.4.1.2" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.6.3.3.3.3.4.1.2.1">58.79</span></span>
+<span class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.6.3.3.3.3.4.1.3" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.6.3.3.3.3.4.1.3.1">64.66</span></span>
+<span class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T3.6.3.3.3.3.4.1.4" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.6.3.3.3.3.4.1.4.1">76.51</span></span></span>
+<span class="ltx_tr" id="S4.T3.6.3.3.3.3.5.2">
+<span class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T3.6.3.3.3.3.5.2.1" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.6.3.3.3.3.5.2.1.1">Last 4 Layers</span></span>
+<span class="ltx_td ltx_align_center" id="S4.T3.6.3.3.3.3.5.2.2" style="padding:0.2pt 3.0pt;"><span class="ltx_text" id="S4.T3.6.3.3.3.3.5.2.2.1">66.98</span></span>
+<span class="ltx_td ltx_align_center" id="S4.T3.6.3.3.3.3.5.2.3" style="padding:0.2pt 3.0pt;"><span class="ltx_text" id="S4.T3.6.3.3.3.3.5.2.3.1">72.25</span></span>
+<span class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T3.6.3.3.3.3.5.2.4" style="padding:0.2pt 3.0pt;"><span class="ltx_text" id="S4.T3.6.3.3.3.3.5.2.4.1">83.08</span></span></span>
+<span class="ltx_tr" id="S4.T3.6.3.3.3.3.6.3">
+<span class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T3.6.3.3.3.3.6.3.1" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.6.3.3.3.3.6.3.1.1">Last 6 Layers</span></span>
+<span class="ltx_td ltx_align_center" id="S4.T3.6.3.3.3.3.6.3.2" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.6.3.3.3.3.6.3.2.1">65.69</span></span>
+<span class="ltx_td ltx_align_center" id="S4.T3.6.3.3.3.3.6.3.3" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.6.3.3.3.3.6.3.3.1">70.64</span></span>
+<span class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T3.6.3.3.3.3.6.3.4" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.6.3.3.3.3.6.3.4.1">82.56</span></span></span>
+<span class="ltx_tr" id="S4.T3.6.3.3.3.3.7.4">
+<span class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S4.T3.6.3.3.3.3.7.4.1" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.6.3.3.3.3.7.4.1.1">All Layers</span></span>
+<span class="ltx_td ltx_align_center ltx_border_bb" id="S4.T3.6.3.3.3.3.7.4.2" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.6.3.3.3.3.7.4.2.1">59.45</span></span>
+<span class="ltx_td ltx_align_center ltx_border_bb" id="S4.T3.6.3.3.3.3.7.4.3" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.6.3.3.3.3.7.4.3.1">64.31</span></span>
+<span class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb" id="S4.T3.6.3.3.3.3.7.4.4" style="padding:0.2pt 3.0pt;"><span class="ltx_text ltx_font_medium" id="S4.T3.6.3.3.3.3.7.4.4.1">74.78</span></span></span>
+</span>
+</span>
+</span></span></span><span class="ltx_text" id="S4.T3.6.3.4" style="font-size:80%;"></span></p>
+</div>
+</div>
+</figure>
+<figure class="ltx_table" id="S4.T4">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S4.T4.8.1.1" style="font-size:90%;">Table 4</span>: </span><span class="ltx_text ltx_font_bold" id="S4.T4.9.2" style="font-size:90%;">Comparison of different satellite image representations.<span class="ltx_text ltx_font_medium" id="S4.T4.9.2.1"> We compare global <span class="ltx_text ltx_font_typewriter" id="S4.T4.9.2.1.1">[CLS]</span> token features with variants that incorporate local patch tokens from the vision encoder. Our results show that relying on the global <span class="ltx_text ltx_font_typewriter" id="S4.T4.9.2.1.2">[CLS]</span> representation yields the highest localization accuracy.</span></span></figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T4.3">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T4.3.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T4.3.3.4"><span class="ltx_text ltx_font_bold" id="S4.T4.3.3.4.1">Method</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T4.1.1.1">
+<span class="ltx_text ltx_font_bold" id="S4.T4.1.1.1.1">R@40m</span> <math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T4.1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T4.2.2.2">
+<span class="ltx_text ltx_font_bold" id="S4.T4.2.2.2.1">R@50m</span> <math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T4.2.2.2.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T4.3.3.3">
+<span class="ltx_text ltx_font_bold" id="S4.T4.3.3.3.1">R@100m</span> <math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T4.3.3.3.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T4.3.4.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T4.3.4.1.1">
+<span class="ltx_text ltx_font_typewriter" id="S4.T4.3.4.1.1.1">[CLS]</span> + 256</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.3.4.1.2">63.38</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.3.4.1.3">68.25</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.3.4.1.4">79.83</td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.3.5.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T4.3.5.2.1">
+<span class="ltx_text ltx_font_typewriter" id="S4.T4.3.5.2.1.1">[CLS]</span> + 64</th>
+<td class="ltx_td ltx_align_center" id="S4.T4.3.5.2.2">64.60</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.3.5.2.3">70.10</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.3.5.2.4">80.70</td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.3.6.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T4.3.6.3.1">
+<span class="ltx_text ltx_font_typewriter" id="S4.T4.3.6.3.1.1">[CLS]</span> + 32</th>
+<td class="ltx_td ltx_align_center" id="S4.T4.3.6.3.2">65.80</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.3.6.3.3">72.10</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.3.6.3.4">83.02</td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.3.7.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T4.3.7.4.1">
+<span class="ltx_text ltx_font_typewriter" id="S4.T4.3.7.4.1.1">[CLS]</span> + 16</th>
+<td class="ltx_td ltx_align_center" id="S4.T4.3.7.4.2">65.31</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.3.7.4.3">71.6</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.3.7.4.4">82.60</td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.3.8.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T4.3.8.5.1">
+<span class="ltx_text ltx_font_typewriter" id="S4.T4.3.8.5.1.1">[CLS]</span> + 8</th>
+<td class="ltx_td ltx_align_center" id="S4.T4.3.8.5.2">65.31</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.3.8.5.3">70.76</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.3.8.5.4">82.12</td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.3.9.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t" id="S4.T4.3.9.6.1">
+<span class="ltx_text ltx_font_typewriter" id="S4.T4.3.9.6.1.1">[CLS]</span> Only</th>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T4.3.9.6.2"><span class="ltx_text ltx_font_bold" id="S4.T4.3.9.6.2.1">66.98</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T4.3.9.6.3"><span class="ltx_text ltx_font_bold" id="S4.T4.3.9.6.3.1">72.25</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T4.3.9.6.4"><span class="ltx_text ltx_font_bold" id="S4.T4.3.9.6.4.1">83.08</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section class="ltx_subsection" id="S4.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.4 </span><span class="translated-text">消融研究</span><span class="original-text">Ablation Study</span></h3>
+<div class="ltx_para" id="S4.SS4.p1">
+<p class="ltx_p" id="S4.SS4.p1.3"><span class="translated-text">为了评估每个组件的贡献，我们对数据集进行了消融研究。为了提高效率，所有消融实验均使用</span><span class="original-text">To evaluate the contribution of each component, we conducted ablation studies on our dataset. For efficiency, all ablation experiments are performed using a</span><math alttext="4\times 4" class="ltx_Math" display="inline" id="S4.SS4.p1.1.m1" intent=":literal"><semantics><mrow><mn>4</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">4\times 4</annotation></semantics></math><span class="translated-text">卫星贴片布局</span><span class="original-text">satellite patch layout with</span><math alttext="N=3" class="ltx_Math" display="inline" id="S4.SS4.p1.2.m2" intent=":literal"><semantics><mrow><mi>N</mi><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">N=3</annotation></semantics></math><span class="translated-text">a 下的缩放步骤</span><span class="original-text">zoom steps under a</span><math alttext="2\,\mathrm{km}\times 2\,\mathrm{km}" class="ltx_Math" display="inline" id="S4.SS4.p1.3.m3" intent=":literal"><semantics><mrow><mrow><mrow><mn>2</mn><mo lspace="0.170em" rspace="0em">​</mo><mi>km</mi></mrow><mo lspace="0.222em" rspace="0.222em">×</mo><mn>2</mn></mrow><mo lspace="0.170em" rspace="0em">​</mo><mi>km</mi></mrow><annotation encoding="application/x-tex">2\,\mathrm{km}\times 2\,\mathrm{km}</annotation></semantics></math><span class="translated-text">搜索设置。</span><span class="original-text">search setup.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS4.p2">
+<p class="ltx_p" id="S4.SS4.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS4.p2.1.1"><span class="translated-text">视觉编码器选择。</span><span class="original-text">Vision encoder choices.</span></span><span class="translated-text">视觉编码器的选择对于弥合街景和卫星图像之间的巨大域差距至关重要。为了评估不同最先进的视觉基础模型针对此任务的固有能力，我们将它们评估为冻结特征提取器，仅训练后续的自回归策略模块（表</span><span class="original-text">The choice of a vision encoder is critical for bridging the significant domain gap between street-view and satellite imagery. To assess the inherent capability of different state-of-the-art vision foundation models for this task, we evaluate them as frozen feature extractors, training only the subsequent autoregressive policy module (Table</span><a class="ltx_ref" href="#S4.T3" title="Table 3 ‣ 4.3 Comparison with Contrastive Baselines ‣ 4 Experiments ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">）。自监督模型，例如 DINOv2</span><span class="original-text">). Self-supervised models such as DINOv2</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">Oquab2023dinov2</span>]</cite><span class="translated-text">和 DINOv3</span><span class="original-text">and DINOv3</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">simeoni2025dinov3</span>]</cite><span class="translated-text">显着优于语言对齐的 SigLIP2</span><span class="original-text">significantly outperform the language-aligned SigLIP2</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">tschannen2025siglip2</span>]</cite><span class="translated-text">。尽管 SigLIP2 保留了一些可转移的理解，但其性能不足以满足精确地理定位所需的细粒度空间辨别。基于这些结果，我们选择 DINOv2 作为所有后续实验的默认主干。</span><span class="original-text">. Although SigLIP2 retains some transferable understanding, its performance is insufficient for the fine-grained spatial discrimination required for accurate geo-localization. Based on these results, we select DINOv2 as the default backbone for all subsequent experiments.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F6"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="267" id="S4.F6.g1" src="https://arxiv.org/html/2603.25686v1/figures/model_results.jpg" width="476"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F6.6.1.1" style="font-size:90%;">Figure 6</span>: </span><span class="ltx_text ltx_font_bold" id="S4.F6.7.2" style="font-size:90%;">Results.<span class="ltx_text ltx_font_medium" id="S4.F6.7.2.1">  Qualitative visualization of our model’s auto-regressive localization. The first column shows the input street-view query. The subsequent columns (Lvl 1-4) display the satellite map at each sequential zoom step. On each map, the </span>model’s predicted patch<span class="ltx_text ltx_font_medium" id="S4.F6.7.2.2"> is highlighted by the grid overlay, the </span>ground truth (GT) location<span class="ltx_text ltx_font_medium" id="S4.F6.7.2.3"> is marked with a red dot, and the </span>50m success radius<span class="ltx_text ltx_font_medium" id="S4.F6.7.2.4"> is shown as a white dotted circle.</span></span></figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS4.p3">
+<p class="ltx_p" id="S4.SS4.p3.1"><span class="ltx_text ltx_font_bold" id="S4.SS4.p3.1.1"><span class="translated-text">视觉编码器微调。</span><span class="original-text">Vision encoder fine-tuning.</span></span><span class="translated-text">尽管 DINOv2 等基础模型提供了强大的通用视觉功能，但它们本身并不适合街景和卫星图像之间剧烈的视点变化。为了评估特定任务适应的需要，我们在训练期间尝试了不同数量的冻结层。这使得最高级别的语义特征能够适应街景和卫星表示之间的域转换。如表所示</span><span class="original-text">Although foundation models such as DINOv2 provide strong general-purpose visual features, they are not natively aligned to drastic viewpoint changes between street-view and satellite imagery. To assess the need for task-specific adaptation, we experimented with different numbers of frozen layers during training. This allows the highest-level semantic features to adapt to the domain shift between street-view and satellite representations. As shown in Table</span><a class="ltx_ref" href="#S4.T3" title="Table 3 ‣ 4.3 Comparison with Contrastive Baselines ‣ 4 Experiments ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">，严格的现成特征不足以实现高精度定位。增加最后六层之外的可训练层数会导致收益递减。这一观察结果与直觉相一致，即基础模型的早期层编码一般几何和纹理级特征，而后面的层捕获更高级别的语义信息，这些信息受益于跨视图对应的适应</span><span class="original-text">, the strictly off-the-shelf features are insufficient for high-precision localization. Increasing the number of trainable layers beyond the final six leads to diminishing returns. This observation aligns with the intuition that earlier layers of foundation models encode general geometric and texture-level features, whereas later layers capture higher-level semantic information that benefits from adaptation to cross-view correspondence</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">izquierdo2024optimal</span>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S4.SS4.p4">
+<p class="ltx_p" id="S4.SS4.p4.1"><span class="ltx_text ltx_font_bold" id="S4.SS4.p4.1.1"><span class="translated-text">全局与本地补丁功能。</span><span class="original-text">Global vs. local patch features.</span></span><span class="translated-text">我们的默认模型仅使用</span><span class="original-text">Our default model uses only the</span><span class="ltx_text ltx_font_typewriter" id="S4.SS4.p4.1.2">[CLS]</span><span class="translated-text">来自视觉编码器的令牌，用作整个卫星补丁的全局描述符。我们还研究了合并来自 DINOv2 的本地补丁标记是否可以改进细粒度匹配。为了测试这一点，我们比较了单</span><span class="original-text">token from the vision encoder, which serves as a global descriptor for the entire satellite patch. We also investigated whether incorporating local patch tokens from DINOv2 can improve fine-grained matching. To test this, we compare the single-</span><span class="ltx_text ltx_font_typewriter" id="S4.SS4.p4.1.3">[CLS]</span><span class="translated-text">针对选择性包括的变体的基线</span><span class="original-text">baseline against a variant that selectively includes the</span><math alttext="S" class="ltx_Math" display="inline" id="S4.SS4.p4.1.m1" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math><span class="translated-text">与街景最相似的补丁标记</span><span class="original-text">patch tokens most similar to the street-view</span><span class="ltx_text ltx_font_typewriter" id="S4.SS4.p4.1.4">[CLS]</span><span class="translated-text">令牌。如表所示</span><span class="original-text">token. As shown in Table</span><a class="ltx_ref" href="#S4.T4" title="Table 4 ‣ 4.3 Comparison with Contrastive Baselines ‣ 4 Experiments ‣ Just Zoom In: Cross-View Geo-Localization via Autoregressive Zooming"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">，合并本地补丁标记，即使基于语义相似性进行过滤，也会导致性能下降。这一结果表明，自回归缩放策略在做出顺序决策时受益于高级全局表示，并且引入细粒度的局部细节可能会引入噪声或过度拟合外观变化，而不是稳定的结构线索。</span><span class="original-text">, incorporating local patch tokens, even when filtered based on semantic similarity, leads to a performance decline. This result suggests that the autoregressive zooming policy benefits from a high-level global representation when making sequential decisions, and that introducing fine-grained local details may introduce noise or over-fit to appearance variations rather than stable structural cues.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">我们引入了 Just Zoom In，这是一种用于跨视图地理定位的自回归框架，它用顺序的、从粗到细的定位过程取代了单次对比检索。通过将街景和多尺度卫星图像联合编码为共享表示并使用因果变换器预测缩放动作，我们的方法逐步缩小搜索区域，同时保留全局空间上下文。这种设计能够实现与地理区域成对数缩放的高效推理，避免对比匹配的计算和表示瓶颈。我们进一步策划了一个新的多尺度数据集，由政府来源的正射摄影和众包街景图像组成，为跨视图定位提供了现实且可重复的基准。大量的实验和消融表明，与最先进的对比基线相比，我们的自回归公式始终能产生更高的定位精度和鲁棒性，特别是在具有挑战性的现实条件下。我们希望这项工作能够推动跨视图定位中从基于检索的匹配向顺序空间推理的转变。</span><span class="original-text">We introduced Just Zoom In, an autoregressive framework for cross-view geo-localization that replaces single-shot contrastive retrieval with a sequential, coarse-to-fine localization process. By jointly encoding street-view and multi-scale satellite imagery into a shared representation and predicting zoom actions with a causal transformer, our method progressively narrows the search region while preserving global spatial context. This design enables efficient inference that scales logarithmically with geographic area, avoiding the computational and representation bottlenecks of contrastive matching. We further curated a new multi-scale dataset composed of government-sourced orthophotography and crowd-sourced street-view imagery, providing a realistic and reproducible benchmark for cross-view localization. Extensive experiments and ablations demonstrate that our autoregressive formulation yields consistently higher localization accuracy and robustness compared to state-of-the-art contrastive baselines, particularly in challenging real-world conditions. We hope this work motivates a shift from retrieval-based matching toward sequential spatial reasoning in cross-view localization.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2603.25686v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
