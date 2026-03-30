@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">GaussianGPT：迈向自回归 3D 高斯场景生成</span><span class="original-text">GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 3 月 27 日星期五 18:00:00 生成 http://dlmf.nist.gov/LaTeXML/。</span><span class="original-text">Generated on Fri Mar 27 18:00:00 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2603.26661" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2603.26661" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2603.26661v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2603.26661v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<a class="header-button color-tog" href="javascript:toggleColorScheme();" title="Toggle dark/light mode">
+<label class="toggle-icon automatic-tog" title="Switch to light mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon light-tog" title="Switch to dark mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon dark-tog" title="Switch to system preference">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+</a>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Related Works</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S2.SS0.SSS0.Px1" title="In 2 Related Works ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">3D Representations for Generation.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S2.SS0.SSS0.Px2" title="In 2 Related Works ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Autoregressive 3D Generation.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S2.SS0.SSS0.Px3" title="In 2 Related Works ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">From Objects to Scenes.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Methodology</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S3.SS1" title="In 3 Methodology ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Scene Compression via Sparse 3D Latent Encoding</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS1.SSS0.Px1" title="In 3.1 Scene Compression via Sparse 3D Latent Encoding ‣ 3 Methodology ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Sparse 3D Feature Grid.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS1.SSS0.Px2" title="In 3.1 Scene Compression via Sparse 3D Latent Encoding ‣ 3 Methodology ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Sparse 3D CNN Encoder-Decoder.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS1.SSS0.Px3" title="In 3.1 Scene Compression via Sparse 3D Latent Encoding ‣ 3 Methodology ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Vector Quantization.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS1.SSS0.Px4" title="In 3.1 Scene Compression via Sparse 3D Latent Encoding ‣ 3 Methodology ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Training.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S3.SS2" title="In 3 Methodology ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Autoregressive Modeling of Latent 3D Grids</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS2.SSS0.Px1" title="In 3.2 Autoregressive Modeling of Latent 3D Grids ‣ 3 Methodology ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">3D Grid Serialization.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS2.SSS0.Px2" title="In 3.2 Autoregressive Modeling of Latent 3D Grids ‣ 3 Methodology ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Vocabulary Design.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS2.SSS0.Px3" title="In 3.2 Autoregressive Modeling of Latent 3D Grids ‣ 3 Methodology ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">3D Rotary Positional Encoding.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS2.SSS0.Px4" title="In 3.2 Autoregressive Modeling of Latent 3D Grids ‣ 3 Methodology ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Transformer Architecture.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS2.SSS0.Px5" title="In 3.2 Autoregressive Modeling of Latent 3D Grids ‣ 3 Methodology ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Training.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS2.SSS0.Px6" title="In 3.2 Autoregressive Modeling of Latent 3D Grids ‣ 3 Methodology ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Scene Generation and Completion.</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Experiments</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S4.SS1" title="In 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>Datasets</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS1.SSS0.Px1" title="In 4.1 Datasets ‣ 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Aria Synthetic Environments.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS1.SSS0.Px2" title="In 4.1 Datasets ‣ 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">3D-FRONT.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS1.SSS0.Px3" title="In 4.1 Datasets ‣ 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">PhotoShape.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S4.SS2" title="In 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2 </span>Experimental Setup</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS2.SSS0.Px1" title="In 4.2 Experimental Setup ‣ 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Autoencoder Configuration.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS2.SSS0.Px2" title="In 4.2 Experimental Setup ‣ 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Transformer Configuration.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS2.SSS0.Px3" title="In 4.2 Experimental Setup ‣ 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Training Strategy.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS2.SSS0.Px4" title="In 4.2 Experimental Setup ‣ 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Optimization and Compute.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS3" title="In 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3 </span>Shape Synthesis</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS4" title="In 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.4 </span>Scene Synthesis</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS5" title="In 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.5 </span>Scene Completion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS6" title="In 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.6 </span>Sequence Ordering Ablation</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S5" title="In GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Conclusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">References</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_appendix">
+<a class="ltx_ref" href="#Pt0.A1" title="In GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">0.A </span>Real-World Results</span></a>
+<ol class="ltx_toclist ltx_toclist_appendix">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#Pt0.A1.SS0.SSS0.Px1" title="In Appendix 0.A Real-World Results ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Training Details.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#Pt0.A1.SS0.SSS0.Px2" title="In Appendix 0.A Real-World Results ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Completion Results.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#Pt0.A1.SS0.SSS0.Px3" title="In Appendix 0.A Real-World Results ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Limitations.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#Pt0.A1.SS0.SSS0.Px4" title="In Appendix 0.A Real-World Results ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Future Work.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_appendix">
+<a class="ltx_ref" href="#Pt0.A2" title="In GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">0.B </span>Large Scene Generation</span></a>
+<ol class="ltx_toclist ltx_toclist_appendix">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#Pt0.A2.SS0.SSS0.Px1" title="In Appendix 0.B Large Scene Generation ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Resampling.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#Pt0.A2.SS0.SSS0.Px2" title="In Appendix 0.B Large Scene Generation ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Sampling Efficiency.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#Pt0.A2.SS0.SSS0.Px3" title="In Appendix 0.B Large Scene Generation ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Chunk Window Positioning.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_appendix">
+<a class="ltx_ref" href="#Pt0.A3" title="In GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">0.C </span>Additional Training Details</span></a>
+<ol class="ltx_toclist ltx_toclist_appendix">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#Pt0.A3.SS0.SSS0.Px1" title="In Appendix 0.C Additional Training Details ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Chunk Sampling.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#Pt0.A3.SS0.SSS0.Px2" title="In Appendix 0.C Additional Training Details ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Camera Sampling.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#Pt0.A3.SS0.SSS0.Px3" title="In Appendix 0.C Additional Training Details ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Encoder and Decoder Heads.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#Pt0.A3.SS0.SSS0.Px4" title="In Appendix 0.C Additional Training Details ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Feature Representations.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_appendix">
+<a class="ltx_ref" href="#Pt0.A4" title="In GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">0.D </span>GPT Training Hyperparameters</span></a>
+<ol class="ltx_toclist ltx_toclist_appendix">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#Pt0.A4.SS0.SSS0.Px1" title="In Appendix 0.D GPT Training Hyperparameters ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Optimizers.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#Pt0.A4.SS0.SSS0.Px2" title="In Appendix 0.D GPT Training Hyperparameters ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title">Weight Initialization.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_appendix"><a class="ltx_ref" href="#Pt0.A5" title="In GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">0.E </span>Additional Results</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2603.26661v1 [cs.CV] 2026 年 3 月 27 日</span><span class="original-text">arXiv:2603.26661v1 [cs.CV] 27 Mar 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line"><span class="ltx_note ltx_role_institutetext" id="id1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type"><span class="translated-text">机构文本：</span><span class="original-text">institutetext:</span></span><span class="translated-text">德国慕尼黑工业大学</span><span class="original-text">Technical University of Munich, Germany</span></span></span></span>
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">GaussianGPT：迈向自回归 3D 高斯场景生成</span><span class="original-text">GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Nicolas von Lützow
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Barbara Rössle
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Katharina Schmid
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Matthias NieSSner
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">3D 生成建模的最新进展依赖于扩散或流量匹配公式。
+相反，我们探索一种完全自回归的替代方案并引入</span><span class="original-text">Most recent advances in 3D generative modeling rely on diffusion or flow-matching formulations.
+We instead explore a fully autoregressive alternative and introduce</span><span class="ltx_text ltx_font_bold"><span class="translated-text">高斯GPT</span><span class="original-text">GaussianGPT</span></span><span class="translated-text">，一种基于 Transformer 的模型，可通过下一个标记预测直接生成 3D 高斯，从而促进完整的 3D 场景生成。
+我们首先使用具有矢量量化功能的稀疏 3D 卷积自动编码器将高斯基元压缩为离散潜在网格。
+使用具有 3D 旋转位置嵌入的因果转换器对生成的令牌进行序列化和建模，从而能够顺序生成空间结构和外观。
+与整体细化场景的基于扩散的方法不同，我们的公式逐步构建场景，自然支持完成、覆盖、通过温度控制采样和灵活的生成范围。
+该公式利用了自回归建模的组合归纳偏差和可扩展性，同时在与现代神经渲染管道兼容的显式表示上进行操作，将自回归变压器定位为可控和上下文感知 3D 生成的补充范例。</span><span class="original-text">, a transformer-based model that directly generates 3D Gaussians via next-token prediction, thus facilitating full 3D scene generation.
+We first compress Gaussian primitives into a discrete latent grid using a sparse 3D convolutional autoencoder with vector quantization.
+The resulting tokens are serialized and modeled using a causal transformer with 3D rotary positional embedding, enabling sequential generation of spatial structure and appearance.
+Unlike diffusion-based methods that refine scenes holistically, our formulation constructs scenes step-by-step, naturally supporting completion, outpainting, controllable sampling via temperature, and flexible generation horizons.
+This formulation leverages the compositional inductive biases and scalability of autoregressive modeling while operating on explicit representations compatible with modern neural rendering pipelines, positioning autoregressive transformers as a complementary paradigm for controllable and context-aware 3D generation.</span></p>
+</div>
+<figure class="ltx_figure" id="S0.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="306" id="S0.F1.g1" src="https://arxiv.org/html/2603.26661v1/x1.png" width="660"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S0.F1.2.1.1" style="font-size:90%;">Figure 1</span>: </span><span class="ltx_text" id="S0.F1.3.2" style="font-size:90%;">
+GaussianGPT is a purely autoregressive approach for 3D Gaussian scene generation.
+Our approach enables unconditional scene generation, scene completion, and large-scale scene synthesis using only a single model.
+</span></figcaption>
+</figure>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">深度神经网络的最新进展已经实现了图像、视频、音频和语言的高质量合成。
+将这些功能扩展到结构化 3D 场景生成是迈向沉浸式虚拟环境、具体人工智能、模拟和内容创建的关键一步。此类任务需要模型来推理连贯的空间布局而不是平面视觉信号。
+虽然当前的 3D 生成方法通常依赖于整体去噪，但它们缺乏环境实际构建方式所需的灵活性：增量式。实际上，3D 场景很少是静态的；它们被逐步扩展、完成和编辑。这就迫切需要将 3D 空间视为结构化序列的模型，从而能够逐步构建。
+因此，我们将 3D 生成视为一个自回归过程，其中通过预测以现有空间上下文为条件的新元素来迭代构建场景。</span><span class="original-text">Recent advances in deep neural networks have enabled high-quality synthesis across images, video, audio, and language.
+Extending these capabilities to structured 3D scene generation is a key step toward immersive virtual environments, embodied AI, simulation, and content creation. Such tasks require models to reason about coherent spatial layouts rather than flat visual signals.
+While current 3D generative approaches often rely on holistic denoising, they lack the flexibility required for the way environments are actually constructed: incrementally. In practice, 3D scenes are rarely static; they are progressively extended, completed, and edited. This creates a critical need for models that treat 3D space as a structured sequence, enabling step-by-step construction.
+Accordingly, we frame 3D generation as an autoregressive process in which the scene is iteratively built by predicting new elements conditioned on the existing spatial context.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">尽管取得了快速进展，但由于 3D 数据固有的高维性和缺乏自然序列，生成结构化 3D 场景仍然很困难。
+与 2D 图像不同，3D 环境需要联合捕获几何、外观和语义的表示，同时保持多视图一致性。
+室内场景表现出很强的规律性和高度的可变性，要求全局结构连贯性（例如房间布局）和局部构图灵活性（包括不同的对象放置、几何形状和外观）之间的平衡。
+此外，缺乏规范排序使得很难应用其他领域的成功自回归范例，因为模型需要将 3D 场景序列化为序列，同时保留空间依赖性。</span><span class="original-text">Despite rapid progress, generating structured 3D scenes remains difficult due to the inherent high dimensionality and lack of a natural sequence in 3D data.
+Unlike 2D images, 3D environments require representations that jointly capture geometry, appearance, and semantics while maintaining multi-view consistency.
+Indoor scenes exhibit both strong regularities and high variability, demanding a balance between global structural coherence (e.g., room layout) and local compositional flexibility, including varied object placement, geometry, and appearance.
+Furthermore, the lack of a canonical ordering makes it difficult to apply successful autoregressive paradigms from other domains, as models need to serialize the 3D scene into a sequence while preserving spatial dependencies.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">最近最先进的方法</span><span class="original-text">Recent state-of-the-art approaches</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xiang_native_2025</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">xiang_structured_2025</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">lan_gaussiananything_2025</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">roessle_l3dg_2024</span>]</cite><span class="translated-text">主要依赖于在神经场、高斯原语或潜在场景表示上运行的扩散或基于流的模型。虽然这些方法实现了令人印象深刻的视觉保真度，但它们通常将生成制定为全局去噪或细化过程，这可能会使增量编辑和结构化完成变得不那么自然。相比之下，自回归 Transformer 在结构化序列建模和跨语言和视觉领域的可控生成方面表现出了强大的能力，但在结构化 3D 场景合成方面的探索相对较少。利用 3D 自回归建模需要能够实现有意义的标记化，同时保留空间结构和组合语义的表示。</span><span class="original-text">predominantly rely on diffusion or flow-based models operating over neural fields, Gaussian primitives, or latent scene representations. While these methods achieve impressive visual fidelity, they typically formulate generation as a global denoising or refinement process, which can make incremental editing and structured completion less natural. In contrast, autoregressive transformers have demonstrated strong capabilities for structured sequence modeling and controllable generation across language and vision domains, yet remain comparatively underexplored for structured 3D scene synthesis. Leveraging autoregressive modeling for 3D requires representations that enable meaningful tokenization while preserving spatial structure and compositional semantics.</span></p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">在这项工作中，我们介绍</span><span class="original-text">In this work, we introduce</span><span class="ltx_text ltx_font_bold" id="S1.p4.1.1"><span class="translated-text">高斯GPT</span><span class="original-text">GaussianGPT</span></span><span class="translated-text">，一种用于自回归室内场景生成和完成的新颖方法，它将 3D 合成制定为结构化场景基元的顺序预测。我们将场景表示为从矢量量化 3D 高斯原语派生的离散标记序列，使基于 Transformer 的模型能够通过下一个标记预测逐步生成、扩展和编辑场景。该公式将显式 3D 表示与自回归变压器的组合归纳偏差相结合，为基于扩散的范式提供了补充替代方案。</span><span class="original-text">, a novel method for autoregressive indoor scene generation and completion that formulates 3D synthesis as sequential prediction over structured scene primitives. We represent scenes as sequences of discrete tokens derived from vector-quantized 3D Gaussian primitives, enabling transformer-based models to incrementally generate, extend, and edit scenes through next-token prediction. This formulation combines explicit 3D representations with the compositional inductive biases of autoregressive transformers, providing a complementary alternative to diffusion-based paradigms.</span></p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">总而言之，我们的贡献是：</span><span class="original-text">To sum up, our contributions are:</span></p>
+<ul class="ltx_itemize" id="S1.I1">
+<li class="ltx_item" id="S1.I1.ix1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item"><span class="translated-text">(一)</span><span class="original-text">(i)</span></span>
+<div class="ltx_para" id="S1.I1.ix1.p1">
+<p class="ltx_p" id="S1.I1.ix1.p1.1"><span class="translated-text">基于高斯的场景表示的结构化标记化，支持复杂室内环境的自回归建模</span><span class="original-text">a structured tokenization of Gaussian-based scene representations that enables autoregressive modeling of complex indoor environments</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.ix2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item"><span class="translated-text">(二)</span><span class="original-text">(ii)</span></span>
+<div class="ltx_para" id="S1.I1.ix2.p1">
+<p class="ltx_p" id="S1.I1.ix2.p1.1"><span class="translated-text">用于增量 3D 高斯场景生成、完成和绘制的自回归变压器框架。</span><span class="original-text">an autoregressive transformer framework for incremental 3D Gaussian scene generation, completion, and outpainting.</span></p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">相关作品</span><span class="original-text">Related Works</span></h2>
+<section class="ltx_paragraph" id="S2.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">生成的 3D 表示。</span><span class="original-text">3D Representations for Generation.</span></h4>
+<div class="ltx_para" id="S2.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S2.SS0.SSS0.Px1.p1.1"><span class="translated-text">3D 生成建模中的一个关键设计选择是底层的 3D 表示。
+早期的生成方法主要使用离散或隐式几何公式来建模形状，包括基于体素的占用网格、有符号距离函数和点云</span><span class="original-text">A critical design choice in 3D generative modeling is the underlying 3D representation.
+Early generative approaches predominantly modeled shapes using discretized or implicit geometric formulations, including voxel-based occupancy grids, signed distance functions, and point clouds</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">wu_learning_2017</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">wu_3d_2015</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">park_deepsdf_2019</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">chou_diffusion-sdf_2023</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">shim_diffusion-based_2023</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">yang_pointflow_2019</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">achlioptas_learning_2018</span>]</cite><span class="translated-text">。
+网格构成了另一种显式表面表示，最近已被探索用于 3D 生成建模</span><span class="original-text">.
+Meshes constitute another explicit surface representation and have recently been explored for 3D generative modelling</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">siddiqui_meshgpt_2023</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">xiang_structured_2025</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">xiang_native_2025</span>]</cite><span class="translated-text">。
+引入神经辐射场 (NeRF)</span><span class="original-text">.
+The introduction of Neural Radiance Fields (NeRF)</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">mildenhall_nerf_2020</span>]</cite><span class="translated-text">通过连续体积表示实现高保真 3D 生成建模</span><span class="original-text">enabled high-fidelity 3D generative modeling through continuous volumetric representations</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">niemeyer_giraffe_2021</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">muller_diffrf_2023</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">tang_volumediffusion_2024</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">poole_dreamfusion_2022</span>]</cite><span class="translated-text">。
+然而，基于 NeRF 的表示需要密集的体积采样，导致训练和推理成本较高，从而限制了可扩展性。
+3D 高斯泼溅</span><span class="original-text">.
+However, NeRF-based representations require dense volumetric sampling, resulting in high training and inference costs that limit scalability.
+3D Gaussian Splatting</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">kerbl_3d_2023</span>]</cite><span class="translated-text">已成为 3D 生成建模的高效且富有表现力的替代方案，将高视觉质量与实时渲染相结合</span><span class="original-text">has emerged as an efficient and expressive alternative for 3D generative modelling, combining high visual quality with real-time rendering</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">chen_splatformer_2025</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">xiang_structured_2025</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">lan_gaussiananything_2025</span>]</cite><span class="translated-text">。
+然而，无约束的 3D 高斯集缺乏结构规律，这使得它们难以建模。
+为了解决这个问题，提出了与空间网格对齐的结构化高斯参数化，以在保持渲染效率的同时引入规律性</span><span class="original-text">.
+However, unconstrained sets of 3D Gaussians lack structural regularity, which makes them difficult to model.
+To address this, structured Gaussian parameterizations aligned to spatial grids have been proposed to introduce regularity while preserving rendering efficiency</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">roessle_l3dg_2024</span>]</cite><span class="translated-text">。
+此外，我们不是直接生成结构化 3D 高斯函数，而是遵循潜在空间生成范式</span><span class="original-text">.
+Furthermore, rather than generating the structured 3D Gaussians directly, we follow the paradigm of latent-space generation</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">rombach_high-resolution_2022</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">gao_can3tok_2025</span>]</cite><span class="translated-text">，已广泛应用于 3D 生成建模中，以提高稳定性、可扩展性和样本质量。</span><span class="original-text">, which has been widely adopted in 3D generative modeling to improve stability, scalability, and sample quality.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S2.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">自回归 3D 生成。</span><span class="original-text">Autoregressive 3D Generation.</span></h4>
+<div class="ltx_para" id="S2.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="S2.SS0.SSS0.Px2.p1.1"><span class="translated-text">早期的 3D 建模生成方法主要基于变分自动编码器和生成对抗网络</span><span class="original-text">Early generative approaches for 3D modeling were largely based on variational autoencoders and generative adversarial networks</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">wu_3d_2015</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">wu_learning_2017</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">achlioptas_learning_2018</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">yang_pointflow_2019</span>]</cite><span class="translated-text">。
+最近，3D 生成建模的进步主要由扩散和流匹配范式驱动，这些范式通过迭代去噪或连续时间变换对复杂的数据分布进行建模，并在表示中实现强大的综合质量</span><span class="original-text">.
+More recently, advances in 3D generative modeling have been driven predominantly by diffusion and flow-matching paradigms, which model complex data distributions through iterative denoising or continuous-time transformations and achieve strong synthesis quality across representations</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">ho_denoising_2020</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">lipman_flow_2023</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">poole_dreamfusion_2022</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">chou_diffusion-sdf_2023</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">shim_diffusion-based_2023</span>]</cite><span class="translated-text">。
+并行自回归建模，因基于 Transformer 的序列架构（例如 GPT 样式模型）而流行</span><span class="original-text">.
+In parallel, autoregressive modeling, popularized by Transformer-based sequence architectures such as GPT-style models</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">vaswani_attention_2023</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">radford_language_2019</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">brown_language_2020</span>]</cite><span class="translated-text">，通过将联合分布分解为一系列条件预测，在语言、视觉和多模态生成方面取得了显着的成功。
+这种公式可以实现基于可能性的训练、渐进式生成和灵活的调节。
+尽管在标记化领域取得了成功，但自回归建模在 3D 生成方面的探索相对较少。
+现有的工作主要集中于离散几何表示的顺序建模，包括基于网格的生成</span><span class="original-text">, has achieved remarkable success in language, vision, and multimodal generation by factorizing joint distributions into a sequence of conditional predictions.
+This formulation enables likelihood-based training, progressive generation, and flexible conditioning.
+Despite its success in tokenized domains, autoregressive modeling remains comparatively underexplored for 3D generation.
+Existing works primarily focus on sequential modeling of discretized geometric representations, including mesh-based generation</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">siddiqui_meshgpt_2023</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">chen_meshanything_2024</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">hao_meshtron_2024</span>]</cite><span class="translated-text">，分层体素或八叉树标记化</span><span class="original-text">, hierarchical voxel or octree tokenizations</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">ibing_octree_2021</span>]</cite><span class="translated-text">，以及结构化几何标记建模</span><span class="original-text">, and structured geometric token modeling</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">chen_mar-3d_2025</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">han_var-3d_2026</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">zhang_g3pt_2024</span>]</cite><span class="translated-text">。
+相比之下，我们探索结构化高斯基元上的自回归生成，从而实现对象和整个场景的可扩展建模，同时避免基于扩散的方法的迭代采样过程特征。</span><span class="original-text">.
+In contrast, we explore autoregressive generation over structured Gaussian primitives, enabling scalable modeling of both objects and full scenes while avoiding the iterative sampling procedures characteristic of diffusion-based methods.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S2.SS0.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">从对象到场景。</span><span class="original-text">From Objects to Scenes.</span></h4>
+<div class="ltx_para" id="S2.SS0.SSS0.Px3.p1">
+<p class="ltx_p" id="S2.SS0.SSS0.Px3.p1.1"><span class="translated-text">在对象层面，3D生成建模近年来取得了显着进展</span><span class="original-text">On object level, 3D generative modeling has seen remarkable progress in recent years</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xiang_structured_2025</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">lan_gaussiananything_2025</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">xiang_native_2025</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">chen_text--3d_2024</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">tang_dreamgaussian_2024</span>]</cite><span class="translated-text">。
+相比之下，完整的 3D 场景生成仍然相对未得到充分探索。
+场景带来了额外的挑战，包括大空间尺度、长距离空间依赖性、多对象组合性以及对连贯布局和物理合理性的需求。
+现有方法以不同的方式应对这些挑战。
+有些将场景生成分解为结构化布局预测，然后进行对象检索或对象级合成</span><span class="original-text">.
+In contrast, full 3D scene generation remains comparatively underexplored.
+Scenes introduce additional challenges, including large spatial scale, long-range spatial dependencies, multi-object compositionality, and the need for coherent layout and physical plausibility.
+Existing approaches address these challenges in different ways.
+Some decompose scene generation into structured layout prediction followed by object retrieval or object-level synthesis</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">tang_diffuscene_2024</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">paschalidou_atiss_2021</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">wang_sceneformer_2021</span>]</cite><span class="translated-text">。
+其他人利用预训练图像或视频生成模型的强大先验来指导 3D 优化或重建</span><span class="original-text">.
+Others leverage strong priors from pretrained image or video generative models to guide 3D optimization or reconstruction</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">schneider_worldexplorer_2025</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">hollein_text2room_2023</span>]</cite><span class="translated-text">，或者依靠大规模基础模型来提供语义或结构监督</span><span class="original-text">, or rely on large-scale foundation models to provide semantic or structural supervision</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">li_worldgrow_2025</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">li_dreamscene_2025</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">zhou_dreamscene360_2024</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">feng_layoutgpt_2023</span>]</cite><span class="translated-text">。
+进一步的工作将场景生成制定为使用深度或多视图线索与高斯泼溅相结合的前馈重建，重点是重建而不是无条件生成建模</span><span class="original-text">.
+A further line of work formulates scene generation as feed-forward reconstruction using depth or multi-view cues combined with Gaussian splatting, focusing on reconstruction rather than unconditional generative modeling</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">lin_depth_2025</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">zhang_gs-lrm_2024</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">jiang_anysplat_2025</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">charatan_pixelsplat_2024</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">chen_mvsplat_2025</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">szymanowicz_flash3d_2025</span>]</cite><span class="translated-text">。
+虽然这些策略显示出有希望的结果，但它们通常依赖于外部先验、多阶段管道或优化过程。
+相比之下，我们的目标是学习一个统一的自回归生成模型，该模型可以直接对 3D 场景进行建模，而不依赖于预训练的 2D 扩散或视频先验，从而在单个概率框架内实现可扩展的场景合成。</span><span class="original-text">.
+While these strategies demonstrate promising results, they often depend on external priors, multi-stage pipelines, or optimization-heavy procedures.
+In contrast, we aim to learn a unified autoregressive generative model that directly models 3D scenes without relying on pretrained 2D diffusion or video priors, enabling scalable scene synthesis within a single probabilistic framework.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">方法论</span><span class="original-text">Methodology</span></h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="translated-text">我们的目标是使用 GPT 式转换器的无条件自回归生成来合成 3D 高斯场景。
+由于 GPT 模型在离散标记序列上运行并且上下文范围有限，因此我们首先需要 3D 场景的紧凑且离散的表示。
+为此，我们利用稀疏 3D 卷积自动编码器将高斯场景映射到离散潜在网格表示并忠实地重建它们（</span><span class="original-text">Our goal is to synthesize 3D Gaussian scenes using unconditional autoregressive generation with a GPT-style transformer.
+Since GPT models operate on discrete token sequences and have limited contextual scope, we first require a compact and discrete representation of 3D scenes.
+To this end, we leverage a sparse 3D convolutional autoencoder that maps Gaussian scenes to a discrete latent grid representation and faithfully reconstructs them (</span><a class="ltx_ref" href="#S3.SS1" title="3.1 Scene Compression via Sparse 3D Latent Encoding ‣ 3 Methodology ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_tag">Sec.</span>˜<span class="ltx_text ltx_ref_tag">3.1</span></a><span class="translated-text">）。
+给定这种表示，我们将潜在网格序列化为令牌序列，并训练因果变换器来对网格占用和特征的联合分布进行建模。
+我们详细介绍了自回归公式、架构设计、推理过程以及 3D 空间先验的纳入</span><span class="original-text">).
+Given this representation, we serialize the latent grids into token sequences and train a causal transformer to model the joint distribution of grid occupancy and features.
+We detail the autoregressive formulation, architectural design, inference procedure, and the incorporation of 3D spatial priors in</span><a class="ltx_ref" href="#S3.SS2" title="3.2 Autoregressive Modeling of Latent 3D Grids ‣ 3 Methodology ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_tag">Sec.</span>˜<span class="ltx_text ltx_ref_tag">3.2</span></a>.</p>
+</div>
+<figure class="ltx_figure" id="S3.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="204" id="S3.F2.g1" src="https://arxiv.org/html/2603.26661v1/x2.png" width="475"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F2.9.4.1" style="font-size:90%;">Figure 2</span>: </span><span class="ltx_text" id="S3.F2.6.3" style="font-size:90%;">
+Overview of <span class="ltx_text ltx_font_bold" id="S3.F2.6.3.1">GaussianGPT</span>.
+A 3D Gaussian scene is subsampled into a sparse voxel grid and encoded into per-voxel features.
+A sparse 3D CNN compresses the grid into discrete codebook indices.
+The resulting latent grid is serialized via <math alttext="xyz" class="ltx_Math" display="inline" id="S3.F2.4.1.m1" intent=":literal"><semantics><mrow><mi>x</mi><mo lspace="0em" rspace="0em">​</mo><mi>y</mi><mo lspace="0em" rspace="0em">​</mo><mi>z</mi></mrow><annotation encoding="application/x-tex">xyz</annotation></semantics></math> ordering and represented as interleaved position tokens <math alttext="p_{i}" class="ltx_Math" display="inline" id="S3.F2.5.2.m2" intent=":literal"><semantics><msub><mi>p</mi><mi>i</mi></msub><annotation encoding="application/x-tex">p_{i}</annotation></semantics></math> and feature tokens <math alttext="f_{i}" class="ltx_Math" display="inline" id="S3.F2.6.3.m3" intent=":literal"><semantics><msub><mi>f</mi><mi>i</mi></msub><annotation encoding="application/x-tex">f_{i}</annotation></semantics></math>.
+A causal transformer with 3D RoPE predicts alternating position and feature tokens, which are mapped back to voxel locations and decoded through LFQ to reconstruct the 3D Gaussian scene.
+</span></figcaption>
+</figure>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">通过稀疏 3D 潜在编码进行场景压缩</span><span class="original-text">Scene Compression via Sparse 3D Latent Encoding</span></h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">为了实现基于标记的自回归建模，我们首先将连续的 3D 高斯场景转换为紧凑的离散潜在网格表示。
+我们的压缩阶段包括 (i) 将高斯基元投影到稀疏 3D 特征网格中，(ii) 使用稀疏 3D 卷积自动编码器对该网格进行编码，以及 (iii) 通过矢量量化离散化潜在表示。
+由此产生的量化潜在网格构成了后续自回归建模的基础。</span><span class="original-text">To enable token-based autoregressive modeling, we first transform a continuous 3D Gaussian scene into a compact discrete latent grid representation.
+Our compression stage consists of (i) projecting Gaussian primitives into a sparse 3D feature grid, (ii) encoding this grid using a sparse 3D convolutional autoencoder, and (iii) discretizing the latent representation via vector quantization.
+The resulting quantized latent grid forms the basis for subsequent autoregressive modeling.</span></p>
+</div>
+<section class="ltx_paragraph" id="S3.SS1.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">稀疏 3D 特征网格。</span><span class="original-text">Sparse 3D Feature Grid.</span></h4>
+<div class="ltx_para" id="S3.SS1.SSS0.Px1.p1">
+<p class="ltx_p" id="S3.SS1.SSS0.Px1.p1.1"><span class="translated-text">遵循 3D 高斯泼溅</span><span class="original-text">Following 3D Gaussian Splatting</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">kerbl_3d_2023</span>]</cite><span class="translated-text">，我们的输入是由一组高斯基元表示的场景。
+每个图元都由一组连续属性定义：位置、不透明度、大小、旋转和颜色。
+我们在世界坐标中定义一个网格，并根据它们的位置将高斯分配给相应的体素。
+当体素中存在多个高斯分布时，我们用距体素中心的相对偏移量替换绝对位置，并随机进行子采样，以获得输入 3D 高斯场景。
+对于每个体素，我们使用一组轻量级编码头对每个高斯特征进行编码，然后将结果连接成统一向量以获得稀疏输入特征网格。
+对称地，在通过 3D CNN 后，一组按特征解码头将预测的每体素特征向量转换回单独的高斯属性。</span><span class="original-text">, our input is a scene represented by a set of Gaussian primitives.
+Each primitive is defined by a set of continuous attributes: position, opacity, size, rotation, and color.
+We define a grid in world coordinates and assign Gaussians to the corresponding voxels based on their positions.
+We replace absolute positions with relative offsets from the voxel centers and randomly subsample, when multiple Gaussians are present in a voxel, to obtain our input 3D Gaussian scene.
+For each voxel, we use a set of lightweight encoding heads to encode each Gaussian feature, then concatenate the results into a unified vector to obtain a sparse input feature grid.
+Symmetrically, after passing through the 3D CNN, a set of per-feature decoding heads converts the predicted per-voxel feature vectors back into individual Gaussian attributes.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS1.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">稀疏 3D CNN 编码器-解码器。</span><span class="original-text">Sparse 3D CNN Encoder-Decoder.</span></h4>
+<div class="ltx_para" id="S3.SS1.SSS0.Px2.p1">
+<p class="ltx_p" id="S3.SS1.SSS0.Px2.p1.2"><span class="translated-text">输入特征网格由稀疏 3D 卷积编码器处理</span><span class="original-text">The input feature grid is processed by a sparse 3D convolutional encoder</span><math alttext="\mathcal{E}" class="ltx_Math" display="inline" id="S3.SS1.SSS0.Px2.p1.1.m1" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">ℰ</mi><annotation encoding="application/x-tex">\mathcal{E}</annotation></semantics></math><span class="translated-text">和解码器</span><span class="original-text">and decoder</span><math alttext="\mathcal{D}" class="ltx_Math" display="inline" id="S3.SS1.SSS0.Px2.p1.2.m2" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒟</mi><annotation encoding="application/x-tex">\mathcal{D}</annotation></semantics></math><span class="translated-text">关注 L3DG</span><span class="original-text">following L3DG</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">roessle_l3dg_2024</span>]</cite><span class="translated-text">。
+编码器逐渐将网格下采样为紧凑的潜在表示，而解码器则重建体素级特征。
+卷积设计保留了空间局部性和平移等方差，产生非常适合后续生成建模的结构化潜在特征。</span><span class="original-text">.
+The encoder progressively downsamples the grid to a compact latent representation, while the decoder reconstructs voxel-level features.
+The convolutional design preserves spatial locality and translation equivariance, yielding structured latent features well suited for subsequent generative modeling.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS1.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">矢量量化。</span><span class="original-text">Vector Quantization.</span></h4>
+<div class="ltx_para" id="S3.SS1.SSS0.Px3.p1">
+<p class="ltx_p" id="S3.SS1.SSS0.Px3.p1.3"><span class="translated-text">与 L3DG 实现相反，我们采用无查找量化（LFQ）</span><span class="original-text">In contrast to the L3DG implementation, we adopt lookup-free quantization (LFQ)</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">yu_language_2024</span>]</cite><span class="translated-text">，这已被证明可以提高码本的利用率和质量。
+遵循 LFQ 的概念，我们的编码器的输出</span><span class="original-text">, which has been shown to improve codebook utilization and quality.
+Following the concept of LFQ, the output of our encoder</span><math alttext="\mathbf{z}" class="ltx_Math" display="inline" id="S3.SS1.SSS0.Px3.p1.1.m1" intent=":literal"><semantics><mi>𝐳</mi><annotation encoding="application/x-tex">\mathbf{z}</annotation></semantics></math><span class="translated-text">通过离散化直接对应于码本索引</span><span class="original-text">directly corresponds to the codebook indices by discretizing to</span><math alttext="0" class="ltx_Math" display="inline" id="S3.SS1.SSS0.Px3.p1.2.m2" intent=":literal"><mn>0</mn></math> or <math alttext="1" class="ltx_Math" display="inline" id="S3.SS1.SSS0.Px3.p1.3.m3" intent=":literal"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math><span class="translated-text">根据标志。</span><span class="original-text">based on the sign.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS1.SSS0.Px4">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">培训。</span><span class="original-text">Training.</span></h4>
+<div class="ltx_para" id="S3.SS1.SSS0.Px4.p1">
+<p class="ltx_p" id="S3.SS1.SSS0.Px4.p1.6"><span class="translated-text">通过结合使用重新渲染、占用率和码本损失来训练网络，对随机选择的图像进行训练：</span><span class="original-text">The network is trained on randomly selected images by using a combination of re-rendering, occupancy, and codebook losses:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{L}=\underbrace{\lambda_{RGB}\mathcal{L}_{RGB}+\lambda_{perc}\mathcal{L}_{perc}}_{\text{re-rendering}}+\underbrace{\lambda_{occ}\mathcal{L}_{occ}}_{\text{occupancy}}+\underbrace{\lambda_{LFQ}\text{softplus}\left(\mathcal{L}_{LFQ}+5\right)}_{\text{codebook entropy}}." class="ltx_Math" display="block" id="S3.E1.m1" intent=":literal"><semantics><mrow><mrow><mi class="ltx_font_mathcaligraphic">ℒ</mi><mo>=</mo><mrow><munder><munder accentunder="true"><mrow><mrow><msub><mi>λ</mi><mrow><mi>R</mi><mo lspace="0em" rspace="0em">​</mo><mi>G</mi><mo lspace="0em" rspace="0em">​</mo><mi>B</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mrow><mi>R</mi><mo lspace="0em" rspace="0em">​</mo><mi>G</mi><mo lspace="0em" rspace="0em">​</mo><mi>B</mi></mrow></msub></mrow><mo>+</mo><mrow><msub><mi>λ</mi><mrow><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mrow><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi></mrow></msub></mrow></mrow><mo stretchy="true">⏟</mo></munder><mtext>re-rendering</mtext></munder><mo>+</mo><munder><munder accentunder="true"><mrow><msub><mi>λ</mi><mrow><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mrow><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi></mrow></msub></mrow><mo stretchy="true">⏟</mo></munder><mtext>occupancy</mtext></munder><mo>+</mo><munder><munder accentunder="true"><mrow><msub><mi>λ</mi><mrow><mi>L</mi><mo lspace="0em" rspace="0em">​</mo><mi>F</mi><mo lspace="0em" rspace="0em">​</mo><mi>Q</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mtext>softplus</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo>(</mo><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mrow><mi>L</mi><mo lspace="0em" rspace="0em">​</mo><mi>F</mi><mo lspace="0em" rspace="0em">​</mo><mi>Q</mi></mrow></msub><mo>+</mo><mn>5</mn></mrow><mo>)</mo></mrow></mrow><mo stretchy="true">⏟</mo></munder><mtext>codebook entropy</mtext></munder></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\mathcal{L}=\underbrace{\lambda_{RGB}\mathcal{L}_{RGB}+\lambda_{perc}\mathcal{L}_{perc}}_{\text{re-rendering}}+\underbrace{\lambda_{occ}\mathcal{L}_{occ}}_{\text{occupancy}}+\underbrace{\lambda_{LFQ}\text{softplus}\left(\mathcal{L}_{LFQ}+5\right)}_{\text{codebook entropy}}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS1.SSS0.Px4.p1.5"><span class="translated-text">对于重新渲染损失，</span><span class="original-text">For the rerendering losses,</span><math alttext="\mathcal{L}_{RGB}" class="ltx_Math" display="inline" id="S3.SS1.SSS0.Px4.p1.1.m1" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mrow><mi>R</mi><mo lspace="0em" rspace="0em">​</mo><mi>G</mi><mo lspace="0em" rspace="0em">​</mo><mi>B</mi></mrow></msub><annotation encoding="application/x-tex">\mathcal{L}_{RGB}</annotation></semantics></math><span class="translated-text">是一个</span><span class="original-text">is an</span><math alttext="L_{1}" class="ltx_Math" display="inline" id="S3.SS1.SSS0.Px4.p1.2.m2" intent=":literal"><semantics><msub><mi>L</mi><mn>1</mn></msub><annotation encoding="application/x-tex">L_{1}</annotation></semantics></math><span class="translated-text">颜色损失和</span><span class="original-text">color loss and</span><math alttext="\mathcal{L}_{perc}" class="ltx_Math" display="inline" id="S3.SS1.SSS0.Px4.p1.3.m3" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mrow><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi></mrow></msub><annotation encoding="application/x-tex">\mathcal{L}_{perc}</annotation></semantics></math><span class="translated-text">是一个基于VGG19的</span><span class="original-text">is a VGG19-based</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">simonyan_very_2015</span>]</cite><span class="translated-text">知觉丧失；两者都聚合在一组采样图像和姿势上。
+解码器上采样层中的占用预测由二进制交叉熵损失引导，</span><span class="original-text">perceptual loss; both are aggregated over a set of sampled images and poses.
+Occupancy predictions in the decoder upsampling layers are guided by a binary cross-entropy loss,</span><math alttext="\mathcal{L}_{occ}" class="ltx_Math" display="inline" id="S3.SS1.SSS0.Px4.p1.4.m4" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mrow><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi></mrow></msub><annotation encoding="application/x-tex">\mathcal{L}_{occ}</annotation></semantics></math><span class="translated-text">，遵循 L3DG。
+最后，</span><span class="original-text">, following L3DG.
+Lastly,</span><math alttext="\mathcal{L}_{LFQ}" class="ltx_Math" display="inline" id="S3.SS1.SSS0.Px4.p1.5.m5" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mrow><mi>L</mi><mo lspace="0em" rspace="0em">​</mo><mi>F</mi><mo lspace="0em" rspace="0em">​</mo><mi>Q</mi></mrow></msub><annotation encoding="application/x-tex">\mathcal{L}_{LFQ}</annotation></semantics></math><span class="translated-text">旨在通过增加熵来增加密码本的使用，如中所述</span><span class="original-text">aims to increase the codebook usage by increasing entropy, as introduced in</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">yu_language_2024</span>]</cite><span class="translated-text">。
+我们将结果通过 offset softplus 函数传递以获得正损失值。</span><span class="original-text">.
+We pass the result through an offset softplus function to obtain positive loss values.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span><span class="translated-text">潜在 3D 网格的自回归建模</span><span class="original-text">Autoregressive Modeling of Latent 3D Grids</span></h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">给定量化的潜在网格，我们的目标是使用基于序列的自回归模型对其占用和特征的联合分布进行建模。
+因此，我们的第一步是将 3D 网格序列化为 1D 标记序列，之后我们可以训练因果变换器来对底层模式进行建模。
+我们还通过分离位置和特征词汇并注入 3D 位置嵌入来为模型提供先验。</span><span class="original-text">Given the quantized latent grid, our goal is to model the joint distribution of its occupancy and features using a sequence-based autoregressive model.
+Our first step is therefore to serialize the 3D grid into a 1D token sequence, after which we can train a causal transformer to model the underlying patterns.
+We additionally provide priors to the model by separating position and feature vocabularies and injecting 3D positional embeddings.</span></p>
+</div>
+<section class="ltx_paragraph" id="S3.SS2.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">3D 网格序列化。</span><span class="original-text">3D Grid Serialization.</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS0.Px1.p1">
+<p class="ltx_p" id="S3.SS2.SSS0.Px1.p1.3"><span class="translated-text">我们使用简单且固定的方法将 3D 结构线性化为 1D 序列</span><span class="original-text">We linearize the 3D structure into a 1D sequence using a simple and fixed</span><math alttext="xyz" class="ltx_Math" display="inline" id="S3.SS2.SSS0.Px1.p1.1.m1" intent=":literal"><semantics><mrow><mi>x</mi><mo lspace="0em" rspace="0em">​</mo><mi>y</mi><mo lspace="0em" rspace="0em">​</mo><mi>z</mi></mrow><annotation encoding="application/x-tex">xyz</annotation></semantics></math><span class="translated-text">遍历顺序。
+自从</span><span class="original-text">traversal order.
+Since</span><math alttext="z" class="ltx_Math" display="inline" id="S3.SS2.SSS0.Px1.p1.2.m2" intent=":literal"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math><span class="translated-text">是最不重要的维度，对此的直观理解是我们每次都会迭代一个场景高度列</span><span class="original-text">is the least significant dimension, an intuitive understanding of this is that we iterate a scene-height column at every</span><math alttext="(x,y)" class="ltx_Math" display="inline" id="S3.SS2.SSS0.Px1.p1.3.m3" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(x,y)</annotation></semantics></math><span class="translated-text">跳转到下一个之前的位置。
+虽然此模式不保留 1D 序列中的 3D 局部性，但其优点在于其简单、可解释的排序（参见</span><span class="original-text">position before jumping to the next one.
+While this pattern does not preserve 3D locality in the 1D sequence, its advantages lie in its simple, interpretable ordering (see</span><a class="ltx_ref" href="#S4.SS6" title="4.6 Sequence Ordering Ablation ‣ 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_tag">Sec.</span>˜<span class="ltx_text ltx_ref_tag">4.6</span></a>).</p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS0.Px1.p2">
+<p class="ltx_p" id="S3.SS2.SSS0.Px1.p2.1"><span class="translated-text">给定体素的排序和相对位置索引，我们通过交错位置和特征标记来构建序列。
+由于可能的序列随场景大小呈立方体增长，因此我们通过在块而不是整个场景上操作 GPT 模型来限制所需的上下文大小。
+每个体素都被分配一个相对于当前网格块而不是其绝对位置的位置索引，使模型能够在本地操作并跨位置、场景和布局进行概括。</span><span class="original-text">Given the ordering and relative position indices of the voxels, we construct our sequence by interleaving position and feature tokens.
+Since the possible sequence grows cubically with scene size, we limit the required context size by operating our GPT model on chunks rather than entire scenes.
+Each voxel is assigned a position index relative to the current grid chunk rather than its absolute position, enabling the model to operate locally and generalize across positions, scenes, and layouts.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS2.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">词汇设计。</span><span class="original-text">Vocabulary Design.</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS0.Px2.p1">
+<p class="ltx_p" id="S3.SS2.SSS0.Px2.p1.1"><span class="translated-text">尽管我们的序列是由共享变压器主干处理的，但我们对位置和特征标记使用单独的词汇表。
+遵循位置和特征标记的规则交替模式，我们在不同的位置和特征头之间交替。
+位置头的任务是预测下一个占用的体素索引，特征头的任务是预测前一个位置的特征。
+这种词汇和预测的明确分离将几何结构与外观建模分离，并防止空间和语义特征之间对共享索引的竞争。
+顺便说一句，这种设计还允许我们自由控制块大小和相应的位置索引数量，而不管特征码本的大小。</span><span class="original-text">Although our sequences are processed by a shared transformer backbone, we employ separate vocabularies for position and feature tokens.
+Following the regular alternating pattern of position and feature tokens, we alternate between a distinct position and feature head.
+The task of the position head is to predict the next occupied voxel index, and the feature head predicts the feature at the preceding position.
+This explicit separation in vocabulary and predictions decouples geometric structure from appearance modeling and prevents competition between spatial and semantic features over shared indices.
+Incidentally, this design also allows us to freely control the chunk size and the corresponding number of position indices, irrespective of the feature codebook size.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS2.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">3D 旋转位置编码。</span><span class="original-text">3D Rotary Positional Encoding.</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS0.Px3.p1">
+<p class="ltx_p" id="S3.SS2.SSS0.Px3.p1.1"><span class="translated-text">GPT 样式模型中使用的 Transformer 将输入处理为一维标记序列，并且需要明确的位置概念。
+在标准应用中，位置信息沿着这个一维索引注入，或者通过学习的绝对嵌入，或者通过相对编码，例如旋转位置嵌入（RoPE）</span><span class="original-text">Transformers, as used in GPT-style models, process inputs as a 1D token sequence and require an explicit notion of position.
+In standard applications, positional information is injected along this 1D index, either via learned absolute embeddings or via relative encodings such as rotary positional embeddings (RoPE)</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">su_roformer_2023</span>]</cite><span class="translated-text">。
+然而，在我们的设置中，令牌序列并不是本质上的一维信号：它是通过序列化稀疏 3D 潜在网格而获得的。
+如果我们将标准一维位置编码直接应用于序列化顺序，则模型将主要学习序列邻近度的概念，这很难转化为空间邻近度。
+特别是，靠近的体素</span><span class="original-text">.
+However, in our setting, the token sequence is not an inherently one-dimensional signal: it is obtained by serializing a sparse 3D latent grid.
+If we were to apply standard 1D positional encoding directly to the serialized order, the model would primarily learn notions of sequence proximity, which can translate poorly to spatial proximity.
+In particular, voxels that are close in</span><math alttext="(x,y,z)" class="ltx_Math" display="inline" id="S3.SS2.SSS0.Px3.p1.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(x,y,z)</annotation></semantics></math><span class="translated-text">在序列化中可能相距很远，反之亦然。</span><span class="original-text">may be far apart in the serialization, and vice versa.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS0.Px3.p2">
+<p class="ltx_p" id="S3.SS2.SSS0.Px3.p2.1"><span class="translated-text">为了注入显式的空间归纳偏差，我们使用 3D RoPE 对注意力机制内的实际体素坐标进行编码。
+这样，注意力分数就成为标记之间相对空间偏移的函数，而不是序列偏移的函数。
+该方法遵循最近在 3D 生成中使用坐标感知旋转嵌入的做法</span><span class="original-text">To inject an explicit spatial inductive bias, we encode actual voxel coordinates inside the attention mechanism using 3D RoPE.
+This way, the attention score becomes a function of the relative spatial offset between the tokens rather than the sequence offset.
+The approach follows recent uses of coordinate-aware rotary embeddings in 3D generation</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xiang_native_2025</span>]</cite><span class="translated-text">，使模型能够独立于序列化顺序来推理空间局部性。</span><span class="original-text">, enabling the model to reason about the spatial locality independent of the serialization order.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS0.Px3.p3">
+<p class="ltx_p" id="S3.SS2.SSS0.Px3.p3.1"><span class="translated-text">最后，我们的序列在位置和特征标记之间交替，两者都对应于相同的 3D 位置。
+因此，在实践中，我们使用指示令牌类型的附加第四维来扩展旋转嵌入。
+这种令牌型旋转组件有助于变压器进一步将几何形状与外观分开，同时在混合令牌流上保留单一统一的注意力公式。</span><span class="original-text">Finally, our sequence alternates between position and feature tokens, both of which correspond to the same 3D location.
+In practice, we therefore extend the rotary embeddings with an additional 4th dimension that indicates the token type.
+This token-type rotary component helps the transformer to further disentangle geometry from appearance while retaining a single unified attention formulation over the mixed token stream.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS2.SSS0.Px4">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">变压器架构。</span><span class="original-text">Transformer Architecture.</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS0.Px4.p1">
+<p class="ltx_p" id="S3.SS2.SSS0.Px4.p1.1"><span class="translated-text">我们的仅解码器因果变压器架构遵循标准 GPT 公式，具有堆叠多头自注意力和前馈块。
+我们的模型基于 GPT-2</span><span class="original-text">Our decoder-only causal transformer architecture follows the standard GPT formulation with stacked multi-head self-attention and feed-forward blocks.
+Our model is based on GPT-2</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">radford_language_2019</span>]</cite><span class="translated-text">并建立在 nanochat 之上</span><span class="original-text">and builds on nanochat</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">nanochat</span>]</cite><span class="translated-text">作为其技术支柱。
+与普通的 GPT-2 管道相比，我们还采用了旋转位置嵌入（如上所述扩展到 3D）、查询键归一化、每层残差缩放和 Muon 优化器</span><span class="original-text">as its technical backbone.
+Compared to the vanilla GPT-2 pipeline, we additionally employ rotary positional embeddings (extended to 3D as described above), query–key normalization, per-layer residual scaling, and the Muon optimizer</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">henry_query-key_2020</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">modded_nanogpt_2024</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">jordan_muon_2024</span>]</cite><span class="translated-text">。
+虽然是 nanochat 主干默认配置的一部分，但我们不使用值嵌入或滑动窗口注意力</span><span class="original-text">.
+While part of the default configuration of the nanochat backbone, we do not use value embeddings or sliding-window attention</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">zhou_value_2025</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">brown_language_2020</span>]</cite>.</p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS2.SSS0.Px5">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">培训。</span><span class="original-text">Training.</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS0.Px5.p1">
+<p class="ltx_p" id="S3.SS2.SSS0.Px5.p1.1"><span class="translated-text">变压器经过训练，可以使用标准自回归目标对序列化场景标记的分布进行建模。
+给定一个标记化的场景序列</span><span class="original-text">The transformer is trained to model the distribution of serialized scene tokens using a standard autoregressive objective.
+Given a tokenized scene sequence</span><math alttext="\mathbf{t}=(t_{1},\dots,t_{T})" class="ltx_Math" display="inline" id="S3.SS2.SSS0.Px5.p1.1.m1" intent=":literal"><semantics><mrow><mi>𝐭</mi><mo>=</mo><mrow><mo stretchy="false">(</mo><msub><mi>t</mi><mn>1</mn></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>t</mi><mi>T</mi></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathbf{t}=(t_{1},\dots,t_{T})</annotation></semantics></math><span class="translated-text">，模型根据所有先前的标记来预测每个标记：</span><span class="original-text">, the model predicts each token conditioned on all previous tokens:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{L}_{CE}=-\sum_{i=1}^{T}\log p_{\theta}(t_{i}\mid t_{&lt;i})." class="ltx_Math" display="block" id="S3.E2.m1" intent=":literal"><semantics><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mrow><mi>C</mi><mo lspace="0em" rspace="0em">​</mo><mi>E</mi></mrow></msub><mo>=</mo><mrow><mo>−</mo><mrow><munderover><mo movablelimits="false">∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></munderover><mrow><mrow><mi>log</mi><mo lspace="0.167em">⁡</mo><msub><mi>p</mi><mi>θ</mi></msub></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><msub><mi>t</mi><mi>i</mi></msub><mo>∣</mo><msub><mi>t</mi><mrow><mi></mi><mo>&lt;</mo><mi>i</mi></mrow></msub></mrow><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\mathcal{L}_{CE}=-\sum_{i=1}^{T}\log p_{\theta}(t_{i}\mid t_{&lt;i}).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS2.SSS0.Px5.p1.2"><span class="translated-text">训练是通过教师强制进行的，我们提供真实标记作为输入，模型学习预测序列中的下一个标记。
+由于我们的表示在位置标记和特征标记之间交替，因此每一步都会根据相应的词汇计算交叉熵损失。
+无效词汇条目被屏蔽，以便模型仅预测位置步骤的位置标记和特征步骤的特征标记。</span><span class="original-text">Training is performed with teacher forcing, where we provide ground-truth tokens as input, and the model learns to predict the next token in the sequence.
+Since our representation alternates between position tokens and feature tokens, the cross-entropy loss is computed over the corresponding vocabulary at each step.
+Invalid vocabulary entries are masked such that the model only predicts position tokens at position steps and feature tokens at feature steps.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS2.SSS0.Px6">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">场景生成和完成。</span><span class="original-text">Scene Generation and Completion.</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS0.Px6.p1">
+<p class="ltx_p" id="S3.SS2.SSS0.Px6.p1.1"><span class="translated-text">在推理时，场景是通过根据先前生成的上下文对令牌进行采样而自动生成的。
+从序列开始（BOS）令牌开始，转换器在预测位置令牌和特征令牌之间交替，直到产生序列结束（EOS）令牌。</span><span class="original-text">At inference time, scenes are generated autoregressively by sampling tokens conditioned on previously generated context.
+Starting from a begin-of-sequence (BOS) token, the transformer alternates between predicting position tokens and feature tokens until an end-of-sequence (EOS) token is produced.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS0.Px6.p2">
+<p class="ltx_p" id="S3.SS2.SSS0.Px6.p2.1"><span class="translated-text">自回归公式的一个关键优点是场景完成和无条件生成由相同的机制处理。
+给定一个部分场景，我们只需序列化观察到的标记并将它们用作模型继续生成的前缀提示。
+这使得转换器能够自然地推断缺失的几何形状和外观，同时保持与现有场景上下文完全一致。
+同样的原理还可以实现超出固定训练块大小的大规模场景合成。
+通过在先前生成的标记的滑动窗口上重复应用补全作为上下文，我们可以无限地超越场景。</span><span class="original-text">A key advantage of the autoregressive formulation is that scene completion and unconditional generation are handled by the same mechanism.
+Given a partial scene, we simply serialize the observed tokens and use them as a prefix prompt from which the model continues generation.
+This allows the transformer to naturally infer missing geometry and appearance while remaining fully consistent with the existing scene context.
+The same principle also enables large-scale scene synthesis beyond the fixed training chunk size.
+By repeatedly applying completions on a sliding window of previously generated tokens as context, we can infinitely outpaint the scene.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS0.Px6.p3">
+<p class="ltx_p" id="S3.SS2.SSS0.Px6.p3.1"><span class="translated-text">由于自回归生成的组合性质，我们可以进一步限制基于当前序列的预测。
+具体来说，由于每个位置标记直接对应于当前块内的体素索引，因此我们可以屏蔽已经生成的位置，确保采样序列始终遵守排序约束。
+此外，我们方法的顺序性质使得树搜索成为可能。
+我们在通过对没有占用的列进行重新采样来生成更大的场景时使用此功能，从而创建更多占用和连接的场景。</span><span class="original-text">Due to the compositional nature of autoregressive generation, we can further limit predictions based on the current sequence.
+Specifically, since each position token directly corresponds to a voxel index within the current chunk, we can mask already generated locations, ensuring that the sampled sequence always respects ordering constraints.
+Additionally, the sequential nature of our approach enables tree search.
+We use this when generating larger scenes by resampling columns without occupancy, thereby creating more occupied and connected scenes.</span></p>
+</div>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">实验</span><span class="original-text">Experiments</span></h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">我们在无条件生成、场景完成和大型场景绘制方面评估了 GaussianGPT。
+首先，我们描述数据集和实验设置。
+然后，我们提出无条件形状生成的定量结果，以及场景生成和完成的定性结果。
+最后，我们展示了通过我们的方法合成的更大的场景，并消除了我们的设计选择对序列排序的影响。</span><span class="original-text">We evaluate GaussianGPT on unconditional generation, scene completion, and large scene outpainting.
+First, we describe the datasets and experimental setup.
+We then present quantitative results on unconditional shape generation, as well as qualitative results for scene generation and completion.
+Lastly, we showcase larger scenes synthesized by our approach and ablate the effect of our design choice for sequence ordering.</span></p>
+</div>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span><span class="translated-text">数据集</span><span class="original-text">Datasets</span></h3>
+<section class="ltx_paragraph" id="S4.SS1.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">Aria 合成环境。</span><span class="original-text">Aria Synthetic Environments.</span></h4>
+<div class="ltx_para" id="S4.SS1.SSS0.Px1.p1">
+<p class="ltx_p" id="S4.SS1.SSS0.Px1.p1.1"><span class="translated-text">对于大规模场景建模，我们使用源自 Aria 合成环境 (ASE) 的高斯场景</span><span class="original-text">For large-scale scene modeling, we use Gaussian scenes derived from Aria Synthetic Environments (ASE)</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">avetisyan_scenescript_2024</span>]</cite><span class="translated-text">作为 SceneSplat++ 的一部分进行优化</span><span class="original-text">optimized as part of SceneSplat++</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">ma_scenesplat_2025</span>]</cite><span class="translated-text">。
+该数据集包含 25,000 个具有不同布局、对象排列和外观的室内场景。</span><span class="original-text">.
+The dataset contains 25,000 indoor scenes with diverse layouts, object arrangements, and appearances.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS1.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">3D 正面。</span><span class="original-text">3D-FRONT.</span></h4>
+<div class="ltx_para" id="S4.SS1.SSS0.Px2.p1">
+<p class="ltx_p" id="S4.SS1.SSS0.Px2.p1.1"><span class="translated-text">为了获得高保真高斯场景，我们另外构建了一个基于3D-FRONT的数据集</span><span class="original-text">To obtain high-fidelity Gaussian scenes, we additionally construct a dataset based on 3D-FRONT</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">fu_3d-front_2021</span>]</cite><span class="translated-text">。
+对于每个场景，我们渲染多视图图像并从深度图初始化高斯基元。
+这些高斯函数使用 Scaffold-GS 进行了优化</span><span class="original-text">.
+For each scene, we render multi-view images and initialize Gaussian primitives from depth maps.
+These Gaussians are optimized using Scaffold-GS</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">lu_scaffold-gs_2023</span>]</cite><span class="translated-text">60k 次迭代。
+通过将锚点与体素中心对齐并将每个锚点限制为单个高斯，我们在自动编码器的输入域内获得了高保真高斯场景。
+根据空间范围过滤场景后，我们得到的数据集包含 4,472 个场景。
+为了增加数据多样性，我们还应用了旋转和基于反射的增强，有效地将数据集大小增加了八倍。</span><span class="original-text">for 60k iterations.
+By aligning anchors with voxel centers and restricting each anchor to a single Gaussian, we obtain a high-fidelity Gaussian scene within the input domain of our autoencoder.
+After filtering scenes based on spatial extent, our resulting dataset contains 4,472 scenes.
+To increase data diversity, we additionally apply rotational and reflection-based augmentations, effectively increasing the dataset size by a factor of eight.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS1.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">照片形状。</span><span class="original-text">PhotoShape.</span></h4>
+<div class="ltx_para" id="S4.SS1.SSS0.Px3.p1">
+<p class="ltx_p" id="S4.SS1.SSS0.Px3.p1.1"><span class="translated-text">对于对象级实验，我们遵循 DiffRF 的设置</span><span class="original-text">For object-level experiments, we follow the setup of DiffRF</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">muller_diffrf_2023</span>]</cite><span class="translated-text">使用照片形状</span><span class="original-text">using PhotoShape</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">park_photoshape_2018</span>]</cite><span class="translated-text">。
+该数据集包含标准化为规范网格的 15,576 张椅子，每张椅子与 200 个渲染视图相关联。</span><span class="original-text">.
+The dataset contains 15,576 chairs normalized to a canonical grid, and associated with 200 rendered views each.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span><span class="translated-text">实验装置</span><span class="original-text">Experimental Setup</span></h3>
+<section class="ltx_paragraph" id="S4.SS2.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">自动编码器配置。</span><span class="original-text">Autoencoder Configuration.</span></h4>
+<div class="ltx_para" id="S4.SS2.SSS0.Px1.p1">
+<p class="ltx_p" id="S4.SS2.SSS0.Px1.p1.9"><span class="translated-text">场景自动编码器在基本体素大小上运行</span><span class="original-text">The scene autoencoder operates on a base voxel size of</span><math alttext="0.025\,\mathrm{m}" class="ltx_Math" display="inline" id="S4.SS2.SSS0.Px1.p1.1.m1" intent=":literal"><semantics><mrow><mn>0.025</mn><mo lspace="0.170em" rspace="0em">​</mo><mi mathvariant="normal">m</mi></mrow><annotation encoding="application/x-tex">0.025\,\mathrm{m}</annotation></semantics></math><span class="translated-text">并应用三个下采样阶段，产生体素大小为的潜在网格</span><span class="original-text">and applies three downsampling stages, resulting in a latent grid with a voxel size of</span><math alttext="20\,\mathrm{cm}" class="ltx_Math" display="inline" id="S4.SS2.SSS0.Px1.p1.2.m2" intent=":literal"><semantics><mrow><mn>20</mn><mo lspace="0.170em" rspace="0em">​</mo><mi>cm</mi></mrow><annotation encoding="application/x-tex">20\,\mathrm{cm}</annotation></semantics></math><span class="translated-text">。
+对于物体，形状被离散化</span><span class="original-text">.
+For objects, shapes are discretized on a</span><math alttext="128^{3}" class="ltx_Math" display="inline" id="S4.SS2.SSS0.Px1.p1.3.m3" intent=":literal"><semantics><msup><mn>128</mn><mn>3</mn></msup><annotation encoding="application/x-tex">128^{3}</annotation></semantics></math><span class="translated-text">具有两个下采样阶段的网格以匹配之前的工作</span><span class="original-text">grid with two downsampling stages to match prior work</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">roessle_l3dg_2024</span>]</cite><span class="translated-text">。
+我们不对场景中依赖于视图的外观进行建模，而对象则使用一阶球谐函数。
+在所有实验中，码本大小设置为 4,096。
+对于重新渲染损失，我们使用</span><span class="original-text">.
+We do not model view-dependent appearance for scenes, while objects use first-order spherical harmonics.
+Across all experiments, the codebook size is set to 4,096.
+For the re-rendering losses, we use</span><math alttext="\lambda_{RGB}=7.5" class="ltx_Math" display="inline" id="S4.SS2.SSS0.Px1.p1.4.m4" intent=":literal"><semantics><mrow><msub><mi>λ</mi><mrow><mi>R</mi><mo lspace="0em" rspace="0em">​</mo><mi>G</mi><mo lspace="0em" rspace="0em">​</mo><mi>B</mi></mrow></msub><mo>=</mo><mn>7.5</mn></mrow><annotation encoding="application/x-tex">\lambda_{RGB}=7.5</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="\lambda_{perc}=0.3" class="ltx_Math" display="inline" id="S4.SS2.SSS0.Px1.p1.5.m5" intent=":literal"><semantics><mrow><msub><mi>λ</mi><mrow><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi></mrow></msub><mo>=</mo><mn>0.3</mn></mrow><annotation encoding="application/x-tex">\lambda_{perc}=0.3</annotation></semantics></math><span class="translated-text">有 12 个场景图像，以及</span><span class="original-text">with 12 images for scenes, and</span><math alttext="\lambda_{RGB}=12.5" class="ltx_Math" display="inline" id="S4.SS2.SSS0.Px1.p1.6.m6" intent=":literal"><semantics><mrow><msub><mi>λ</mi><mrow><mi>R</mi><mo lspace="0em" rspace="0em">​</mo><mi>G</mi><mo lspace="0em" rspace="0em">​</mo><mi>B</mi></mrow></msub><mo>=</mo><mn>12.5</mn></mrow><annotation encoding="application/x-tex">\lambda_{RGB}=12.5</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="\lambda_{perc}=0.1" class="ltx_Math" display="inline" id="S4.SS2.SSS0.Px1.p1.7.m7" intent=":literal"><semantics><mrow><msub><mi>λ</mi><mrow><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi></mrow></msub><mo>=</mo><mn>0.1</mn></mrow><annotation encoding="application/x-tex">\lambda_{perc}=0.1</annotation></semantics></math><span class="translated-text">带有 4 个以下物体的图像</span><span class="original-text">with 4 images for objects following</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">roessle_l3dg_2024</span>]</cite>.
+<math alttext="\lambda_{occ}=1.0" class="ltx_Math" display="inline" id="S4.SS2.SSS0.Px1.p1.8.m8" intent=":literal"><semantics><mrow><msub><mi>λ</mi><mrow><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi></mrow></msub><mo>=</mo><mn>1.0</mn></mrow><annotation encoding="application/x-tex">\lambda_{occ}=1.0</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="\lambda_{LFQ}=0.1" class="ltx_Math" display="inline" id="S4.SS2.SSS0.Px1.p1.9.m9" intent=":literal"><semantics><mrow><msub><mi>λ</mi><mrow><mi>L</mi><mo lspace="0em" rspace="0em">​</mo><mi>F</mi><mo lspace="0em" rspace="0em">​</mo><mi>Q</mi></mrow></msub><mo>=</mo><mn>0.1</mn></mrow><annotation encoding="application/x-tex">\lambda_{LFQ}=0.1</annotation></semantics></math><span class="translated-text">所有训练都是一样的。</span><span class="original-text">are the same across all trainings.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS2.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">变压器配置。</span><span class="original-text">Transformer Configuration.</span></h4>
+<div class="ltx_para" id="S4.SS2.SSS0.Px2.p1">
+<p class="ltx_p" id="S4.SS2.SSS0.Px2.p1.2"><span class="translated-text">对于场景建模，我们使用具有 16,384 个标记的上下文窗口的 GPT-2 中型变压器，这足以覆盖最坏情况下完全占用的块。
+对于对象生成，我们使用具有 8,192 个标记的上下文窗口的 GPT-2 小型转换器。
+所有结果均在以下温度下采样</span><span class="original-text">For scene modeling, we use a GPT-2 medium-sized transformer with a context window of 16,384 tokens, which is sufficient to cover the worst-case fully occupied chunk.
+For object generation, we use a GPT-2 small-sized transformer with a context window of 8,192 tokens.
+All results are sampled with a temperature of</span><math alttext="0.9" class="ltx_Math" display="inline" id="S4.SS2.SSS0.Px2.p1.1.m1" intent=":literal"><semantics><mn>0.9</mn><annotation encoding="application/x-tex">0.9</annotation></semantics></math><span class="translated-text">和细胞核取样</span><span class="original-text">and Nucleus Sampling</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">holtzman_curious_2020</span>]</cite><span class="translated-text">与</span><span class="original-text">with</span><math alttext="p=0.9" class="ltx_Math" display="inline" id="S4.SS2.SSS0.Px2.p1.2.m2" intent=":literal"><semantics><mrow><mi>p</mi><mo>=</mo><mn>0.9</mn></mrow><annotation encoding="application/x-tex">p=0.9</annotation></semantics></math>.</p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS2.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">培训策略。</span><span class="original-text">Training Strategy.</span></h4>
+<div class="ltx_para" id="S4.SS2.SSS0.Px3.p1">
+<p class="ltx_p" id="S4.SS2.SSS0.Px3.p1.1"><span class="translated-text">场景训练是在具有固定垂直位置的空间块上执行的，以便跨场景和数据集对齐地板高度。
+在训练期间，我们根据最小占用阈值随机采样块位置。
+对于 ASE 场景，自动编码器训练的监督是通过与渲染的地面实况高斯进行比较来获得的，而对于 3D-FRONT 场景，我们使用之前渲染的图像。
+我们通过以相同的方式对真实高斯进行分块或使用投影深度图来掩盖渲染图像来限制对采样块的监督。
+对于对象实验，自动编码器和变压器都在完整形状上进行训练，而无需分块。</span><span class="original-text">Scene training is performed on spatial chunks with fixed vertical positions in order to align floor heights across scenes and datasets.
+During training, we randomly sample chunk locations subject to minimum occupancy thresholds.
+For ASE scenes, supervision for autoencoder training is obtained by comparing against rendered ground-truth Gaussians, whereas for 3D-FRONT scenes, we use the previously rendered images.
+We restrict supervision to the sampled chunk, either by chunking the ground-truth Gaussians in the same manner or by using projected depth maps to mask the rendered images.
+For object experiments, both the autoencoder and transformer are trained on full shapes without chunking.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS2.SSS0.Px4">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">优化和计算。</span><span class="original-text">Optimization and Compute.</span></h4>
+<div class="ltx_para" id="S4.SS2.SSS0.Px4.p1">
+<p class="ltx_p" id="S4.SS2.SSS0.Px4.p1.3"><span class="translated-text">自动编码器使用 Adam 进行训练</span><span class="original-text">The autoencoder is trained using Adam</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">kingma_adam_2017</span>]</cite><span class="translated-text">学习率为</span><span class="original-text">with a learning rate of</span><math alttext="10^{-4}" class="ltx_Math" display="inline" id="S4.SS2.SSS0.Px4.p1.1.m1" intent=":literal"><semantics><msup><mn>10</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup><annotation encoding="application/x-tex">10^{-4}</annotation></semantics></math><span class="translated-text">，变压器采用 AdamW 的组合</span><span class="original-text">, and the transformer uses a combination of AdamW</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">loshchilov_decoupled_2019</span>]</cite><span class="translated-text">和介子</span><span class="original-text">and Muon</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">jordan_muon_2024</span>]</cite><span class="translated-text">每个模块的学习率</span><span class="original-text">with per-module learning rates</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">nanochat</span>]</cite><span class="translated-text">。
+两个模型都使用余弦学习率衰减</span><span class="original-text">.
+Both models use cosine learning rate decay to</span><math alttext="10\%" class="ltx_Math" display="inline" id="S4.SS2.SSS0.Px4.p1.2.m2" intent=":literal"><semantics><mrow><mn>10</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">10\%</annotation></semantics></math><span class="translated-text">的初始值。
+自动编码器训练使用 4 个 RTX A6000 GPU，场景的有效批量大小为 8，对象的有效批量大小为 24。
+Transformer 训练使用 4 个 GH200 GPU，有效批量大小为 64。
+我们在场景上训练自动编码器大约 4 天，在 PhotoShape 上训练自动编码器 2 天。
+GPT 场景训练大约需要 1 天，</span><span class="original-text">of the initial value.
+Autoencoder training uses 4 RTX A6000 GPUs, with an effective batch size of 8 for scenes and 24 for objects.
+Transformer training uses 4 GH200 GPUs with an effective batch size of 64.
+We train the autoencoder for around 4 days on scenes and 2 days on PhotoShape.
+GPT training takes around 1 day on scenes and</span><math alttext="4.5" class="ltx_Math" display="inline" id="S4.SS2.SSS0.Px4.p1.3.m3" intent=":literal"><semantics><mn>4.5</mn><annotation encoding="application/x-tex">4.5</annotation></semantics></math><span class="translated-text">PhotoShape 上的小时数。
+我们还仅在 3D-FRONT 上对这两个模型进行微调，自动编码器大约需要 1 天，GPT 模型大约需要 10 小时。</span><span class="original-text">hours on PhotoShape.
+We additionally fine-tune both models on 3D-FRONT only, which takes around 1 day for the autoencoder and 10 hours for the GPT model.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="244" id="S4.F3.g1" src="https://arxiv.org/html/2603.26661v1/x3.png" width="475"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F3.2.1.1" style="font-size:90%;">Figure 3</span>: </span><span class="ltx_text" id="S4.F3.3.2" style="font-size:90%;">Qualitative results on unconditional chair generation.
+From left to right: DiffRF <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">muller_diffrf_2023</span>]</cite>, L3DG <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">roessle_l3dg_2024</span>]</cite>, and GaussianGPT (ours).
+All models generate high-fidelity shapes; our method produces clean Gaussian allocations with consistent geometric structure.</span></figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span><span class="translated-text">形状合成</span><span class="original-text">Shape Synthesis</span></h3>
+<figure class="ltx_table" id="S4.T1">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S4.T1.9.2.1" style="font-size:90%;">Table 1</span>: </span><span class="ltx_text" id="S4.T1.2.1" style="font-size:90%;">Quantitative evaluation on unconditional generation of 1000 shapes after training on the PhotoShape Chairs dataset <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">park_photoshape_2018</span>]</cite>. MMD and KID scores are multiplied by <math alttext="10^{3}" class="ltx_Math" display="inline" id="S4.T1.2.1.m1" intent=":literal"><semantics><msup><mn>10</mn><mn>3</mn></msup><annotation encoding="application/x-tex">10^{3}</annotation></semantics></math>.</span></figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T1.7">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T1.6.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T1.6.4.5">Method</th>
+<th class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T1.3.1.1">FID <math alttext="\downarrow" class="ltx_Math" display="inline" id="S4.T1.3.1.1.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T1.4.2.2">KID <math alttext="\downarrow" class="ltx_Math" display="inline" id="S4.T1.4.2.2.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T1.5.3.3">COV <math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T1.5.3.3.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T1.6.4.4">MMD <math alttext="\downarrow" class="ltx_Math" display="inline" id="S4.T1.6.4.4.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T1.7.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T1.7.5.1">
+<math alttext="\pi" class="ltx_Math" display="inline" id="S4.T1.7.5.1.m1" intent=":literal"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>-GAN <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">chan_pi-gan_2021</span>]</cite>
+</th>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_t" id="S4.T1.7.5.2">52.71</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_t" id="S4.T1.7.5.3">13.64</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_t" id="S4.T1.7.5.4">39.92</td>
+<td class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T1.7.5.5">7.387</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.7.6.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T1.7.6.1.1">EG3D <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">chan_efficient_2022</span>]</cite>
+</th>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="S4.T1.7.6.1.2">16.54</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="S4.T1.7.6.1.3">8.412</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="S4.T1.7.6.1.4">47.55</td>
+<td class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" id="S4.T1.7.6.1.5">5.619</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.7.7.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T1.7.7.2.1">DiffRF <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">muller_diffrf_2023</span>]</cite>
+</th>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="S4.T1.7.7.2.2">15.95</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="S4.T1.7.7.2.3">7.935</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="S4.T1.7.7.2.4">58.93</td>
+<td class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" id="S4.T1.7.7.2.5">4.416</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.7.8.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T1.7.8.3.1">L3DG <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">roessle_l3dg_2024</span>]</cite>
+</th>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="S4.T1.7.8.3.2">8.49</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="S4.T1.7.8.3.3">3.147</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="S4.T1.7.8.3.4">63.80</td>
+<td class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" id="S4.T1.7.8.3.5"><span class="ltx_text ltx_font_bold" id="S4.T1.7.8.3.5.1">4.241</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.7.9.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S4.T1.7.9.4.1">Ours</th>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_bb" id="S4.T1.7.9.4.2"><span class="ltx_text ltx_font_bold" id="S4.T1.7.9.4.2.1">5.68</span></td>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_bb" id="S4.T1.7.9.4.3"><span class="ltx_text ltx_font_bold" id="S4.T1.7.9.4.3.1">1.835</span></td>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_bb" id="S4.T1.7.9.4.4"><span class="ltx_text ltx_font_bold" id="S4.T1.7.9.4.4.1">67.40</span></td>
+<td class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb" id="S4.T1.7.9.4.5">4.278</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.1"><span class="translated-text">遵循L3DG的评估协议</span><span class="original-text">Following the evaluation protocol of L3DG</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">roessle_l3dg_2024</span>]</cite><span class="translated-text">，我们使用 PhotoShape 评估 GaussianGPT 无条件椅子生成</span><span class="original-text">, we evaluate GaussianGPT on unconditional chair generation using PhotoShape</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">park_photoshape_2018</span>]</cite><span class="translated-text">,
+渲染质量使用 Frechet Inception Distance (FID) 和 Kernel Inception Distance (KID) 来衡量</span><span class="original-text">,
+Rendering quality is measured using Frechet Inception Distance (FID) and Kernel Inception Distance (KID) on</span><math alttext="128\times 128" class="ltx_Math" display="inline" id="S4.SS3.p1.1.m1" intent=":literal"><semantics><mrow><mn>128</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>128</mn></mrow><annotation encoding="application/x-tex">128\times 128</annotation></semantics></math><span class="translated-text">渲染视图</span><span class="original-text">rendered views</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">heusel_gans_2018</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">binkowski_demystifying_2021</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">obukhov2020torchfidelity</span>]</cite><span class="translated-text">。
+对于几何评估，我们使用从生成的高斯函数中提取的网格上的倒角距离来计算覆盖率 (COV) 和最小匹配距离 (MMD)，如下</span><span class="original-text">.
+For geometric evaluation, we compute Coverage (COV) and Minimum Matching Distance (MMD) using Chamfer Distance on meshes extracted from generated Gaussians, following</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">achlioptas_learning_2018</span>]</cite><span class="translated-text">。
+COV衡量样本多样性，而MMD反映几何保真度。</span><span class="original-text">.
+COV measures sample diversity, while MMD reflects geometric fidelity.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS3.p2">
+<p class="ltx_p" id="S4.SS3.p2.1"><span class="translated-text">定量结果报告于</span><span class="original-text">Quantitative results are reported in</span><a class="ltx_ref" href="#S4.T1" title="In 4.3 Shape Synthesis ‣ 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_tag">Tab.</span>˜<span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">。
+我们的自回归模型在所有方法中实现了最佳的 FID、KID 和 COV，同时在 MMD 中保持竞争力，表明在外观和几何形状方面与目标分布具有很强的一致性。</span><span class="original-text">.
+Our autoregressive model achieves the best FID, KID, and COV among all methods, while remaining competitive in MMD, indicating strong alignment with the target distribution in both appearance and geometry.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS3.p3">
+<p class="ltx_p" id="S4.SS3.p3.1"><span class="translated-text">定性结果显示在</span><span class="original-text">Qualitative results are shown in</span><a class="ltx_ref" href="#S4.F3" title="In Optimization and Compute. ‣ 4.2 Experimental Setup ‣ 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_tag">Fig.</span>˜<span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">。
+L3DG 和 GaussianGPT 都生产具有合理几何形状和外观的高质量椅子。
+然而，我们的模型倾向于避免嘈杂的离群基元，从而产生更清晰的结构和更清晰的渲染，同时保持形状和风格的实质性变化。
+总体而言，这些结果表明，矢量量化高斯表示的自回归建模可以在无条件 3D 形状合成中实现最先进的性能。</span><span class="original-text">.
+Both L3DG and GaussianGPT produce high-quality chairs with plausible geometry and appearance.
+However, our model tends to avoid noisy outlier primitives, resulting in sharper structures and cleaner renderings while maintaining substantial variation in shape and style.
+Overall, these results demonstrate that autoregressive modeling of vector-quantized Gaussian representations can achieve state-of-the-art performance in unconditional 3D shape synthesis.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.4 </span><span class="translated-text">场景合成</span><span class="original-text">Scene Synthesis</span></h3>
+<div class="ltx_para" id="S4.SS4.p1">
+<p class="ltx_p" id="S4.SS4.p1.1"><span class="translated-text">我们将 GaussianGPT 与 L3DG 进行比较</span><span class="original-text">We compare GaussianGPT to L3DG</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">roessle_l3dg_2024</span>]</cite><span class="translated-text">关于室内场景生成。
+为了公平比较，我们使用管道的替代版本，仅在 3D-FRONT 数据上进行训练。
+虽然 L3DG 生成完全标准化的场景，但我们的模型自回归生成空间块。
+尽管如此，这两种方法都能产生连贯的室内布局，并具有合理的物体放置和外观。
+我们比较使用任一方法渲染的图像集，定性结果显示在</span><span class="original-text">on indoor scene generation.
+For a fair comparison, we use an alternative version of our pipeline, trained only on 3D-FRONT data.
+While L3DG generates full normalized scenes, our model generates spatial chunks autoregressively.
+Nonetheless, both approaches produce coherent indoor layouts with plausible object placement and appearance.
+We compare sets of images rendered using either approach, and the qualitative results are shown in</span><a class="ltx_ref" href="#S4.F4" title="In 4.4 Scene Synthesis ‣ 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_tag">Fig.</span>˜<span class="ltx_text ltx_ref_tag">4</span></a>.</p>
+</div>
+<figure class="ltx_figure" id="S4.F4"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="315" id="S4.F4.g1" src="https://arxiv.org/html/2603.26661v1/x4.png" width="475"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F4.2.1.1" style="font-size:90%;">Figure 4</span>: </span><span class="ltx_text" id="S4.F4.3.2" style="font-size:90%;">Qualitative results on unconditional scene generation. We compare L3DG <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">roessle_l3dg_2024</span>]</cite> and GaussianGPT (ours). L3DG generates full but normalized scenes; ours generates full-scale scene chunks.</span></figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS4.p2">
+<p class="ltx_p" id="S4.SS4.p2.1"><span class="translated-text">我们的公式的一个关键优势是能够将场景扩展到固定的空间范围之外。
+由于生成是在序列化的潜在块上因果地进行的，因此可以迭代地应用该模型来执行连续的绘制，而无需进行架构修改。</span><span class="original-text">A key advantage of our formulation is the ability to extend scenes beyond a fixed spatial horizon.
+Since generation proceeds causally over serialized latent chunks, the model can be applied iteratively to perform continuous outpainting without architectural modification.</span><a class="ltx_ref" href="#S4.F5" title="In 4.4 Scene Synthesis ‣ 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_tag">Fig.</span>˜<span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">说明了通过顺序采样和附加潜在网格的列生成的大规模场景。
+尽管在固定大小的区域上进行了训练，GaussianGPT 在扩展的空间上下文中保持了几何一致性和风格一致性。
+我们观察到稳定的地板对齐、一致的房间布局以及跨越块边界的结构元素的合理延续。
+这些结果凸显了开放式 3D 场景合成的自回归建模的灵活性，其中场景大小不是预先确定的，并且生成可以自然地随上下文缩放。</span><span class="original-text">illustrates large-scale scenes generated by sequentially sampling and appending columns of the latent grid.
+Despite being trained on fixed-size regions, GaussianGPT maintains geometric coherence and stylistic consistency across extended spatial contexts.
+We observe stable floor alignment, consistent room layouts, and plausible continuation of structural elements across chunk boundaries.
+These results highlight the flexibility of autoregressive modeling for open-ended 3D scene synthesis, where scene size is not predetermined, and generation can naturally scale with context.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F5"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="129" id="S4.F5.g1" src="https://arxiv.org/html/2603.26661v1/x5.png" width="475"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F5.4.1.1" style="font-size:90%;">Figure 5</span>: </span><math alttext="12\,\mathrm{m}\times 12\,\mathrm{m}" class="ltx_Math" display="inline" id="S4.F5.2.m1" intent=":literal"><semantics><mrow><mrow><mrow><mn mathsize="0.900em">12</mn><mo lspace="0.170em" rspace="0em">​</mo><mi mathsize="0.900em" mathvariant="normal">m</mi></mrow><mo lspace="0.222em" mathsize="0.900em" rspace="0.222em">×</mo><mn mathsize="0.900em">12</mn></mrow><mo lspace="0.170em" rspace="0em">​</mo><mi mathsize="0.900em" mathvariant="normal">m</mi></mrow><annotation encoding="application/x-tex">12\,\mathrm{m}\times 12\,\mathrm{m}</annotation></semantics></math><span class="ltx_text" id="S4.F5.5.2" style="font-size:90%;"> scene synthesis via autoregressive outpainting.
+GaussianGPT sequentially generates and appends latent grid columns, enabling scenes to grow beyond the training horizon.</span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S4.SS5">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.5 </span><span class="translated-text">场景完成</span><span class="original-text">Scene Completion</span></h3>
+<div class="ltx_para" id="S4.SS5.p1">
+<p class="ltx_p" id="S4.SS5.p1.1"><span class="translated-text">我们通过调节 3D-FRONT 验证集中的部分潜在块并自回归生成剩余空间区域来评估结构化场景完成上的 GaussianGPT。
+具体来说，我们揭示场景块的四分之一或二分之一，并要求模型通过标准的下一个标记预测来合成缺失的部分。</span><span class="original-text">We evaluate GaussianGPT on structured scene completion by conditioning on partial latent chunks from the 3D-FRONT validation set and autoregressively generating the remaining spatial region.
+Specifically, we reveal either one quarter or one half of a scene chunk and task the model with synthesizing the missing portion via standard next-token prediction.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS5.p2">
+<p class="ltx_p" id="S4.SS5.p2.1"><span class="translated-text">定性结果显示在</span><span class="original-text">Qualitative results are shown in</span><a class="ltx_ref" href="#S4.F6" title="In 4.5 Scene Completion ‣ 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_tag">Fig.</span>˜<span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">。
+在不同的室内布局中，GaussianGPT 始终能够产生连贯且语义上合理的完成效果。
+生成的区域与观察到的环境很好地对齐，保持地板连续性、墙壁结构和对象放置与可见部分一致。
+重要的是，该模型不仅仅复制确定性延续：以相同部分输入为条件的多个样本在布局和对象配置方面表现出有意义的变化，同时在结构上与上下文保持一致。</span><span class="original-text">.
+Across diverse indoor layouts, GaussianGPT consistently produces coherent and semantically plausible completions.
+Generated regions align well with the observed context, maintaining floor continuity, wall structure, and object placement consistent with the visible portion.
+Importantly, the model does not merely replicate deterministic continuations: multiple samples conditioned on the same partial input exhibit meaningful variation in layout and object configuration while remaining structurally consistent with the context.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS5.p3">
+<p class="ltx_p" id="S4.SS5.p3.1"><span class="translated-text">与无条件生成相比，完成凸显了自回归建模的关键优势：因果公式自然地以任意前缀为条件，无需架构更改或专门的调节机制即可实现结构化修复。
+我们观察到生成的补全在语义上都是有意义的，并且在样本之间具有多样性，这表明在部分观察的 3D 环境中进行了有效的不确定性建模。</span><span class="original-text">Compared to unconditional generation, completion highlights a key strength of autoregressive modeling: the causal formulation naturally conditions on arbitrary prefixes, enabling structured inpainting without architectural changes or specialized conditioning mechanisms.
+We observe that generated completions are both semantically meaningful and diverse across samples, indicating effective uncertainty modeling in partially observed 3D environments.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F6"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="525" id="S4.F6.g1" src="https://arxiv.org/html/2603.26661v1/x6.png" width="475"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F6.2.1.1" style="font-size:90%;">Figure 6</span>: </span><span class="ltx_text" id="S4.F6.3.2" style="font-size:90%;">Qualitative results on scene chunk completion. Given one quarter of a validation chunk as context, GaussianGPT produces plausible and diverse completions.</span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S4.SS6">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.6 </span><span class="translated-text">顺序消融</span><span class="original-text">Sequence Ordering Ablation</span></h3>
+<div class="ltx_para" id="S4.SS6.p1">
+<p class="ltx_p" id="S4.SS6.p1.1"><span class="translated-text">我们研究了不同 3D 到 1D 序列化策略对自回归建模的影响。
+除了我们的专栏之外</span><span class="original-text">We study the effect of different 3D-to-1D serialization strategies on autoregressive modeling.
+Besides our column-wise</span><math alttext="xyz" class="ltx_Math" display="inline" id="S4.SS6.p1.1.m1" intent=":literal"><semantics><mrow><mi>x</mi><mo lspace="0em" rspace="0em">​</mo><mi>y</mi><mo lspace="0em" rspace="0em">​</mo><mi>z</mi></mrow><annotation encoding="application/x-tex">xyz</annotation></semantics></math><span class="translated-text">遍历，我们评估保留局部性的空间填充曲线，包括 Z 顺序和希尔伯特遍历及其遵循 Point Transformer V3 的转置变体</span><span class="original-text">traversal, we evaluate locality-preserving space-filling curves, including Z-order and Hilbert traversals and their transposed variants following Point Transformer V3</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">wu_point_2024</span>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S4.SS6.p2">
+<p class="ltx_p" id="S4.SS6.p2.2"><a class="ltx_ref" href="#S4.T2" title="In 4.6 Sequence Ordering Ablation ‣ 4 Experiments ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_tag">Tab.</span>˜<span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">报告在 ASE 和 3D-FRONT 上 40 个 epoch 后的训练和验证交叉熵。
+尽管空间填充曲线具有更强的局部性保证，但它们并不能提高性能。
+简单的</span><span class="original-text">reports training and validation cross-entropy after 40 epochs on ASE and 3D-FRONT.
+Despite their stronger locality guarantees, space-filling curves do not improve performance.
+The simple</span><math alttext="xyz" class="ltx_Math" display="inline" id="S4.SS6.p2.1.m1" intent=":literal"><semantics><mrow><mi>x</mi><mo lspace="0em" rspace="0em">​</mo><mi>y</mi><mo lspace="0em" rspace="0em">​</mo><mi>z</mi></mrow><annotation encoding="application/x-tex">xyz</annotation></semantics></math><span class="translated-text">排序的性能与替代方案相当或略好，而基于希尔伯特的遍历始终表现不佳。
+我们将此归因于 3D RoPE 的使用，它将空间关系直接注入注意力机制中。
+结果，几何局部性被保留，与序列化顺序无关，而规则结构</span><span class="original-text">ordering performs on par with or slightly better than the alternatives, while Hilbert-based traversals consistently underperform.
+We attribute this to the use of 3D RoPE, which injects spatial relationships directly into the attention mechanism.
+As a result, geometric locality is preserved independently of the serialization order, while the regular structure of</span><math alttext="xyz" class="ltx_Math" display="inline" id="S4.SS6.p2.2.m2" intent=":literal"><semantics><mrow><mi>x</mi><mo lspace="0em" rspace="0em">​</mo><mi>y</mi><mo lspace="0em" rspace="0em">​</mo><mi>z</mi></mrow><annotation encoding="application/x-tex">xyz</annotation></semantics></math><span class="translated-text">简化了下一个标记的预测。</span><span class="original-text">simplifies next-token prediction.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T2">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S4.T2.7.2.1" style="font-size:90%;">Table 2</span>: </span><span class="ltx_text" id="S4.T2.2.1" style="font-size:90%;">Ablation of 3D-to-1D serialization strategies. Despite weaker locality guarantees, the simple <math alttext="xyz" class="ltx_Math" display="inline" id="S4.T2.2.1.m1" intent=":literal"><semantics><mrow><mi>x</mi><mo lspace="0em" rspace="0em">​</mo><mi>y</mi><mo lspace="0em" rspace="0em">​</mo><mi>z</mi></mrow><annotation encoding="application/x-tex">xyz</annotation></semantics></math> traversal achieves the best training and validation cross-entropy.</span></figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T2.5">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T2.4.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T2.4.2.3">Ordering Strategy</th>
+<th class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T2.3.1.1">Train CE <math alttext="\downarrow" class="ltx_Math" display="inline" id="S4.T2.3.1.1.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T2.4.2.2">Val CE <math alttext="\downarrow" class="ltx_Math" display="inline" id="S4.T2.4.2.2.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T2.5.4.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T2.5.4.1.1">Z-order</th>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_t" id="S4.T2.5.4.1.2">2.379</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_t" id="S4.T2.5.4.1.3">2.448</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.5.5.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T2.5.5.2.1">Trans. Z-order</th>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="S4.T2.5.5.2.2">2.379</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="S4.T2.5.5.2.3">2.445</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.5.6.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T2.5.6.3.1">Hilbert</th>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="S4.T2.5.6.3.2">2.467</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="S4.T2.5.6.3.3">2.497</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.5.7.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T2.5.7.4.1">Trans. Hilbert</th>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="S4.T2.5.7.4.2">2.462</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="S4.T2.5.7.4.3">2.493</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.5.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S4.T2.5.3.1"><math alttext="xyz" class="ltx_Math" display="inline" id="S4.T2.5.3.1.m1" intent=":literal"><semantics><mrow><mi>x</mi><mo lspace="0em" rspace="0em">​</mo><mi>y</mi><mo lspace="0em" rspace="0em">​</mo><mi>z</mi></mrow><annotation encoding="application/x-tex">xyz</annotation></semantics></math></th>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_bb" id="S4.T2.5.3.2"><span class="ltx_text ltx_font_bold" id="S4.T2.5.3.2.1">2.346</span></td>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_bb" id="S4.T2.5.3.3"><span class="ltx_text ltx_font_bold" id="S4.T2.5.3.3.1">2.444</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">我们介绍了</span><span class="original-text">We introduced</span><span class="ltx_text ltx_font_bold" id="S5.p1.1.1"><span class="translated-text">高斯GPT</span><span class="original-text">GaussianGPT</span></span><span class="translated-text">，一个完全自回归框架，用于直接在矢量量化高斯表示上运行 3D 场景生成和完成。
+通过将稀疏 3D 潜在压缩与结构化标记化和 3D 感知变压器建模相结合，我们表明顺序下一个标记预测是基于扩散的结构化 3D 合成方法的可行且补充的替代方案。
+与基于扩散的方法相比，我们的配方实现了多种新功能。
+场景可以作为一系列离散空间决策逐步生成，从而允许对采样进行显式控制，对部分生成的几何图形进行因果推理，以及使用同一模型对完成和绘制进行无缝支持。</span><span class="original-text">, a fully autoregressive framework for 3D scene generation and completion operating directly on vector-quantized Gaussian representations.
+By combining sparse 3D latent compression with structured tokenization and 3D-aware transformer modeling, we show that sequential next-token prediction is a viable and complementary alternative to diffusion-based approaches for structured 3D synthesis.
+Compared to diffusion-based methods, our formulation enables several new capabilities.
+Scenes can be generated incrementally as a sequence of discrete spatial decisions, allowing explicit control over sampling, causal reasoning over partially generated geometry, and seamless support for completion and outpainting using the same model.</span></p>
+</div>
+<div class="ltx_para" id="S5.p2">
+<p class="ltx_p" id="S5.p2.1"><span class="translated-text">我们展示了 3D 形状合成中视觉质量的提高，并定性地展示了无条件生成、场景完成和大规模场景合成中生成的场景的多样性和保真度。
+更广泛地说，我们的工作强调了将 3D 场景视为结构化标记序列的潜力，为可控和组合的 3D 生成开辟了新的机会。
+未来的工作包括将框架扩展到现实世界的数据，其中不确定性感知建模变得至关重要，并且自回归方法特别适合。
+我们还设想了其他有希望的途径来提高长期稳定性并将生成上下文扩展到固定空间块之外。</span><span class="original-text">We demonstrate improved visual quality in 3D shape synthesis and qualitatively showcase the diversity and fidelity of generated scenes across unconditional generation, scene completion, and large-scale scene synthesis.
+More broadly, our work highlights the potential of treating 3D scenes as structured token sequences, opening new opportunities for controllable and compositional 3D generation.
+Future work includes extending the framework to real-world data, where uncertainty-aware modeling becomes essential, and autoregressive approaches are particularly well-suited.
+We also imagine other promising avenues for improving long-horizon stability and extending the generation context beyond fixed spatial chunks.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="Sx1">
+<h2 class="ltx_title ltx_title_section"><span class="translated-text">致谢</span><span class="original-text">Acknowledgements</span></h2>
+<div class="ltx_para" id="Sx1.p1">
+<p class="ltx_p" id="Sx1.p1.1"><span class="translated-text">Nicolas von Lützow 得到 MDSI 焦点主题的支持</span><span class="original-text">Nicolas von Lützow is supported by the MDSI focus topic</span><em class="ltx_emph ltx_font_italic" id="Sx1.p1.1.1"><span class="translated-text">了解建筑规划中的现有结构</span><span class="original-text">Understanding Existing Structures in Building Planning</span></em><span class="translated-text">（USP），Katharina Schmid 是 MDSI 博士研究员。
+这项工作得到了 ERC Consolidator Grant 的进一步支持</span><span class="original-text">(USP), and Katharina Schmid is an MDSI doctoral fellow.
+This work was further supported by the ERC Consolidator Grant</span><em class="ltx_emph ltx_font_italic" id="Sx1.p1.1.2">Gen3D</em><span class="translated-text">(101171131)，以及项目下于利希超级计算中心的计算资源</span><span class="original-text">(101171131), and by compute resources from the Jülich Supercomputing Centre under project</span><em class="ltx_emph ltx_font_italic" id="Sx1.p1.1.3"><span class="translated-text">网格基金会</span><span class="original-text">MeshFoundation</span></em><span class="translated-text">。
+我们感谢戴安吉拉 (Angela Dai) 的视频配音。</span><span class="original-text">.
+We thank Angela Dai for the video voice-over.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+</ul>
+</section>
+<div class="ltx_pagination ltx_role_newpage"></div>
+<div class="ltx_para" id="p1">
+<p class="ltx_p ltx_align_center" id="p1.1"><span class="ltx_text ltx_font_bold" id="p1.1.1" style="font-size:144%;"><span class="translated-text">附录</span><span class="original-text">Appendix</span></span></p>
+</div>
+<section class="ltx_appendix" id="Pt0.A1">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录0.A</span><span class="original-text">Appendix 0.A</span></span><span class="translated-text">真实世界的结果</span><span class="original-text">Real-World Results</span></h2>
+<div class="ltx_para" id="Pt0.A1.p1">
+<p class="ltx_p" id="Pt0.A1.p1.3"><span class="translated-text">为了评估我们的方法在实际数据上的可行性，我们在 ScanNet++ v2 上微调我们的模型</span><span class="original-text">To assess the feasibility of our approach on real-world data, we fine-tune our models on ScanNet++ v2</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">yeshwanth_scannet_2023</span>]</cite><span class="translated-text">。
+与主论文中使用的合成数据集相比，此设置引入了几个额外的挑战：更高的视觉和几何复杂性、更大的场景可变性以及缺乏轴对齐结构（例如墙壁和地板）。
+此外，可用的数据集要小得多。
+我们使用高斯优化作为 SceneSplat++ 的一部分</span><span class="original-text">.
+Compared to the synthetic datasets used in the main paper, this setting introduces several additional challenges: higher visual and geometric complexity, greater scene variability, and the absence of axis-aligned structures such as walls and floors.
+Moreover, the available dataset is significantly smaller.
+We use Gaussians optimized as part of SceneSplat++</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">ma_scenesplat_2025</span>]</cite><span class="translated-text">，得到</span><span class="original-text">, obtaining</span><math alttext="895" class="ltx_Math" display="inline" id="Pt0.A1.p1.1.m1" intent=":literal"><semantics><mn>895</mn><annotation encoding="application/x-tex">895</annotation></semantics></math><span class="translated-text">总共场景，其中</span><span class="original-text">scenes in total, of which</span><math alttext="90\%" class="ltx_Math" display="inline" id="Pt0.A1.p1.2.m2" intent=":literal"><semantics><mrow><mn>90</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">90\%</annotation></semantics></math><span class="translated-text">用于训练。
+即使有相同的</span><span class="original-text">are used for training.
+Even with the same</span><math alttext="8\times" class="ltx_math_unparsed" display="inline" id="Pt0.A1.p1.3.m3" intent=":literal"><semantics><mrow><mn>8</mn><mo lspace="0.222em">×</mo></mrow><annotation encoding="application/x-tex">8\times</annotation></semantics></math><span class="translated-text">与主要实验一样，旋转和翻转增强，有效的训练集仍然有限。</span><span class="original-text">rotation and flipping augmentation as in the main experiments, the effective training set remains limited.</span></p>
+</div>
+<figure class="ltx_figure" id="Pt0.A1.F7"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="414" id="Pt0.A1.F7.g1" src="https://arxiv.org/html/2603.26661v1/x7.png" width="475"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="Pt0.A1.F7.6.3.1" style="font-size:90%;">Figure 7</span>: </span><span class="ltx_text" id="Pt0.A1.F7.4.2" style="font-size:90%;">Qualitative results on scene chunk completion on ScanNet++ v2 <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">yeshwanth_scannet_2023</span>]</cite>. We sample completions with temperature <math alttext="0.6" class="ltx_Math" display="inline" id="Pt0.A1.F7.3.1.m1" intent=":literal"><semantics><mn>0.6</mn><annotation encoding="application/x-tex">0.6</annotation></semantics></math>, and Nucleus Sampling <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">holtzman_curious_2020</span>]</cite> with <math alttext="p=0.7" class="ltx_Math" display="inline" id="Pt0.A1.F7.4.2.m2" intent=":literal"><semantics><mrow><mi>p</mi><mo>=</mo><mn>0.7</mn></mrow><annotation encoding="application/x-tex">p=0.7</annotation></semantics></math>, yielding varied and feasible completions.</span></figcaption>
+</figure>
+<section class="ltx_paragraph" id="Pt0.A1.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">培训细节。</span><span class="original-text">Training Details.</span></h4>
+<div class="ltx_para" id="Pt0.A1.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="Pt0.A1.SS0.SSS0.Px1.p1.3"><span class="translated-text">我们从官方 ScanNet++ v2 版本获取 DSLR 图像，并使用半分辨率的分块训练对自动编码器进行微调</span><span class="original-text">We obtain DSLR images from the official ScanNet++ v2 release and fine-tune the autoencoder using chunked training at half resolution for</span><math alttext="100" class="ltx_Math" display="inline" id="Pt0.A1.SS0.SSS0.Px1.p1.1.m1" intent=":literal"><semantics><mn>100</mn><annotation encoding="application/x-tex">100</annotation></semantics></math><span class="translated-text">epochs（大约一天的训练）。
+然后，GPT 模型在生成的潜在网格上进行微调</span><span class="original-text">epochs (approximately one day of training).
+The GPT model is then fine-tuned on the resulting latent grids for</span><math alttext="250" class="ltx_Math" display="inline" id="Pt0.A1.SS0.SSS0.Px1.p1.2.m2" intent=":literal"><semantics><mn>250</mn><annotation encoding="application/x-tex">250</annotation></semantics></math><span class="translated-text">纪元，这需要大约</span><span class="original-text">epochs, which takes around</span><math alttext="7.5" class="ltx_Math" display="inline" id="Pt0.A1.SS0.SSS0.Px1.p1.3.m3" intent=":literal"><semantics><mn>7.5</mn><annotation encoding="application/x-tex">7.5</annotation></semantics></math><span class="translated-text">小时。</span><span class="original-text">hours.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="Pt0.A1.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">完成结果。</span><span class="original-text">Completion Results.</span></h4>
+<div class="ltx_para" id="Pt0.A1.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="Pt0.A1.SS0.SSS0.Px2.p1.1"><span class="translated-text">我们使用与主论文中相同的设置来评估场景块完成的模型，并在中显示结果</span><span class="original-text">We evaluate the model on scene chunk completion using the same setup as in the main paper and show results in</span><a class="ltx_ref" href="#Pt0.A1.F7" title="In Appendix 0.A Real-World Results ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_tag">Fig.</span>˜<span class="ltx_text ltx_ref_tag">7</span></a><span class="translated-text">。
+尽管数据集很小，但该模型保留了从合成数据中学习到的有用先验，并在几何、纹理和语义布局方面产生了多样化且合理的补全。</span><span class="original-text">.
+Despite the small dataset, the model retains useful priors learned from synthetic data and produces diverse and plausible completions in terms of geometry, texture, and semantic layout.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="Pt0.A1.SS0.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">局限性。</span><span class="original-text">Limitations.</span></h4>
+<div class="ltx_para" id="Pt0.A1.SS0.SSS0.Px3.p1">
+<p class="ltx_p" id="Pt0.A1.SS0.SSS0.Px3.p1.1"><span class="translated-text">然而，我们观察到自动编码器的保真度成为现实环境中的限制因素。
+特别是，高频细节通常无法完全重建，导致几何图形和高斯预测更加嘈杂。
+此外，现实世界的扫描本质上包含缺失或未观察到的区域，这些区域无法通过当前管道忠实地建模。</span><span class="original-text">However, we observe that the fidelity of the autoencoder becomes a limiting factor in the real-world setting.
+In particular, high-frequency details are often not fully reconstructed, leading to noisier geometry and Gaussian predictions.
+Furthermore, real-world scans inherently contain missing or unobserved regions that cannot be faithfully modeled by the current pipeline.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="Pt0.A1.SS0.SSS0.Px4">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">未来的工作。</span><span class="original-text">Future Work.</span></h4>
+<div class="ltx_para" id="Pt0.A1.SS0.SSS0.Px4.p1">
+<p class="ltx_p" id="Pt0.A1.SS0.SSS0.Px4.p1.1"><span class="translated-text">提高重建保真度并明确建模部分观测环境中的不确定性仍然是未来工作的重要方向。
+自回归公式特别适合这种设置，因为它们的小型离散决策的组成序列允许掩盖不确定区域，同时仍然能够基于可用的条件信号进行概率推理。
+这可以在内部建模和生成完整场景的同时对部分现实世界扫描进行训练，从而有可能在现实世界环境中释放自回归方法的进一步优势。</span><span class="original-text">Improving reconstruction fidelity and explicitly modeling uncertainty in partially observed environments remain important directions for future work.
+Autoregressive formulations are particularly well suited for this setting, as their compositional sequence of small, discrete decisions allows uncertain regions to be masked while still enabling probabilistic reasoning based on the available conditioning signals.
+This could enable training on partial real-world scans while internally modeling and generating complete scenes, potentially unlocking further advantages of autoregressive approaches in real-world environments.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_appendix" id="Pt0.A2">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录0.B</span><span class="original-text">Appendix 0.B</span></span><span class="translated-text">大场景生成</span><span class="original-text">Large Scene Generation</span></h2>
+<div class="ltx_para" id="Pt0.A2.p1">
+<p class="ltx_p" id="Pt0.A2.p1.1"><span class="translated-text">对于大规模场景生成，我们使用滑动窗口局部上下文通过自回归外画来扩展场景。
+当预测新列时，模型仅观察附近窗口内先前生成的列，并预测该局部坐标系中的下一列。
+列是按光栅顺序生成的，以便每个预测条件都在越来越大的部分场景上。
+其他结果显示在</span><span class="original-text">For large-scale scene generation, we extend scenes via autoregressive outpainting using a sliding-window local context.
+When predicting a new column, the model observes only previously generated columns within a nearby window and predicts the next column in this local coordinate frame.
+Columns are generated in raster order, such that each prediction conditions on an increasingly larger partial scene.
+Additional results are shown in</span><a class="ltx_ref" href="#Pt0.A2.F8" title="In Sampling Efficiency. ‣ Appendix 0.B Large Scene Generation ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_tag">Fig.</span>˜<span class="ltx_text ltx_ref_tag">8</span></a>.</p>
+</div>
+<section class="ltx_paragraph" id="Pt0.A2.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">重新采样。</span><span class="original-text">Resampling.</span></h4>
+<div class="ltx_para" id="Pt0.A2.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="Pt0.A2.SS0.SSS0.Px1.p1.1"><span class="translated-text">训练块可以包含相对稀疏的几何图形，这可能会导致在生成大型场景时出现空预测。
+为了鼓励有意义的占用，我们应用了一个简单的重采样策略：如果预测列为空，我们会重试生成最多五次。
+这促进了不平凡的结构，同时避免了对模型的硬约束。</span><span class="original-text">Training chunks can contain relatively sparse geometry, which may lead to empty predictions when generating large scenes.
+To encourage meaningful occupancy, we apply a simple resampling strategy: if a predicted column is empty, we retry generation up to five times.
+This promotes non-trivial structure while avoiding hard constraints on the model.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="Pt0.A2.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">采样效率。</span><span class="original-text">Sampling Efficiency.</span></h4>
+<div class="ltx_para" id="Pt0.A2.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="Pt0.A2.SS0.SSS0.Px2.p1.8"><span class="translated-text">场景生成分三个阶段进行。
+首先，通过单块采样生成初始连续上下文块。
+其次，移动的引导阶段沿着</span><span class="original-text">Scene generation proceeds in three stages.
+First, an initial contiguous context block is produced via single-chunk sampling.
+Second, a shifted bootstrap stage expands this seed along the</span><math alttext="x" class="ltx_Math" display="inline" id="Pt0.A2.SS0.SSS0.Px2.p1.1.m1" intent=":literal"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math><span class="translated-text">-方向，通过滑动上下文窗口并每步生成 20 列的新切片。
+最后，主绘制循环沿着</span><span class="original-text">-direction by sliding the context window and generating a new slice of 20 columns per step.
+Finally, the main outpainting loop grows the scene along the</span><math alttext="y" class="ltx_Math" display="inline" id="Pt0.A2.SS0.SSS0.Px2.p1.2.m2" intent=":literal"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math><span class="translated-text">- 方向，直到达到目标尺寸。
+引导通过每次调用生成多个列来减少采样循环调用的数量，并实现转换器 KV 缓存的高效重用。
+由于我们的表示的稀疏性，生成时间很大程度上取决于占用率。
+然而，平均而言，合成</span><span class="original-text">-direction until the target size is reached.
+Bootstrapping reduces the number of sampling loop calls by generating multiple columns per call and enables efficient reuse of the transformer KV-cache.
+Due to the sparse nature of our representation, generation time largely depends on occupancy.
+However, on average, synthesizing a</span><math alttext="12\,\mathrm{m}\times 12\,\mathrm{m}" class="ltx_Math" display="inline" id="Pt0.A2.SS0.SSS0.Px2.p1.3.m3" intent=":literal"><semantics><mrow><mrow><mrow><mn>12</mn><mo lspace="0.170em" rspace="0em">​</mo><mi mathvariant="normal">m</mi></mrow><mo lspace="0.222em" rspace="0.222em">×</mo><mn>12</mn></mrow><mo lspace="0.170em" rspace="0em">​</mo><mi mathvariant="normal">m</mi></mrow><annotation encoding="application/x-tex">12\,\mathrm{m}\times 12\,\mathrm{m}</annotation></semantics></math><span class="translated-text">场景大约需要</span><span class="original-text">scene takes approximately</span><math alttext="6{,}000" class="ltx_Math" display="inline" id="Pt0.A2.SS0.SSS0.Px2.p1.4.m4" intent=":literal"><semantics><mrow><mn>6</mn><mo>,</mo><mn>000</mn></mrow><annotation encoding="application/x-tex">6{,}000</annotation></semantics></math><span class="translated-text">GH200 GPU 上的秒数。
+生成单个</span><span class="original-text">seconds on a GH200 GPU.
+Generating a single</span><math alttext="4\,\mathrm{m}\times 4\,\mathrm{m}" class="ltx_Math" display="inline" id="Pt0.A2.SS0.SSS0.Px2.p1.5.m5" intent=":literal"><semantics><mrow><mrow><mrow><mn>4</mn><mo lspace="0.170em" rspace="0em">​</mo><mi mathvariant="normal">m</mi></mrow><mo lspace="0.222em" rspace="0.222em">×</mo><mn>4</mn></mrow><mo lspace="0.170em" rspace="0em">​</mo><mi mathvariant="normal">m</mi></mrow><annotation encoding="application/x-tex">4\,\mathrm{m}\times 4\,\mathrm{m}</annotation></semantics></math><span class="translated-text">块大约需要</span><span class="original-text">chunk takes roughly</span><math alttext="90" class="ltx_Math" display="inline" id="Pt0.A2.SS0.SSS0.Px2.p1.6.m6" intent=":literal"><semantics><mn>90</mn><annotation encoding="application/x-tex">90</annotation></semantics></math><span class="translated-text">秒，对应约</span><span class="original-text">seconds, corresponding to about</span><math alttext="4.4" class="ltx_Math" display="inline" id="Pt0.A2.SS0.SSS0.Px2.p1.7.m7" intent=":literal"><semantics><mn>4.4</mn><annotation encoding="application/x-tex">4.4</annotation></semantics></math><span class="translated-text">列/秒，相比之下</span><span class="original-text">columns/s, in contrast to the</span><math alttext="0.6" class="ltx_Math" display="inline" id="Pt0.A2.SS0.SSS0.Px2.p1.8.m8" intent=":literal"><semantics><mn>0.6</mn><annotation encoding="application/x-tex">0.6</annotation></semantics></math><span class="translated-text">上面要求的列。
+如果不进行重采样，生成速度大约是原来的两倍。</span><span class="original-text">columns/s required above.
+Without resampling, generation is approximately twice as fast.</span></p>
+</div>
+<figure class="ltx_figure" id="Pt0.A2.F8"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="320" id="Pt0.A2.F8.g1" src="https://arxiv.org/html/2603.26661v1/x8.png" width="475"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="Pt0.A2.F8.4.2.1" style="font-size:90%;">Figure 8</span>: </span><span class="ltx_text" id="Pt0.A2.F8.2.1" style="font-size:90%;">More examples of <math alttext="12\,\mathrm{m}\times 12\,\mathrm{m}" class="ltx_Math" display="inline" id="Pt0.A2.F8.2.1.m1" intent=":literal"><semantics><mrow><mrow><mrow><mn>12</mn><mo lspace="0.170em" rspace="0em">​</mo><mi mathvariant="normal">m</mi></mrow><mo lspace="0.222em" rspace="0.222em">×</mo><mn>12</mn></mrow><mo lspace="0.170em" rspace="0em">​</mo><mi mathvariant="normal">m</mi></mrow><annotation encoding="application/x-tex">12\,\mathrm{m}\times 12\,\mathrm{m}</annotation></semantics></math> scene synthesis via autoregressive outpainting.</span></figcaption>
+</figure>
+</section>
+<section class="ltx_paragraph" id="Pt0.A2.SS0.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">块窗口定位。</span><span class="original-text">Chunk Window Positioning.</span></h4>
+<div class="ltx_para" id="Pt0.A2.SS0.SSS0.Px3.p1">
+<p class="ltx_p" id="Pt0.A2.SS0.SSS0.Px3.p1.4"><span class="translated-text">另一个实际考虑因素是预测目标在滑动窗口内的放置。
+在训练过程中，模型学习预测本地上下文中任意位置的列。
+在推理时，我们利用这种灵活性来平衡预测背后的历史量与可用的本地上下文。
+具体来说，假设块坐标</span><span class="original-text">Another practical consideration is the placement of the prediction target within the sliding window.
+During training, the model learns to predict columns at arbitrary positions inside the local context.
+At inference time, we exploit this flexibility to balance the amount of history behind the prediction with the available local context.
+Specifically, assuming the chunk coordinates</span><math alttext="(0,0,z)" class="ltx_Math" display="inline" id="Pt0.A2.SS0.SSS0.Px3.p1.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>,</mo><mi>z</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(0,0,z)</annotation></semantics></math><span class="translated-text">描述按顺序最后一个的角柱，我们沿着</span><span class="original-text">describe the corner column which is last in sequence, we generate along the</span><math alttext="y" class="ltx_Math" display="inline" id="Pt0.A2.SS0.SSS0.Px3.p1.2.m2" intent=":literal"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math><span class="translated-text">方向与</span><span class="original-text">direction with</span><math alttext="y\in[5,10)" class="ltx_Math" display="inline" id="Pt0.A2.SS0.SSS0.Px3.p1.3.m3" intent=":literal"><semantics><mrow><mi>y</mi><mo>∈</mo><mrow><mo stretchy="false">[</mo><mn>5</mn><mo>,</mo><mn>10</mn><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">y\in[5,10)</annotation></semantics></math><span class="translated-text">，它为双方提供了足够的上下文，同时允许在一次采样调用中生成最多五列。
+我们还旨在预测周围</span><span class="original-text">, which provides sufficient context on both sides while allowing up to five columns to be produced in a single sampling call.
+We also aim to predict around</span><math alttext="x=5" class="ltx_Math" display="inline" id="Pt0.A2.SS0.SSS0.Px3.p1.4.m4" intent=":literal"><semantics><mrow><mi>x</mi><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">x=5</annotation></semantics></math><span class="translated-text">，允许每个局部窗口类似于由于未知部分而导致的训练块的分布。
+这些选择共同在大型场景合成过程中产生稳定、条件良好的生成前沿。</span><span class="original-text">, allowing each local window to resemble the distribution of training chunks due to the unknown section.
+Together, these choices yield a stable, well-conditioned generation frontier during large scene synthesis.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_appendix" id="Pt0.A3">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录0.C</span><span class="original-text">Appendix 0.C</span></span><span class="translated-text">其他培训细节</span><span class="original-text">Additional Training Details</span></h2>
+<section class="ltx_paragraph" id="Pt0.A3.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">块采样。</span><span class="original-text">Chunk Sampling.</span></h4>
+<div class="ltx_para" id="Pt0.A3.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="Pt0.A3.SS0.SSS0.Px1.p1.3"><span class="translated-text">自动编码器和 GPT 模型都是通过从可用场景中采样空间块来训练的。
+对于每个训练步骤，最多</span><span class="original-text">Both the autoencoder and the GPT model are trained by sampling spatial chunks from the available scenes.
+For each training step, up to</span><math alttext="10" class="ltx_Math" display="inline" id="Pt0.A3.SS0.SSS0.Px1.p1.1.m1" intent=":literal"><semantics><mn>10</mn><annotation encoding="application/x-tex">10</annotation></semantics></math><span class="translated-text">提出候选块，直到满足最小占用阈值</span><span class="original-text">candidate chunks are proposed until one satisfies the minimum occupancy threshold of</span><math alttext="0.2" class="ltx_Math" display="inline" id="Pt0.A3.SS0.SSS0.Px1.p1.2.m2" intent=":literal"><semantics><mn>0.2</mn><annotation encoding="application/x-tex">0.2</annotation></semantics></math><span class="translated-text">用于自动编码器训练和</span><span class="original-text">for autoencoder training and</span><math alttext="0.3" class="ltx_Math" display="inline" id="Pt0.A3.SS0.SSS0.Px1.p1.3.m3" intent=":literal"><semantics><mn>0.3</mn><annotation encoding="application/x-tex">0.3</annotation></semantics></math><span class="translated-text">对于 GPT 训练，因为潜在网格更粗糙。
+如果没有候选满足要求，则选择占用率最高的块。</span><span class="original-text">for GPT training, since the latent grid is coarser.
+If no candidate meets the requirement, the chunk with the highest occupancy is selected instead.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="Pt0.A3.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">相机采样。</span><span class="original-text">Camera Sampling.</span></h4>
+<div class="ltx_para" id="Pt0.A3.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="Pt0.A3.SS0.SSS0.Px2.p1.2"><span class="translated-text">对于自动编码器训练，我们还根据所选块对相机进行采样。
+有意义地观察块的视图被优先考虑。
+对于 3D-FRONT</span><span class="original-text">For autoencoder training, we additionally sample cameras conditioned on the selected chunk.
+Views that meaningfully observe the chunk are prioritized.
+For 3D-FRONT</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">fu_3d-front_2021</span>]</cite><span class="translated-text">，我们可以通过将深度图与块边界进行比较来精确地确定相关图像区域。
+因此我们抽样</span><span class="original-text">, we can determine the relevant image area precisely by comparing depth maps with the chunk boundaries.
+We therefore sample</span><math alttext="8\times" class="ltx_math_unparsed" display="inline" id="Pt0.A3.SS0.SSS0.Px2.p1.1.m1" intent=":literal"><semantics><mrow><mn>8</mn><mo lspace="0.222em">×</mo></mrow><annotation encoding="application/x-tex">8\times</annotation></semantics></math><span class="translated-text">所需的图像数量，根据可见块区域的数量对它们进行评分，并根据该分数按比例进行采样。
+这种方法有利于信息丰富的视图，同时仍然允许使用所有可用的相机视点。
+对于日月光</span><span class="original-text">the required number of images, score them based on the amount of visible chunk area, and sample proportionally to this score.
+This approach favors informative views while still allowing the use of all available camera viewpoints.
+For ASE</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">avetisyan_scenescript_2024</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">ma_scenesplat_2025</span>]</cite><span class="translated-text">，我们使用基于屏幕空间中投影块边界框的更简单的启发式。
+相机至少包含</span><span class="original-text">, we use a simpler heuristic based on the projected chunk bounding box in screen space.
+Cameras containing at least</span><math alttext="40\%" class="ltx_Math" display="inline" id="Pt0.A3.SS0.SSS0.Px2.p1.2.m2" intent=":literal"><semantics><mrow><mn>40</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">40\%</annotation></semantics></math><span class="translated-text">首选块覆盖，如有必要，可回退到具有任何重叠的相机。</span><span class="original-text">chunk coverage are preferred, falling back to cameras with any overlap if necessary.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="Pt0.A3.SS0.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">编码器和解码器头。</span><span class="original-text">Encoder and Decoder Heads.</span></h4>
+<div class="ltx_para" id="Pt0.A3.SS0.SSS0.Px3.p1">
+<p class="ltx_p" id="Pt0.A3.SS0.SSS0.Px3.p1.2"><span class="translated-text">在我们的自动编码器中，使用专用的编码器和解码器头将高斯属性编码到特征网格中并从特征网格中进行预测。
+每个编码器头由一个线性层组成，该线性层将特征维度扩展为</span><span class="original-text">In our autoencoder, Gaussian attributes are encoded into and predicted from feature grids using dedicated encoder and decoder heads.
+Each encoder head consists of a linear layer that expands the feature dimensionality by a factor of</span><math alttext="16" class="ltx_Math" display="inline" id="Pt0.A3.SS0.SSS0.Px3.p1.1.m1" intent=":literal"><semantics><mn>16</mn><annotation encoding="application/x-tex">16</annotation></semantics></math><span class="translated-text">，后面是保留维数的残差 MLP 块。
+生成的特征嵌入被连接并传递到编码器网络。
+解码后，重建的特征向量由各个解码器头处理。
+每个解码器头由两个残差 MLP 块组成</span><span class="original-text">, followed by a residual MLP block that preserves dimensionality.
+The resulting feature embeddings are concatenated and passed to the encoder network.
+After decoding, the reconstructed feature vectors are processed by individual decoder heads.
+Each decoder head consists of two residual MLP blocks with</span><math alttext="64" class="ltx_Math" display="inline" id="Pt0.A3.SS0.SSS0.Px3.p1.2.m2" intent=":literal"><semantics><mn>64</mn><annotation encoding="application/x-tex">64</annotation></semantics></math><span class="translated-text">通道，然后是到属性维度的最终线性投影。
+单独的头可预测比例、不透明度、四元数、颜色、坐标偏移和球谐函数（如果适用）。
+为了在训练开始时施加受控先验，最终的投影层使用零权重和选择的恒定偏差进行初始化，以确保合理的初始可见性。</span><span class="original-text">channels, followed by a final linear projection to the attribute’s dimensionality.
+Separate heads predict scales, opacities, quaternions, color, coordinate offsets, and spherical harmonics where applicable.
+To impose a controlled prior at the beginning of training, the final projection layers are initialized with zero weights and constant biases chosen to ensure reasonable initial visibility.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="Pt0.A3.SS0.SSS0.Px4">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">特征表示。</span><span class="original-text">Feature Representations.</span></h4>
+<div class="ltx_para" id="Pt0.A3.SS0.SSS0.Px4.p1">
+<p class="ltx_p" id="Pt0.A3.SS0.SSS0.Px4.p1.2"><span class="translated-text">每个高斯属性都可以在不同的表示和空间中参数化。
+对于自动编码器训练，我们使用 softplus 激活来表示世界空间大小的尺度，logit 空间中的不透明度被限制为</span><span class="original-text">Each Gaussian attribute can be parameterized in different representations and spaces.
+For autoencoder training, we represent scales in world-space size using a softplus activation, opacities in logit space clamped to</span><math alttext="[-10,10]" class="ltx_Math" display="inline" id="Pt0.A3.SS0.SSS0.Px4.p1.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><mrow><mo>−</mo><mn>10</mn></mrow><mo>,</mo><mn>10</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[-10,10]</annotation></semantics></math><span class="translated-text">，颜色钳位到</span><span class="original-text">, colors clamped to</span><math alttext="[0,1]" class="ltx_Math" display="inline" id="Pt0.A3.SS0.SSS0.Px4.p1.2.m2" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[0,1]</annotation></semantics></math><span class="translated-text">、标准化四元数以及作为无界世界空间值的偏移量。
+我们还将特征缩放到相似的大小以稳定训练。</span><span class="original-text">, standardized quaternions, and offsets as unbounded world-space values.
+We additionally scale features to similar magnitudes to stabilize training.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_appendix" id="Pt0.A4">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录0.D</span><span class="original-text">Appendix 0.D</span></span><span class="translated-text">GPT 训练超参数</span><span class="original-text">GPT Training Hyperparameters</span></h2>
+<div class="ltx_para" id="Pt0.A4.p1">
+<p class="ltx_p" id="Pt0.A4.p1.1"><span class="translated-text">使用的纳米聊天</span><span class="original-text">The used nanochat</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">nanochat</span>]</cite><span class="translated-text">后端经过调整，可实现语言任务的快速收敛，并包含每个模块的优化超参数。
+我们的实现是基于commit的</span><span class="original-text">backend is tuned for fast convergence on language tasks and contains per-module optimization hyperparameters.
+Our implementation is based on commit</span><span class="ltx_text ltx_font_italic" id="Pt0.A4.p1.1.1">e527521</span><span class="translated-text">。
+我们发现他们的超参数在我们的环境中运行良好，并且快速稳定地收敛。</span><span class="original-text">.
+We find their hyperparameters to work well in our setting and converge quickly and stably.</span><a class="ltx_ref" href="#Pt0.A4.T3" title="In Weight Initialization. ‣ Appendix 0.D GPT Training Hyperparameters ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_tag">Tab.</span>˜<span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">显示每个模块的优化器、学习率和其他参数。</span><span class="original-text">shows the per-module optimizer, learning rate, and additional parameters.</span></p>
+</div>
+<section class="ltx_paragraph" id="Pt0.A4.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">优化器。</span><span class="original-text">Optimizers.</span></h4>
+<div class="ltx_para" id="Pt0.A4.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="Pt0.A4.SS0.SSS0.Px1.p1.8"><span class="translated-text">所有模块均使用 AdamW 优化</span><span class="original-text">All modules optimized using AdamW</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">loshchilov_decoupled_2019</span>]</cite><span class="translated-text">另外使用</span><span class="original-text">additionally use</span><math alttext="\epsilon=1^{-10}" class="ltx_Math" display="inline" id="Pt0.A4.SS0.SSS0.Px1.p1.1.m1" intent=":literal"><semantics><mrow><mi>ϵ</mi><mo>=</mo><msup><mn>1</mn><mrow><mo>−</mo><mn>10</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\epsilon=1^{-10}</annotation></semantics></math><span class="translated-text">以保证稳定性和无重量衰减。
+使用 Muon 进行优化</span><span class="original-text">for stability and no weight decay.
+For optimization using Muon</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">jordan_muon_2024</span>]</cite>, <math alttext="\beta_{2}" class="ltx_Math" display="inline" id="Pt0.A4.SS0.SSS0.Px1.p1.2.m2" intent=":literal"><semantics><msub><mi>β</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\beta_{2}</annotation></semantics></math><span class="translated-text">指的是方差减少中使用的权重，</span><span class="original-text">refers to the weight used in variance reduction and</span><math alttext="n" class="ltx_Math" display="inline" id="Pt0.A4.SS0.SSS0.Px1.p1.3.m3" intent=":literal"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math><span class="translated-text">牛顿-舒尔茨迭代次数</span><span class="original-text">to the number of Newton-Schulz iterations</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">bernstein_modular_2024</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">higham_functions_2008</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">bjorck_iterative_1971</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">kovarik_iterative_1970</span>]</cite><span class="translated-text">。
+使用的涅斯特罗夫动量</span><span class="original-text">.
+The used Nesterov momentum</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">sutskever_importance_2013</span>]</cite><span class="translated-text">线性增加从</span><span class="original-text">increases linearly from</span><math alttext="0.85" class="ltx_Math" display="inline" id="Pt0.A4.SS0.SSS0.Px1.p1.4.m4" intent=":literal"><semantics><mn>0.85</mn><annotation encoding="application/x-tex">0.85</annotation></semantics></math> to <math alttext="0.95" class="ltx_Math" display="inline" id="Pt0.A4.SS0.SSS0.Px1.p1.5.m5" intent=":literal"><semantics><mn>0.95</mn><annotation encoding="application/x-tex">0.95</annotation></semantics></math><span class="translated-text">在前 300 次迭代中。
+此外，Muon 使用权重衰减</span><span class="original-text">over the first 300 iterations.
+Additionally, Muon uses a weight decay of</span><math alttext="0.025" class="ltx_Math" display="inline" id="Pt0.A4.SS0.SSS0.Px1.p1.6.m6" intent=":literal"><semantics><mn>0.025</mn><annotation encoding="application/x-tex">0.025</annotation></semantics></math><span class="translated-text">对于场景和</span><span class="original-text">for scenes and</span><math alttext="0.1" class="ltx_Math" display="inline" id="Pt0.A4.SS0.SSS0.Px1.p1.7.m7" intent=":literal"><semantics><mn>0.1</mn><annotation encoding="application/x-tex">0.1</annotation></semantics></math><span class="translated-text">对于对象，线性缩放为</span><span class="original-text">for objects, scaled linearly to</span><math alttext="0" class="ltx_Math" display="inline" id="Pt0.A4.SS0.SSS0.Px1.p1.8.m8" intent=":literal"><mn>0</mn></math><span class="translated-text">在训练期间。</span><span class="original-text">over the duration of training.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="Pt0.A4.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">权重初始化。</span><span class="original-text">Weight Initialization.</span></h4>
+<div class="ltx_para" id="Pt0.A4.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="Pt0.A4.SS0.SSS0.Px2.p1.6"><span class="translated-text">令牌嵌入初始化自</span><span class="original-text">Token embeddings are initialized from</span><math alttext="\mathcal{N}(0,1)" class="ltx_Math" display="inline" id="Pt0.A4.SS0.SSS0.Px2.p1.1.m1" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">𝒩</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{N}(0,1)</annotation></semantics></math><span class="translated-text">和输出头</span><span class="original-text">and the output heads from</span><math alttext="\mathcal{N}(0,10^{-3})" class="ltx_Math" display="inline" id="Pt0.A4.SS0.SSS0.Px2.p1.2.m2" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">𝒩</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>3</mn></mrow></msup><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{N}(0,10^{-3})</annotation></semantics></math><span class="translated-text">。
+所有注意力投影和 MLP 输入层在之间统一初始化</span><span class="original-text">.
+All attention projections and MLP input layers are initialized uniformly between</span><math alttext="\pm\sqrt{3/d}" class="ltx_Math" display="inline" id="Pt0.A4.SS0.SSS0.Px2.p1.3.m3" intent=":literal"><semantics><mrow><mo>±</mo><msqrt><mrow><mn>3</mn><mo>/</mo><mi>d</mi></mrow></msqrt></mrow><annotation encoding="application/x-tex">\pm\sqrt{3/d}</annotation></semantics></math><span class="translated-text">, 其中</span><span class="original-text">, where</span><math alttext="d" class="ltx_Math" display="inline" id="Pt0.A4.SS0.SSS0.Px2.p1.4.m4" intent=":literal"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math><span class="translated-text">是嵌入维度。
+注意力和 MLP 输出投影被初始化为零。
+剩余权重初始化为</span><span class="original-text">is the embedding dimension.
+Attention and MLP output projections are initialized to zero.
+Residual weights are initialized to</span><math alttext="1.0" class="ltx_Math" display="inline" id="Pt0.A4.SS0.SSS0.Px2.p1.5.m5" intent=":literal"><semantics><mn>1.0</mn><annotation encoding="application/x-tex">1.0</annotation></semantics></math><span class="translated-text">，并将跳跃权重输入到</span><span class="original-text">, and input skip weights to</span><math alttext="0.1" class="ltx_Math" display="inline" id="Pt0.A4.SS0.SSS0.Px2.p1.6.m6" intent=":literal"><semantics><mn>0.1</mn><annotation encoding="application/x-tex">0.1</annotation></semantics></math>.</p>
+</div>
+<figure class="ltx_table" id="Pt0.A4.T3">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="Pt0.A4.T3.11.3.1" style="font-size:90%;">Table 3</span>: </span><span class="ltx_text" id="Pt0.A4.T3.4.2" style="font-size:90%;">Learning Rates and Optimizer Parameters used in our GPT model training.
+<math alttext="{\dagger}" class="ltx_Math" display="inline" id="Pt0.A4.T3.3.1.m1" intent=":literal"><semantics><mo>†</mo><annotation encoding="application/x-tex">{\dagger}</annotation></semantics></math> Learning Rates are scaled by embedding dimension; the given values are exact for object training. For scenes, they are divided by <math alttext="\sqrt{1024/768}\approx 1.155" class="ltx_Math" display="inline" id="Pt0.A4.T3.4.2.m2" intent=":literal"><semantics><mrow><msqrt><mrow><mn>1024</mn><mo>/</mo><mn>768</mn></mrow></msqrt><mo>≈</mo><mn>1.155</mn></mrow><annotation encoding="application/x-tex">\sqrt{1024/768}\approx 1.155</annotation></semantics></math>.
+</span></figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="Pt0.A4.T3.9">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="Pt0.A4.T3.9.6.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="Pt0.A4.T3.9.6.1.1">Module</th>
+<th class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="Pt0.A4.T3.9.6.1.2">Optimizer</th>
+<th class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="Pt0.A4.T3.9.6.1.3">Learning Rate</th>
+<th class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="Pt0.A4.T3.9.6.1.4">Optimizer Parameters</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="Pt0.A4.T3.5.1">
+<td class="ltx_td ltx_align_left ltx_border_t" id="Pt0.A4.T3.5.1.2">Output Heads</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_t" id="Pt0.A4.T3.5.1.3">AdamW</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_t" id="Pt0.A4.T3.5.1.4">0.004 †</td>
+<td class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_t" id="Pt0.A4.T3.5.1.1"><math alttext="\beta_{1}=0.8,\beta_{2}=0.95" class="ltx_Math" display="inline" id="Pt0.A4.T3.5.1.1.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>β</mi><mn>1</mn></msub><mo>=</mo><mn>0.8</mn></mrow><mo>,</mo><mrow><msub><mi>β</mi><mn>2</mn></msub><mo>=</mo><mn>0.95</mn></mrow></mrow><annotation encoding="application/x-tex">\beta_{1}=0.8,\beta_{2}=0.95</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="Pt0.A4.T3.6.2">
+<td class="ltx_td ltx_align_left" id="Pt0.A4.T3.6.2.2">Embeddings</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="Pt0.A4.T3.6.2.3">AdamW</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="Pt0.A4.T3.6.2.4">0.2 †</td>
+<td class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" id="Pt0.A4.T3.6.2.1"><math alttext="\beta_{1}=0.8,\beta_{2}=0.95" class="ltx_Math" display="inline" id="Pt0.A4.T3.6.2.1.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>β</mi><mn>1</mn></msub><mo>=</mo><mn>0.8</mn></mrow><mo>,</mo><mrow><msub><mi>β</mi><mn>2</mn></msub><mo>=</mo><mn>0.95</mn></mrow></mrow><annotation encoding="application/x-tex">\beta_{1}=0.8,\beta_{2}=0.95</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="Pt0.A4.T3.7.3">
+<td class="ltx_td ltx_align_left" id="Pt0.A4.T3.7.3.2">Residual Weights</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="Pt0.A4.T3.7.3.3">AdamW</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="Pt0.A4.T3.7.3.4">0.005</td>
+<td class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" id="Pt0.A4.T3.7.3.1"><math alttext="\beta_{1}=0.8,\beta_{2}=0.95" class="ltx_Math" display="inline" id="Pt0.A4.T3.7.3.1.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>β</mi><mn>1</mn></msub><mo>=</mo><mn>0.8</mn></mrow><mo>,</mo><mrow><msub><mi>β</mi><mn>2</mn></msub><mo>=</mo><mn>0.95</mn></mrow></mrow><annotation encoding="application/x-tex">\beta_{1}=0.8,\beta_{2}=0.95</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="Pt0.A4.T3.8.4">
+<td class="ltx_td ltx_align_left" id="Pt0.A4.T3.8.4.2">Input Skip Weights</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="Pt0.A4.T3.8.4.3">AdamW</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="Pt0.A4.T3.8.4.4">0.5</td>
+<td class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center" id="Pt0.A4.T3.8.4.1"><math alttext="\beta_{1}=0.96,\beta_{2}=0.95" class="ltx_Math" display="inline" id="Pt0.A4.T3.8.4.1.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>β</mi><mn>1</mn></msub><mo>=</mo><mn>0.96</mn></mrow><mo>,</mo><mrow><msub><mi>β</mi><mn>2</mn></msub><mo>=</mo><mn>0.95</mn></mrow></mrow><annotation encoding="application/x-tex">\beta_{1}=0.96,\beta_{2}=0.95</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="Pt0.A4.T3.9.5">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="Pt0.A4.T3.9.5.2">Others</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_bb" id="Pt0.A4.T3.9.5.3">Muon</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_bb" id="Pt0.A4.T3.9.5.4">0.02</td>
+<td class="ltx_td ltx_nopad_l ltx_nopad_r ltx_align_center ltx_border_bb" id="Pt0.A4.T3.9.5.1"><math alttext="\beta_{2}=0.95,n=5" class="ltx_Math" display="inline" id="Pt0.A4.T3.9.5.1.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>β</mi><mn>2</mn></msub><mo>=</mo><mn>0.95</mn></mrow><mo>,</mo><mrow><mi>n</mi><mo>=</mo><mn>5</mn></mrow></mrow><annotation encoding="application/x-tex">\beta_{2}=0.95,n=5</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</section>
+</section>
+<section class="ltx_appendix" id="Pt0.A5">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录0.E</span><span class="original-text">Appendix 0.E</span></span><span class="translated-text">附加结果</span><span class="original-text">Additional Results</span></h2>
+<div class="ltx_para" id="Pt0.A5.p1">
+<p class="ltx_p" id="Pt0.A5.p1.1"><span class="translated-text">我们使用在 3D-FRONT 上训练的模型展示了无条件场景块生成的额外定性结果</span><span class="original-text">We present additional qualitative results of unconditional scene chunk generation using our model trained on 3D-FRONT in</span><a class="ltx_ref" href="#Pt0.A5.F9" title="In Appendix 0.E Additional Results ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_tag">Fig.</span>˜<span class="ltx_text ltx_ref_tag">9</span></a>.
+<a class="ltx_ref" href="#Pt0.A5.F10" title="In Appendix 0.E Additional Results ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_tag">Figure</span>˜<span class="ltx_text ltx_ref_tag">10</span></a><span class="translated-text">显示了我们的 ASE 预训练模型的结果，该模型提高了生成场景的多样性。
+最后，</span><span class="original-text">shows results from our ASE-pretrained model, which improves the diversity of the generated scenes.
+Finally,</span><a class="ltx_ref" href="#Pt0.A5.F11" title="In Appendix 0.E Additional Results ‣ GaussianGPT: Towards Autoregressive 3D Gaussian Scene Generation"><span class="ltx_text ltx_ref_tag">Fig.</span>˜<span class="ltx_text ltx_ref_tag">11</span></a><span class="translated-text">呈现额外的场景块完成，展示模型在每个块的大量完成中的多样性、稳定性和质量。</span><span class="original-text">presents additional scene chunk completions, demonstrating the model’s diversity, stability, and quality across a large number of completions per chunk.</span></p>
+</div>
+<figure class="ltx_figure" id="Pt0.A5.F9"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="675" id="Pt0.A5.F9.g1" src="https://arxiv.org/html/2603.26661v1/x9.png" width="661"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="Pt0.A5.F9.2.1.1" style="font-size:90%;">Figure 9</span>: </span><span class="ltx_text" id="Pt0.A5.F9.3.2" style="font-size:90%;">Additional qualitative results on unconditional scene generation using our model trained only on 3D-FRONT <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">fu_3d-front_2021</span>]</cite>.</span></figcaption>
+</figure>
+<figure class="ltx_figure" id="Pt0.A5.F10"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="679" id="Pt0.A5.F10.g1" src="https://arxiv.org/html/2603.26661v1/x10.png" width="660"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="Pt0.A5.F10.2.1.1" style="font-size:90%;">Figure 10</span>: </span><span class="ltx_text" id="Pt0.A5.F10.3.2" style="font-size:90%;">Qualitative results on unconditional scene generation using our model pre-trained on ASE <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">avetisyan_scenescript_2024</span>]</cite> and 3D-FRONT <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">fu_3d-front_2021</span>]</cite>.</span></figcaption>
+</figure>
+<figure class="ltx_figure" id="Pt0.A5.F11"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="583" id="Pt0.A5.F11.g1" src="https://arxiv.org/html/2603.26661v1/x11.png" width="475"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="Pt0.A5.F11.2.1.1" style="font-size:90%;">Figure 11</span>: </span><span class="ltx_text" id="Pt0.A5.F11.3.2" style="font-size:90%;">Additional qualitative results on scene chunk completion.</span></figcaption>
+</figure>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2603.26661v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
