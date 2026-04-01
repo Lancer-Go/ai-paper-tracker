@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">机器人操作的混合框架：集成强化学习和大型语言模型</span><span class="original-text">Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 3 月 31 日星期二 17:08:32 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Tue Mar 31 17:08:32 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2603.30022" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2603.30022" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2603.30022v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2603.30022v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<a class="header-button color-tog" href="javascript:toggleColorScheme();" title="Toggle dark/light mode">
+<label class="toggle-icon automatic-tog" title="Switch to light mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon light-tog" title="Switch to dark mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon dark-tog" title="Switch to system preference">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+</a>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">I </span><span class="ltx_text ltx_font_smallcaps">Introduction</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S2" title="In Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">II </span><span class="ltx_text ltx_font_smallcaps">Related Work</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">III </span><span class="ltx_text ltx_font_smallcaps">Proposed Work</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In III Proposed Work ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-A</span> </span><span class="ltx_text ltx_font_italic">Framework Overview</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS2" title="In III Proposed Work ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-B</span> </span><span class="ltx_text ltx_font_italic">Workflow Description</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS3" title="In III Proposed Work ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-C</span> </span><span class="ltx_text ltx_font_italic">Simulation Environment</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS4" title="In III Proposed Work ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-D</span> </span><span class="ltx_text ltx_font_italic">Integration of LLM and RL</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">IV </span><span class="ltx_text ltx_font_smallcaps">Methodology</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In IV Methodology ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-A</span> </span><span class="ltx_text ltx_font_italic">Simulation Environment</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S4.SS2" title="In IV Methodology ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-B</span> </span><span class="ltx_text ltx_font_italic">Hybrid Framework</span></span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS2.SSS1" title="In IV-B Hybrid Framework ‣ IV Methodology ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-B</span>1 </span>Reinforcement Learning Module</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS2.SSS2" title="In IV-B Hybrid Framework ‣ IV Methodology ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-B</span>2 </span>Large Language Model Module</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS2.SSS3" title="In IV-B Hybrid Framework ‣ IV Methodology ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-B</span>3 </span>Integration</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S5" title="In Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">V </span><span class="ltx_text ltx_font_smallcaps">Results and Discussion</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS1" title="In V Results and Discussion ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-A</span> </span><span class="ltx_text ltx_font_italic">Task Completion Time</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS2" title="In V Results and Discussion ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-B</span> </span><span class="ltx_text ltx_font_italic">Accuracy and Adaptability</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS3" title="In V Results and Discussion ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-C</span> </span><span class="ltx_text ltx_font_italic">Task Completion Time Across Experiments</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS4" title="In V Results and Discussion ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-D</span> </span><span class="ltx_text ltx_font_italic">Learning Progress</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS5" title="In V Results and Discussion ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-E</span> </span><span class="ltx_text ltx_font_italic">Performance Comparison</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S6" title="In Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">VI </span><span class="ltx_text ltx_font_smallcaps">Conclusion</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2603.30022v1 [cs.RO] 2026 年 3 月 31 日</span><span class="original-text">arXiv:2603.30022v1 [cs.RO] 31 Mar 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">机器人操作的混合框架：
+整合强化学习和大型
+语言模型</span><span class="original-text">Hybrid Framework for Robotic Manipulation:
+Integrating Reinforcement Learning and Large
+Language Models</span><br class="ltx_break"/><sup class="ltx_sup" id="id1.id1"></sup><span class="ltx_text" id="id2.id2" style="font-size:80%;">
+</span>
+</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Md Saad
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Sajjad Hussain
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Mohd Suhaib
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">本文介绍了一种新的混合框架，该框架结合了强化学习（RL）和大型语言模型（LLM）来改进机器人操作任务。通过利用强化学习进行精确的低级控制，并利用法学硕士进行高级任务规划和自然语言理解，所提出的框架有效地将机器人系统中的低级执行与高级推理连接起来。这种集成使机器人能够理解并执行复杂的、类似人类的指令，同时适应不断变化的环境。该框架使用 Franka Emika Panda 机械臂在基于 PyBullet 的模拟环境中进行测试，并以各种操作场景作为基准。结果显示，与仅使用 RL 的系统相比，任务完成时间减少了 33.5%，准确性和适应性分别提高了 18.1% 和 36.4%。这些结果强调了法学硕士增强型机器人系统在实际应用中的潜力，使它们更加高效、适应性更强，并且能够与人类互动。未来的研究将致力于探索模拟到真实的传输、可扩展性和多机器人系统，以进一步扩大该框架的适用性。</span><span class="original-text">This paper introduces a new hybrid framework that combines Reinforcement Learning (RL) and Large Language Models (LLMs) to improve robotic manipulation tasks. By utilizing RL for accurate low-level control and LLMs for high-level task planning and understanding of natural language, the proposed framework effectively connects low-level execution with high-level reasoning in robotic systems. This integration allows robots to understand and carry out complex, human-like instructions while adapting to changing environments in real-time. The framework is tested in a PyBullet-based simulation environment using the Franka Emika Panda robotic arm, with various manipulation scenarios as benchmarks. The results show a 33.5% decrease in task completion time and enhancements of 18.1% and 36.4% in accuracy and adaptability, respectively, when compared to systems that use only RL. These results underscore the potential of LLM-enhanced robotic systems for practical applications, making them more efficient, adaptable, and capable of interacting with humans. Future research will aim to explore sim-to-real transfer, scalability, and multi-robot systems to further broaden the framework’s applicability.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="p1">
+<p class="ltx_p" id="p1.1"><span class="ltx_text ltx_font_bold" id="p1.1.1"><span class="translated-text">关键词：</span><span class="original-text">Keywords:</span></span><span class="translated-text">机器人操作、强化学习大型语言模型 (LLM)、任务执行。</span><span class="original-text">Robotic Manipulation, Reinforcement Learning Large Language Models (LLMs), Task Execution.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span class="ltx_text ltx_font_smallcaps" id="S1.1.1"><span class="translated-text">简介</span><span class="original-text">Introduction</span></span>
+</h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">近年来，机器人领域出现了显着增长，这主要归功于人工智能（AI）和机器学习（ML）的进步</span><span class="original-text">In recent years, the field of robotics has seen significant growth, largely due to advancements in artificial intelligence (AI) and machine learning (ML)</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="">1</a>]</cite><span class="translated-text">。该领域的杰出发展之一是强化学习（RL），事实证明，它能够非常有效地使机器人能够以令人印象深刻的精度和自主性执行操纵和导航等低级控制任务</span><span class="original-text">. One of the standout developments in this area is Reinforcement Learning (RL), which has proven highly effective in enabling robots to carry out low-level control tasks like manipulation and navigation with impressive precision and autonomy</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="">2</a>]</cite><span class="translated-text">。同时，大型语言模型（LLM）已经改变了自然语言理解和任务规划，提供了类似于人类思维过程的推理和决策能力</span><span class="original-text">. Concurrently, Large Language Models (LLMs) have transformed natural language understanding and task planning, providing capabilities for reasoning and decision-making that resemble human thought processes</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="">3</a>]</cite><span class="translated-text">。然而，即使在这些不同的领域取得了进展，将强化学习和法学硕士合并以开发更智能、适应性更强的机器人系统的机会尚未得到充分探索</span><span class="original-text">. However, even with the progress made in these separate areas, the opportunity to merge RL and LLMs to develop more intelligent and adaptable robotic systems has not been fully explored</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib4" title="">4</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">本文旨在通过引入一种混合框架来填补这一空白，该框架将用于执行低级任务的强化学习与用于高级任务规划和决策的法学硕士结合起来。这种集成使机器人能够理解并执行复杂的、类似人类的指令，同时适应不断变化的环境。通过利用强化学习和法学硕士的优势，所提出的框架旨在提高机器人操作任务的效率、准确性和适应性。该框架使用 Franka Emika Panda 机械臂在基于 PyBullet 的模拟环境中进行评估，其中各种操作场景作为评估其性能的基准。</span><span class="original-text">This paper aims to fill that gap by introducing a hybrid framework that combines RL for executing low-level tasks with LLMs for high-level task planning and decision-making. This integration allows robots to comprehend and carry out complex, human-like instructions while adjusting to changing environments. By harnessing the advantages of both RL and LLMs, the proposed framework seeks to improve efficiency, accuracy, and adaptability in robotic manipulation tasks. The framework is evaluated in a PyBullet-based simulation environment using the Franka Emika Panda robotic arm, where various manipulation scenarios serve as benchmarks for assessing its performance.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span class="ltx_text ltx_font_smallcaps" id="S2.1.1"><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></span>
+</h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="translated-text">强化学习（RL）和大型语言模型（LLM）在机器人领域的集成已成为近年来的热门话题。戈麦斯等人</span><span class="original-text">The integration of Reinforcement Learning (RL) and Large Language Models (LLMs) in robotics has become a hot topic in recent years. Gomes et al</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib5" title="">5</a>]</cite><span class="translated-text">研究了用于机器人拾放任务的深度强化学习，通过利用 MobileNet 和深度相机在模拟环境中进行机器人抓取，实现了令人印象深刻的 84% 准确度。沙希德等人</span><span class="original-text">investigated deep RL for robotic pick-and-place tasks, achieving an impressive 84% accuracy by utilizing MobileNet and depth cameras for robotic grasping in simulated environments. Shahid et al</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="">6</a>]</cite><span class="translated-text">展示了通过近端策略优化 (PPO) 和 Soft Actor-Critic (SAC) 算法对机器人操纵进行连续控制操作的有效性。他们的研究在使用 Franka Emika Panda 机器人抓取任务方面取得了令人瞩目的 100% 成功率，成功地将学习到的行为从模拟转移到现实世界场景。</span><span class="original-text">showcased the effectiveness of continuous control actions for robotic manipulation through the Proximal Policy Optimization (PPO) and Soft Actor-Critic (SAC) algorithms. Their research achieved a remarkable 100 % success rate in grasping tasks with the Franka Emika Panda robot, successfully transferring learned behaviors from simulations to real-world scenarios.</span></p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="translated-text">楚等人</span><span class="original-text">Chu et al</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="">7</a>]</cite><span class="translated-text">推出了 Lafite-RL，一个利用 LLM 反馈来加速 RL 训练的框架。他们的研究结果表明，与传统的强化学习方法相比，学习率显着提高。同样，刘等人</span><span class="original-text">introduced Lafite-RL, a framework that utilizes LLM feedback to speed up RL training. Their findings showed notable improvements in learning rates compared to traditional RL approaches. Likewise, Liu et al</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="">8</a>]</cite><span class="translated-text">提出了一种用于端到端机器人操作的自校正多模态 LLM 框架，通过结合错误纠正机制，在已知物体上实现了 79% 的准确率，在未见过的类别上实现了 69% 的准确率。在农业机器人领域，Che 等人</span><span class="original-text">proposed a self-corrected multimodal LLM framework for end-to-end robot manipulation, achieving 79 % accuracy on known objects and 69 % on unseen categories by incorporating an error rectification mechanism. In the realm of agricultural robotics, Che et al</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib9" title="">9</a>]</cite><span class="translated-text">强调了将生成式人工智能和计算机视觉相结合的智能机器人系统的潜力，尽管面临环境挑战，但在农业采摘任务中超越了传统方法。其他研究人员也探索了法学硕士在机器人领域的更广泛应用。王等</span><span class="original-text">highlighted the potential of merging generative AI and computer vision for intelligent robotic systems, surpassing conventional methods in agricultural picking tasks despite facing environmental challenges. Other researchers have also explored the wider applications of LLMs in robotics. Wang et al</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="">3</a>]</cite><span class="translated-text">对机器人领域的法学硕士进行了全面的回顾，强调了将其集成到机器人系统中所带来的机遇和挑战。权等人</span><span class="original-text">provided a thorough review of LLMs in robotics, emphasizing the opportunities and challenges that come with their integration into robotic systems. Kwon et al</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib10" title="">10</a>]</cite><span class="translated-text">证明了使用 LLM 作为零样本轨迹生成器的实用性，说明 LLM 可以使用简单的提示为机器人操作创建低级轨迹。莫尔等人</span><span class="original-text">demonstrated the practicality of using LLMs as zero-shot trajectory generators, illustrating that LLMs can create low-level trajectories for robotic manipulation using straightforward prompts. Mower et al</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib11" title="">11</a>]</cite><span class="translated-text">推出了 ROS-LLM，这是一个将法学硕士与机器人操作系统 (ROS) 连接起来的框架，使非专家更容易通过自然语言进行机器人编程。</span><span class="original-text">introduced ROS-LLM, a framework that links LLMs with the Robot Operating System (ROS), making robot programming more accessible for non-experts through natural language.</span></p>
+</div>
+<div class="ltx_para" id="S2.p3">
+<p class="ltx_p" id="S2.p3.1"><span class="translated-text">机器人技术的最新进展强调将高级语义推理与低级控制相结合以提高适应性。强化学习 (RL) 在控制任务方面取得了成功，但在解释复杂指令方面却遇到了困难。这一差距可以通过集成大型语言模型 (LLM) 来解决，该模型使机器人能够通过语言理解和概括任务</span><span class="original-text">Recent advances in robotics emphasize combining high-level semantic reasoning with low-level control for improved adaptability. Reinforcement Learning (RL) has shown success in control tasks but struggles with interpreting complex instructions. This gap is addressed by integrating Large Language Models (LLMs), which enable robots to understand and generalize tasks through language</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib12" title="">12</a>]</cite><span class="translated-text">。贾恩等人。</span><span class="original-text">. Jain et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="">13</a>]</cite><span class="translated-text">通过自然语言引入动态奖励规范。黄等人。</span><span class="original-text">introduced dynamic reward specification via natural language. Huang et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="">14</a>]</cite><span class="translated-text">提出了用于内部任务推理的 InnerMonologue。安等人。</span><span class="original-text">proposed InnerMonologue for internal task reasoning. Ahn et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib15" title="">15</a>]</cite><span class="translated-text">开发了 SayCan，通过可行性评分为 LLM 计划奠定基础。江等人。</span><span class="original-text">developed SayCan, grounding LLM plans through feasibility scoring. Jiang et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib16" title="">16</a>]</cite><span class="translated-text">提出了 LLM-Planner 来生成具有常识推理的行为树。坎德尔瓦尔等人。</span><span class="original-text">presented LLM-Planner to generate behavior trees with commonsense reasoning. Khandelwal et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib17" title="">17</a>]</cite><span class="translated-text">引入了 PromptIRL，使用语言提示从演示中推断奖励函数。这些方法凸显了法学硕士通过改进规划和可解释性来增强基于强化学习的机器人操作的潜力。</span><span class="original-text">introduced PromptIRL, using language prompts for inferring reward functions from demonstrations. These approaches highlight the potential of LLMs to enhance RL-based robotic manipulation through improved planning and interpretability.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section"><span class="translated-text">三、</span><span class="original-text">III</span></span><span class="ltx_text ltx_font_smallcaps" id="S3.1.1"><span class="translated-text">拟议的工作</span><span class="original-text">Proposed Work</span></span>
+</h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="translated-text">在这项工作中，我们提出了一个集成强化学习（RL）和大型语言模型（LLM）的混合框架，以实现稳健和自适应的机器人操作。所提出的框架利用法学硕士的规划和推理能力来进行高级任务理解和分解，而强化学习则确保精确的低级任务执行。</span><span class="original-text">In this work, we present a hybrid framework that integrates Reinforcement Learning (RL) and Large Language Models (LLMs) to achieve robust and adaptive robotic manipulation. The proposed framework leverages the planning and reasoning capabilities of LLMs for high-level task understanding and decomposition, while RL ensures precise low-level task execution.</span></p>
+</div>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS1.5.1.1"><span class="translated-text">Ⅲ-A</span><span class="original-text">III-A</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS1.6.2"><span class="translated-text">框架概述</span><span class="original-text">Framework Overview</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">该框架由三个主要组件组成：</span><span class="original-text">The framework consists of three primary components:</span></p>
+<ul class="ltx_itemize" id="S3.I1">
+<li class="ltx_item" id="S3.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i1.p1">
+<p class="ltx_p" id="S3.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i1.p1.1.1"><span class="translated-text">任务计划员（基于法学硕士）</span><span class="original-text">Task Planner (LLM-based)</span></span><span class="translated-text">：任务规划器解释自然语言指令并将其分解为一系列子任务。</span><span class="original-text">: The Task Planner interprets natural language instructions and decomposes them into a sequence of subtasks.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i2.p1">
+<p class="ltx_p" id="S3.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i2.p1.1.1"><span class="translated-text">技能执行器（基于强化学习）</span><span class="original-text">Skill Executor (RL-based)</span></span><span class="translated-text">：该组件在模拟环境中执行每个子任务，依靠训练有素的 RL 策略进行有效操作。</span><span class="original-text">: This component executes each subtask in the simulation environment, relying on trained RL policies for effective manipulation.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i3.p1">
+<p class="ltx_p" id="S3.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i3.p1.1.1"><span class="translated-text">模拟环境</span><span class="original-text">Simulation Environment</span></span><span class="translated-text">：PyBullet模拟环境为评估混合框架提供了一个真实的测试平台。它包括 Franka Emika Panda 机械臂、模拟感官输入和各种操纵对象。</span><span class="original-text">: The PyBullet simulation environment provides a realistic testing platform for evaluating the hybrid framework. It includes the Franka Emika Panda robotic arm, simulated sensory inputs, and various objects for manipulation.</span></p>
+</div>
+</li>
+</ul>
+</div>
+<figure class="ltx_figure" id="S3.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="148" id="S3.F1.g1" src="https://arxiv.org/html/2603.30022v1/architecture.png" width="262"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F1.2.1.1" style="font-size:90%;">Figure 1</span>: </span><span class="ltx_text" id="S3.F1.3.2" style="font-size:90%;">System Architecture: Integration of LLM and RL for Robotic Manipulation</span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS2.5.1.1"><span class="translated-text">Ⅲ-B</span><span class="original-text">III-B</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS2.6.2"><span class="translated-text">工作流程说明</span><span class="original-text">Workflow Description</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">整体工作流程如下：</span><span class="original-text">The overall workflow is as follows:</span></p>
+<ol class="ltx_enumerate" id="S3.I2">
+<li class="ltx_item" id="S3.I2.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span>
+<div class="ltx_para" id="S3.I2.i1.p1">
+<p class="ltx_p" id="S3.I2.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I2.i1.p1.1.1"><span class="translated-text">系统初始化</span><span class="original-text">System Initialization</span></span><span class="translated-text">：系统初始化LLM、RL代理和模拟环境。</span><span class="original-text">: The system initializes the LLM, RL agent, and simulation environment.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I2.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span>
+<div class="ltx_para" id="S3.I2.i2.p1">
+<p class="ltx_p" id="S3.I2.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I2.i2.p1.1.1"><span class="translated-text">自然语言输入</span><span class="original-text">Natural Language Input</span></span><span class="translated-text">：用户提供高级指令，由LLM处理。</span><span class="original-text">: The user provides high-level instructions, which are processed by the LLM.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I2.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span>
+<div class="ltx_para" id="S3.I2.i3.p1">
+<p class="ltx_p" id="S3.I2.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I2.i3.p1.1.1"><span class="translated-text">任务分解与执行</span><span class="original-text">Task Decomposition and Execution</span></span><span class="translated-text">：LLM 将指令分解为子任务，由 RL 代理顺序执行。</span><span class="original-text">: The LLM decomposes the instruction into subtasks, which are sequentially executed by the RL agent.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I2.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">4.</span>
+<div class="ltx_para" id="S3.I2.i4.p1">
+<p class="ltx_p" id="S3.I2.i4.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I2.i4.p1.1.1"><span class="translated-text">反馈和适应</span><span class="original-text">Feedback and Adaptation</span></span><span class="translated-text">：法学硕士持续监控环境的变化，并在必要时更新任务计划。</span><span class="original-text">: The LLM continuously monitors the environment for changes and updates the task plan when necessary.</span></p>
+</div>
+</li>
+</ol>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS3.5.1.1"><span class="translated-text">Ⅲ-C</span><span class="original-text">III-C</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS3.6.2"><span class="translated-text">模拟环境</span><span class="original-text">Simulation Environment</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.1"><span class="translated-text">基于 PyBullet 的模拟环境旨在评估所提出的框架在各种对象操作任务中的性能，例如拾放和避障。该环境包括 Franka Emika Panda 机器人和具有不同属性的物体。</span><span class="original-text">The PyBullet-based simulation environment is designed to evaluate the proposed framework in various object manipulation tasks, such as pick-and-place and obstacle avoidance. The environment includes the Franka Emika Panda robot and objects with varying properties.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="147" id="S3.F2.g1" src="https://arxiv.org/html/2603.30022v1/simulation.png" width="238"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F2.2.1.1" style="font-size:90%;">Figure 2</span>: </span><span class="ltx_text" id="S3.F2.3.2" style="font-size:90%;">Simulation Environment: Franka Emika Panda Robot in PyBullet</span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S3.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS4.5.1.1"><span class="translated-text">Ⅲ-D</span><span class="original-text">III-D</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS4.6.2"><span class="translated-text">LLM和RL的整合</span><span class="original-text">Integration of LLM and RL</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS4.p1">
+<p class="ltx_p" id="S3.SS4.p1.1"><span class="translated-text">任务规划器 (LLM) 和技能执行器 (RL) 通过集成层进行通信。 LLM模块提供高级任务分解，而RL模块确保每个子任务的精确执行。两个模块之间的反馈循环可实现动态任务适应和错误恢复。</span><span class="original-text">The Task Planner (LLM) and Skill Executor (RL) communicate through an integration layer. The LLM module provides high-level task decomposition, while the RL module ensures precise execution of each subtask. A feedback loop between the two modules enables dynamic task adaptation and error recovery.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span class="ltx_text ltx_font_smallcaps" id="S4.1.1"><span class="translated-text">方法论</span><span class="original-text">Methodology</span></span>
+</h2>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS1.5.1.1">IV-A</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS1.6.2"><span class="translated-text">模拟环境</span><span class="original-text">Simulation Environment</span></span>
+</h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.1"><span class="translated-text">所提出的框架是在模拟环境中开发和测试的</span><span class="original-text">The proposed framework is developed and tested in a simulation environment using</span><span class="ltx_text ltx_font_bold" id="S4.SS1.p1.1.1"><span class="translated-text">pybullet</span><span class="original-text">PyBullet</span></span><span class="translated-text">，一个基于物理的模拟平台。模拟设置包括</span><span class="original-text">, a physics-based simulation platform. The simulation setup includes the</span><span class="ltx_text ltx_font_bold" id="S4.SS1.p1.1.2"><span class="translated-text">弗兰卡·埃米卡·熊猫</span><span class="original-text">Franka Emika Panda</span></span><span class="translated-text">机械臂因其高精度和灵活性而被广泛用于操纵任务。该环境被设计为包括各种对象操作场景，例如拾取和放置任务、对象排序和动态避障。这些任务作为评估所提出框架性能的基准。</span><span class="original-text">robotic arm, which is widely used for manipulation tasks due to its high precision and flexibility. The environment is designed to include various object manipulation scenarios such as pick-and-place tasks, object sorting, and dynamic obstacle avoidance. These tasks serve as benchmarks for evaluating the performance of the proposed framework.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p2">
+<p class="ltx_p" id="S4.SS1.p2.1"><span class="translated-text">任务设置包括：</span><span class="original-text">The task setup consists of:</span></p>
+<ul class="ltx_itemize" id="S4.I1">
+<li class="ltx_item" id="S4.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i1.p1">
+<p class="ltx_p" id="S4.I1.i1.p1.1">A <span class="ltx_text ltx_font_bold" id="S4.I1.i1.p1.1.1"><span class="translated-text">工作区</span><span class="original-text">workspace</span></span><span class="translated-text">具有物体和目标位置的预定义位置。</span><span class="original-text">with predefined positions for objects and target locations.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i2.p1">
+<p class="ltx_p" id="S4.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S4.I1.i2.p1.1.1"><span class="translated-text">感觉输入</span><span class="original-text">Sensory inputs</span></span><span class="translated-text">使用深度相机和力传感器进行模拟。</span><span class="original-text">simulated using depth cameras and force sensors.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i3.p1">
+<p class="ltx_p" id="S4.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S4.I1.i3.p1.1.1"><span class="translated-text">控制策略</span><span class="original-text">Control strategies</span></span><span class="translated-text">使用强化学习（RL）策略来执行低级动作。</span><span class="original-text">implemented using reinforcement learning (RL) policies for executing low-level movements.</span></p>
+</div>
+</li>
+</ul>
+<p class="ltx_p" id="S4.SS1.p2.2"><span class="translated-text">该模拟设置为训练和测试强化学习与大型语言模型的集成提供了受控环境。</span><span class="original-text">This simulation setup provides a controlled environment for training and testing the integration of reinforcement learning and large language models.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS2.5.1.1">IV-B</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS2.6.2"><span class="translated-text">混合框架</span><span class="original-text">Hybrid Framework</span></span>
+</h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.1"><span class="translated-text">混合框架集成了</span><span class="original-text">The hybrid framework integrates</span><span class="ltx_text ltx_font_bold" id="S4.SS2.p1.1.1"><span class="translated-text">强化学习（RL）</span><span class="original-text">Reinforcement Learning (RL)</span></span><span class="translated-text">用于低级任务执行和</span><span class="original-text">for low-level task execution and</span><span class="ltx_text ltx_font_bold" id="S4.SS2.p1.1.2"><span class="translated-text">大型语言模型 (LLM)</span><span class="original-text">Large Language Models (LLMs)</span></span><span class="translated-text">用于高级任务规划。该框架的整体结构如图所示</span><span class="original-text">for high-level task planning. The overall structure of this framework is depicted in Figure</span><a class="ltx_ref" href="#S4.F3" title="Figure 3 ‣ IV-B Hybrid Framework ‣ IV Methodology ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">，说明了这些组件之间的交互。</span><span class="original-text">, illustrating the interaction between these components.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="150" id="S4.F3.g1" src="https://arxiv.org/html/2603.30022v1/image.png" width="238"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F3.2.1.1" style="font-size:90%;">Figure 3</span>: </span><span class="ltx_text" id="S4.F3.3.2" style="font-size:90%;">Hybrid Framework Integrating RL and LLMs</span></figcaption>
+</figure>
+<section class="ltx_subsubsection" id="S4.SS2.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S4.SS2.SSS1.5.1.1">IV-B</span>1 </span><span class="translated-text">强化学习模块</span><span class="original-text">Reinforcement Learning Module</span></h4>
+<div class="ltx_para" id="S4.SS2.SSS1.p1">
+<p class="ltx_p" id="S4.SS2.SSS1.p1.1"><span class="translated-text">强化学习模块负责执行机器人任务执行所需的低级控制策略。在这项工作中，我们使用</span><span class="original-text">The reinforcement learning module is responsible for executing the low-level control policies required for robot task execution. In this work, we use</span><span class="ltx_text ltx_font_bold" id="S4.SS2.SSS1.p1.1.1"><span class="translated-text">近端策略优化 (PPO)</span><span class="original-text">Proximal Policy Optimization (PPO)</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_bold" id="S4.SS2.SSS1.p1.1.2"><span class="translated-text">软演员评论家 (SAC)</span><span class="original-text">Soft Actor-Critic (SAC)</span></span><span class="translated-text">，两种广泛使用的强化学习算法，用于训练机器人操作任务的策略。</span><span class="original-text">, two widely used RL algorithms, to train policies for robot manipulation tasks.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.SSS1.p2">
+<p class="ltx_p" id="S4.SS2.SSS1.p2.1"><span class="translated-text">RL模块的工作原理如下：</span><span class="original-text">The RL module operates as follows:</span></p>
+<ul class="ltx_itemize" id="S4.I2">
+<li class="ltx_item" id="S4.I2.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i1.p1">
+<p class="ltx_p" id="S4.I2.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S4.I2.i1.p1.1.1"><span class="translated-text">国家代表：</span><span class="original-text">State representation:</span></span><span class="translated-text">机器人通过感官输入感知环境，包括关节位置、速度和物体位置。</span><span class="original-text">The robot perceives the environment through sensory inputs, including joint positions, velocities, and object positions.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I2.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i2.p1">
+<p class="ltx_p" id="S4.I2.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S4.I2.i2.p1.1.1"><span class="translated-text">动作选择：</span><span class="original-text">Action selection:</span></span><span class="translated-text">根据学习到的策略，强化学习代理选择最佳操作来操纵对象。</span><span class="original-text">Based on the learned policy, the RL agent selects the optimal action to manipulate objects.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I2.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i3.p1">
+<p class="ltx_p" id="S4.I2.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S4.I2.i3.p1.1.1"><span class="translated-text">奖励功能：</span><span class="original-text">Reward function:</span></span><span class="translated-text">自定义奖励功能旨在鼓励高效、准确的任务执行。</span><span class="original-text">A custom reward function is designed to encourage efficient and accurate task execution.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I2.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i4.p1">
+<p class="ltx_p" id="S4.I2.i4.p1.1"><span class="ltx_text ltx_font_bold" id="S4.I2.i4.p1.1.1"><span class="translated-text">训练过程：</span><span class="original-text">Training process:</span></span><span class="translated-text">该代理接受情景训练，根据与环境的交互不断完善其策略。</span><span class="original-text">The agent undergoes episodic training, continuously refining its policy based on interaction with the environment.</span></p>
+</div>
+</li>
+</ul>
+<p class="ltx_p" id="S4.SS2.SSS1.p2.2"><span class="translated-text">该模块确保机器人可以自主执行完成指定任务所需的物理交互。</span><span class="original-text">This module ensures that the robot can autonomously perform physical interactions necessary for completing the assigned tasks.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S4.SS2.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S4.SS2.SSS2.5.1.1">IV-B</span>2 </span><span class="translated-text">大语言模型模块</span><span class="original-text">Large Language Model Module</span></h4>
+<div class="ltx_para" id="S4.SS2.SSS2.p1">
+<p class="ltx_p" id="S4.SS2.SSS2.p1.1"><span class="translated-text">大型语言模型（LLM）模块负责理解和解释高级任务指令。我们利用诸如</span><span class="original-text">The Large Language Model (LLM) module is responsible for understanding and interpreting high-level task instructions. We leverage models such as</span><span class="ltx_text ltx_font_bold" id="S4.SS2.SSS2.p1.1.1"><span class="translated-text">基于 GPT 的架构</span><span class="original-text">GPT-based architectures</span></span><span class="translated-text">处理类似人类的命令并将其转换为结构化的子任务序列。</span><span class="original-text">to process human-like commands and translate them into structured subtask sequences.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.SSS2.p2">
+<p class="ltx_p" id="S4.SS2.SSS2.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.SSS2.p2.1.1"><span class="translated-text">主要功能：</span><span class="original-text">Key functionalities:</span></span></p>
+<ul class="ltx_itemize" id="S4.I3">
+<li class="ltx_item" id="S4.I3.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I3.i1.p1">
+<p class="ltx_p" id="S4.I3.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S4.I3.i1.p1.1.1"><span class="translated-text">任务解读：</span><span class="original-text">Task interpretation:</span></span><span class="translated-text">法学硕士解析人类指令（例如，“拿起红色立方体并将其放在蓝色平台上”）。</span><span class="original-text">LLMs parse human instructions (e.g., ”Pick up the red cube and place it on the blue platform”).</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I3.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I3.i2.p1">
+<p class="ltx_p" id="S4.I3.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S4.I3.i2.p1.1.1"><span class="translated-text">任务分解：</span><span class="original-text">Task decomposition:</span></span><span class="translated-text">高级指令被分解为更小的子任务，例如“移动到立方体”、“抓住立方体”和“移动到目标位置”。</span><span class="original-text">The high-level instruction is broken down into smaller subtasks, such as ”Move to the cube,” ”Grasp the cube,” and ”Move to the target location.”</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I3.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I3.i3.p1">
+<p class="ltx_p" id="S4.I3.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S4.I3.i3.p1.1.1"><span class="translated-text">输出生成：</span><span class="original-text">Output generation:</span></span><span class="translated-text">LLM 生成结构化命令序列，然后将其输入 RL 模块中执行。</span><span class="original-text">The LLM generates structured command sequences, which are then fed into the RL module for execution.</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="S4.SS2.SSS2.p3">
+<p class="ltx_p" id="S4.SS2.SSS2.p3.1"><span class="translated-text">这种集成使机器人能够遵循复杂的、基于自然语言的指令，使它们更能适应人类的命令。</span><span class="original-text">This integration enables robots to follow complex, natural language-based instructions, making them more adaptable to human commands.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S4.SS2.SSS3">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S4.SS2.SSS3.5.1.1">IV-B</span>3 </span><span class="translated-text">整合</span><span class="original-text">Integration</span></h4>
+<div class="ltx_para" id="S4.SS2.SSS3.p1">
+<p class="ltx_p" id="S4.SS2.SSS3.p1.1"><span class="translated-text">RL 和 LLM 模块的集成是通过</span><span class="original-text">The integration of the RL and LLM modules is facilitated through an</span><span class="ltx_text ltx_font_bold" id="S4.SS2.SSS3.p1.1.1"><span class="translated-text">整合层</span><span class="original-text">Integration Layer</span></span><span class="translated-text">，作为高层规划和底层执行之间的沟通桥梁。</span><span class="original-text">, which serves as the communication bridge between high-level planning and low-level execution.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S4.SSx1">
+<h3 class="ltx_title ltx_font_italic ltx_title_subsection"><span class="translated-text">伪代码：用于机器人操作的 LLM 和 RL 集成</span><span class="original-text">Pseudocode: LLM and RL Integration for Robotic Manipulation</span></h3>
+<figure class="ltx_float ltx_float_algorithm ltx_framed ltx_framed_top" id="alg1">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_float"><span class="ltx_text ltx_font_bold" id="alg1.2.1.1">Algorithm 1</span> </span> LLM and RL Integration for Robotic Manipulation</figcaption>
+<div class="ltx_listing ltx_listing" id="alg1.3">
+<div class="ltx_listingline" id="alg1.l1">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l1.1.1.1" style="font-size:80%;">1:</span></span>Initialize LLM and RL agent
+
+</div>
+<div class="ltx_listingline" id="alg1.l2">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l2.1.1.1" style="font-size:80%;">2:</span></span>Initialize simulation environment (PyBullet)
+
+</div>
+<div class="ltx_listingline" id="alg1.l3">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l3.1.1.1" style="font-size:80%;">3:</span></span><span class="ltx_text ltx_font_bold" id="alg1.l3.2">while</span> task is not complete <span class="ltx_text ltx_font_bold" id="alg1.l3.3">do</span>
+</div>
+<div class="ltx_listingline" id="alg1.l4">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l4.1.1.1" style="font-size:80%;">4:</span></span>  Parse NLI (Natural Language Instruction) using LLM to generate subtasks
+
+</div>
+<div class="ltx_listingline" id="alg1.l5">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l5.1.1.1" style="font-size:80%;">5:</span></span>  <span class="ltx_text ltx_font_bold" id="alg1.l5.2">for all</span> subtask <span class="ltx_text ltx_font_bold" id="alg1.l5.3">do</span>
+</div>
+<div class="ltx_listingline" id="alg1.l6">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l6.1.1.1" style="font-size:80%;">6:</span></span>   Query RL agent to execute the subtask
+
+</div>
+<div class="ltx_listingline" id="alg1.l7">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l7.1.1.1" style="font-size:80%;">7:</span></span>   Monitor environment state
+
+</div>
+<div class="ltx_listingline" id="alg1.l8">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l8.1.1.1" style="font-size:80%;">8:</span></span>   <span class="ltx_text ltx_font_bold" id="alg1.l8.2">if</span> environment changes <span class="ltx_text ltx_font_bold" id="alg1.l8.3">then</span>
+</div>
+<div class="ltx_listingline" id="alg1.l9">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l9.1.1.1" style="font-size:80%;">9:</span></span>     Update task plan via LLM
+
+</div>
+<div class="ltx_listingline" id="alg1.l10">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l10.1.1.1" style="font-size:80%;">10:</span></span>   <span class="ltx_text ltx_font_bold" id="alg1.l10.2">end</span> <span class="ltx_text ltx_font_bold" id="alg1.l10.3">if</span>
+</div>
+<div class="ltx_listingline" id="alg1.l11">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l11.1.1.1" style="font-size:80%;">11:</span></span>  <span class="ltx_text ltx_font_bold" id="alg1.l11.2">end</span> <span class="ltx_text ltx_font_bold" id="alg1.l11.3">for</span>
+</div>
+<div class="ltx_listingline" id="alg1.l12">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l12.1.1.1" style="font-size:80%;">12:</span></span><span class="ltx_text ltx_font_bold" id="alg1.l12.2">end</span> <span class="ltx_text ltx_font_bold" id="alg1.l12.3">while</span>
+</div>
+<div class="ltx_listingline" id="alg1.l13">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l13.1.1.1" style="font-size:80%;">13:</span></span>Return completion status
+
+</div>
+</div>
+</figure>
+<div class="ltx_para" id="S4.SSx1.p1">
+<p class="ltx_p" id="S4.SSx1.p1.1"><span class="translated-text">这种集成允许系统以动态方式运行，其中法学硕士提供推理和规划能力，而强化学习则确保精确执行。</span><span class="original-text">This integration allows the system to operate in a dynamic manner, where the LLM provides reasoning and planning capabilities, while RL ensures precise execution.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span class="ltx_text ltx_font_smallcaps" id="S5.1.1"><span class="translated-text">结果与讨论</span><span class="original-text">Results and Discussion</span></span>
+</h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">本节介绍了所提出的将强化学习 (RL) 与大型语言模型 (LLM) 相结合以进行机器人操作的混合框架的结果。评估是使用 Franka Emika Panda 机器人在 PyBullet 模拟环境中进行的。结果突显了与纯强化学习方法相比，任务完成时间、准确性和适应性方面的改进。</span><span class="original-text">This section presents the results of the proposed hybrid framework integrating Reinforcement Learning (RL) with Large Language Models (LLMs) for robotic manipulation. The evaluation was conducted in a PyBullet simulation environment using the Franka Emika Panda robot. The results highlight improvements in task completion time, accuracy, and adaptability compared to an RL-only approach.</span></p>
+</div>
+<section class="ltx_subsection" id="S5.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS1.5.1.1">V-A</span> </span><span class="ltx_text ltx_font_italic" id="S5.SS1.6.2"><span class="translated-text">任务完成时间</span><span class="original-text">Task Completion Time</span></span>
+</h3>
+<div class="ltx_para" id="S5.SS1.p1">
+<p class="ltx_p" id="S5.SS1.p1.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S5.F4" title="Figure 4 ‣ V-A Task Completion Time ‣ V Results and Discussion ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">说明了纯 RL 系统和 LLM+RL 系统之间任务完成时间的比较。仅 RL 系统平均需要 18.5 秒才能完成任务，而 LLM+RL 系统将这一时间缩短至 12.3 秒，效率提高了 33.5%。</span><span class="original-text">illustrates the comparison of task completion time between the RL-only and LLM+RL systems. The RL-only system took an average of 18.5 seconds to complete tasks, while the LLM+RL system reduced this time to 12.3 seconds, representing a 33.5% improvement in efficiency.</span></p>
+</div>
+<figure class="ltx_figure" id="S5.F4"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="238" id="S5.F4.g1" src="https://arxiv.org/html/2603.30022v1/task_completion_time_better.png" width="238"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S5.F4.2.1.1" style="font-size:90%;">Figure 4</span>: </span><span class="ltx_text" id="S5.F4.3.2" style="font-size:90%;">Task Completion Time Comparison</span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S5.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS2.5.1.1">V-B</span> </span><span class="ltx_text ltx_font_italic" id="S5.SS2.6.2"><span class="translated-text">准确性和适应性</span><span class="original-text">Accuracy and Adaptability</span></span>
+</h3>
+<div class="ltx_para" id="S5.SS2.p1">
+<p class="ltx_p" id="S5.SS2.p1.1"><span class="translated-text">所提出的混合系统还展示了准确性和适应性的显着改进，如图所示</span><span class="original-text">The proposed hybrid system also demonstrates significant improvements in accuracy and adaptability, as shown in Figure</span><a class="ltx_ref" href="#S5.F5" title="Figure 5 ‣ V-B Accuracy and Adaptability ‣ V Results and Discussion ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">。 LLM+RL 系统的准确率达到了 92.6%，而纯 RL 系统的准确率为 78.4%。同样，适应性从纯 RL 系统的 65.2% 增加到 LLM+RL 系统的 88.9%，凸显了所提出的方法在动态环境中的鲁棒性。</span><span class="original-text">. The LLM+RL system achieved an accuracy of 92.6% compared to 78.4% for the RL-only system. Similarly, the adaptability increased from 65.2% in the RL-only system to 88.9% in the LLM+RL system, highlighting the robustness of the proposed approach in dynamic environments.</span></p>
+</div>
+<figure class="ltx_figure" id="S5.F5"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="179" id="S5.F5.g1" src="https://arxiv.org/html/2603.30022v1/accuracy_adaptability_comparison.png" width="238"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S5.F5.2.1.1" style="font-size:90%;">Figure 5</span>: </span><span class="ltx_text" id="S5.F5.3.2" style="font-size:90%;">Accuracy and Adaptability Comparison</span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S5.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS3.5.1.1"><span class="translated-text">电压-C</span><span class="original-text">V-C</span></span> </span><span class="ltx_text ltx_font_italic" id="S5.SS3.6.2"><span class="translated-text">各个实验的任务完成时间</span><span class="original-text">Task Completion Time Across Experiments</span></span>
+</h3>
+<div class="ltx_para" id="S5.SS3.p1">
+<p class="ltx_p" id="S5.SS3.p1.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S5.F6" title="Figure 6 ‣ V-C Task Completion Time Across Experiments ‣ V Results and Discussion ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">显示 10 次不同实验运行的任务完成时间。仅 RL 系统表现出较高的完成时间，但有波动，范围为 17.5 至 19 秒。相比之下，LLM+RL系统保持了大约12秒的一致平均时间，表现出更好的稳定性和效率。</span><span class="original-text">shows task completion time across 10 different experimental runs. The RL-only system exhibited higher completion times with fluctuations, ranging from 17.5 to 19 seconds. In contrast, the LLM+RL system maintained a consistent average of approximately 12 seconds, demonstrating better stability and efficiency.</span></p>
+</div>
+<figure class="ltx_figure" id="S5.F6"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="179" id="S5.F6.g1" src="https://arxiv.org/html/2603.30022v1/task_completion_time_trend.png" width="238"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S5.F6.2.1.1" style="font-size:90%;">Figure 6</span>: </span><span class="ltx_text" id="S5.F6.3.2" style="font-size:90%;">Task Completion Time Across Experiments</span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S5.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS4.5.1.1"><span class="translated-text">维-D</span><span class="original-text">V-D</span></span> </span><span class="ltx_text ltx_font_italic" id="S5.SS4.6.2"><span class="translated-text">学习进度</span><span class="original-text">Learning Progress</span></span>
+</h3>
+<div class="ltx_para" id="S5.SS4.p1">
+<p class="ltx_p" id="S5.SS4.p1.1"><span class="translated-text">100episode的学习进度如图所示</span><span class="original-text">The learning progress over 100 episodes is depicted in Figure</span><a class="ltx_ref" href="#S5.F7" title="Figure 7 ‣ V-D Learning Progress ‣ V Results and Discussion ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_tag">7</span></a><span class="translated-text">。 LLM+RL 系统的累积奖励稳定增长，并且优于仅 RL 系统，反映了混合框架提供的增强的学习能力。</span><span class="original-text">. The cumulative reward for the LLM+RL system grew steadily and outperformed the RL-only system, reflecting the enhanced learning capability provided by the hybrid framework.</span></p>
+</div>
+<figure class="ltx_figure" id="S5.F7"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="179" id="S5.F7.g1" src="https://arxiv.org/html/2603.30022v1/learning_progress_over_episodes.png" width="238"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S5.F7.2.1.1" style="font-size:90%;">Figure 7</span>: </span><span class="ltx_text" id="S5.F7.3.2" style="font-size:90%;">Learning Progress Over Episodes</span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S5.SS5">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS5.5.1.1"><span class="translated-text">维-E</span><span class="original-text">V-E</span></span> </span><span class="ltx_text ltx_font_italic" id="S5.SS5.6.2"><span class="translated-text">性能比较</span><span class="original-text">Performance Comparison</span></span>
+</h3>
+<div class="ltx_para" id="S5.SS5.p1">
+<p class="ltx_p" id="S5.SS5.p1.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S5.T1" title="TABLE I ‣ V-E Performance Comparison ‣ V Results and Discussion ‣ Hybrid Framework for Robotic Manipulation: Integrating Reinforcement Learning and Large Language Models"><span class="ltx_text ltx_ref_tag">I</span></a><span class="translated-text">总结了纯 RL 系统和 LLM+RL 系统的性能指标。 LLM+RL 系统在任务完成时间、准确性和适应性方面表现出显着改进，增强了将 LLM 的高级任务规划与 RL 的低级执行相结合的有效性。</span><span class="original-text">summarizes the performance metrics for the RL-only and LLM+RL systems. The LLM+RL system demonstrates notable improvements in task completion time, accuracy, and adaptability, reinforcing the effectiveness of integrating high-level task planning from LLMs with low-level execution from RL.</span></p>
+</div>
+<figure class="ltx_table" id="S5.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S5.T1.2.1.1" style="font-size:90%;">TABLE I</span>: </span><span class="ltx_text" id="S5.T1.3.2" style="font-size:90%;">Performance Comparison of RL-Only and LLM+RL Systems</span></figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S5.T1.4">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S5.T1.4.1.1">
+<th class="ltx_td ltx_align_justify ltx_align_top ltx_th ltx_th_column ltx_th_row ltx_border_l ltx_border_r ltx_border_t" id="S5.T1.4.1.1.1" style="padding-top:1.5pt;padding-bottom:1.5pt;">
+<span class="ltx_inline-block ltx_align_top" id="S5.T1.4.1.1.1.1">
+<span class="ltx_p" id="S5.T1.4.1.1.1.1.1" style="width:56.9pt;"><span class="ltx_text ltx_font_bold" id="S5.T1.4.1.1.1.1.1.1">Metric</span></span>
+</span>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S5.T1.4.1.1.2" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span class="ltx_text ltx_font_bold" id="S5.T1.4.1.1.2.1">RL Only</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S5.T1.4.1.1.3" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span class="ltx_text ltx_font_bold" id="S5.T1.4.1.1.3.1">LLM + RL</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S5.T1.4.1.1.4" style="padding-top:1.5pt;padding-bottom:1.5pt;"><span class="ltx_text ltx_font_bold" id="S5.T1.4.1.1.4.1">Improvement (%)</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S5.T1.4.2.1">
+<th class="ltx_td ltx_align_justify ltx_align_top ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" id="S5.T1.4.2.1.1" style="padding-top:1.5pt;padding-bottom:1.5pt;">
+<span class="ltx_inline-block ltx_align_top" id="S5.T1.4.2.1.1.1">
+<span class="ltx_p" id="S5.T1.4.2.1.1.1.1" style="width:56.9pt;">Task Completion Time (s)</span>
+</span>
+</th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S5.T1.4.2.1.2" style="padding-top:1.5pt;padding-bottom:1.5pt;">18.5</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S5.T1.4.2.1.3" style="padding-top:1.5pt;padding-bottom:1.5pt;">12.3</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S5.T1.4.2.1.4" style="padding-top:1.5pt;padding-bottom:1.5pt;">33.5</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.4.3.2">
+<th class="ltx_td ltx_align_justify ltx_align_top ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" id="S5.T1.4.3.2.1" style="padding-top:1.5pt;padding-bottom:1.5pt;">
+<span class="ltx_inline-block ltx_align_top" id="S5.T1.4.3.2.1.1">
+<span class="ltx_p" id="S5.T1.4.3.2.1.1.1" style="width:56.9pt;">Accuracy (%)</span>
+</span>
+</th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S5.T1.4.3.2.2" style="padding-top:1.5pt;padding-bottom:1.5pt;">78.4</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S5.T1.4.3.2.3" style="padding-top:1.5pt;padding-bottom:1.5pt;">92.6</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S5.T1.4.3.2.4" style="padding-top:1.5pt;padding-bottom:1.5pt;">18.1</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.4.4.3">
+<th class="ltx_td ltx_align_justify ltx_align_top ltx_th ltx_th_row ltx_border_b ltx_border_l ltx_border_r ltx_border_t" id="S5.T1.4.4.3.1" style="padding-top:1.5pt;padding-bottom:1.5pt;">
+<span class="ltx_inline-block ltx_align_top" id="S5.T1.4.4.3.1.1">
+<span class="ltx_p" id="S5.T1.4.4.3.1.1.1" style="width:56.9pt;">Adaptability (%)</span>
+</span>
+</th>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t" id="S5.T1.4.4.3.2" style="padding-top:1.5pt;padding-bottom:1.5pt;">65.2</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t" id="S5.T1.4.4.3.3" style="padding-top:1.5pt;padding-bottom:1.5pt;">88.9</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t" id="S5.T1.4.4.3.4" style="padding-top:1.5pt;padding-bottom:1.5pt;">36.4</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S5.SS5.p2">
+<p class="ltx_p" id="S5.SS5.p2.1"><span class="translated-text">结果清楚地表明，将法学硕士集成到机器人操作任务中可以显着提高多个指标的性能。该混合框架能够解释高级自然语言指令并适应动态环境，这使其比传统的基于强化学习的方法更加强大和高效。 LLM 和 RL 组件之间的反馈机制可确保任务的持续细化，从而提高准确性和适应性。这些发现凸显了 LLM+RL 系统在现实机器人场景中更广泛应用的潜力。</span><span class="original-text">The results clearly demonstrate that integrating LLMs into robotic manipulation tasks significantly improves performance across multiple metrics. The hybrid framework’s ability to interpret high-level natural language instructions and adapt to dynamic environments makes it more robust and efficient than traditional RL-based approaches. The feedback mechanism between the LLM and RL components ensures continuous task refinement, resulting in improved accuracy and adaptability. These findings highlight the potential for broader applications of LLM+RL systems in real-world robotic scenarios.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">VI </span><span class="ltx_text ltx_font_smallcaps" id="S6.1.1"><span class="translated-text">结论</span><span class="original-text">Conclusion</span></span>
+</h2>
+<div class="ltx_para" id="S6.p1">
+<p class="ltx_p" id="S6.p1.1"><span class="translated-text">本文提出了一种混合框架，将强化学习 (RL) 与大型语言模型 (LLM) 相结合，以增强机器人操作任务。使用 Franka Emika Panda 机器人进行 PyBullet 模拟的结果表明，与仅依赖 RL 的系统相比，任务完成时间、准确性和适应性都有显着改善。 LLM+RL 方法将任务完成时间缩短了 33.5%，同时将准确性和适应性分别提高了 18.1% 和 36.4%。这种集成允许动态任务适应和处理自然语言指令的能力，从而使机器人系统更加高效和有弹性。未来的研究将致力于现实世界的实施、多个机器人的可扩展性，以及改进模拟到真实的传输，以扩大该框架的适用性。</span><span class="original-text">This paper presents a hybrid framework that combines Reinforcement Learning (RL) with Large Language Models (LLMs) to enhance robotic manipulation tasks. Results from PyBullet simulations using the Franka Emika Panda robot indicate notable improvements in task completion time, accuracy, and adaptability when compared to systems relying solely on RL. The LLM+RL approach achieves a 33.5 % reduction in task completion time, while also boosting accuracy and adaptability by 18.1% and 36.4%, respectively. This integration allows for dynamic task adaptation and the ability to process natural language instructions, thereby making robotic systems more efficient and resilient. Future research will aim at real-world implementation, scalability for multiple robots, and improving sim-to-real transfer to broaden the framework’s applicability.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist">
+<li class="ltx_bibitem" id="bib.bib1">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+M. Soori, B. Arezoo, and R. Dastres, “Artificial intelligence, machine learning and deep learning in advanced robotics, a review,” <em class="ltx_emph ltx_font_italic" id="bib.bib1.1.1">Cognitive Robotics</em>, vol. 3, pp. 54–70, 2023.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib2">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+C. Tang, B. Abbatematteo, J. Hu, R. Chandra, R. Martín-Martín, and P. Stone, “Deep reinforcement learning for robotics: A survey of real-world successes,” <em class="ltx_emph ltx_font_italic" id="bib.bib2.1.1">Annual Review of Control, Robotics, and Autonomous Systems</em>, vol. 8, 2024.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib3">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+J. Wang, Z. Wu, Y. Li, H. Jiang, P. Shu, E. Shi, H. Hu, C. Ma, Y. Liu, and X. e. a. Wang, “Large language models for robotics: Opportunities, challenges, and perspectives,” <a class="ltx_ref ltx_url ltx_font_typewriter" href="http://arxiv.org/abs/2401.04334" title="">http://arxiv.org/abs/2401.04334</a>, 2024.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib4">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+H. Jeong, H. Lee, C. Kim, and S. Shin, “A survey of robot intelligence with large language models,” <em class="ltx_emph ltx_font_italic" id="bib.bib4.1.1">Applied Sciences</em>, vol. 14, no. 19, p. 8868, 2024.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib5">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+N. M. Gomes, F. N. Martins, J. Lima, and H. Wörtche, “Deep reinforcement learning applied to a robotic pick-and-place application,” <em class="ltx_emph ltx_font_italic" id="bib.bib5.1.1">Communications in Computer and Information Science</em>, pp. 251–265, 2021.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib6">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+A. A. Shahid, D. Piga, F. Braghin, and L. Roveda, “Continuous control actions learning and adaptation for robotic manipulation through reinforcement learning,” <em class="ltx_emph ltx_font_italic" id="bib.bib6.1.1">Autonomous Robots</em>, vol. 46, no. 3, pp. 483–498, 2022.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib7">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+K. Chu, X. Zhao, C. Weber, M. Li, and S. Wermter, “Accelerating reinforcement learning of robotic manipulations via feedback from large language models,” <a class="ltx_ref ltx_url ltx_font_typewriter" href="http://arxiv.org/abs/2311.02379" title="">http://arxiv.org/abs/2311.02379</a>, 2023.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib8">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+J. Liu, C. Li, G. Wang, L. Lee, K. Zhou, S. Chen, C. Xiong, J. Ge, R. Zhang, and S. Zhang, “Self-corrected multimodal large language model for end-to-end robot manipulation,” <a class="ltx_ref ltx_url ltx_font_typewriter" href="http://arxiv.org/abs/2405.17418" title="">http://arxiv.org/abs/2405.17418</a>, 2024.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib9">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+C. Che, C. Li, and Z. Huang, “The integration of generative artificial intelligence and computer vision in industrial robotic arms,” <em class="ltx_emph ltx_font_italic" id="bib.bib9.1.1">International Journal of Computer Science and Information Technology</em>, vol. 2, no. 3, pp. 1–9, 2024.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib10">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+T. Kwon, N. Di Palo, and E. Johns, “Language models as zero-shot trajectory generators,” <em class="ltx_emph ltx_font_italic" id="bib.bib10.1.1">IEEE Robotics and Automation Letters</em>, vol. 9, no. 7, pp. 6728–6735, 2024.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib11">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+C. E. Mower, Y. Wan, H. Yu, A. Grosnit, J. Gonzalez-Billandon, M. Zimmer, and J. e. a. Wang, “Ros-llm: A ros framework for embodied ai with task feedback and structured reasoning,” 2024.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib12">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+Y. Kim, D. Kim, J. Choi, J. Park, N. Oh, and D. Park, “A survey on integration of large language models with intelligent robots,” <em class="ltx_emph ltx_font_italic" id="bib.bib12.1.1">Intelligent Service Robotics</em>, vol. 17, no. 5, pp. 1091–1107, 2024.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib13">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+A. Jain, A. Singh, and T. Darrell, “Grounding language-based reward functions,” <em class="ltx_emph ltx_font_italic" id="bib.bib13.1.1">arXiv preprint arXiv:2305.15301</em>, 2023.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib14">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+W. Huang, C. Ye, P. Stone, and Y. Zhu, “Innermonologue: Embodied reasoning through planning with language models,” <em class="ltx_emph ltx_font_italic" id="bib.bib14.1.1">arXiv preprint arXiv:2305.16220</em>, 2023.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib15">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+M. Ahn, A. Brohan, N. Brown <em class="ltx_emph ltx_font_italic" id="bib.bib15.1.1">et al.</em>, “Do as i can, not as i say: Grounding language in robotic affordances,” in <em class="ltx_emph ltx_font_italic" id="bib.bib15.2.2">Robotics: Science and Systems (RSS)</em>, 2022.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib16">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+Y. Jiang, Y. Xiang, and D. Fox, “Llm-planner: Few-shot grounded planning with large language models,” <em class="ltx_emph ltx_font_italic" id="bib.bib16.1.1">arXiv preprint arXiv:2302.01948</em>, 2023.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib17">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+S. Khandelwal, D. Pathak, and A. Gupta, “Promptirl: Robotic inverse reinforcement learning with language models,” <em class="ltx_emph ltx_font_italic" id="bib.bib17.1.1">arXiv preprint arXiv:2306.01061</em>, 2023.
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2603.30022v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
