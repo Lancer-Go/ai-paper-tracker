@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">人工智能辅助单元测试编写和测试驱动代码重构：案例研究</span><span class="original-text">AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 4 月 3 日星期五 15:51:59 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Fri Apr  3 15:51:59 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2604.03135" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2604.03135" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2604.03135v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2604.03135v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<a class="header-button color-tog" href="javascript:toggleColorScheme();" title="Toggle dark/light mode">
+<label class="toggle-icon automatic-tog" title="Switch to light mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon light-tog" title="Switch to dark mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon dark-tog" title="Switch to system preference">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+</a>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">I </span><span class="ltx_text ltx_font_smallcaps">Introduction</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">II </span><span class="ltx_text ltx_font_smallcaps">Related Work</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS1" title="In II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-A</span> </span><span class="ltx_text ltx_font_italic">Refactoring and testing foundations</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS2" title="In II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-B</span> </span><span class="ltx_text ltx_font_italic">AI/LLM-Assisted Testing</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS3" title="In II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-C</span> </span><span class="ltx_text ltx_font_italic">AI/LLM-Assisted Refactoring</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">III </span><span class="ltx_text ltx_font_smallcaps">Methodology</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In III Methodology ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-A</span> </span><span class="ltx_text ltx_font_italic">Context</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS2" title="In III Methodology ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-B</span> </span><span class="ltx_text ltx_font_italic">Models and Tooling</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS3" title="In III Methodology ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-C</span> </span><span class="ltx_text ltx_font_italic">Stage 1: AI-Assisted Test Suite Construction</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS4" title="In III Methodology ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-D</span> </span><span class="ltx_text ltx_font_italic">Stage 2: AI-Assisted Test-Guarded Refactor</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">IV </span><span class="ltx_text ltx_font_smallcaps">Results</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S4.SS1" title="In IV Results ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-A</span> </span><span class="ltx_text ltx_font_italic">AI-Assisted Test Suite Construction</span></span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS1.SSS0.Px1" title="In IV-A AI-Assisted Test Suite Construction ‣ IV Results ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title">Generated code metrics</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS1.SSS0.Px2" title="In IV-A AI-Assisted Test Suite Construction ‣ IV Results ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title">Test suite organization</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS1.SSS0.Px3" title="In IV-A AI-Assisted Test Suite Construction ‣ IV Results ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title">Tests as documentation</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S4.SS2" title="In IV Results ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-B</span> </span><span class="ltx_text ltx_font_italic">AI-Assisted Test-Guarded Refactor</span></span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS2.SSS0.Px1" title="In IV-B AI-Assisted Test-Guarded Refactor ‣ IV Results ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title">Code evolution metrics</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS2.SSS0.Px2" title="In IV-B AI-Assisted Test-Guarded Refactor ‣ IV Results ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title">Source code distribution</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S5" title="In AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">V </span><span class="ltx_text ltx_font_smallcaps">Findings and Discussion</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S5.SS1" title="In V Findings and Discussion ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-A</span> </span><span class="ltx_text ltx_font_italic">AI-Assisted Test Suite Construction</span></span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S5.SS1.SSS0.Px1" title="In V-A AI-Assisted Test Suite Construction ‣ V Findings and Discussion ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title">Adaptive code organization through iterations</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S5.SS2" title="In V Findings and Discussion ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-B</span> </span><span class="ltx_text ltx_font_italic">AI-Assisted Test-Guarded Refactor</span></span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S5.SS2.SSS0.Px1" title="In V-B AI-Assisted Test-Guarded Refactor ‣ V Findings and Discussion ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title">Structurally invasive refactor</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S5.SS2.SSS0.Px2" title="In V-B AI-Assisted Test-Guarded Refactor ‣ V Findings and Discussion ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title">On LOC growth and architectural interpretation</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S6" title="In AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">VI </span><span class="ltx_text ltx_font_smallcaps">Threats to Validity</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S6.SS0.SSS0.Px1" title="In VI Threats to Validity ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title">Internal validity</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S6.SS0.SSS0.Px2" title="In VI Threats to Validity ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title">External validity</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S6.SS0.SSS0.Px3" title="In VI Threats to Validity ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title">Construct validity</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S7" title="In AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">VII </span><span class="ltx_text ltx_font_smallcaps">Conclusion and Further Research</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2604.03135v1 [cs.SE] 2026 年 4 月 3 日</span><span class="original-text">arXiv:2604.03135v1 [cs.SE] 03 Apr 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">人工智能辅助单元测试编写和测试驱动代码重构：案例研究</span><span class="original-text">AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+
+Ema Smolić1,
+Mario Brčić12,
+Luka Hobor2,
+Mihael Kovač2
+
+
+
+mario.brcic@fer.hr
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">许多软件系统最初都是原型或最小可行产品（MVP），开发时重点关注交付速度和对不断变化的需求的响应能力，而不是长期代码可维护性。虽然这种方法对于快速交付有效，但可能会导致代码库难以修改，从而在人工智能辅助甚至人工智能主导的编程时代带来巨大的机会成本。在本文中，我们提出了一个使用编码模型进行自动单元测试生成和随后的安全重构的案例研究，并通过通过测试验证了建议的代码更改。该研究探讨了迭代生成测试以捕获现有系统行为的最佳实践，然后在开发人员的监督下进行模型辅助重构。我们描述了这个工作流程如何限制重构变化、在两个阶段观察到的错误和限制、在需要手动干预时实现的效率增益，以及我们如何解决在模型中观察到的弱值错位。使用这种方法，我们在数小时而不是数周内生成了近 16,000 行可靠的单元测试，在关键模块中实现了高达 78% 的分支覆盖率，并显着降低了大规模重构期间的回归风险。这些结果说明了软件工程向实证科学的转变，强调支持快速、安全迭代的数据收集和约束机制。</span><span class="original-text">Many software systems originate as prototypes or minimum viable products (MVPs), developed with an emphasis on delivery speed and responsiveness to changing requirements rather than long-term code maintainability. While effective for rapid delivery, this approach can result in codebases that are difficult to modify, presenting a significant opportunity cost in the era of AI-assisted or even AI-led programming. In this paper, we present a case study of using coding models for automated unit test generation and subsequent safe refactoring, with proposed code changes validated by passing tests. The study examines best practices for iteratively generating tests to capture existing system behavior, followed by model-assisted refactoring under developer supervision. We describe how this workflow constrained refactoring changes, the errors and limitations observed in both phases, the efficiency gains achieved, when manual intervention was necessary, and how we addressed the weak value misalignment we observed in models. Using this approach, we generated nearly 16,000 lines of reliable unit tests in hours rather than weeks, achieved up to 78% branch coverage in critical modules, and significantly reduced regression risk during large-scale refactoring. These results illustrate software engineering’s shift toward an empirical science, emphasizing data collection and constraining mechanisms that support fast, safe iteration.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span class="ltx_text ltx_font_smallcaps" id="S1.1.1"><span class="translated-text">简介</span><span class="original-text">Introduction</span></span>
+</h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">许多软件系统都是从原型或最小可行产品 (MVP) 开始的，它们针对速度而不是长期可维护性进行了优化。不断变化的需求和快速的功能集成通常会导致代码库在结构和最佳实践编码方面不太理想。随着这些代码库的成熟，技术债务可能会将微小的变化变成复杂的问题，阻碍进一步的开发。在人工智能辅助（甚至人工智能主导）编程的时代，这个问题变得更加明显。由于编码模型在可预测的、先前见过的环境中表现最佳，因此组织不良的代码会限制其有效性。这带来了机会成本</span><span class="original-text">Many software systems begin as prototypes or minimum viable products (MVPs), which are optimized for speed rather than long-term maintainability. Shifting requirements and rapid feature integration often result in codebases that are less than optimal in terms of structure and best-practice coding. As these codebases mature, technical debt may turn small changes into complex problems, hindering further development. This issue becomes even more pronounced in the age of AI-assisted (or even AI-led) programming. Since coding models perform best in predictable, previously seen environments, poorly organized code limits their effectiveness. That presents an opportunity cost</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="AI-assisted code generation and optimization in .net web development">20</a>]</cite><span class="translated-text">必须通过重构来缓解。如果重构是实现可维护性的最快途径，那么测试就是使其变得可行的安全机制，尤其是当代码更改自动化时。</span><span class="original-text">which must be mitigated through refactoring. If refactoring is the fastest path to maintainability, then tests are the safety mechanism that makes it feasible, especially when code changes are automated.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">测试作为可执行的规范和护栏，限制代码重构期间的性能回归和错误引入</span><span class="original-text">Tests serve as executable specifications and guardrails, limiting performance regressions and bug introductions during code refactoring</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="Refactoring: improving the design of existing code">9</a>]</cite><span class="translated-text">。研究表明法学硕士可以比其他自动化测试生成解决方案更有效地编写测试</span><span class="original-text">. Research shows that LLMs can write tests more effectively than other automated test generation solutions</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib23" title="An empirical evaluation of using large language models for automated unit test generation">19</a>]</cite><span class="translated-text">。虽然研究概述了覆盖上限和脆弱性等一些问题，但他们也通过相对简单的技术（例如更好的提示策略）提出了解决方案</span><span class="original-text">. While studies outline some issues such as coverage ceilings and brittleness, they also propose solutions through relatively simple techniques such as better prompting strategies</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib20" title="Test Intention Guided LLM-Based Unit Test Generation">14</a>, <a class="ltx_ref" href="#bib.bib21" title="Code-aware prompting: a study of coverage-guided test generation in regression setting using llm">18</a>, <a class="ltx_ref" href="#bib.bib22" title="ChatUniTest: a framework for llm-based test generation">6</a>, <a class="ltx_ref" href="#bib.bib28" title="LLM4VV: developing llm-driven testsuite for compiler validation">13</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">同样，法学硕士可以有效地重构代码，从而带来可衡量的改进。它们已被证明可以降低复杂性和行数</span><span class="original-text">Likewise, LLMs can refactor code effectively, leading to measurable improvements. They have been shown to reduce complexity and line count</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib15" title="Refactoring programs using large language models with few-shot examples">21</a>, <a class="ltx_ref" href="#bib.bib16" title="LLM-based multi-agent system forăintelligent refactoring ofăhaskell code">22</a>]</cite><span class="translated-text">。然而，LLM也容易产生幻觉，这可能会导致错误引入。为了解决这个问题，研究人员提出了人机交互工作流程</span><span class="original-text">. However, LLMs are also prone to hallucinations, which may result in error introduction. To address this issue, researchers propose human-in-the-loop workflows</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib12" title="LLM-driven code refactoring: opportunities and limitations">7</a>, <a class="ltx_ref" href="#bib.bib19" title="An empirical study on the potential of llms in automated software refactoring">12</a>]</cite><span class="translated-text">。在这项工作中，我们探索自动化测试是否可以达到这个目的。</span><span class="original-text">. In this work, we explore whether automated tests can serve this purpose instead.</span></p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">该实验的动机是一个最初作为 MVP 的生产现实世界系统。为了促进基于人工智能的开发，需要进行重构。该系统缺乏全面的测试套件，使得此类重构存在风险。由于人类开发人员的重构成本太高，我们选择使用法学硕士。我们希望探索单一集成工作流程的可行性，其中法学硕士 (1) 构建全面的行为捕获测试套件，然后 (2) 使用该套件在成熟的商业代码库中约束和验证模型辅助重构。</span><span class="original-text">This experiment is motivated by a production, real-world system that originated as an MVP. To facilitate AI-based development, it needed a refactor. The system lacked a comprehensive test suite, making such refactors risky. Since refactoring by human developers would be too costly, we chose to use LLMs. We wanted to explore the feasibility of a single integrated workflow where LLMs (1) build a comprehensive, behavior-capturing test suite, and then (2) use that suite to constrain and validate model-assisted refactoring in a mature commercial codebase.</span></p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">在本文中，我们提出了一个案例研究，评估人工智能辅助单元测试生成是否能够有效地捕获现有行为，以实现安全、大规模的重构（同样由模型主导）。我们发现确实可行。我们详细描述了工作流程，以帮助在其他系统中复制并为类似方法提供最佳实践。记录了两个阶段的常见故障模式，并在定性分析的同时对结果进行了量化。</span><span class="original-text">In this paper, we present a case study evaluating whether AI-assisted unit test generation can efficiently capture existing behavior well enough to enable safe, large-scale refactoring, also led by a model. We find that it is indeed feasible. We describe the workflow in detail to aid replication in other systems and to inform best practices for similar approaches. Common failure modes in both phases are documented, and outcomes are quantified alongside qualitative analysis.</span></p>
+</div>
+<div class="ltx_para" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1"><span class="translated-text">本文的其余部分组织如下。部分</span><span class="original-text">The rest of the paper is organized as follows. Section</span><a class="ltx_ref" href="#S2" title="II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">II</span></a><span class="translated-text">回顾之前的代码重构和测试工作，重点是基于人工智能的方法。部分</span><span class="original-text">reviews prior work on code refactoring and testing, with a focus on AI-based approaches. Section</span><a class="ltx_ref" href="#S3" title="III Methodology ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">III</span></a><span class="translated-text">详细描述了我们的工作流程。部分</span><span class="original-text">describes our workflow in detail. Sections</span><a class="ltx_ref" href="#S4" title="IV Results ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">IV</span></a><span class="translated-text">和</span><span class="original-text">and</span><a class="ltx_ref" href="#S5" title="V Findings and Discussion ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">V</span></a><span class="translated-text">呈现定量结果并讨论研究结果。部分</span><span class="original-text">present quantitative results and discuss the findings. Section</span><a class="ltx_ref" href="#S6" title="VI Threats to Validity ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">VI</span></a><span class="translated-text">解决对有效性的威胁，以及节</span><span class="original-text">addresses threats to validity, and Section</span><a class="ltx_ref" href="#S7" title="VII Conclusion and Further Research ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">VII</span></a><span class="translated-text">最后提出了未来工作的方向。</span><span class="original-text">concludes with directions for future work.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span class="ltx_text ltx_font_smallcaps" id="S2.1.1"><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></span>
+</h2>
+<section class="ltx_subsection" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S2.SS1.4.1.1"><span class="translated-text">Ⅱ-A</span><span class="original-text">II-A</span></span> </span><span class="ltx_text ltx_font_italic" id="S2.SS1.5.2"><span class="translated-text">重构和测试基础</span><span class="original-text">Refactoring and testing foundations</span></span>
+</h3>
+<div class="ltx_para" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.1"><span class="translated-text">软件开发中的测试不仅被认为是确保代码按预期运行的一种手段，而且也是变革的推动者。它们充当代码修改的护栏，通过表明系统仍然符合规范。类似地，测试被描述为</span><span class="original-text">Tests in software development are considered not only a means of assurance that code behaves as expected, but also an enabler of change. They serve as guardrails for code modification, with passing indicating the system remains aligned with the specifications. Similarly, tests have been described as</span><span class="ltx_text ltx_font_italic" id="S2.SS1.p1.1.1"><span class="translated-text">可执行规范</span><span class="original-text">executable specifications</span></span><span class="translated-text">，桥接静态文档/规范和动态、实时代码状态反馈的概念。由于这些好处，它们被广泛用于代码重构，以确保修改不会破坏当前行为</span><span class="original-text">, bridging the concepts of static documentation/specification and dynamic, real-time feedback on code status. Due to these benefits, they are widely used in code refactoring to ensure that modifications do not break current behavior</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="Refactoring: improving the design of existing code">9</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.SS1.p2">
+<p class="ltx_p" id="S2.SS1.p2.1"><span class="translated-text">重构过程中常见的问题包括引入错误和导致回归。研究表明，超过一半的引发错误的提交还包含重构更改</span><span class="original-text">Common concerns during the refactoring process include introducing bugs and causing regressions. Research shows that more than half of bug-inducing commits also contain refactoring changes</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="Is refactoring always a good egg? exploring the interconnection between bugs and refactorings">3</a>]</cite><span class="translated-text">。同样，性能回归在不同的代码更改场景中普遍存在</span><span class="original-text">. Similarly, performance regression is widespread throughout different code change scenarios</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib24" title="An exploratory study of performance regression introducing code changes">5</a>]</cite>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S2.SS2.4.1.1"><span class="translated-text">Ⅱ-B</span><span class="original-text">II-B</span></span> </span><span class="ltx_text ltx_font_italic" id="S2.SS2.5.2"><span class="translated-text">AI/LLM 辅助测试</span><span class="original-text">AI/LLM-Assisted Testing</span></span>
+</h3>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.1"><span class="translated-text">LLM（大型语言模型）的最新进展促使人们对其在软件开发中的应用进行越来越多的研究，包括自动测试编写</span><span class="original-text">Recent advances in LLMs (large language models) have prompted growing research on their application in software development, including automatic test writing</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib25" title="Large language models are few-shot testers: exploring llm-based general bug reproduction">11</a>, <a class="ltx_ref" href="#bib.bib23" title="An empirical evaluation of using large language models for automated unit test generation">19</a>, <a class="ltx_ref" href="#bib.bib20" title="Test Intention Guided LLM-Based Unit Test Generation">14</a>, <a class="ltx_ref" href="#bib.bib21" title="Code-aware prompting: a study of coverage-guided test generation in regression setting using llm">18</a>, <a class="ltx_ref" href="#bib.bib22" title="ChatUniTest: a framework for llm-based test generation">6</a>, <a class="ltx_ref" href="#bib.bib28" title="LLM4VV: developing llm-driven testsuite for compiler validation">13</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p2">
+<p class="ltx_p" id="S2.SS2.p2.1"><span class="translated-text">与其他自动化技术相比，LLM 生成的测试始终能够实现卓越的语句和分支覆盖率</span><span class="original-text">LLM-generated tests consistently achieve superior statement and branch coverage when compared to other automated techniques</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib23" title="An empirical evaluation of using large language models for automated unit test generation">19</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p3">
+<p class="ltx_p" id="S2.SS2.p3.1"><span class="translated-text">然而，法学硕士生成的测试总体覆盖率仍然相对较低。其他常见的担忧是它们的模拟能力不足和整体脆弱。然而，研究表明这些问题可以通过相对简单的技术来解决，例如更好的提示</span><span class="original-text">However, LLM-generated tests still show relatively low coverage overall. Other common concerns are their insufficient mocking capabilities and overall brittleness. However, research shows that these problems can be addressed with relatively simple techniques such as better prompting</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib20" title="Test Intention Guided LLM-Based Unit Test Generation">14</a>, <a class="ltx_ref" href="#bib.bib21" title="Code-aware prompting: a study of coverage-guided test generation in regression setting using llm">18</a>, <a class="ltx_ref" href="#bib.bib22" title="ChatUniTest: a framework for llm-based test generation">6</a>, <a class="ltx_ref" href="#bib.bib28" title="LLM4VV: developing llm-driven testsuite for compiler validation">13</a>]</cite>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S2.SS3.4.1.1"><span class="translated-text">Ⅱ-C</span><span class="original-text">II-C</span></span> </span><span class="ltx_text ltx_font_italic" id="S2.SS3.5.2"><span class="translated-text">AI/LLM辅助重构</span><span class="original-text">AI/LLM-Assisted Refactoring</span></span>
+</h3>
+<div class="ltx_para" id="S2.SS3.p1">
+<p class="ltx_p" id="S2.SS3.p1.1"><span class="translated-text">同样，LLM应用程序已被广泛研究用于自动代码重构</span><span class="original-text">Similarly, LLM applications have been widely studied for automatic code refactoring</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib12" title="LLM-driven code refactoring: opportunities and limitations">7</a>, <a class="ltx_ref" href="#bib.bib13" title="An empirical study on the code refactoring capability of large language models">8</a>]</cite><span class="translated-text">。方法范围从开发定制模型到</span><span class="original-text">. Approaches range from the development of custom models</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib10" title="AI-driven automatic code refactoring for performance optimization">15</a>]</cite><span class="translated-text">专门的 RAG 技术</span><span class="original-text">to specialized RAG techniques</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib18" title="MANTRA: enhancing automated method-level refactoring with contextual rag and multi-agent llm collaboration">27</a>]</cite><span class="translated-text">，模型可以单独使用，也可以作为多智能体系统中的子域专家</span><span class="original-text">, with models used either in isolation or as subdomain experts in multi-agent systems</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib17" title="A multi-agent llm environment for software design and refactoring: a conceptual framework">16</a>, <a class="ltx_ref" href="#bib.bib18" title="MANTRA: enhancing automated method-level refactoring with contextual rag and multi-agent llm collaboration">27</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.SS3.p2">
+<p class="ltx_p" id="S2.SS3.p2.1"><span class="translated-text">法学硕士在代码重构方面表现出明显的优势。生成的代码始终比原始源代码具有更低的复杂性和行数</span><span class="original-text">LLMs show clear benefits in code refactoring. The generated code consistently has lower complexity and line count than the original source</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib15" title="Refactoring programs using large language models with few-shot examples">21</a>, <a class="ltx_ref" href="#bib.bib16" title="LLM-based multi-agent system forăintelligent refactoring ofăhaskell code">22</a>]</cite><span class="translated-text">。此外，即使是通用模型（即不只针对代码进行训练）也能在不到 10 次重试的情况下成功改进代码</span><span class="original-text">. Moreover, even general models (i. e., not trained for code only) successfully improve code in less than 10 retries</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib15" title="Refactoring programs using large language models with few-shot examples">21</a>]</cite><span class="translated-text">大多数时候。</span><span class="original-text">most of the time.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS3.p3">
+<p class="ltx_p" id="S2.SS3.p3.1"><span class="translated-text">基于 LLM 的重构的一个已知问题是幻觉和错误引入</span><span class="original-text">A known issue with LLM-based refactoring is hallucination and error introduction</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib12" title="LLM-driven code refactoring: opportunities and limitations">7</a>, <a class="ltx_ref" href="#bib.bib19" title="An empirical study on the potential of llms in automated software refactoring">12</a>]</cite><span class="translated-text">。研究人员认为这限制了它们在自动管道中的可靠性，并建议让人类开发人员参与其中</span><span class="original-text">. Researchers suggest that this limits their reliability in automatic pipelines and recommend having a human developer in the loop</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib12" title="LLM-driven code refactoring: opportunities and limitations">7</a>]</cite><span class="translated-text">。此外，法学硕士在识别重构机会方面表现相当差，但可以通过专门的提示技术进行改进</span><span class="original-text">. Furthermore, LLMs perform rather poorly at identifying refactoring opportunities, but can be improved with specialized prompting techniques</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib19" title="An empirical study on the potential of llms in automated software refactoring">12</a>]</cite>.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section"><span class="translated-text">三、</span><span class="original-text">III</span></span><span class="ltx_text ltx_font_smallcaps" id="S3.1.1"><span class="translated-text">方法论</span><span class="original-text">Methodology</span></span>
+</h2>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS1.4.1.1"><span class="translated-text">Ⅲ-A</span><span class="original-text">III-A</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS1.5.2"><span class="translated-text">背景</span><span class="original-text">Context</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">本案例研究中讨论的人工智能驱动的测试和重构过程应用于商业 Web 应用程序的前端代码库。它是作为 React/Next.js 应用程序开发的，包含大约 19k LOC（代码行），主要是 TypeScript/TSX（</span><span class="original-text">The AI-driven testing and refactoring process discussed in this case study was applied to the frontend codebase of a commercial web application. It was developed as a React/Next.js application comprising approximately 19k LOC (lines of code), mostly TypeScript/TSX (</span><math alttext="\sim" class="ltx_Math" display="inline" id="S3.SS1.p1.1.m1" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math><span class="translated-text">17.5k LOC）。它使用路由组、嵌套布局、挂钩、共享组件、API 客户端和外部组件库等模式。之前没有实施一致的测试。</span><span class="original-text">17.5k LOC). It uses patterns such as route groups, nested layouts, hooks, shared components, API clients, and an external component library. No consistent testing had been implemented previously.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS2.4.1.1"><span class="translated-text">Ⅲ-B</span><span class="original-text">III-B</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS2.5.2"><span class="translated-text">模型和工具</span><span class="original-text">Models and Tooling</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">该工作流程采用分层、多代理方法来平衡推理深度和执行速度。 “规划器”模型是 Gemini 2.5 Pro，可通过 Gemini CLI 访问。选择该模型是因为其大型上下文窗口，这使得它能够立即处理整个前端代码库，以识别跨模块依赖关系并计划重构步骤。 “执行者”模型负责重复测试实施和本地化重构，由Cursor在自动模式下的集成模型组合而成。</span><span class="original-text">The workflow employed a hierarchical, multi-agent approach to balance reasoning depth with execution speed. The "planner" model was Gemini 2.5 Pro, accessed via the Gemini CLI. This model was selected for its large context window, which allowed it to process the entire frontend codebase at once to identify cross-module dependencies and plan refactoring steps. The "executor" models, responsible for repetitive test implementation and localized refactoring, consisted of a combination of Cursor’s integrated models in Auto mode.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.p2">
+<p class="ltx_p" id="S3.SS2.p2.1"><span class="translated-text">激励策略遵循结构化的“计划-行动-验证”循环。规划器根据代码库上下文生成高级降价指令。这些计划以及持久的特定于项目的规则文件（例如，</span><span class="original-text">The prompting strategy followed a structured "Plan-Act-Verify" loop. The planner generated high-level markdown instructions based on the codebase context. These plans, along with persistent project-specific rule files (e.g.,</span><span class="ltx_text ltx_font_typewriter" id="S3.SS2.p2.1.1">GEMINI.md</span>, <span class="ltx_text ltx_font_typewriter" id="S3.SS2.p2.1.2">.cursorrules</span><span class="translated-text">），作为执行器模型的系统提示。这种方法确保即使执行器模型在狭窄的、特定于文件的范围内运行，它仍然受到全局架构规则和命名约定的限制。
+核心架构约束和生成指南被捕获在持久的、版本控制的规则和规划文件中，其结构如下所述。</span><span class="original-text">), served as the system prompt for the executor models. This approach ensured that even when an executor model operated on a narrow, file-specific scope, it remained constrained by global architectural rules and naming conventions.
+The core architectural constraints and generative guidelines were captured in persistent, version-controlled rule and planning files, whose structure is described below.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS3.4.1.1"><span class="translated-text">Ⅲ-C</span><span class="original-text">III-C</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS3.5.2"><span class="translated-text">第一阶段：人工智能辅助测试套件构建</span><span class="original-text">Stage 1: AI-Assisted Test Suite Construction</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.1"><span class="translated-text">在本小节中，我们概述了人工智能辅助测试套件构建的工作流程。首先，我们提供有关指定基本规则的指导。然后，我们定义了一个以计划为主导、自我修正的增量测试生成过程，涉及人机交互（如图所示）</span><span class="original-text">In this subsection, we outline the workflow for AI-assisted test suite construction. First, we provide guidance on specifying ground rules. Then, we define a plan-led and self-correcting incremental test generation process involving a human-in-the-loop (illustration in figure</span><a class="ltx_ref" href="#S3.F1" title="Figure 1 ‣ III-C Stage 1: AI-Assisted Test Suite Construction ‣ III Methodology ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">1</span></a>).</p>
+</div>
+<div class="ltx_para" id="S3.SS3.p2">
+<p class="ltx_p" id="S3.SS3.p2.1"><span class="translated-text">先前的工作表明，格式良好的指令可以带来更好的输出</span><span class="original-text">Prior work shows that well-formed instructions lead to better output</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib4" title="Optimizing ai-assisted code generation">25</a>, <a class="ltx_ref" href="#bib.bib5" title="Assessing the effectiveness and security implications of ai code generators">24</a>]</cite><span class="translated-text">。此外，研究表明，没有严格规范的基于人工智能的代码生成可能会引入漏洞</span><span class="original-text">. Furthermore, research indicates that AI-based code generation without rigorous specification can introduce vulnerabilities</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib5" title="Assessing the effectiveness and security implications of ai code generators">24</a>]</cite><span class="translated-text">。因此，我们采用人工智能主导的编码方法，该方法严重依赖于规则和上下文语句。可以使用两种特定于模型的文件名，例如</span><span class="original-text">. Therefore, we employ an AI-led coding approach that relies heavily on rules and context statements. One can use both model-specific file names, such as</span><span class="ltx_text ltx_font_typewriter" id="S3.SS3.p2.1.1"><span class="translated-text">克劳德.md</span><span class="original-text">CLAUDE.md</span></span> <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="Claude code: best practices for agentic coding">2</a>]</cite><span class="translated-text">，这可能需要特殊的格式，以及在代理之间共享更广泛的规范文件，例如</span><span class="original-text">, which may require a special format, and broader specification files shared between agents, such as</span><span class="ltx_text ltx_font_typewriter" id="S3.SS3.p2.1.2"><span class="translated-text">代理.md</span><span class="original-text">AGENTS.md</span></span> <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="AGENTS.md: a simple, open format for guiding coding agents">1</a>]</cite><span class="translated-text">。也可以使用自定义规则文件。在这些文件中，我们捕获了命名约定、导入规则和更广泛的测试生成指南。最后，建立了测试原则，例如禁止模拟内部钩子和修改源代码。</span><span class="original-text">. Custom rule files can also be used. In these files, we captured naming conventions, import rules, and broader test-generation guidelines. Lastly, testing principles, such as prohibitions on mocking internal hooks and on modifying source code, were established.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.p3">
+<p class="ltx_p" id="S3.SS3.p3.1"><span class="translated-text">在计划的指导下（通过自我规划）使用人工智能模型生成代码会更有效</span><span class="original-text">Generating code using AI models is more effective when guided by a plan, either through self-planning</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="Self-planning code generation with large language models">10</a>]</cite><span class="translated-text">或者使用更强大或更专业的模型作为规划器</span><span class="original-text">or using a stronger or more specialized model as the planner</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib9" title="Empowering ai to generate better ai code: guided generation of deep learning projects with llms">26</a>]</cite><span class="translated-text">。受到研究的启发，我们决定在测试计划步骤中使用更强大的模型，同时允许更小、更便宜的编码器来处理编码。</span><span class="original-text">. Inspired by research, we decided to use a stronger model for the test planning step while allowing a smaller, cheaper coder to handle the coding.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.p4">
+<p class="ltx_p" id="S3.SS3.p4.1"><span class="translated-text">该计划存在于一个 markdown 文件中，包含以下信息：</span><span class="original-text">The plan lived in a markdown file and contained information on</span></p>
+<ol class="ltx_enumerate" id="S3.I1">
+<li class="ltx_item" id="S3.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span>
+<div class="ltx_para" id="S3.I1.i1.p1">
+<p class="ltx_p" id="S3.I1.i1.p1.1"><span class="translated-text">下一步应该测试代码库的哪些部分，</span><span class="original-text">which parts of the codebase should be tested in the next step,</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span>
+<div class="ltx_para" id="S3.I1.i2.p1">
+<p class="ltx_p" id="S3.I1.i2.p1.1"><span class="translated-text">应如何构建特定的测试套件，以及</span><span class="original-text">how specific test suites should be structured, and</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span>
+<div class="ltx_para" id="S3.I1.i3.p1">
+<p class="ltx_p" id="S3.I1.i3.p1.1"><span class="translated-text">要遵循哪些约定（以及上下文文件中的规则）。</span><span class="original-text">which conventions to follow (alongside the rules in context files).</span></p>
+</div>
+</li>
+</ol>
+<p class="ltx_p" id="S3.SS3.p4.2"><span class="translated-text">在上一步实施并由人工审核员审核后，它会进行迭代更新。</span><span class="original-text">It was updated iteratively after the previous step was implemented and reviewed by a human reviewer.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.p5">
+<p class="ltx_p" id="S3.SS3.p5.1"><span class="translated-text">在为特定迭代设计计划后，编码模型实施了这些步骤。人类没有审查开发过程中生成的代码。相反，质量是通过在现有源代码上运行时通过的测试来保证的。如果发生故障，在消除失败的测试之前，允许进行有限次数的修复重试。然而，在完成生成（包括重试）和消除无效测试的突变测试之后，开发人员审查了整个迭代，检查了故障日志，根据需要修改了代码，并批准或拒绝了更改。用阿姆达尔的话说，我们将工作流程的串行部分缩小到一个薄片，让自动化承担可并行的任务。</span><span class="original-text">After devising a plan for a particular iteration, a coding model implemented the steps. A human did not review the code generated during development. Instead, quality was assured by the tests passing when run on existing source code. In case of failures, a limited number of fixing retries was permitted before eliminating the failing tests. However, after a completed generation (including retries) and mutation testing that eliminated ineffective tests, a developer reviewed the entire iteration, inspected failure logs, modified code as needed, and approved or rejected the changes. In Amdahl’s terms, we shrank the serial part of the workflow to a thin slice, letting automation carry the parallelizable bulk.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="273" id="S3.F1.g1" src="https://arxiv.org/html/2604.03135v1/figures/test_flow.drawio.png" width="539"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>AI-led test generation flow</figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S3.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS4.4.1.1"><span class="translated-text">Ⅲ-D</span><span class="original-text">III-D</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS4.5.2"><span class="translated-text">第 2 阶段：人工智能辅助测试保护重构</span><span class="original-text">Stage 2: AI-Assisted Test-Guarded Refactor</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS4.p1">
+<p class="ltx_p" id="S3.SS4.p1.1"><span class="translated-text">生成完整的测试套件后，我们工作流程的下一阶段是测试保护重构。这个想法是采用编码模型根据软件开发最佳实践（例如，增加模块化、减少源文件大小和减轻复杂性热点）来重构代码库的特定部分。规则（包括编码指南和限制）包含在特殊的规则文件中（请参阅上一节）。最重要的是，测试文件无法修改，除非在极少数情况下，例如在重构代码中重命名变量时。有关此工作流程的说明，请参见图</span><span class="original-text">After generating a complete test suite, the next stage in our workflow is a test-guarded refactor. The idea was to employ a coding model to refactor specific parts of the codebase in line with software development best practices (e.g., increasing modularity, reducing source file sizes, and alleviating complexity hotspots). Rules, including coding guidelines and restrictions, were contained in a special rule file (see previous section). Most importantly, test files could not be modified, except in rare cases, such as when variables were renamed in refactored code. For an illustration of this workflow, refer to figure</span><a class="ltx_ref" href="#S3.F2" title="Figure 2 ‣ III-D Stage 2: AI-Assisted Test-Guarded Refactor ‣ III Methodology ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">。与前一阶段类似，核心工件是提到的规则文件和跨迭代共享的规划文件。</span><span class="original-text">. Similarly to the previous stage, the core artifacts were the mentioned rule files and a planning file shared across iterations.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="273" id="S3.F2.g1" src="https://arxiv.org/html/2604.03135v1/figures/refactor_flow.png" width="539"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>AI-led refactoring flow</figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span class="ltx_text ltx_font_smallcaps" id="S4.1.1"><span class="translated-text">结果</span><span class="original-text">Results</span></span>
+</h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">在本节中，我们报告上一节详细介绍的两个步骤中引入的定量和定性（结构）变化。</span><span class="original-text">In this section, we report on quantitative and qualitative (structural) changes introduced in both steps detailed in the previous section.</span></p>
+</div>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS1.4.1.1">IV-A</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS1.5.2"><span class="translated-text">AI辅助测试套件构建</span><span class="original-text">AI-Assisted Test Suite Construction</span></span>
+</h3>
+<section class="ltx_paragraph" id="S4.SS1.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">生成的代码指标</span><span class="original-text">Generated code metrics</span></h4>
+<div class="ltx_para" id="S4.SS1.SSS0.Px1.p1">
+<p class="ltx_p" id="S4.SS1.SSS0.Px1.p1.1"><span class="translated-text">在实验过程中，测试从专注于选定的 E2E（端到端）场景的有限基线扩展到涵盖大多数前端功能的套件。具体来说，构建后的状态为：</span><span class="original-text">During the experiment, the tests expanded from a limited baseline focused on select E2E (end-to-end) scenarios to a suite covering most frontend features. Specifically, the state after construction is:</span></p>
+<ol class="ltx_enumerate" id="S4.I1">
+<li class="ltx_item" id="S4.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span>
+<div class="ltx_para" id="S4.I1.i1.p1">
+<p class="ltx_p" id="S4.I1.i1.p1.1"><span class="translated-text">87 个测试文件，包含 382 个单独的测试用例</span><span class="original-text">87 test files containing 382 individual test cases</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span>
+<div class="ltx_para" id="S4.I1.i2.p1">
+<p class="ltx_p" id="S4.I1.i2.p1.1"><math alttext="\sim" class="ltx_Math" display="inline" id="S4.I1.i2.p1.1.m1" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math><span class="translated-text">11,000 LOC 仅计数测试规范</span><span class="original-text">11,000 LOC counting only test specification</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span>
+<div class="ltx_para" id="S4.I1.i3.p1">
+<p class="ltx_p" id="S4.I1.i3.p1.1"><math alttext="&gt;" class="ltx_Math" display="inline" id="S4.I1.i3.p1.1.m1" intent=":literal"><semantics><mo>&gt;</mo><annotation encoding="application/x-tex">&gt;</annotation></semantics></math><span class="translated-text">16,000 个 LOC，包括模拟、装置和设置实用程序</span><span class="original-text">16,000 LOC including mocks, fixtures, and setup utilities</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">4.</span>
+<div class="ltx_para" id="S4.I1.i4.p1">
+<p class="ltx_p" id="S4.I1.i4.p1.1"><span class="translated-text">在有针对性的逻辑密集型模块中，分支覆盖率达到 78.12%，线路覆盖率达到 67.85%</span><span class="original-text">78.12% branch coverage and 67.85% line coverage in targeted, logic-heavy modules</span><span class="ltx_note ltx_role_footnote" id="footnote1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span><span class="translated-text">不包括以下区域</span><span class="original-text">Excludes areas like</span><span class="ltx_text ltx_font_typewriter" id="footnote1.1"><span class="translated-text">国际化</span><span class="original-text">i18n</span></span><span class="translated-text">、主题和挂钩。</span><span class="original-text">, themes and hooks.</span></span></span></span></p>
+</div>
+</li>
+</ol>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS1.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">测试套件组织</span><span class="original-text">Test suite organization</span></h4>
+<div class="ltx_para" id="S4.SS1.SSS0.Px2.p1">
+<p class="ltx_p" id="S4.SS1.SSS0.Px2.p1.1"><span class="translated-text">该测试套件展示了从狭隘的、基于流程的测试方法到模块化、系统性和围绕架构边界组织的测试方法的转变。测试文件按其覆盖的区域进行分组，这也表明了重构步骤的自然顺序。按所涵盖的案例、文件和 LOC 数量（仅计算规格）划分的明细如表所示</span><span class="original-text">The test suite shows a shift from a narrow, flow-based testing approach to one that is modular, systematic, and organized around architectural boundaries. Test files were grouped by the areas they cover, which also suggested a natural order for the refactoring step. The breakdown by the number of covered cases, files, and LOC (counting only specifications) is shown in Table</span><a class="ltx_ref" href="#S4.T1" title="TABLE I ‣ Test suite organization ‣ IV-A AI-Assisted Test Suite Construction ‣ IV Results ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">I</span></a>.</p>
+</div>
+<figure class="ltx_table" id="S4.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">TABLE I: </span>Distribution of Test Suite by Architectural Area (Ordered by Test Cases)</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T1.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_t" id="S4.T1.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S4.T1.1.1.1.1.1">Area</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_t" id="S4.T1.1.1.1.2"><span class="ltx_text ltx_font_bold" id="S4.T1.1.1.1.2.1">Test Cases</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_t" id="S4.T1.1.1.1.3"><span class="ltx_text ltx_font_bold" id="S4.T1.1.1.1.3.1">Spec Files</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_t" id="S4.T1.1.1.1.4"><span class="ltx_text ltx_font_bold" id="S4.T1.1.1.1.4.1">Spec LOC</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T1.1.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T1.1.2.1.1">Reusable UI components</th>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T1.1.2.1.2">127 (33.2%)</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T1.1.2.1.3">32 (36.8%)</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T1.1.2.1.4">2,801 (25.0%)</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.1.3.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T1.1.3.2.1">Feature-specific modules</th>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.3.2.2">121 (31.7%)</td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.3.2.3">23 (26.4%)</td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.3.2.4">5,010 (44.7%)</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.1.4.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T1.1.4.3.1">Application pages</th>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.4.3.2">57 (14.9%)</td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.4.3.3">17 (19.5%)</td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.4.3.4">1,702 (15.2%)</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.1.5.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T1.1.5.4.1">API-facing logic</th>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.5.4.2">55 (14.4%)</td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.5.4.3">7 (8.0%)</td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.5.4.4">1,030 (9.2%)</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.1.6.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T1.1.6.5.1">Authentication</th>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.6.5.2">18 (4.7%)</td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.6.5.3">7 (8.0%)</td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.6.5.4">582 (5.2%)</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.1.7.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T1.1.7.6.1">Utilities</th>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.7.6.2">4 (1.0%)</td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.7.6.3">1 (1.1%)</td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.7.6.4">74 (0.7%)</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.1.8.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_t" id="S4.T1.1.8.7.1"><span class="ltx_text ltx_font_bold" id="S4.T1.1.8.7.1.1">Total</span></th>
+<td class="ltx_td ltx_align_right ltx_border_b ltx_border_t" id="S4.T1.1.8.7.2">382 (100%)</td>
+<td class="ltx_td ltx_align_right ltx_border_b ltx_border_t" id="S4.T1.1.8.7.3">87 (100%)</td>
+<td class="ltx_td ltx_align_right ltx_border_b ltx_border_t" id="S4.T1.1.8.7.4">11,199 (100%)</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section class="ltx_paragraph" id="S4.SS1.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">测试作为文档</span><span class="original-text">Tests as documentation</span></h4>
+<div class="ltx_para" id="S4.SS1.SSS0.Px3.p1">
+<p class="ltx_p" id="S4.SS1.SSS0.Px3.p1.1"><span class="translated-text">使用 TypeScript/TSX，测试与源的奇偶性从可忽略的基线比率增加到接近 1:1 (</span><span class="original-text">Test-to-source parity increased from a negligible baseline ratio to one approaching 1:1 with TypeScript/TSX (</span><math alttext="\sim" class="ltx_Math" display="inline" id="S4.SS1.SSS0.Px3.p1.1.m1" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math><span class="translated-text">17.5k LOC）。这使得测试套件可用作预期行为的文档，并证明其在自动重构步骤中用作防护的合理性。</span><span class="original-text">17.5k LOC). That makes the test suite useful as documentation of expected behavior and justifies its use as a guard during the automated refactoring step.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS2.4.1.1">IV-B</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS2.5.2"><span class="translated-text">人工智能辅助测试保护重构</span><span class="original-text">AI-Assisted Test-Guarded Refactor</span></span>
+</h3>
+<section class="ltx_paragraph" id="S4.SS2.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">代码演化指标</span><span class="original-text">Code evolution metrics</span></h4>
+<div class="ltx_para" id="S4.SS2.SSS0.Px1.p1">
+<p class="ltx_p" id="S4.SS2.SSS0.Px1.p1.1"><span class="translated-text">与上一步的目的是增加测试代码量相反，重构步骤的目标更加复杂。虽然通常希望拥有更少的源代码行以提高可读性和可维护性，但减少行数绝不能导致代码组织质量降低。经过实验，我们发现：</span><span class="original-text">Contrary to the previous step, where the aim was to increase the amount of test code, the goal in the refactoring step was more complex. While it is generally desirable to have fewer lines of source code for readability and maintainability, reducing the number of lines must not result in lower-quality code organization. Following the experiment, we found that:</span></p>
+<ul class="ltx_itemize" id="S4.I2">
+<li class="ltx_item" id="S4.I2.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i1.p1">
+<p class="ltx_p" id="S4.I2.i1.p1.1"><span class="translated-text">修改了 219 个文件（146 个添加、120 个删除、51 个就地修改）</span><span class="original-text">219 files modified (146 additions, 120 deletions, 51 in-place modifications)</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I2.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i2.p1">
+<p class="ltx_p" id="S4.I2.i2.p1.1"><span class="translated-text">源文件数量从 237 个增加到 263 个（+26 个文件）</span><span class="original-text">source file count grew from 237 to 263 (+26 files)</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I2.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i3.p1">
+<p class="ltx_p" id="S4.I2.i3.p1.1"><span class="translated-text">LOC 从 18,619 增加到 21,624（+3,005 LOC）</span><span class="original-text">LOC increased from 18,619 to 21,624 (+3,005 LOC)</span></p>
+</div>
+</li>
+</ul>
+<p class="ltx_p" id="S4.SS2.SSS0.Px1.p1.2"><span class="translated-text">如下所示，这种增长反映了逻辑上的重新分配，而不是膨胀。删除文件的数量几乎与添加文件的数量相匹配（120 与 146），这已经表明差异是由架构重组驱动的。</span><span class="original-text">As we show below, this growth reflects logical redistribution rather than bloat. The number of deleted files nearly matches the number of additions (120 vs. 146), already suggesting that the diffs are driven by architectural restructuring.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS2.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">源代码分发</span><span class="original-text">Source code distribution</span></h4>
+<div class="ltx_para" id="S4.SS2.SSS0.Px2.p1">
+<p class="ltx_p" id="S4.SS2.SSS0.Px2.p1.1"><span class="translated-text">重构之前，大部分逻辑集中在路由层，没有专用功能或共享层。重构后，路由层变得更加精简，并引入了新的层。各层变更明细见表</span><span class="original-text">Before the refactor, most logic was concentrated in the routing layer, with no dedicated feature or shared layers. After the refactor, the routing layer became much leaner and new layers were introduced. The breakdown of changes by layers is shown in Table</span><a class="ltx_ref" href="#S4.T2" title="TABLE II ‣ Source code distribution ‣ IV-B AI-Assisted Test-Guarded Refactor ‣ IV Results ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">II</span></a><span class="translated-text">并如图所示</span><span class="original-text">and illustrated in Figure</span><a class="ltx_ref" href="#S4.F3" title="Figure 3 ‣ Source code distribution ‣ IV-B AI-Assisted Test-Guarded Refactor ‣ IV Results ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">。这支持了这样的说法：文件和 LOC 的增加是由于架构重组而不是代码膨胀造成的。</span><span class="original-text">. That supports the claim that the increase in files and LOC results from architectural restructuring rather than code bloat.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T2">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">TABLE II: </span>Distribution of LOC in <span class="ltx_text ltx_font_typewriter" id="S4.T2.66.1">frontend/src</span> by Architectural Layer (Before <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.2.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> After Refactor)</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T2.64">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T2.4.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T2.4.2.3"><span class="ltx_text ltx_font_bold" id="S4.T2.4.2.3.1">Layer</span></th>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T2.3.1.1"><span class="ltx_text ltx_font_bold" id="S4.T2.3.1.1.1">Text files (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.3.1.1.1.m1" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math>)</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T2.4.2.2"><span class="ltx_text ltx_font_bold" id="S4.T2.4.2.2.1">Text LOC (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.4.2.2.1.m1" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math>)</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T2.4.2.4"><span class="ltx_text ltx_font_bold" id="S4.T2.4.2.4.1">Share of Text LOC</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T2.4.2.5"><span class="ltx_text ltx_font_bold" id="S4.T2.4.2.5.1">Avg LOC/File</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.13.11">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T2.13.11.10">Routing (src/app)</th>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T2.7.5.3">166 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.5.3.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 52 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.6.4.2.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = <math alttext="-" class="ltx_Math" display="inline" id="S4.T2.7.5.3.m3" intent=":literal"><semantics><mo>−</mo><annotation encoding="application/x-tex">-</annotation></semantics></math>114)</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T2.11.9.7">17,872 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.8.6.4.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 6,201 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.9.7.5.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = <math alttext="-" class="ltx_Math" display="inline" id="S4.T2.10.8.6.m3" intent=":literal"><semantics><mo>−</mo><annotation encoding="application/x-tex">-</annotation></semantics></math>11,671, <math alttext="-" class="ltx_Math" display="inline" id="S4.T2.11.9.7.m4" intent=":literal"><semantics><mo>−</mo><annotation encoding="application/x-tex">-</annotation></semantics></math>65.3%)</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T2.12.10.8">96.0% <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.12.10.8.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 28.7%</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T2.13.11.9">108 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.13.11.9.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 119</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.19.17">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T2.19.17.7">Features (src/features)</th>
+<td class="ltx_td ltx_align_right" id="S4.T2.15.13.2">0 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.14.12.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 79 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.15.13.2.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = +79)</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.17.15.4">0 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.16.14.3.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 9,595 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.17.15.4.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = +9,595)</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.18.16.5">0% <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.18.16.5.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 44.4%</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.19.17.6">0 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.19.17.6.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 121</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.25.23">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T2.25.23.7">Shared (src/shared)</th>
+<td class="ltx_td ltx_align_right" id="S4.T2.21.19.2">0 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.20.18.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 63 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.21.19.2.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = +63)</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.23.21.4">0 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.22.20.3.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 5,130 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.23.21.4.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = +5,130)</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.24.22.5">0% <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.24.22.5.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 23.7%</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.25.23.6">0 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.25.23.6.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 81</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.31.29">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T2.31.29.7">Domains (src/domains)</th>
+<td class="ltx_td ltx_align_right" id="S4.T2.27.25.2">0 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.26.24.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 3 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.27.25.2.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = +3)</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.29.27.4">0 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.28.26.3.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 198 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.29.27.4.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = +198)</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.30.28.5">0% <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.30.28.5.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 0.9%</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.31.29.6">0 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.31.29.6.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 66</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.40.38">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T2.40.38.10">Libraries (src/libs)</th>
+<td class="ltx_td ltx_align_right" id="S4.T2.34.32.3">13 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.32.30.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 8 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.33.31.2.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = <math alttext="-" class="ltx_Math" display="inline" id="S4.T2.34.32.3.m3" intent=":literal"><semantics><mo>−</mo><annotation encoding="application/x-tex">-</annotation></semantics></math>5)</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.38.36.7">532 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.35.33.4.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 283 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.36.34.5.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = <math alttext="-" class="ltx_Math" display="inline" id="S4.T2.37.35.6.m3" intent=":literal"><semantics><mo>−</mo><annotation encoding="application/x-tex">-</annotation></semantics></math>249, <math alttext="-" class="ltx_Math" display="inline" id="S4.T2.38.36.7.m4" intent=":literal"><semantics><mo>−</mo><annotation encoding="application/x-tex">-</annotation></semantics></math>46.8%)</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.39.37.8">2.9% <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.39.37.8.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 1.3%</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.40.38.9">41 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.40.38.9.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 35</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.46.44">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T2.46.44.7">Other text (assets + misc)</th>
+<td class="ltx_td ltx_align_right" id="S4.T2.42.40.2">47 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.41.39.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 47 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.42.40.2.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = 0)</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.44.42.4">215 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.43.41.3.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 217 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.44.42.4.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = +2, +0.9%)</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.45.43.5">1.2% <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.45.43.5.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 1.0%</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.46.44.6">5 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.46.44.6.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 5</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.52.50">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T2.52.50.7"><span class="ltx_text ltx_font_bold" id="S4.T2.52.50.7.1">Total <span class="ltx_text ltx_font_typewriter" id="S4.T2.52.50.7.1.1">frontend/src</span> (text only)</span></th>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T2.48.46.2">226 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.47.45.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 252 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.48.46.2.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = +26)</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T2.50.48.4">18,619 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.49.47.3.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 21,624 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.50.48.4.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = +3,005, +16.1%)</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T2.51.49.5">100% <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.51.49.5.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 100%</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T2.52.50.6">82 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.52.50.6.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 86</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.58.56">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T2.58.56.7"><span class="ltx_text ltx_font_italic" id="S4.T2.58.56.7.1">TS/TSX text (subset of total)</span></th>
+<td class="ltx_td ltx_align_right" id="S4.T2.54.52.2">180 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.53.51.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 206 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.54.52.2.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = +26)</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.56.54.4">17,511 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.55.53.3.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 20,476 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.56.54.4.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = +2,965, +16.9%)</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.57.55.5">94.0% <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.57.55.5.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 94.7%</td>
+<td class="ltx_td ltx_align_right" id="S4.T2.58.56.6">97 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.58.56.6.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 99</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.64.62">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b" id="S4.T2.64.62.7"><span class="ltx_text ltx_font_italic" id="S4.T2.64.62.7.1">Non-TS/TSX text (subset of total)</span></th>
+<td class="ltx_td ltx_align_right ltx_border_b" id="S4.T2.60.58.2">46 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.59.57.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 46 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.60.58.2.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = 0)</td>
+<td class="ltx_td ltx_align_right ltx_border_b" id="S4.T2.62.60.4">1,108 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.61.59.3.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 1,148 (<math alttext="\Delta" class="ltx_Math" display="inline" id="S4.T2.62.60.4.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> = +40, +3.6%)</td>
+<td class="ltx_td ltx_align_right ltx_border_b" id="S4.T2.63.61.5">6.0% <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.63.61.5.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 5.3%</td>
+<td class="ltx_td ltx_align_right ltx_border_b" id="S4.T2.64.62.6">24 <math alttext="\to" class="ltx_Math" display="inline" id="S4.T2.64.62.6.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 25</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure class="ltx_figure" id="S4.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="402" id="S4.F3.g1" src="https://arxiv.org/html/2604.03135v1/figures/post_refactor_code_change.png" width="539"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>LOC difference pre- and post-refactor</figcaption>
+</figure>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span class="ltx_text ltx_font_smallcaps" id="S5.1.1"><span class="translated-text">调查结果与讨论</span><span class="original-text">Findings and Discussion</span></span>
+</h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">在本节中，我们根据上一节所述的结果讨论我们的发现。</span><span class="original-text">In this section, we discuss our findings based on the results stated in the previous section.</span></p>
+</div>
+<section class="ltx_subsection" id="S5.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS1.4.1.1">V-A</span> </span><span class="ltx_text ltx_font_italic" id="S5.SS1.5.2"><span class="translated-text">AI辅助测试套件构建</span><span class="original-text">AI-Assisted Test Suite Construction</span></span>
+</h3>
+<div class="ltx_para" id="S5.SS1.p1">
+<p class="ltx_p" id="S5.SS1.p1.1"><span class="translated-text">在第 5 节中描述的 AI 主导的测试生成过程中</span><span class="original-text">During the AI-led test generation process described in Section</span><a class="ltx_ref" href="#S3" title="III Methodology ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">III</span></a><span class="translated-text">, 小节</span><span class="original-text">, Subsection</span><a class="ltx_ref" href="#S3.SS3" title="III-C Stage 1: AI-Assisted Test Suite Construction ‣ III Methodology ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">III-C</span></span></a><span class="translated-text">，我们发现该模型在共享基础设施上投入了大量精力。换句话说，测试被组织成按逻辑目录分组的文件，并且模型应用了共享设置逻辑、标准化模拟以及测试逻辑与测试数据分离等模式，其中一些在规则文件中概述，但另一些则作为最佳实践自行出现</span><span class="original-text">, we found that the model invested significant effort into shared infrastructure. In other words, tests were organized into files grouped by logical directories, and the model applied patterns such as shared setup logic, standardized mocking, and separation of test logic from test data—some of which were outlined in the rule files, but others emerged on their own as best-practice</span><span class="ltx_text ltx_font_italic" id="S5.SS1.p1.1.1"><span class="translated-text">常识</span><span class="original-text">common sense</span></span>.</p>
+</div>
+<div class="ltx_para" id="S5.SS1.p2">
+<p class="ltx_p" id="S5.SS1.p2.1"><span class="translated-text">例如，该模型引入了包含数千个 LOC 的集中式模拟数据目录以及整合的固定装置，从而减少了重复。它还建立了一个基于请求拦截的 API 模拟层和一个具有一致环境设置、类似浏览器的填充和严格副作用处理的全局测试工具。该基础设施实现了重用和进一步增长。</span><span class="original-text">For instance, the model introduced a centralized mock data catalog of several thousand LOC with consolidated fixtures, reducing duplication. It also established an API-mocking layer based on request interception and a global test harness with consistent environment setup, browser-like polyfills, and strict side-effect handling. This infrastructure enabled reuse and further growth.</span></p>
+</div>
+<section class="ltx_paragraph" id="S5.SS1.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">通过迭代进行自适应代码组织</span><span class="original-text">Adaptive code organization through iterations</span></h4>
+<div class="ltx_para" id="S5.SS1.SSS0.Px1.p1">
+<p class="ltx_p" id="S5.SS1.SSS0.Px1.p1.1"><span class="translated-text">此外，我们注意到测试代码被迭代地重构、合并、修改和删除（以减少脆弱性或冗余）。这是在设置中允许的，并表明编码模型可以识别问题并改进自己的代码。此外，约定和基础设施随着新的测试而发展，需要偶尔进行重构。法学硕士在确定性反馈（无论是自动反馈还是人为反馈）下效果最好。我们发现，留给自己设备的法学硕士产生了很高比例的单元测试（接近 40%），这些测试有助于代码覆盖率（如目标所述），但效率低下。这是一种形式</span><span class="original-text">Also, we noticed that test code was iteratively refactored, consolidated, modified, and removed (to reduce brittleness or redundancy). That was allowed in the setup and shows that coding models can recognize issues and improve their own code. Moreover, conventions and infrastructure evolved alongside new tests, necessitating occasional refactoring. LLMs work best with deterministic feedback, be it automated or human-given. We found that LLMs left to their own devices produced a high proportion of unit tests (approaching 40%) that contribute to code coverage (as stated as an objective) but are ineffective. That is a form of</span><span class="ltx_text ltx_font_italic" id="S5.SS1.SSS0.Px1.p1.1.1"><span class="translated-text">价值错位</span><span class="original-text">value misalignment</span></span><span class="translated-text">其中选择了懒惰但高性能的解决方案，除非在其他重要维度上精心陈述和强制执行这些质量。拥有一个</span><span class="original-text">in which lazy but performant solutions are chosen, unless the qualities are meticulously stated and enforced across other important dimensions. Having a</span><span class="ltx_text ltx_font_bold" id="S5.SS1.SSS0.Px1.p1.1.2"><span class="translated-text">特定领域模型线束</span><span class="original-text">domain-specific model harness</span></span><span class="translated-text">非常重要；在这种情况下，在测试生成阶段，我们使用突变测试来识别可以消除或更改的无效测试。总的来说，我们发现允许已经生成的、经过人类批准的代码在迭代中不断发展会产生内部更加一致的套件。</span><span class="original-text">is highly important; in this case, for the test generation phase, we used mutation testing to identify ineffective tests that could be eliminated or changed. In total, we find that allowing already generated, human-approved code to evolve over iterations results in a more internally consistent suite.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S5.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS2.4.1.1">V-B</span> </span><span class="ltx_text ltx_font_italic" id="S5.SS2.5.2"><span class="translated-text">人工智能辅助测试保护重构</span><span class="original-text">AI-Assisted Test-Guarded Refactor</span></span>
+</h3>
+<section class="ltx_paragraph" id="S5.SS2.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">结构侵入式重构</span><span class="original-text">Structurally invasive refactor</span></h4>
+<div class="ltx_para" id="S5.SS2.SSS0.Px1.p1">
+<p class="ltx_p" id="S5.SS2.SSS0.Px1.p1.1"><span class="translated-text">关于重构步骤，我们注意到这些变化显着改变了结构，同时保留了测试保护行为。它包含将逻辑重新分配到专门层中，而 LOC 仅略有增长。结果是一个基于可重用组件和清晰层边界的架构。</span><span class="original-text">Regarding the refactoring step, we noticed that the changes significantly altered the structure while preserving test-guarded behavior. It contained a major redistribution of logic into specialized layers, with only a modest growth in LOC. The result is an architecture based on reusable components and clear layer boundaries.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S5.SS2.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">关于 LOC 增长和架构解释</span><span class="original-text">On LOC growth and architectural interpretation</span></h4>
+<div class="ltx_para" id="S5.SS2.SSS0.Px2.p1">
+<p class="ltx_p" id="S5.SS2.SSS0.Px2.p1.1"><span class="translated-text">观察到的总 LOC 增长 16.1% 单独来看可能会适得其反。然而，一些结构指标表明真正的架构改进而不是简单的代码重新分配。首先，路由层在 LOC 中缩小了 65.3%，从包含所有代码的 96% 变为 28.7%。其次，该逻辑分布在三个新层（功能层、共享层、域），每个层都有不同的架构角色。第三，每个文件的平均 LOC 在整个代码库中保持稳定（82 到 86），这表明新文件在粒度上与现有文件相当，而不是聚合不相关的功能。第四，删除了 120 个文件，同时添加了 146 个文件，这表明这些变化涉及重组而不仅仅是累加性增长。</span><span class="original-text">The observed 16.1% growth in total LOC may appear counterproductive in isolation. However, several structural indicators suggest genuine architectural improvement rather than simple code redistribution. First, the routing layer shrank by 65.3% in LOC, shifting from containing 96% of all code to 28.7%. Second, this logic was distributed across three new layers (features, shared, domains), each with a distinct architectural role. Third, the average LOC per file remained stable across the codebase (82 to 86), indicating that the new files are comparable in granularity to existing ones rather than aggregating unrelated functionality. Fourth, 120 files were deleted alongside 146 additions, indicating that the changes involved restructuring rather than solely additive growth.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS2.SSS0.Px2.p2">
+<p class="ltx_p" id="S5.SS2.SSS0.Px2.p2.1"><span class="translated-text">为了超越 LOC 级别的观察，我们解析了代码库的抽象语法树 (AST)，以在重构前后提取更细粒度的结构指标。</span><span class="original-text">To move beyond LOC-level observations, we parsed the codebase’s Abstract Syntax Tree (AST) to extract finer-grained structural metrics before and after the refactor.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS2.SSS0.Px2.p3">
+<p class="ltx_p" id="S5.SS2.SSS0.Px2.p3.1"><span class="ltx_text ltx_font_bold" id="S5.SS2.SSS0.Px2.p3.1.1"><span class="translated-text">耦合（依赖性分析）。</span><span class="original-text">Coupling (Dependency Analysis).</span></span><span class="translated-text">在预重构状态下，路由层（</span><span class="original-text">In the pre-refactor state, the routing layer (</span><span class="ltx_text ltx_font_typewriter" id="S5.SS2.SSS0.Px2.p3.1.2"><span class="translated-text">源代码/应用程序</span><span class="original-text">src/app</span></span><span class="translated-text">）作为一个与业务逻辑严重耦合的整体容器，由 893 个独特的内部证明</span><span class="original-text">) acted as a monolithic container heavily coupled to business logic, evidenced by 893 unique internal</span><span class="ltx_text ltx_font_typewriter" id="S5.SS2.SSS0.Px2.p3.1.3"><span class="translated-text">进口</span><span class="original-text">import</span></span><span class="translated-text">声明。重构后，路由层内的内部导入减少到 379 个，依赖密度降低了 57.5%。新创建的</span><span class="original-text">statements. Following the refactor, internal imports within the routing layer were reduced to 379 — a 57.5% reduction in dependency density. The newly created</span><span class="ltx_text ltx_font_typewriter" id="S5.SS2.SSS0.Px2.p3.1.4"><span class="translated-text">特点</span><span class="original-text">features</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_typewriter" id="S5.SS2.SSS0.Px2.p3.1.5"><span class="translated-text">共享</span><span class="original-text">shared</span></span><span class="translated-text">层分别吸收了 467 和 186 个模块导入，证实了向更高功能内聚性的转变。</span><span class="original-text">layers absorbed 467 and 186 modular imports, respectively, confirming a shift toward higher functional cohesion.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS2.SSS0.Px2.p4">
+<p class="ltx_p" id="S5.SS2.SSS0.Px2.p4.1"><span class="ltx_text ltx_font_bold" id="S5.SS2.SSS0.Px2.p4.1.1"><span class="translated-text">圈复杂度。</span><span class="original-text">Cyclomatic Complexity.</span></span><span class="translated-text">虽然函数和组件的总数从 806 个增加到 1,022 个以支持新的模块化架构，但每个函数的平均圈复杂度从 2.24 下降到 2.13。特别是在路由层内，平均函数复杂度下降至 1.97。</span><span class="original-text">While the total number of functions and components grew from 806 to 1,022 to support the new modular architecture, the average cyclomatic complexity per function decreased from 2.24 to 2.13. Within the routing layer specifically, average function complexity dropped to 1.97.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS2.SSS0.Px2.p5">
+<p class="ltx_p" id="S5.SS2.SSS0.Px2.p5.1"><span class="ltx_text ltx_font_bold" id="S5.SS2.SSS0.Px2.p5.1.1"><span class="translated-text">模块化与聚合。</span><span class="original-text">Modularization vs. Aggregation.</span></span><span class="translated-text">表中指出的每个文件的平均 LOC 增加</span><span class="original-text">The increase in average LOC per file noted in Table</span><a class="ltx_ref" href="#S4.T2" title="TABLE II ‣ Source code distribution ‣ IV-B AI-Assisted Test-Guarded Refactor ‣ IV Results ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">II</span></a><span class="translated-text">（例如，路由层中的 108 到 119，功能中的 0 到 121）反映了有意的模块化而不是代码膨胀。在新的</span><span class="original-text">(e.g., 108 to 119 in the routing layer, 0 to 121 in features) reflects deliberate modularization rather than code bloat. In the new</span><span class="ltx_text ltx_font_typewriter" id="S5.SS2.SSS0.Px2.p5.1.2"><span class="translated-text">特点</span><span class="original-text">features</span></span><span class="translated-text">层中，文件平均包含 6.49 个内聚函数，每个函数的平均复杂度较低，为 2.19，这表明以前分散的逻辑已被分组为内聚的、独立的模块。</span><span class="original-text">layer, files contain an average of 6.49 cohesive functions, with a low average complexity of 2.19 per function, indicating that previously scattered logic has been grouped into cohesive, self-contained modules.</span></p>
+</div>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">VI </span><span class="ltx_text ltx_font_smallcaps" id="S6.1.1"><span class="translated-text">有效性的威胁</span><span class="original-text">Threats to Validity</span></span>
+</h2>
+<section class="ltx_paragraph" id="S6.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">内部效度</span><span class="original-text">Internal validity</span></h4>
+<div class="ltx_para" id="S6.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S6.SS0.SSS0.Px1.p1.1"><span class="translated-text">内部有效性的主要威胁是我们尚未识别的残值失调。该方法对持久配置文件的依赖（</span><span class="original-text">The main threat to internal validity is residual value misalignment that we have not yet identified. The methodology’s reliance on persistent configuration files (</span><span class="ltx_text ltx_font_typewriter" id="S6.SS0.SSS0.Px1.p1.1.1">GEMINI.md</span>, <span class="ltx_text ltx_font_typewriter" id="S6.SS0.SSS0.Px1.p1.1.2">.cursorrules</span><span class="translated-text">）和版本化的 Markdown 计划确保核心生成约束被记录下来。该测试套件通过现有源代码进行验证，并克服模型工具中的选择压力，使工作与软件工程的最佳实践保持一致。然而，在我们没有在工具或目标中指定或衡量的一些重要方面，代码库质量很可能没有提高甚至下降。在整个过程中，我们相对于起点迭代地扩展了我们考虑的标准和指标。</span><span class="original-text">) and versioned Markdown plans ensures that the core generative constraints are documented. The test suite was validated by passing against existing source code and by surviving selection pressure in the model harness, aligning the work with software engineering’s best practices. However, it is quite possible that codebase quality did not improve or even degraded on some important aspects that we did not specify or measure in the harness or objectives. We iteratively extended our criteria and metrics considered relative to the starting point throughout the procedure.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S6.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">外部效度</span><span class="original-text">External validity</span></h4>
+<div class="ltx_para" id="S6.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="S6.SS0.SSS0.Px2.p1.1"><span class="translated-text">本研究检查了使用 React/Next.js 构建的单个商业前端代码库</span><span class="original-text">This study examines a single commercial frontend codebase built with React/Next.js</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib26" title="Case study research and applications: design and methods">28</a>, <a class="ltx_ref" href="#bib.bib27" title="Guidelines for conducting and reporting case study research in software engineering">17</a>]</cite><span class="translated-text">。研究结果可能不会转移到其他技术堆栈、后端系统或不同规模或成熟度级别的代码库。需要跨不同设置（尤其是传统的面向对象后端和遗留系统）进行复制，以建立更广泛的适用性。</span><span class="original-text">. The findings may not transfer to other technology stacks, backend systems, or codebases of different scales or maturity levels. Replication across diverse settings — particularly traditional object-oriented backends and legacy systems — is needed to establish broader applicability.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S6.SS0.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">建构效度</span><span class="original-text">Construct validity</span></h4>
+<div class="ltx_para" id="S6.SS0.SSS0.Px3.p1">
+<p class="ltx_p" id="S6.SS0.SSS0.Px3.p1.1"><span class="translated-text">使用 LOC 级分布和基于 AST 的指标（圈复杂度和依赖性分析）来评估重构质量。这些非常适合此处研究的功能性、基于组件的 React 范例。测试质量通过分支和线路覆盖率进行评估，并遵循测试有效性的约束满足情况。</span><span class="original-text">Refactoring quality was evaluated using both LOC-level distributions and AST-based metrics (cyclomatic complexity and dependency analysis). These are well-suited to the functional, component-based React paradigm studied here. Test quality was assessed through branch and line coverage, following constraint satisfaction on test effectiveness.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S7">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section"><span class="translated-text">七</span><span class="original-text">VII</span></span><span class="ltx_text ltx_font_smallcaps" id="S7.1.1"><span class="translated-text">结论和进一步研究</span><span class="original-text">Conclusion and Further Research</span></span>
+</h2>
+<div class="ltx_para" id="S7.p1">
+<p class="ltx_p" id="S7.p1.1"><span class="translated-text">总而言之，实验的第一步通过大型、结构化、基础设施支持的单元测试套件丰富了未经测试的代码库。它引入了跨核心架构领域的数百个测试用例。生成的测试套件遵循最佳实践，特别是通过支持重用和稳定性的大量共享基础设施。</span><span class="original-text">To sum up, the first step of the experiment enriched an undertested codebase with a large, structured, infrastructure-backed unit test suite. It introduced hundreds of test cases across core architectural areas. The generated test suite followed best practices, especially through substantial shared infrastructure that supports reuse and stability.</span></p>
+</div>
+<div class="ltx_para" id="S7.p2">
+<p class="ltx_p" id="S7.p2.1"><span class="translated-text">另一方面，重构步骤将组织不良的 MVP 转变为模块化程度更高的分层架构。虽然总体源代码大小适度增长，但主要影响是将逻辑从路由文件重新分配到专用功能层和共享层。重构涉及大量文件重定位和选择性重写，但它保留了外部可观察的行为。基于 AST 的分析证实，所得结构减少了耦合（路由层中的导入减少了 57.5%），降低了平均圈复杂度（2.24 至 2.13），并为进一步开发提供了更可维护的基础。未来的工作应该在不同的技术堆栈中复制该方法。
+此外，它应该创建最佳实践目录以及不同的重要质量指标及其阈值。这应该有助于缓解价值错位</span><span class="original-text">On the other hand, the refactor step transformed a poorly-organized MVP into a layered architecture with improved modularity. While the overall source code size grew moderately, the dominant effect was a redistribution of logic from routing files into dedicated feature and shared layers. The refactor involved extensive file relocation and selective rewriting, yet it preserved externally observable behavior. AST-based analysis confirms that the resulting structure reduces coupling (57.5% fewer imports in the routing layer), lowers average cyclomatic complexity (2.24 to 2.13), and provides a more maintainable foundation for further development. Future work should replicate the approach across different technology stacks.
+Furthermore, it should create a catalog of best practices as well as different important quality metrics and their thresholds. That should help alleviate value misalignment</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib29" title="Impossibility results in AI: a survey">4</a>]</cite><span class="translated-text">这发生在目标规范或规范执行中。在本文中，我们确定了这两个问题。我们通过测试生成期间的反馈和迭代来解决这些问题（其中可以通过需要使用突变测试来修剪的无效测试来提高覆盖率）和后来的代码重构（其中质量仅在明确规定的目标上得到提高）。拥有独立于法学硕士的确定性代码来评估重要的质量特征非常重要，无论是作为模型利用的一部分还是在事后解决方案分析中，因为我们注意到法学硕士不愿意报告低于标准的指标，除非明确强调这个问题，同时将积极的指标和方面推到最前沿。这种模型行为与最近的研究是一致的</span><span class="original-text">that occurs either in goal specification or specification enforcement. In this paper, we identified both issues. We addressed them through feedback and iteration during test generation (where coverage can be improved by ineffective tests that need to be pruned using mutation testing) and later code refactoring (where quality gets improved only on explicitly stated objectives). It is important to have LLM-independent, deterministic code for evaluating important quality characteristics, both as part of the model harness and in post-hoc solution analysis, as we have noticed that LLMs hesitate to report subpar metrics unless explicitly pressed on the issue, while pushing positive metrics and aspects to the forefront. Such model behavior is consistent with the recent research</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib30" title="Emotion concepts and their function in a large language model">23</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S7.p3">
+<p class="ltx_p" id="S7.p3.1"><span class="translated-text">总之，这两个阶段表明，只要在规则文件中设置初始指导、模型工具就位，并且在最关键时刻存在人在环，人工智能辅助工作流程就可以有效地应用于成熟的生产系统。通过将自动测试生成与自动重构相结合，该方法建立在人工智能辅助编码的当前进展之上。</span><span class="original-text">In conclusion, these two phases demonstrate that AI-assisted workflows can be effectively applied to mature, production systems, provided that initial guidance is set in rule files, model harness is in place, and a human-in-the-loop is present at most critical moments. By combining automated test generation with automated refactoring, the approach builds on current advances in AI-assisted coding.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib7">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">AGENTS.md Project</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">AGENTS.md: a simple, open format for guiding coding agents</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><span class="ltx_ref ltx_nolink ltx_url ltx_font_typewriter ltx_ref_self">https://agents.md/</span>Accessed: 2026-01-26</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS3.p2.1" title="III-C Stage 1: AI-Assisted Test Suite Construction ‣ III Methodology ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib6">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Anthropic</span><span class="ltx_text ltx_bib_year"> (2025-04-18)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Claude code: best practices for agentic coding</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><span class="ltx_ref ltx_nolink ltx_url ltx_font_typewriter ltx_ref_self">https://www.anthropic.com/engineering/claude-code-best-practices</span>Accessed: 2026-01-26</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS3.p2.1" title="III-C Stage 1: AI-Assisted Test Suite Construction ‣ III Methodology ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib3">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Bagheri and P. Hegedüs</span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Is refactoring always a good egg? exploring the interconnection between bugs and refactorings</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 19th International Conference on Mining Software Repositories</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 117–121</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p2.1" title="II-A Refactoring and testing foundations ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib29">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Brcic and R. V. Yampolskiy</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Impossibility results in AI: a survey</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">ACM Computing Surveys</span> <span class="ltx_text ltx_bib_volume">55</span> (<span class="ltx_text ltx_bib_number">12</span>).
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.p2.1" title="VII Conclusion and Further Research ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§VII</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib24">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Chen and W. Shang</span><span class="ltx_text ltx_bib_year"> (2017)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">An exploratory study of performance regression introducing code changes</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 341–352</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1109/ICSME.2017.13" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p2.1" title="II-A Refactoring and testing foundations ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib22">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Chen, Z. Hu, C. Zhi, J. Han, S. Deng, and J. Yin</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">ChatUniTest: a framework for llm-based test generation</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_place">New York, NY, USA</span>, <span class="ltx_text ltx_bib_pages"> pp. 572–576</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text isbn ltx_bib_external">ISBN 9798400706585</span>,
+<a class="ltx_ref ltx_bib_external" href="https://doi.org/10.1145/3663529.3663801" title="">Link</a>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1145/3663529.3663801" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS2.p1.1" title="II-B AI/LLM-Assisted Testing ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>,
+<a class="ltx_ref" href="#S2.SS2.p3.1" title="II-B AI/LLM-Assisted Testing ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib12">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Cordeiro, S. Noei, and Y. Zou</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">LLM-driven code refactoring: opportunities and limitations</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2025 IEEE/ACM Second IDE Workshop (IDE)</span>,
+</span>
+<span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume"></span>, <span class="ltx_text ltx_bib_pages"> pp. 32–36</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1109/IDE66625.2025.00011" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="I Introduction ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS3.p1.1" title="II-C AI/LLM-Assisted Refactoring ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-C</span></span></a>,
+<a class="ltx_ref" href="#S2.SS3.p3.1" title="II-C AI/LLM-Assisted Refactoring ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib13">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Cordeiro, S. Noei, and Y. Zou</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">An empirical study on the code refactoring capability of large language models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">ACM Transactions on Software Engineering and Methodology</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1145/3801158" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.p1.1" title="II-C AI/LLM-Assisted Refactoring ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_book" id="bib.bib2">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Fowler</span><span class="ltx_text ltx_bib_year"> (2018)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Refactoring: improving the design of existing code</span>.
+</span>
+<span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">Addison-Wesley Professional</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p1.1" title="II-A Refactoring and testing foundations ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib8">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">X. Jiang, Y. Dong, L. Wang, Z. Fang, Q. Shang, G. Li, Z. Jin, and W. Jiao</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Self-planning code generation with large language models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">ACM Transactions on Software Engineering and Methodology</span> <span class="ltx_text ltx_bib_volume">33</span> (<span class="ltx_text ltx_bib_number">7</span>), <span class="ltx_text ltx_bib_pages"> pp. 1–30</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1145/3672456" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS3.p3.1" title="III-C Stage 1: AI-Assisted Test Suite Construction ‣ III Methodology ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib25">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Kang, J. Yoon, and S. Yoo</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Large language models are few-shot testers: exploring llm-based general bug reproduction</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 2312–2323</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1109/ICSE48619.2023.00194" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="II-B AI/LLM-Assisted Testing ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib19">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">B. Liu, Y. Jiang, Y. Zhang, N. Niu, G. Li, and H. Liu</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">An empirical study on the potential of llms in automated software refactoring</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2411.04444</span>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2411.04444" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="I Introduction ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS3.p3.1" title="II-C AI/LLM-Assisted Refactoring ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib28">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">C. Munley, A. Jarmusch, and S. Chandrasekaran</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">LLM4VV: developing llm-driven testsuite for compiler validation</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Future Generation Computer Systems</span> <span class="ltx_text ltx_bib_volume">160</span>, <span class="ltx_text ltx_bib_pages"> pp. 1–13</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text issn ltx_bib_external">ISSN 0167-739X</span>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/https%3A//doi.org/10.1016/j.future.2024.05.034" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://www.sciencedirect.com/science/article/pii/S0167739X24002449" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS2.p1.1" title="II-B AI/LLM-Assisted Testing ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>,
+<a class="ltx_ref" href="#S2.SS2.p3.1" title="II-B AI/LLM-Assisted Testing ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib20">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Z. Nan, Z. Guo, K. Liu, and X. Xia</span><span class="ltx_text ltx_bib_year"> (2025-05)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title"> Test Intention Guided LLM-Based Unit Test Generation </span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2025 IEEE/ACM 47th International Conference on Software Engineering (ICSE)Companion Proceedings of the 32nd ACM International Conference on the Foundations of Software Engineering2017 IEEE International Conference on Software Maintenance and Evolution (ICSME)2023 IEEE/ACM 45th International Conference on Software Engineering (ICSE)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_series">FSE 2024</span>, Vol. <span class="ltx_text ltx_bib_volume"></span>, <span class="ltx_text ltx_bib_pages"> pp. 1026–1038</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text issn ltx_bib_external">ISSN </span></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS2.p1.1" title="II-B AI/LLM-Assisted Testing ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>,
+<a class="ltx_ref" href="#S2.SS2.p3.1" title="II-B AI/LLM-Assisted Testing ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib10">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">O. R. Polu</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">AI-driven automatic code refactoring for performance optimization</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">International Journal of Science and Research</span> <span class="ltx_text ltx_bib_volume">14</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 1316–1320</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.21275/sr25011114610" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.p1.1" title="II-C AI/LLM-Assisted Refactoring ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib17">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">V. Rajendran, D. Besiahgari, S. C. Patil, M. Chandrashekaraiah, and V. Challagulla</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A multi-agent llm environment for software design and refactoring: a conceptual framework</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">SoutheastCon 2025</span>,
+</span>
+<span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume"></span>, <span class="ltx_text ltx_bib_pages"> pp. 488–493</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1109/SoutheastCon56624.2025.10971563" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.p1.1" title="II-C AI/LLM-Assisted Refactoring ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib27">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">P. Runeson and M. Höst</span><span class="ltx_text ltx_bib_year"> (2009)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Guidelines for conducting and reporting case study research in software engineering</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Empirical Software Engineering</span> <span class="ltx_text ltx_bib_volume">14</span> (<span class="ltx_text ltx_bib_number">2</span>), <span class="ltx_text ltx_bib_pages"> pp. 131–164</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S6.SS0.SSS0.Px2.p1.1" title="External validity ‣ VI Threats to Validity ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§VI</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib21">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">G. Ryan, S. Jain, M. Shang, S. Wang, X. Ma, M. K. Ramanathan, and B. Ray</span><span class="ltx_text ltx_bib_year"> (2024-07)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Code-aware prompting: a study of coverage-guided test generation in regression setting using llm</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Proc. ACM Softw. Eng.</span> <span class="ltx_text ltx_bib_volume">1</span> (<span class="ltx_text ltx_bib_number">FSE</span>).
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://doi.org/10.1145/3643769" title="">Link</a>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1145/3643769" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS2.p1.1" title="II-B AI/LLM-Assisted Testing ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>,
+<a class="ltx_ref" href="#S2.SS2.p3.1" title="II-B AI/LLM-Assisted Testing ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib23">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Schäfer, S. Nadi, A. Eghbali, and F. Tip</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">An empirical evaluation of using large language models for automated unit test generation</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Transactions on Software Engineering</span> <span class="ltx_text ltx_bib_volume">50</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 85–105</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1109/TSE.2023.3334955" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS2.p1.1" title="II-B AI/LLM-Assisted Testing ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>,
+<a class="ltx_ref" href="#S2.SS2.p2.1" title="II-B AI/LLM-Assisted Testing ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib1">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. S. Shethiya</span><span class="ltx_text ltx_bib_year"> (2025-Jan.)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">AI-assisted code generation and optimization in .net web development</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Annals of Applied Sciences</span> <span class="ltx_text ltx_bib_volume">6</span> (<span class="ltx_text ltx_bib_number">1</span>).
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://annalsofappliedsciences.com/index.php/aas/article/view/15" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib15">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Shirafuji, Y. Oda, J. Suzuki, M. Morishita, and Y. Watanobe</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Refactoring programs using large language models with few-shot examples</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2023 30th Asia-Pacific Software Engineering Conference (APSEC)</span>,
+</span>
+<span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume"></span>, <span class="ltx_text ltx_bib_pages"> pp. 151–160</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1109/APSEC60848.2023.00025" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="I Introduction ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS3.p2.1" title="II-C AI/LLM-Assisted Refactoring ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib16">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Siddeeq, M. Waseem, Z. Rasheed, M. M. Hasan, J. Rasku, M. Saari, H. Terho, K. Mäkelä, K. Kemell, and P. Abrahamsson</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">LLM-based multi-agent system forăintelligent refactoring ofăhaskell code</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Product-Focused Software Process Improvement</span>,  <span class="ltx_text ltx_bib_editor">G. Scanniello, V. Lenarduzzi, S. Romano, S. Vegas, and R. Francese (Eds.)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_place">Cham</span>, <span class="ltx_text ltx_bib_pages"> pp. 408–418</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text isbn ltx_bib_external">ISBN 978-3-032-12089-2</span></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="I Introduction ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS3.p2.1" title="II-C AI/LLM-Assisted Refactoring ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib30">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">N. Sofroniew, I. Kauvar, W. Saunders, R. Chen, T. Henighan, S. Hydrie, C. Citro, A. Pearce, J. Tarng, W. Gurnee, J. Batson, S. Zimmerman, K. Rivoire, K. Fish, C. Olah, and J. Lindsey</span><span class="ltx_text ltx_bib_year"> (2026-04)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Emotion concepts and their function in a large language model</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">Transformer Circuits Thread, AnthropicPublished April 2, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://transformer-circuits.pub/2026/emotions/index.html" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.p2.1" title="VII Conclusion and Further Research ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§VII</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib5">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Taeb, H. Chi, and S. Bernadin</span><span class="ltx_text ltx_bib_year"> (2024-02)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Assessing the effectiveness and security implications of ai code generators</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Journal of The Colloquium for Information Systems Security Education</span> <span class="ltx_text ltx_bib_volume">11</span>, <span class="ltx_text ltx_bib_pages"> pp. 6</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.53735/cisse.v11i1.180" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS3.p2.1" title="III-C Stage 1: AI-Assisted Test Suite Construction ‣ III Methodology ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib4">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Torka and S. Albayrak</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Optimizing ai-assisted code generation</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2412.10953</span>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2412.10953" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS3.p2.1" title="III-C Stage 1: AI-Assisted Test Suite Construction ‣ III Methodology ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib9">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">C. Xie, M. Jiao, X. Gu, and B. Shen</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Empowering ai to generate better ai code: guided generation of deep learning projects with llms</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2025 IEEE 49th Annual Computers, Software, and Applications Conference (COMPSAC)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 1394–1399</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1109/COMPSAC65507.2025.00175" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS3.p3.1" title="III-C Stage 1: AI-Assisted Test Suite Construction ‣ III Methodology ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib18">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Xu, F. Lin, J. Yang, T. Chen, and N. Tsantalis</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">MANTRA: enhancing automated method-level refactoring with contextual rag and multi-agent llm collaboration</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2503.14340</span>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2503.14340" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.p1.1" title="II-C AI/LLM-Assisted Refactoring ‣ II Related Work ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_book" id="bib.bib26">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">R. K. Yin</span><span class="ltx_text ltx_bib_year"> (2018)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Case study research and applications: design and methods</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_edition">6 edition</span>,  <span class="ltx_text ltx_bib_publisher">Sage publications</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S6.SS0.SSS0.Px2.p1.1" title="External validity ‣ VI Threats to Validity ‣ AI-Assisted Unit Test Writing and Test-Driven Code Refactoring: A Case Study"><span class="ltx_text ltx_ref_tag">§VI</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2604.03135v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
