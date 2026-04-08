@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">EEG-MFTNet：具有多尺度时间卷积和变压器融合的增强型 EEGNet 架构，用于跨会话运动意象解码</span><span class="original-text">EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 4 月 7 日星期二 13:03:30 生成 http://dlmf.nist.gov/LaTeXML/。</span><span class="original-text">Generated on Tue Apr  7 13:03:30 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2604.05843" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2604.05843" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2604.05843v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2604.05843v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<a class="header-button color-tog" href="javascript:toggleColorScheme();" title="Toggle dark/light mode">
+<label class="toggle-icon automatic-tog" title="Switch to light mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon light-tog" title="Switch to dark mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon dark-tog" title="Switch to system preference">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+</a>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">I </span><span class="ltx_text ltx_font_smallcaps">Introduction</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S2" title="In EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">II </span><span class="ltx_text ltx_font_smallcaps">Related Work</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S3" title="In EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">III </span><span class="ltx_text ltx_font_smallcaps">Proposed Model</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S4" title="In EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">IV </span><span class="ltx_text ltx_font_smallcaps">Data Description</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S5" title="In EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">V </span><span class="ltx_text ltx_font_smallcaps">Experimental Results and Discussion</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS1" title="In V Experimental Results and Discussion ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-A</span> </span><span class="ltx_text ltx_font_italic">Experimental Setup</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS2" title="In V Experimental Results and Discussion ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-B</span> </span><span class="ltx_text ltx_font_italic">Results and Comparison with State-of-the-Art</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS3" title="In V Experimental Results and Discussion ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-C</span> </span><span class="ltx_text ltx_font_italic">Analysis of the Results</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS4" title="In V Experimental Results and Discussion ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-D</span> </span><span class="ltx_text ltx_font_italic">Ablation Study</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S6" title="In EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">VI </span><span class="ltx_text ltx_font_smallcaps">Model Interpretation</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S7" title="In VI Model Interpretation ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">VII </span><span class="ltx_text ltx_font_smallcaps">Conclusion and Future Work</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In VII Conclusion and Future Work ‣ VI Model Interpretation ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：arXiv.org 永久非独占许可证</span><span class="original-text">License: arXiv.org perpetual non-exclusive license</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2604.05843v1 [cs.LG] 2026 年 4 月 7 日</span><span class="original-text">arXiv:2604.05843v1 [cs.LG] 07 Apr 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">EEG-MFTNet：具有多尺度时间卷积和变压器融合的增强型 EEGNet 架构，用于跨会话运动意象解码</span><span class="original-text">EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Panagiotis Andrikopoulos, Siamak Mehrkanoon1
+</span><span class="ltx_author_notes">*Corresponding author.Code available at: <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/pandrikopoul/EEG-MFTNet" title="">https://github.com/pandrikopoul/EEG-MFTNet</a></span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">脑机接口（BCIs）可以实现大脑和外部设备之间的直接通信，为运动障碍患者提供关键支持。然而，由于噪声和跨会话变异性，从脑电图 (EEG) 中准确解码运动想象 (MI) 仍然具有挑战性。本研究介绍了 EEG-MFTNet，这是一种基于 EEGNet 架构的新型深度学习模型，并通过多尺度时间卷积和 Transformer 编码器流进行了增强。这些组件旨在捕获脑电图信号中的短期和长期时间依赖性。该模型使用依赖于主题的跨会话设置在 SHU 数据集上进行评估，其性能优于基线模型，包括 EEGNet 及其最新的衍生模型。 EEG-MFTNet 的平均分类精度为 58.9%，同时保持较低的计算复杂度和推理延迟。结果凸显了该模型在实时 BCI 应用中的潜力，并强调了架构创新在改进 MI 解码方面的重要性。这项工作有助于开发更强大、更具适应性的脑机接口系统，对辅助技术和神经康复具有影响。</span><span class="original-text">Brain-computer interfaces (BCIs) enable direct communication between the brain and external devices, providing critical support for individuals with motor impairments. However, accurate motor imagery (MI) decoding from electroencephalography (EEG) remains challenging due to noise and cross-session variability. This study introduces EEG-MFTNet, a novel deep learning model based on the EEGNet architecture, enhanced with multi-scale temporal convolutions and a Transformer encoder stream. These components are designed to capture both short and long-range temporal dependencies in EEG signals. The model is evaluated on the SHU dataset using a subject-dependent cross-session setup, outperforming baseline models, including EEGNet and its recent derivatives. EEG-MFTNet achieves an average classification accuracy of 58.9% while maintaining low computational complexity and inference latency. The results highlight the model’s potential for real-time BCI applications and underscore the importance of architectural innovations in improving MI decoding. This work contributes to the development of more robust and adaptive BCI systems, with implications for assistive technologies and neurorehabilitation.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span class="ltx_text ltx_font_smallcaps" id="S1.1.1"><span class="translated-text">简介</span><span class="original-text">Introduction</span></span>
+</h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">脑机接口 (BCI) 可以实现大脑活动与外部设备之间的直接通信，绕过神经肌肉控制来帮助有运动障碍的个体</span><span class="original-text">Brain-computer interfaces (BCIs) enable direct communication between brain activity and external devices, bypassing neuromuscular control to assist individuals with motor impairments</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="Brain computer interfaces, a review">18</a>, <a class="ltx_ref" href="#bib.bib2" title="Deep learning techniques for classification of electroencephalogram (eeg) motor imagery (mi) signals: a review">2</a>]</cite><span class="translated-text">。应用涵盖康复和辅助机器人技术，通过控制假肢、轮椅和外骨骼来增强自主性</span><span class="original-text">. Applications span rehabilitation and assistive robotics, enhancing autonomy through control of prosthetics, wheelchairs, and exoskeletons</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib32" title="Paradigms and methods of noninvasive brain-computer interfaces in motor or communication assistance and rehabilitation: a systematic review">17</a>]</cite><span class="translated-text">。典型的 BCI 管道包括信号采集、特征提取和分类，然后是命令执行</span><span class="original-text">. A typical BCI pipeline consists of signal acquisition, feature extraction and classification, followed by command execution</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="Deep learning techniques for classification of electroencephalogram (eeg) motor imagery (mi) signals: a review">2</a>]</cite><span class="translated-text">。可以使用侵入性或非侵入性方法记录大脑信号。非侵入性技术，例如功能性磁共振成像 (fMRI)、脑磁图 (MEG) 和脑电图 (EEG)，通常更安全、更适合日常使用。虽然 fMRI 和 MEG 提供高空间分辨率，但 EEG 通常因其低成本、便携性和高时间分辨率而成为实时运动想象 (MI) BCI 的首选</span><span class="original-text">. Brain signals can be recorded using either invasive or non-invasive methods. Non-invasive techniques, such as functional magnetic resonance imaging (fMRI), magnetoencephalography (MEG), and electroencephalography (EEG), are generally safer and more practical for everyday use. While fMRI and MEG offer high spatial resolution, EEG is often preferred for real-time motor imagery (MI) BCIs due to its low cost, portability, and high temporal resolution</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="Brain computer interface: control signals review">20</a>, <a class="ltx_ref" href="#bib.bib31" title="Signal acquisition of brain–computer interfaces: a medical-engineering crossover perspective review">26</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.2"><span class="translated-text">MI 涉及在心理上模拟身体运动，这会触发可以使用脑电图捕获的神经活动</span><span class="original-text">MI involves mentally simulating physical movements, which triggers neural activity that can be captured using EEG</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="Deep learning techniques for classification of electroencephalogram (eeg) motor imagery (mi) signals: a review">2</a>, <a class="ltx_ref" href="#bib.bib4" title="EEG-based brain-computer interfaces using motor-imagery: techniques and challenges">19</a>]</cite><span class="translated-text">。几种脑电图节律与不同的认知和运动过程相关，包括 delta (</span><span class="original-text">. Several EEG rhythms are associated with different cognitive and motor processes, including delta (</span><math alttext="\leq" class="ltx_Math" display="inline" id="S1.p2.1.m1" intent=":literal"><semantics><mo>≤</mo><annotation encoding="application/x-tex">\leq</annotation></semantics></math><span class="translated-text">4 Hz)、theta (4–8 Hz)、alpha 和 mu (8–13 Hz)、beta (13–30 Hz) 和 gamma (</span><span class="original-text">4 Hz), theta (4–8 Hz), alpha and mu (8–13 Hz), beta (13–30 Hz), and gamma (</span><math alttext="\geq" class="ltx_Math" display="inline" id="S1.p2.2.m2" intent=":literal"><semantics><mo>≥</mo><annotation encoding="application/x-tex">\geq</annotation></semantics></math><span class="translated-text">31 赫兹）。在 MI 任务中，mu 和 beta 带的特定变化，称为事件相关去同步 (ERD) 和同步 (ERS)，通常用作运动皮层激活的指标</span><span class="original-text">31 Hz). In MI tasks, specific changes in the mu and beta bands, referred to as event-related desynchronization (ERD) and synchronization (ERS), are commonly used as indicators of motor cortex activation</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib29" title="EEG-based bcis on motor imagery paradigm using wearable technologies: a systematic review">23</a>, <a class="ltx_ref" href="#bib.bib33" title="Non-invasive brain-computer interfaces: state of the art and trends">5</a>]</cite><span class="translated-text">。然而，准确的 MI-EEG 分类受到情绪、生理和环境因素造成的信号变异和噪声的阻碍</span><span class="original-text">. However, accurate MI-EEG classification is hindered by signal variability and noise due to emotional, physiological, and environmental factors</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib4" title="EEG-based brain-computer interfaces using motor-imagery: techniques and challenges">19</a>]</cite><span class="translated-text">。传统方法，例如通用空间模式 (CSP)</span><span class="original-text">. Traditional approaches, such as Common Spatial Patterns (CSP)</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib25" title="Optimal spatial filtering of single trial eeg during imagined hand movement">21</a>]</cite><span class="translated-text">和滤波器组 CSP (FBCSP)</span><span class="original-text">and Filter Bank CSP (FBCSP)</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib23" title="Filter bank common spatial pattern (fbcsp) in brain-computer interface">3</a>]</cite><span class="translated-text">，提取手工特征，通常使用线性判别分析 (LDA) 或支持向量机 (SVM) 等分类器。虽然在某些情况下有效，但这些方法需要专家驱动的参数调整，并且对受试者间和受试者内的变异性高度敏感</span><span class="original-text">, extract handcrafted features and typically employ classifiers like linear discriminant analysis (LDA) or support vector machines (SVM). While effective in some settings, these methods require expert-driven parameter tuning and are highly sensitive to both inter-subject and intra-subject variability</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib19" title="MFRC-net: multi-scale feature residual convolutional neural network for motor imagery decoding">14</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">最近的深度学习方法通过直接从原始脑电图学习特征来改进 MI 分类，减少对手动预处理的依赖并提高鲁棒性</span><span class="original-text">Recent deep learning approaches have improved MI classification by learning features directly from raw EEG, reducing dependence on manual preprocessing and increasing robustness</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="Deep learning techniques for classification of electroencephalogram (eeg) motor imagery (mi) signals: a review">2</a>, <a class="ltx_ref" href="#bib.bib5" title="An in-depth survey on deep learning-based motor imagery electroencephalogram (eeg) classification">28</a>]</cite><span class="translated-text">。尽管如此，在不增加计算复杂性的情况下管理跨会话和跨主题变异性仍然存在挑战。这项工作通过增强稳健 MI-EEG 解码的端到端模型来解决这些限制。具体来说，这项工作的贡献如下：</span><span class="original-text">. Still, challenges remain in managing cross-session and cross-subject variability without increasing computational complexity. This work addresses these limitations by enhancing an end-to-end model for robust MI-EEG decoding. Specifically, the contributions of this work are as follows:</span></p>
+<ul class="ltx_itemize" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i1.p1.1.1"><span class="translated-text">EEG-MFTNet 架构：</span><span class="original-text">EEG-MFTNet Architecture:</span></span><span class="translated-text">我们提出了一种新颖的运动想象脑电图解码模型，该模型通过合并（i）多尺度时间卷积块来捕获不同时间分辨率的模式，以及（ii）Transformer 编码器流来模拟长范围时间依赖性来扩展 EEGNet。</span><span class="original-text">We propose a novel motor imagery EEG decoding model that extends EEGNet by incorporating (i) a multi-scale temporal convolution block to capture patterns across different temporal resolutions, and (ii) a Transformer encoder stream to model long-range temporal dependencies.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i2.p1.1.1"><span class="translated-text">跨会话鲁棒性：</span><span class="original-text">Cross-Session Robustness:</span></span><span class="translated-text">该模型在 SHU 上的主题相关跨会话协议下进行评估</span><span class="original-text">The model is evaluated under a subject-dependent cross-session protocol on the SHU</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="A large eeg dataset for studying cross-session variability in motor imagery brain-computer interface">16</a>]</cite><span class="translated-text">数据集，平均准确率达到 58.9%，比基线 EEGNet 绝对提高了 5%，同时保持了较低的计算成本和实时推理能力。</span><span class="original-text">dataset, achieving an average accuracy of 58.9%, which represents a +5% absolute improvement over the baseline EEGNet, while maintaining low computational cost and real-time inference capability.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i3.p1.1.1"><span class="translated-text">成分分析：</span><span class="original-text">Component Analysis:</span></span><span class="translated-text">一项消融研究强调了卷积模块和 Transformer 模块的互补优势，每个模块都有助于整体性能增益。</span><span class="original-text">An ablation study highlights the complementary benefits of the convolutional and Transformer modules, with each contributing to the overall performance gain.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i4.p1">
+<p class="ltx_p" id="S1.I1.i4.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i4.p1.1.1"><span class="translated-text">可解释性：</span><span class="original-text">Interpretability:</span></span><span class="translated-text">我们使用梯度提供深入的可解释性分析</span><span class="original-text">We provide an in-depth interpretability analysis using Gradient</span><math alttext="\times" class="ltx_Math" display="inline" id="S1.I1.i4.p1.1.m1" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math><span class="translated-text">输入和电极删除测试，证明该模型专注于特定类别的电极并识别有意义的神经生理学模式，从而提高透明度和可信度。</span><span class="original-text">Input and electrode deletion tests, demonstrating that the model focuses on class-specific electrodes and identifies meaningful neurophysiological patterns, thereby enhancing transparency and trustworthiness.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i5" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i5.p1">
+<p class="ltx_p" id="S1.I1.i5.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i5.p1.1.1"><span class="translated-text">重现性：</span><span class="original-text">Reproducibility:</span></span><span class="translated-text">为了支持未来的研究，所提出的模型和实验设置的完整实现是公开的，解决了当前该数据集缺乏可重复实现的问题。</span><span class="original-text">To support future research, the full implementation of the proposed model and experimental setup is made publicly available, addressing the current lack of reproducible implementations for this dataset.</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">本文的其余部分组织如下。部分</span><span class="original-text">The remainder of this paper is organized as follows. Section</span><a class="ltx_ref" href="#S2" title="II Related Work ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">II</span></a><span class="translated-text">回顾了 BCI 系统和运动想象分类的相关文献。部分</span><span class="original-text">reviews relevant literature on BCI systems and motor imagery classification. Section</span><a class="ltx_ref" href="#S3" title="III Proposed Model ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">III</span></a><span class="translated-text">描述了所提出的模型架构及其主要组件。部分</span><span class="original-text">describes the proposed model architecture and its principal components. Section</span><a class="ltx_ref" href="#S4" title="IV Data Description ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">IV</span></a><span class="translated-text">详细介绍了数据集和预处理过程。部分</span><span class="original-text">details the dataset and preprocessing procedures. Section</span><a class="ltx_ref" href="#S5" title="V Experimental Results and Discussion ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">V</span></a><span class="translated-text">介绍了实验设置、结果、性能比较和消融研究。部分</span><span class="original-text">presents the experimental setup, results, performance comparisons, and the ablation study. Section</span><a class="ltx_ref" href="#S6" title="VI Model Interpretation ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">VI</span></a><span class="translated-text">讨论了所提出模型的可解释性。最后，部分</span><span class="original-text">discusses the interpretability of the proposed model. Finally, Section</span><a class="ltx_ref" href="#S7" title="VII Conclusion and Future Work ‣ VI Model Interpretation ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">VII</span></a><span class="translated-text">总结了主要发现并概述了未来研究的方向。</span><span class="original-text">summarizes the main findings and outlines directions for future research.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span class="ltx_text ltx_font_smallcaps" id="S2.1.1"><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></span>
+</h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="translated-text">使用脑电图信号的 MI 分类通过深度学习取得了重大进展，解决了受试者间变异性和会话间不一致等挑战。深度学习模型可以直接从原始脑电图数据进行端到端学习。早期模型，如深卷积网络和浅卷积网络</span><span class="original-text">MI classification using EEG signals has seen significant progress through deep learning, addressing challenges like inter-subject variability and session-to-session inconsistency. Deep learning models have enabled end-to-end learning directly from raw EEG data. Early models like Deep and Shallow ConvNets</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="Deep learning with convolutional neural networks for eeg decoding and visualization">25</a>]</cite><span class="translated-text">证明了 CNN 用于脑电图解码的可行性。脑电图网络</span><span class="original-text">demonstrated the feasibility of CNNs for EEG decoding. EEGNet</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="EEGNet: a compact convolutional neural network for eeg-based brain–computer interfaces">13</a>]</cite><span class="translated-text">通过引入使用深度和可分离卷积的紧凑架构进一步推进了这一点。它的成功激发了一些扩展：EEG-TCNet</span><span class="original-text">further advanced this by introducing a compact architecture using depthwise and separable convolutions. Its success inspired several extensions: EEG-TCNet</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib9" title="EEG-tcnet: an accurate temporal convolutional network for embedded motor-imagery brain–machine interfaces">10</a>]</cite><span class="translated-text">添加了用于远程建模的时间卷积网络（TCN），而 MI-EEGNet</span><span class="original-text">added Temporal Convolutional Networks (TCNs) for long-range modeling, while MI-EEGNet</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib10" title="MI-eegnet: a novel convolutional neural network for motor imagery classification">22</a>]</cite><span class="translated-text">和脑电图-ITNet</span><span class="original-text">and EEG-ITNet</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib12" title="EEG-itnet: an explainable inception temporal convolutional network for motor imagery classification">24</a>]</cite><span class="translated-text">引入了多尺度和初始风格的模块。值得注意的是，EEG-ITNet 还将 TCN 与残差连接集成在一起，以增强时间特征提取。为了解决 TCN 中的时间不对称问题，EEG-CDILNet</span><span class="original-text">introduced multi-scale and inception-style modules. Notably, EEG-ITNet also integrates TCNs with residual connections to enhance temporal feature extraction. To address temporal asymmetry in TCNs, EEG-CDILNet</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="EEG-cdilnet: a lightweight and accurate cnn network using circular dilated convolution for motor imagery classification">15</a>]</cite><span class="translated-text">使用循环扩张卷积进行平衡时间建模。脑电图基因网</span><span class="original-text">uses circular dilated convolutions for balanced temporal modeling. EEG-GENet</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib11" title="EEG_GENet: a feature-level graph embedding method for motor imagery classification based on eeg signals">27</a>]</cite><span class="translated-text">结合图形嵌入来捕获电极之间的空间关系。轻量级模型，例如 EEG-SimpleConv</span><span class="original-text">incorporates graph embeddings to capture spatial relationships between electrodes. Lightweight models like EEG-SimpleConv</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="A strong and simple deep learning baseline for bci motor imagery decoding">6</a>]</cite><span class="translated-text">表明更简单的架构仍然可以具有竞争力的性能，使它们适合实时应用程序。其他创新包括 MFRC-Net</span><span class="original-text">show that simpler architectures can still perform competitively, making them suitable for real-time applications. Other innovations include MFRC-Net</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib19" title="MFRC-net: multi-scale feature residual convolutional neural network for motor imagery decoding">14</a>]</cite><span class="translated-text">，通过多尺度残差块和 MAFNet 平衡性能和效率</span><span class="original-text">, which balances performance and efficiency via multi-scale residual blocks, and MAFNet</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib21" title="MAFNet: multi-domain features attention-based fusion network for cross-subject motor imagery classification">9</a>]</cite><span class="translated-text">，它使用注意力机制来提取多域特征。</span><span class="original-text">, which uses attention mechanisms to extract multi-domain features.</span></p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="translated-text">虽然大多数 MI 分类的先前研究都集中在 EEG 上，但基于 MEG 的模型也提供了与 EEG 分类相关的架构见解。 AA脑电图网络</span><span class="original-text">While the majority of prior research on MI classification has centered on EEG, MEG-based models also offer architectural insights relevant to EEG classification. AA-EEGNet</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib27" title="Enhancing brain decoding using attention augmented deep neural networks">1</a>]</cite><span class="translated-text">是 EEGNet 的一种注意力增强变体，通过强调显着的时空特征来提高跨学科泛化能力。类似地，DS-GTF</span><span class="original-text">, an attention-enhanced variant of EEGNet, improves cross-subject generalization by emphasizing salient spatiotemporal features. Similarly, DS-GTF</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib26" title="Dual stream graph transformer fusion networks for enhanced brain decoding">8</a>]</cite><span class="translated-text">将图注意力网络与 Transformer 编码器融合以捕获空间和时间依赖性。此外，最近提出的架构虽然是为其他任务（例如睡眠分期）开发的</span><span class="original-text">fuses Graph Attention Networks with a Transformer encoder to capture spatial and temporal dependencies. Additionally, recently proposed architectures, although developed for other tasks such as sleep staging</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib34" title="A novel dual-stream time-frequency contrastive pretext tasks framework for sleep stage classification">11</a>]</cite><span class="translated-text">和声音定位</span><span class="original-text">and sound localization</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib35" title="BAST-Mamba: binaural audio spectrogram mamba transformer for binaural sound localization">12</a>]</cite><span class="translated-text">，为 MI 分类提供有价值的见解，因为它们具有相似的架构和信号处理挑战。尽管上述技术已经证明了令人鼓舞的分类结果，但仍然存在巨大的进步潜力。许多最近的模型仍然依赖于特定的预处理管道或工程输入表示，这可能会限制它们的适应性。例如，3D-CNN-GAN</span><span class="original-text">, offer valuable insights for MI classification, as they share similar architectural and signal processing challenges. Although the aforementioned techniques have demonstrated encouraging classification results, considerable potential for advancement remains. Many recent models still rely on specific preprocessing pipelines or engineered input representations that may limit their adaptability. For instance, 3D-CNN-GAN</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib15" title="EEG-based feature classification combining 3d-convolutional neural networks with generative adversarial networks for motor imagery">7</a>]</cite><span class="translated-text">需要将原始脑电图信号转换为时间频率相位（TFPF）图，这一步骤会引入额外的复杂性，并且可能无法在数据集中很好地推广。其他，例如 MI-EEGNet</span><span class="original-text">requires the transformation of raw EEG signals into temporal-frequency-phase (TFPF) maps, a step that introduces additional complexity and may not generalize well across datasets. Others, like MI-EEGNet</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib10" title="MI-eegnet: a novel convolutional neural network for motor imagery classification">22</a>]</cite><span class="translated-text">，引入复杂的多分支架构，虽然有效，但会增加计算需求，并可能阻碍在资源受限设备上的部署。独特的是，我们的模型无需任何预处理步骤即可运行，完全依靠其架构设计来增强分类性能。此外，所提出的方法优先考虑低延迟和计算效率，从而提高了其在实际实时 BCI 系统中部署的可行性。</span><span class="original-text">, introduce complex multi-branch architectures that, while effective, increase computational demands and may hinder deployment on resource-constrained devices. Distinctively, our model operates without any preprocessing steps, relying entirely on its architectural design to enhance classification performance. Moreover, the proposed approach prioritizes low latency and computational efficiency, thereby increasing its feasibility for deployment in practical real-time BCI systems.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section"><span class="translated-text">三、</span><span class="original-text">III</span></span><span class="ltx_text ltx_font_smallcaps" id="S3.1.1"><span class="translated-text">提议的模型</span><span class="original-text">Proposed Model</span></span>
+</h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="translated-text">在这项工作中，我们建议</span><span class="original-text">In this work, we propose</span><span class="ltx_text ltx_font_bold" id="S3.p1.1.1"><span class="translated-text">脑电图MFT网络</span><span class="original-text">EEG-MFTNet</span></span><span class="translated-text">（基于EEG的多尺度时间卷积和变压器融合网络），一种扩展EEGNet的轻量级架构</span><span class="original-text">(EEG-based Multi-Scale Temporal Convolutions and Transformer Fusion Network), a lightweight architecture extending EEGNet</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="EEGNet: a compact convolutional neural network for eeg-based brain–computer interfaces">13</a>]</cite><span class="translated-text">有两个主要增强功能：（1）受 MI-EEGNet 启发的多尺度时间卷积块</span><span class="original-text">with two major enhancements: (1) a multi-scale temporal convolution block inspired by MI-EEGNet</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib10" title="MI-eegnet: a novel convolutional neural network for motor imagery classification">22</a>]</cite><span class="translated-text">和脑电图-ITNet</span><span class="original-text">and EEG-ITNet</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib12" title="EEG-itnet: an explainable inception temporal convolutional network for motor imagery classification">24</a>]</cite><span class="translated-text">，以及（2）一个 Transformer 编码器分支，受到双流设计的推动</span><span class="original-text">, and (2) a Transformer encoder branch, motivated by the dual-stream design in</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib26" title="Dual stream graph transformer fusion networks for enhanced brain decoding">8</a>]</cite><span class="translated-text">。这些组件在早期时间处理过程中并行运行，并融合以提供更丰富的特征表示，如图所示</span><span class="original-text">. These components operate in parallel during early temporal processing and are fused to provide a richer feature representation, as shown in Figure</span><a class="ltx_ref" href="#S3.F1" title="Figure 1 ‣ III Proposed Model ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+</div>
+<div class="ltx_para" id="S3.p2">
+<p class="ltx_p" id="S3.p2.3"><span class="translated-text">每个脑电图试验表示为</span><span class="original-text">Each EEG trial is represented as</span><math alttext="X\in\mathbb{R}^{C\times T\times 1}" class="ltx_Math" display="inline" id="S3.p2.1.m1" intent=":literal"><semantics><mrow><mi>X</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>C</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>T</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">X\in\mathbb{R}^{C\times T\times 1}</annotation></semantics></math><span class="translated-text">, 其中</span><span class="original-text">, where</span><math alttext="C" class="ltx_Math" display="inline" id="S3.p2.2.m2" intent=":literal"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math><span class="translated-text">是电极的数量，</span><span class="original-text">is the number of electrodes and</span><math alttext="T" class="ltx_Math" display="inline" id="S3.p2.3.m3" intent=":literal"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math><span class="translated-text">时间样本的数量（例如，SHU 数据集中的 32 和 1000）。信号通过两个并行分支进行处理：</span><span class="original-text">the number of time samples (e.g., 32 and 1000 in the SHU dataset). The signal is processed through two parallel branches:</span></p>
+</div>
+<div class="ltx_para" id="S3.p3">
+<ul class="ltx_itemize" id="S3.I1">
+<li class="ltx_item" id="S3.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i1.p1">
+<p class="ltx_p" id="S3.I1.i1.p1.2"><span class="ltx_text ltx_font_bold" id="S3.I1.i1.p1.2.1"><span class="translated-text">多尺度时间卷积：</span><span class="original-text">Multi-Scale Temporal Convolutions:</span></span><span class="translated-text">为了捕获不同时间分辨率的模式，我们使用六个具有内核大小的并行卷积分支</span><span class="original-text">To capture patterns at varying temporal resolutions, we use six parallel convolutional branches with kernel sizes</span><math alttext="k\in\{5,9,13,29,61,125\}" class="ltx_Math" display="inline" id="S3.I1.i1.p1.1.m1" intent=":literal"><semantics><mrow><mi>k</mi><mo>∈</mo><mrow><mo stretchy="false">{</mo><mn>5</mn><mo>,</mo><mn>9</mn><mo>,</mo><mn>13</mn><mo>,</mo><mn>29</mn><mo>,</mo><mn>61</mn><mo>,</mo><mn>125</mn><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">k\in\{5,9,13,29,61,125\}</annotation></semantics></math><span class="translated-text">。每个分支都使用一个</span><span class="original-text">. Each branch uses a</span><math alttext="(1\times k)" class="ltx_Math" display="inline" id="S3.I1.i1.p1.2.m2" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><mrow><mn>1</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mi>k</mi></mrow><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(1\times k)</annotation></semantics></math><span class="translated-text">内核，输出 8 个特征图，并结合批量归一化、ELU 激活和空间 dropout（速率 = 0.5）。所有六个分支（总共 48 个通道）的输出都通过可学习的权重连接和缩放，使模型能够自适应地强调信息最丰富的时间尺度。</span><span class="original-text">kernel, outputs 8 feature maps, and incorporates batch normalization, ELU activation, and spatial dropout (rate = 0.5). The outputs of all six branches (48 channels total) are concatenated and scaled with learnable weights, enabling the model to adaptively emphasize the most informative temporal scales.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i2.p1">
+<p class="ltx_p" id="S3.I1.i2.p1.2"><span class="ltx_text ltx_font_bold" id="S3.I1.i2.p1.2.1"><span class="translated-text">变压器编码器：</span><span class="original-text">Transformer Encoder:</span></span><span class="translated-text">同时，输入被重塑为</span><span class="original-text">In parallel, the input is reshaped to</span><math alttext="\mathbb{R}^{T\times C}" class="ltx_Math" display="inline" id="S3.I1.i2.p1.1.m1" intent=":literal"><semantics><msup><mi>ℝ</mi><mrow><mi>T</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>C</mi></mrow></msup><annotation encoding="application/x-tex">\mathbb{R}^{T\times C}</annotation></semantics></math><span class="translated-text">，将每个时间步骤视为令牌，将电极视为特征。单个 Transformer 编码器块包含两个注意力头、前馈层 (dim = 32)、GELU 激活、dropout (0.2) 和残差连接，捕获跨时间的长程依赖性。输出被重新整形回</span><span class="original-text">, treating each time step as a token and the electrodes as features. A single Transformer encoder block, comprising two attention heads, a feedforward layer (dim = 32), GELU activations, dropout (0.2), and a residual connection, captures long-range dependencies across time. The output is reshaped back to</span><math alttext="\mathbb{R}^{C\times T\times 1}" class="ltx_Math" display="inline" id="S3.I1.i2.p1.2.m2" intent=":literal"><semantics><msup><mi>ℝ</mi><mrow><mi>C</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>T</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mn>1</mn></mrow></msup><annotation encoding="application/x-tex">\mathbb{R}^{C\times T\times 1}</annotation></semantics></math><span class="translated-text">用于与卷积分支融合。</span><span class="original-text">for fusion with the convolutional branch.</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="S3.p4">
+<p class="ltx_p" id="S3.p4.1"><span class="ltx_text ltx_font_bold" id="S3.p4.1.1"><span class="translated-text">融合：</span><span class="original-text">Fusion:</span></span><span class="translated-text">两个分支的输出使用可训练的标量权重进行合并，并沿通道轴连接，产生形状的融合表示</span><span class="original-text">The outputs of both branches are merged using trainable scalar weights and concatenated along the channel axis, yielding a fused representation of shape</span><math alttext="32\times 1000\times 49" class="ltx_Math" display="inline" id="S3.p4.1.m1" intent=":literal"><semantics><mrow><mn>32</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>1000</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>49</mn></mrow><annotation encoding="application/x-tex">32\times 1000\times 49</annotation></semantics></math><span class="translated-text">。随后应用层归一化来增强训练稳定性。</span><span class="original-text">. Layer normalization is subsequently applied to enhance training stability.</span></p>
+</div>
+<div class="ltx_para" id="S3.p5">
+<p class="ltx_p" id="S3.p5.4"><span class="ltx_text ltx_font_bold" id="S3.p5.4.1"><span class="translated-text">空间处理：</span><span class="original-text">Spatial Processing:</span></span><span class="translated-text">接下来，使用内核大小为的深度卷积对电极之间的空间关系进行建模</span><span class="original-text">Next, spatial relationships across electrodes are modeled using a depthwise convolution with a kernel size of</span><math alttext="C\times 1" class="ltx_Math" display="inline" id="S3.p5.1.m1" intent=":literal"><semantics><mrow><mi>C</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">C\times 1</annotation></semantics></math><span class="translated-text">深度乘数为 2，产生 96 个输出通道。接下来是批量归一化、ELU 激活、平均池化</span><span class="original-text">and a depth multiplier of 2, yielding 96 output channels. This is followed by batch normalization, ELU activation, average pooling</span><math alttext="(1\times 4)" class="ltx_Math" display="inline" id="S3.p5.2.m2" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><mrow><mn>1</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>4</mn></mrow><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(1\times 4)</annotation></semantics></math><span class="translated-text">和辍学率（比率 = 0.3）。随后的可分离卷积</span><span class="original-text">, and dropout (rate = 0.3). A subsequent separable convolution</span><math alttext="(1\times 16)" class="ltx_Math" display="inline" id="S3.p5.3.m3" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><mrow><mn>1</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>16</mn></mrow><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(1\times 16)</annotation></semantics></math><span class="translated-text">，由深度分量和逐点分量组成，生成 16 个特征图。接下来再次进行批量归一化、ELU 激活、平均池化</span><span class="original-text">, consisting of a depthwise and a pointwise component, generates 16 feature maps. This is again followed by batch normalization, ELU activation, average pooling</span><math alttext="(1\times 8)" class="ltx_Math" display="inline" id="S3.p5.4.m4" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><mrow><mn>1</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>8</mn></mrow><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(1\times 8)</annotation></semantics></math><span class="translated-text">和辍学率（比率 = 0.3）。</span><span class="original-text">, and dropout (rate = 0.3).</span></p>
+</div>
+<div class="ltx_para" id="S3.p6">
+<p class="ltx_p" id="S3.p6.2"><span class="ltx_text ltx_font_bold" id="S3.p6.2.1"><span class="translated-text">分类头：</span><span class="original-text">Classification Head:</span></span><span class="translated-text">最后，输出被展平并通过最大范数约束为 0.25 的密集层，生成类 logits。然后，softmax 层计算类别概率，如 (1) 所示：</span><span class="original-text">Finally, the output is flattened and passed through a dense layer with a max-norm constraint of 0.25, generating class logits. A softmax layer then computes class probabilities, as shown in (1):</span></p>
+<table class="ltx_equationgroup ltx_eqn_align ltx_eqn_table" id="S7.EGx1">
+<tbody id="S3.E1"><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_td ltx_align_right ltx_eqn_cell"><math alttext="\displaystyle\hat{y}\in\mathbb{R}^{N},\quad\sum_{i=1}^{N}\hat{y}_{i}=1," class="ltx_Math" display="inline" id="S3.E1.m1" intent=":literal"><semantics><mrow><mrow><mrow><mover accent="true"><mi>y</mi><mo>^</mo></mover><mo>∈</mo><msup><mi>ℝ</mi><mi>N</mi></msup></mrow><mo rspace="1.167em">,</mo><mrow><mrow><mstyle displaystyle="true"><munderover><mo movablelimits="false">∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover></mstyle><msub><mover accent="true"><mi>y</mi><mo>^</mo></mover><mi>i</mi></msub></mrow><mo>=</mo><mn>1</mn></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\displaystyle\hat{y}\in\mathbb{R}^{N},\quad\sum_{i=1}^{N}\hat{y}_{i}=1,</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.p6.1"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="N=2" class="ltx_Math" display="inline" id="S3.p6.1.m1" intent=":literal"><semantics><mrow><mi>N</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">N=2</annotation></semantics></math><span class="translated-text">用于二元 MI 分类。所有超参数（例如内核大小、过滤器数量和丢失率）均通过经验搜索进行优化，并根据验证集性能执行模型选择和检查点设置。</span><span class="original-text">for binary MI classification. All hyperparameters, such as kernel sizes, number of filters, and dropout rates, were optimized through empirical search, with model selection and checkpointing performed based on validation-set performance.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="189" id="S3.F1.g1" src="https://arxiv.org/html/2604.05843v1/modeldiagramfinal.png" width="476"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F1.3.1.1" style="font-size:90%;">Figure 1</span>: </span><span class="ltx_text" id="S3.F1.4.2" style="font-size:80%;">EEG-MFTNet’s architecture.The numbers displayed above the input and each component’s output (purple boxes) denote the corresponding output dimensions.</span></figcaption>
+</figure>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span class="ltx_text ltx_font_smallcaps" id="S4.1.1"><span class="translated-text">数据说明</span><span class="original-text">Data Description</span></span>
+</h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">本研究使用SHU数据集</span><span class="original-text">This study uses the SHU dataset</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="A large eeg dataset for studying cross-session variability in motor imagery brain-computer interface">16</a>]</cite><span class="translated-text">，一个大规模、公开的 EEG 数据集，包含来自 25 名健康受试者的数据，每名受试者在多天内完成了 5 个会话。在每次训练中，参与者进行 100 次左手或右手运动想象试验，每次持续 4 秒。 EEG 信号以 250 Hz 的频率从 32 个电极记录，每次试验产生 1000 个时间样本，这些样本直接用作模型的输入。该数据集由原始作者进行了预处理，他们消除了基线漂移并应用 0.5–40 Hz FIR 带通滤波器来保留 MI 相关频率分量。选择 SHU 数据集是因为它强调会话间的变异性，这是基于脑电图的 BCI 中持续存在的挑战，因为非平稳信号受到电极移位、疲劳和精神状态等因素的影响。</span><span class="original-text">, a large-scale, publicly available EEG dataset containing data from 25 healthy subjects, each completing five sessions across multiple days. In each session, participants performed 100 trials of left- or right-hand motor imagery, each lasting 4 seconds. EEG signals were recorded from 32 electrodes at 250 Hz, yielding 1000 time samples per trial, which are used directly as input to the model. The dataset was preprocessed by the original authors, who removed baseline drifts and applied a 0.5–40 Hz FIR band-pass filter to retain MI-relevant frequency components. The SHU dataset was selected for its emphasis on session-to-session variability, an ongoing challenge in EEG-based BCIs due to non-stationary signals influenced by factors such as electrode shifts, fatigue, and mental state.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span class="ltx_text ltx_font_smallcaps" id="S5.1.1"><span class="translated-text">实验结果与讨论</span><span class="original-text">Experimental Results and Discussion</span></span>
+</h2>
+<section class="ltx_subsection" id="S5.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS1.5.1.1">V-A</span> </span><span class="ltx_text ltx_font_italic" id="S5.SS1.6.2"><span class="translated-text">实验装置</span><span class="original-text">Experimental Setup</span></span>
+</h3>
+<div class="ltx_para" id="S5.SS1.p1">
+<p class="ltx_p" id="S5.SS1.p1.1"><span class="translated-text">使用数据集作者提出的主题相关跨会话协议在 SHU 数据集上评估所提出的模型</span><span class="original-text">The proposed model was evaluated on the SHU dataset using the subject-dependent cross-session protocol proposed by the dataset authors</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="A large eeg dataset for studying cross-session variability in motor imagery brain-computer interface">16</a>]</cite><span class="translated-text">。每个受试者的第一节课用于培训（其中 20% 用于验证），而第 2-5 节课用于测试。每个受试者训练一个单独的模型。实验是在 NVIDIA GTX 1650 GPU 上进行的。</span><span class="original-text">. Each subject’s first session was used for training (with 20% held out for validation), while sessions 2–5 were used for testing. A separate model was trained per subject. Experiments were conducted on an NVIDIA GTX 1650 GPU.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS1.p2">
+<p class="ltx_p" id="S5.SS1.p2.1"><span class="translated-text">为了提高模型性能，采用了多种训练策略。使用模型检查点回调来保存训练期间与最高验证精度相对应的权重。训练完成后，这些最佳重量会自动恢复。使用分类交叉熵损失函数和 AdamW 优化器（学习率为 0.001，权重衰减为 1e-4），对所提出的模型以及所有基线模型进行了 100 个时期的训练，批量大小为 16。还使用了学习率调度程序，如果验证损失连续 5 个时期没有改善，则将学习率降低 0.5 倍，降至最低 1e-4。采用该策略是为了防止过度拟合，并通过在整个训练过程中动态调整学习率来加速收敛。
+将所提出模型的性能与 EEGNet 进行了比较，EEGNet 是原始 SHU 数据集论文中最强的基线</span><span class="original-text">To enhance model performance, several training strategies were employed. A model checkpoint callback was used to save the weights corresponding to the highest validation accuracy during training. These best weights were automatically restored upon completion of training. The proposed model, along with all baseline models, was trained for 100 epochs with a batch size of 16, using the categorical cross-entropy loss function and the AdamW optimizer (learning rate of 0.001, weight decay of 1e-4). A learning rate scheduler was also utilized, reducing the learning rate by a factor of 0.5 if the validation loss did not improve for 5 consecutive epochs, down to a minimum of 1e-4. This strategy was adopted to prevent overfitting and to accelerate convergence by dynamically adjusting the learning rate throughout training.
+The performance of the proposed model was compared against EEGNet, which served as the strongest baseline in the original SHU dataset paper</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="A large eeg dataset for studying cross-session variability in motor imagery brain-computer interface">16</a>]</cite><span class="translated-text">并为当前工作奠定了架构基础。与最近的两种 EEGNet 衍生品进行了额外的比较：AA-EEGNet 和 EEG-GeNet。</span><span class="original-text">and formed the architectural foundation for the current work. Additional comparisons were made with two recent EEGNet derivatives: AA-EEGNet and EEG-GeNet.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS1.p3">
+<p class="ltx_p" id="S5.SS1.p3.1"><span class="translated-text">为了确保公平比较，所有基线都使用与我们提出的模型相同的训练设置进行训练。此外，所有基线都使用 EEGNet 特定的超参数，与 SHU 论文中报告的一致</span><span class="original-text">To ensure a fair comparison, all baselines were trained using the same training settings as our proposed model. Additionally, all baselines used EEGNet-specific hyperparameters consistent with those reported in the SHU paper</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="A large eeg dataset for studying cross-session variability in motor imagery brain-computer interface">16</a>]</cite><span class="translated-text">，除了 AA-EEGNet，其中 dropout 设置为 0.25。对于非 EEGNet 特定参数，我们遵循每个模型作者提供的原始配置，但 EEG-GeNet 除外，其中多项式次数设置为</span><span class="original-text">, except for AA-EEGNet, where dropout was set to 0.25. For non-EEGNet-specific parameters, we followed the original configurations provided by each model’s authors, with the exception of EEG-GeNet, where the polynomial degree was set to</span><math alttext="K=3" class="ltx_Math" display="inline" id="S5.SS1.p3.1.m1" intent=":literal"><semantics><mrow><mi>K</mi><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">K=3</annotation></semantics></math><span class="translated-text">经验调整后。为了确保所有实验的可重复性，始终应用 42 的固定随机种子。然而，值得注意的是，由于源代码缺失、训练设置不明确或协议与官方 SHU 基准不一致，与其他基于 SHU 的研究的比较被排除在外。因此，我们将评估限制在具有完全可用实现的模型上，以确保公平比较。</span><span class="original-text">after empirical tuning. To ensure reproducibility across all experiments, a fixed random seed of 42 was applied throughout. However, it is important to note that comparisons with other SHU-based studies were excluded due to missing source code, unclear training setups, or protocol inconsistencies with the official SHU benchmark. Thus, we restrict evaluation to models with fully available implementations to ensure fair comparison.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S5.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS2.5.1.1">V-B</span> </span><span class="ltx_text ltx_font_italic" id="S5.SS2.6.2"><span class="translated-text">结果以及与最先进技术的比较</span><span class="original-text">Results and Comparison with State-of-the-Art</span></span>
+</h3>
+<div class="ltx_para" id="S5.SS2.p1">
+<p class="ltx_p" id="S5.SS2.p1.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S5.T1" title="TABLE I ‣ V-B Results and Comparison with State-of-the-Art ‣ V Experimental Results and Discussion ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">I</span></a><span class="translated-text">总结了在 SHU 数据集上评估的各种深度学习架构所获得的比较分类精度。考虑的模型包括 EEGNet，这是原始 SHU 数据集研究中报告的主要基线</span><span class="original-text">summarizes the comparative classification accuracies obtained by various deep learning architectures evaluated on the SHU dataset. The models considered include EEGNet, the leading baseline reported in the original SHU dataset study</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="A large eeg dataset for studying cross-session variability in motor imagery brain-computer interface">16</a>]</cite><span class="translated-text">，以及最近提出的两个变体，即 AA-EEGNet 和 EEG-GENet。这些架构均基于 EEGNet 系列，为评估所提出的 EEG-MFTNet 模型的性能提供了相关基线，该模型也建立在并扩展了 EEGNet 的架构之上。</span><span class="original-text">, alongside two recently proposed variants, namely AA-EEGNet and EEG-GENet. These architectures, all based on the EEGNet family, provide relevant baselines for evaluating the performance of the proposed EEG-MFTNet model, which also builds upon and extends EEGNet’s architecture.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS2.p2">
+<p class="ltx_p" id="S5.SS2.p2.1"><span class="translated-text">如表所示</span><span class="original-text">As indicated in Table</span><a class="ltx_ref" href="#S5.T1" title="TABLE I ‣ V-B Results and Comparison with State-of-the-Art ‣ V Experimental Results and Discussion ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">I</span></a><span class="translated-text">，原始 EEGNet 模型的平均分类精度为 53.7%。其衍生品 AA-EEGNet 和 EEG-GENet 表现出边际改进，分别达到 54.8% 和 54.7%。这些适度的收益反映了这些扩展模型中引入的增量复杂性和精致的归纳偏差。相比之下，EEG-MFTNet 显示出明显的改进，达到了平均准确度</span><span class="original-text">, the original EEGNet model attains a mean classification accuracy of 53.7%. Its derivatives, AA-EEGNet and EEG-GENet, exhibit marginal improvements, achieving 54.8% and 54.7% respectively. These modest gains reflect the incremental complexity and refined inductive biases introduced within these extended models. In comparison, EEG-MFTNet shows a noticeable improvement, achieving an average accuracy of</span><span class="ltx_text ltx_font_bold" id="S5.SS2.p2.1.1">58.9%</span><span class="translated-text">。与基线 EEGNet 相比，绝对增加了 5% 以上，并且其性能也分别优于 AA-EEGNet 和 EEG-GENet 4.1% 和 4.2%。</span><span class="original-text">. This represents an absolute increase of over 5% compared to the baseline EEGNet, and it also outperforms AA-EEGNet and EEG-GENet by 4.1% and 4.2%, respectively.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS2.p3">
+<p class="ltx_p" id="S5.SS2.p3.1"><span class="translated-text">这一显着的改进强调了显式捕获 EEG 信号中固有的短程和长程时间依赖性的有效性，而这一方面在更轻量级的架构中经常被忽视。虽然受试者之间的标准差略有增加（10.5％），但这可能是由于受试者间的变异性，其中一些受试者表现出更稳定的跨会话脑电图模式或我们提出的模型更好地捕获的模式。</span><span class="original-text">This notable improvement underscores the efficacy of explicitly capturing both short- and long-range temporal dependencies inherent in EEG signals, an aspect often overlooked in more lightweight architectures. While the standard deviation across subjects increases slightly (10.5%), this may be due to inter-subject variability, where some subjects exhibit more stable cross-session EEG patterns or patterns that are better captured by our proposed model.</span></p>
+</div>
+<figure class="ltx_table" id="S5.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S5.T1.8.1.1" style="font-size:90%;">TABLE I</span>: </span><span class="ltx_text" id="S5.T1.9.2" style="font-size:80%;">Comparison of classification accuracy (averaged across all sessions and subjects), model complexity, and inference latency (per trial) for various EEGNet-based architectures.</span></figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="S5.T1.4" style="width:433.6pt;height:86pt;vertical-align:-39.5pt;"><span class="ltx_transformed_inner" style="transform:translate(62.4pt,-12.4pt) scale(1.40436824204751,1.40436824204751) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S5.T1.4.4">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S5.T1.4.4.5.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_l ltx_border_r ltx_border_t" id="S5.T1.4.4.5.1.1" style="padding:0.75pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S5.T1.4.4.5.1.1.1">Model</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S5.T1.4.4.5.1.2" style="padding:0.75pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S5.T1.4.4.5.1.2.1">Accuracy (%)</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S5.T1.4.4.5.1.3" style="padding:0.75pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S5.T1.4.4.5.1.3.1">Parameters</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S5.T1.4.4.5.1.4" style="padding:0.75pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S5.T1.4.4.5.1.4.1">Latency (ms)</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S5.T1.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" id="S5.T1.1.1.1.2" style="padding:0.75pt 4.5pt;">EEGNet</th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S5.T1.1.1.1.1" style="padding:0.75pt 4.5pt;">53.7 <math alttext="\pm" class="ltx_Math" display="inline" id="S5.T1.1.1.1.1.m1" intent=":literal"><semantics><mo mathsize="0.900em">±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math> 6.3</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S5.T1.1.1.1.3" style="padding:0.75pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S5.T1.1.1.1.3.1">3,274</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S5.T1.1.1.1.4" style="padding:0.75pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S5.T1.1.1.1.4.1">47.86</span></td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.2.2.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r" id="S5.T1.2.2.2.2" style="padding:0.75pt 4.5pt;">EEG-GENet</th>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S5.T1.2.2.2.1" style="padding:0.75pt 4.5pt;">54.7 <math alttext="\pm" class="ltx_Math" display="inline" id="S5.T1.2.2.2.1.m1" intent=":literal"><semantics><mo mathsize="0.900em">±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math> 8.5</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S5.T1.2.2.2.3" style="padding:0.75pt 4.5pt;">7,146</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S5.T1.2.2.2.4" style="padding:0.75pt 4.5pt;">48.06</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.3.3.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r" id="S5.T1.3.3.3.2" style="padding:0.75pt 4.5pt;">AA-EEGNet</th>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S5.T1.3.3.3.1" style="padding:0.75pt 4.5pt;">54.8 <math alttext="\pm" class="ltx_Math" display="inline" id="S5.T1.3.3.3.1.m1" intent=":literal"><semantics><mo mathsize="0.900em">±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math> 8.9</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S5.T1.3.3.3.3" style="padding:0.75pt 4.5pt;">517,498</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S5.T1.3.3.3.4" style="padding:0.75pt 4.5pt;">48.83</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.4.4.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_l ltx_border_r" id="S5.T1.4.4.4.2" style="padding:0.75pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S5.T1.4.4.4.2.1">EEG-MFTNet</span></th>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S5.T1.4.4.4.1" style="padding:0.75pt 4.5pt;">
+<span class="ltx_text ltx_font_bold" id="S5.T1.4.4.4.1.1">58.9</span> <math alttext="\pm" class="ltx_Math" display="inline" id="S5.T1.4.4.4.1.m1" intent=":literal"><semantics><mo mathsize="0.900em">±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math> 10.5</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S5.T1.4.4.4.3" style="padding:0.75pt 4.5pt;">16,096</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S5.T1.4.4.4.4" style="padding:0.75pt 4.5pt;">49.63</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+<figcaption class="ltx_caption ltx_centering" style="font-size:80%;">The “<math alttext="\pm" class="ltx_Math" display="inline" id="S5.T1.5.1.m1" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math>” symbol indicates the standard deviation (in percentage points) across subjects to capture inter-subject variability.</figcaption>
+</figure>
+<div class="ltx_para" id="S5.SS2.p4">
+<p class="ltx_p" id="S5.SS2.p4.1"><span class="translated-text">关于计算复杂度和推理速度，如表所示</span><span class="original-text">Regarding computational complexity and inference speed, as shown in Table</span><a class="ltx_ref" href="#S5.T1" title="TABLE I ‣ V-B Results and Comparison with State-of-the-Art ‣ V Experimental Results and Discussion ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">I</span></a><span class="translated-text">，EEGNet 仍然是计算效率最高的模型，只有 3,274 个可训练参数，每次试验的平均推理延迟最低为 47.86 毫秒。 EEG-GENet 的复杂性略有增加，利用了 7,146 个参数，同时保持了 48.06 毫秒的类似延迟。相比之下，AA-EEGNet 显着地将模型大小增加到 517,498 个参数，是 EEGNet 的 150 多倍，但延迟仅略微增加到 48.83 毫秒。</span><span class="original-text">, EEGNet remains the most computationally efficient model, with only 3,274 trainable parameters and the lowest average inference latency of 47.86 ms per trial. EEG-GENet introduces a modest increase in complexity, utilizing 7,146 parameters while maintaining a similar latency of 48.06 ms. In contrast, AA-EEGNet significantly increases model size to 517,498 parameters, over 150 times more than EEGNet, yet results in only a slight latency rise to 48.83 ms.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS2.p5">
+<p class="ltx_p" id="S5.SS2.p5.1"><span class="translated-text">所提出的 EEG-MFTNet 平衡了模型表达能力和计算效率。它包含 16,096 个参数，大大少于 AA-EEGNet，并且每次试验的平均推理延迟为 49.63 毫秒。尽管此延迟稍微超过了比较模型的延迟，但它仍然在近实时操作的可接受范围内，特别是考虑到表中观察到的分类准确性的显着提高</span><span class="original-text">The proposed EEG-MFTNet balances model expressiveness with computational efficiency. It contains 16,096 parameters, substantially fewer than AA-EEGNet, and demonstrates an average inference latency of 49.63 ms per trial. Although this latency slightly exceeds that of the compared models, it remains well within acceptable bounds for near real-time operation, especially given the considerable improvement in classification accuracy observed in Table</span><a class="ltx_ref" href="#S5.T1" title="TABLE I ‣ V-B Results and Comparison with State-of-the-Art ‣ V Experimental Results and Discussion ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">I</span></a>.</p>
+</div>
+<div class="ltx_para" id="S5.SS2.p6">
+<p class="ltx_p" id="S5.SS2.p6.1"><span class="translated-text">总之，多尺度时间卷积与基于 Transformer 的注意力机制的集成显着增强了 EEGNet 架构。这种融合产生了 EEG-MFTNet，为跨会话运动图像分类的轻量级、受 EEGNet 启发的模型设定了新的性能基准。尽管与基线 EEGNet 变体相比，EEG-MFTNet 引入了适度的计算开销，但它通过提供显着增强的分类性能实现了有利的权衡，从而证明了许多实际 BCI 应用增加的复杂性是合理的。</span><span class="original-text">In summary, the integration of multi-scale temporal convolutions with a Transformer-based attention mechanism significantly enhances the EEGNet architecture. This fusion yields EEG-MFTNet, setting a new performance benchmark among lightweight, EEGNet-inspired models for cross-session motor imagery classification. Although EEG-MFTNet introduces moderate computational overhead compared to baseline EEGNet variants, it achieves a favorable trade-off by delivering notably enhanced classification performance, thereby justifying the increased complexity for many practical BCI applications.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S5.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS3.5.1.1"><span class="translated-text">电压-C</span><span class="original-text">V-C</span></span> </span><span class="ltx_text ltx_font_italic" id="S5.SS3.6.2"><span class="translated-text">结果分析</span><span class="original-text">Analysis of the Results</span></span>
+</h3>
+<div class="ltx_para" id="S5.SS3.p1">
+<p class="ltx_p" id="S5.SS3.p1.1"><span class="translated-text">第 2、3、4 和 5 节的平均分类准确度分别为 58.4%、57.2%、61.0% 和 58.8%，显示出中等的跨会话变异性，在第 4 节期间观察到最高性能。</span><span class="original-text">The mean classification accuracies for Sessions 2, 3, 4, and 5 were 58.4%, 57.2%, 61.0%, and 58.8%, respectively, revealing moderate cross-session variability with the highest performance observed during Session 4.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS3.p2">
+<p class="ltx_p" id="S5.SS3.p2.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S5.F2" title="Figure 2 ‣ V-C Analysis of the Results ‣ V Experimental Results and Discussion ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">揭示出明显的个体差异。一些参与者（例如受试者 6 和 20）的准确率始终超过 90%，表明运动想象模式稳定。相反，1、18、19 和 25 等受试者的比例仍低于 55%，这可能是由于信号变异或图像不一致造成的。其他科目（例如科目 13）在不同课程中表现出较大的表现波动。这些结果凸显了个体差异和会话变异性对分类准确性的显着影响，强调了跨会话 MI 解码中持续存在的挑战以及对自适应方法的需求。</span><span class="original-text">reveals clear individual differences. Some participants (e.g., Subjects 6 and 20) consistently exceeded 90% accuracy, suggesting stable motor imagery patterns. Conversely, subjects such as 1, 18, 19, and 25 remained below 55%, likely due to signal variability or inconsistent imagery. Other subjects (e.g., Subject 13) showed large performance swings across sessions. These results highlight the significant impact of both individual differences and session variability on classification accuracy, underscoring the ongoing challenges in cross-session MI decoding and the need for adaptive approaches.</span></p>
+</div>
+<figure class="ltx_figure" id="S5.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="389" id="S5.F2.g1" src="https://arxiv.org/html/2604.05843v1/SubAccccF.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S5.F2.2.1.1" style="font-size:90%;">Figure 2</span>: </span><span class="ltx_text" id="S5.F2.3.2" style="font-size:90%;"> Subject-wise classification accuracy of EEG-MFTNet across the four testing sessions. Each cluster of bars represents a single subject, with each bar indicating the model’s accuracy during a specific testing session.</span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S5.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS4.5.1.1"><span class="translated-text">维-D</span><span class="original-text">V-D</span></span> </span><span class="ltx_text ltx_font_italic" id="S5.SS4.6.2"><span class="translated-text">消融研究</span><span class="original-text">Ablation Study</span></span>
+</h3>
+<div class="ltx_para" id="S5.SS4.p1">
+<p class="ltx_p" id="S5.SS4.p1.1"><span class="translated-text">为了阐明 Transformer 模块和多尺度时间卷积模块对所提出模型的整体功效的各自贡献，进行了消融研究。该分析涉及系统地独立地去除每个组件并评估由此产生的对分类性能的影响。结果总结于表中</span><span class="original-text">To elucidate the individual contributions of the Transformer module and the multi-scale temporal convolution module to the overall efficacy of the proposed model, an ablation study was conducted. This analysis involved systematically removing each component independently and evaluating the resulting impact on classification performance. The findings are summarized in Table</span><a class="ltx_ref" href="#S5.T2" title="TABLE II ‣ V-D Ablation Study ‣ V Experimental Results and Discussion ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">II</span></a>.</p>
+</div>
+<div class="ltx_para" id="S5.SS4.p2">
+<p class="ltx_p" id="S5.SS4.p2.1"><span class="translated-text">结果表明，排除 Transformer 流或多尺度时间卷积模块会导致分类精度显着降低。具体来说，删除 Transformer 组件将平均准确率降低至 57.2%，而省略多尺度时间模块会导致更明显的下降，准确率下降至 55.2%。相比之下，集成了这两个组件的完整模型获得了最高的平均精度</span><span class="original-text">As indicated by the results, the exclusion of either the Transformer stream or the multi-scale temporal convolution module caused a marked reduction in classification accuracy. Specifically, the removal of the Transformer component decreased the average accuracy to 57.2%, whereas omitting the multi-scale temporal module led to a more pronounced decline, with accuracy dropping to 55.2%. In comparison, the complete model, which integrates both components, attained the highest average accuracy of</span><span class="ltx_text ltx_font_bold" id="S5.SS4.p2.1.1">58.9%</span><span class="translated-text">。尽管性能下降，两种消融变体仍然优于基线 EEGNet 模型（准确率 53.7%）。具体来说，仅添加多尺度时间模块将精度提高了 3.5%，而仅添加 Transformer 编码器则获得了 1.5% 的增益。这些结果凸显了两个模块的互补贡献及其对性能的综合影响。即使单独使用，每个组件也提供了明显的优势，证实了 EEG-MFTNet 架构增强的有效性。</span><span class="original-text">. Despite the performance drops, both ablated variants still outperformed the baseline EEGNet model (53.7% accuracy). Specifically, adding only the multi-scale temporal module improved accuracy by 3.5%, while the Transformer encoder alone yielded a 1.5% gain. These results highlight the complementary contributions of both modules and their combined impact on performance. Even when used individually, each component provides a clear advantage, confirming the effectiveness of the architectural enhancements in EEG-MFTNet.</span></p>
+</div>
+<figure class="ltx_table" id="S5.T2">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S5.T2.2.1.1" style="font-size:90%;">TABLE II</span>: </span><span class="ltx_text" id="S5.T2.3.2" style="font-size:90%;"> Ablation study of EEG-MFTNet. Checkmarks (✓) indicate the inclusion of the corresponding component. “–” in both columns corresponds to the baseline EEGNet.</span></figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="S5.T2.4" style="width:433.6pt;height:67.1pt;vertical-align:-30.8pt;"><span class="ltx_transformed_inner" style="transform:translate(19.1pt,-3.0pt) scale(1.09663203148706,1.09663203148706) ;">
+<table class="ltx_tabular ltx_align_middle" id="S5.T2.4.1">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S5.T2.4.1.1.1">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t" id="S5.T2.4.1.1.1.1" style="padding:1pt 8.0pt;"><span class="ltx_text ltx_font_bold" id="S5.T2.4.1.1.1.1.1">Transformer Encoder Stream</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S5.T2.4.1.1.1.2" style="padding:1pt 8.0pt;"><span class="ltx_text ltx_font_bold" id="S5.T2.4.1.1.1.2.1">Multi-scale Conv Module</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S5.T2.4.1.1.1.3" style="padding:1pt 8.0pt;"><span class="ltx_text ltx_font_bold" id="S5.T2.4.1.1.1.3.1">Accuracy (%)</span></td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.4.1.2.2">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r ltx_border_t" id="S5.T2.4.1.2.2.1" style="padding:1pt 8.0pt;">–</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S5.T2.4.1.2.2.2" style="padding:1pt 8.0pt;">–</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S5.T2.4.1.2.2.3" style="padding:1pt 8.0pt;">53.7<sup class="ltx_sup" id="S5.T2.4.1.2.2.3.1">*</sup>
+</td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.4.1.3.3">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S5.T2.4.1.3.3.1" style="padding:1pt 8.0pt;">–</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S5.T2.4.1.3.3.2" style="padding:1pt 8.0pt;">✓</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S5.T2.4.1.3.3.3" style="padding:1pt 8.0pt;">55.2</td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.4.1.4.4">
+<td class="ltx_td ltx_align_center ltx_border_l ltx_border_r" id="S5.T2.4.1.4.4.1" style="padding:1pt 8.0pt;">✓</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S5.T2.4.1.4.4.2" style="padding:1pt 8.0pt;">–</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S5.T2.4.1.4.4.3" style="padding:1pt 8.0pt;">57.2</td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.4.1.5.5">
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_l ltx_border_r" id="S5.T2.4.1.5.5.1" style="padding:1pt 8.0pt;">✓</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S5.T2.4.1.5.5.2" style="padding:1pt 8.0pt;">✓</td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S5.T2.4.1.5.5.3" style="padding:1pt 8.0pt;"><span class="ltx_text ltx_font_bold" id="S5.T2.4.1.5.5.3.1">58.9</span></td>
+</tr>
+</tbody>
+</table>
+</span></div>
+<figcaption class="ltx_caption ltx_centering"><sup class="ltx_sup" id="S5.T2.5.1"><span class="ltx_text" id="S5.T2.5.1.1" style="font-size:80%;">*</span></sup><span class="ltx_text" id="S5.T2.6.2" style="font-size:80%;">EEGNet accuracy reproduced using hyperparameters from the SHU dataset source code <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="A large eeg dataset for studying cross-session variability in motor imagery brain-computer interface">16</a>]</cite>.</span></figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">VI </span><span class="ltx_text ltx_font_smallcaps" id="S6.2.1"><span class="translated-text">模型解读</span><span class="original-text">Model Interpretation</span></span>
+</h2>
+<div class="ltx_para" id="S6.p1">
+<p class="ltx_p" id="S6.p1.1"><span class="translated-text">为了深入了解模型的决策过程，应用梯度×输入技术来评估每个脑电图通道的贡献。事实证明，这种方法在不同的深度学习架构中都有效，特别是在基于脑电图的 BCI 系统中</span><span class="original-text">To gain insight into the model’s decision-making process, the Gradient × Input technique was applied to assess the contribution of each EEG channel. This approach has proven effective across diverse deep learning architectures, particularly in EEG-based BCI systems</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib30" title="Towards best practice of interpreting deep learning models for eeg-based brain computer interfaces">4</a>]</cite><span class="translated-text">。选择主题 6 第 4 节进行此分析，因为它产生了最高的分类准确度。由于检查点选择具有最高验证准确度的权重，并且受试者 6 的训练快速收敛，因此生成的预测往往保持接近 50% 的置信度。因此，使用最终权重对受试者 6 的数据重新训练模型 50 个周期，从而产生更明显的置信度分数并实现更清晰的可信度分析。</span><span class="original-text">. Subject 6, Session 4 was selected for this analysis, as it yielded the highest classification accuracy. Since checkpointing selects the weights with the highest validation accuracy and Subject 6’s training converges rapidly, the resulting predictions tend to remain close to 50% confidence. Therefore, the model was retrained for 50 epochs on Subject 6’s data using the final weights, yielding more distinct confidence scores and enabling a clearer trustworthiness analysis.</span></p>
+</div>
+<div class="ltx_para" id="S6.p2">
+<p class="ltx_p" id="S6.p2.1"><span class="translated-text">可解释性方法涉及计算输入的逐元素乘积以及模型输出相对于输入的梯度。这为每个正确分类的试验生成了归因图，然后对时间进行平均以获得每个渠道的单个归因分数。渠道按平均绝对归因值进行排名，突出显示对模型决策最有影响力的渠道。</span><span class="original-text">The interpretability method involved computing the element-wise product of the input and the gradient of the model’s output with respect to the input. This yielded attribution maps for each correctly classified trial, which were then averaged across time to obtain a single attribution score per channel. Channels were ranked by the average absolute attribution values, highlighting those most influential to the model’s decisions.</span></p>
+</div>
+<div class="ltx_para" id="S6.p3">
+<p class="ltx_p" id="S6.p3.1"><span class="translated-text">使用 MNE-Python 生成头皮地形，以可视化通道重要性的空间模式，聚合每个类别的试验中的归因图。图</span><span class="original-text">Scalp topographies were generated using MNE-Python to visualize spatial patterns of channel importance, aggregating attribution maps across trials per class. Figure</span><a class="ltx_ref" href="#S6.F3" title="Figure 3 ‣ VI Model Interpretation ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">表明左手和右手图像产生不同的激活模式。值得注意的是，右手运动想象与中央额顶叶区域（Fz、F4、FC2、Cz 和 FC1）的活动减少以及后部区域（PO3、O1、Oz 和 O2）的活动增加有关，而左手想象则表现出相反的模式。这些观察结果表明，该模型根据特定区域活动的存在和抑制来区分类别。</span><span class="original-text">shows that left- and right-hand imagery produce distinct activation patterns. Notably, right-hand motor imagery is associated with decreased activation in central frontoparietal regions (Fz, F4, FC2, Cz, and FC1) and increased activity in posterior areas (PO3, O1, Oz, and O2), whereas left-hand imagery exhibits the opposite pattern. These observations suggest the model distinguishes classes based on both the presence and suppression of activity in specific regions.</span></p>
+</div>
+<figure class="ltx_figure" id="S6.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="267" id="S6.F3.g1" src="https://arxiv.org/html/2604.05843v1/RLCmaps.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S6.F3.2.1.1" style="font-size:90%;">Figure 3</span>: </span><span class="ltx_text" id="S6.F3.3.2" style="font-size:90%;"> Topographic contribution maps (Gradient × Input) averaged over all correctly classified trials belonging to a specific class (left or right motor representation) for Subject 6, Session 4. Warm colors indicate greater channel importance.</span></figcaption>
+</figure>
+<div class="ltx_para" id="S6.p4">
+<p class="ltx_p" id="S6.p4.1"><span class="translated-text">为了评估解释方法的可靠性，进行了电极删除测试。电极根据其归因重要性进行排名，并且最重要或最不重要的通道的增加比例设置为零。在每一步中，都会记录模型的预测置信度。</span><span class="original-text">To assess the reliability of the interpretation method, electrode deletion tests were conducted. Electrodes were ranked according to their attribution importance, and increasing proportions of either the most or the least important channels were set to zero. At each step, the model’s prediction confidence was recorded.</span></p>
+</div>
+<div class="ltx_para" id="S6.p5">
+<p class="ltx_p" id="S6.p5.1"><span class="translated-text">对于左侧图像（图</span><span class="original-text">For left-hand imagery (Figure</span><span class="ltx_ref ltx_missing_label ltx_ref_self">LABEL:fig:left_hand_deletion</span><span class="translated-text">），删除 60% 最有影响力的电极后，置信度从约 0.90 降至略低于 0.40，而删除最不重要的通道仅产生很小的影响。对于右侧图像（图</span><span class="original-text">), the confidence dropped from about 0.90 to just below 0.40 after deleting 60% of the most influential electrodes, while removing the least important channels had only a minor effect. For right-hand imagery (Figure</span><span class="ltx_ref ltx_missing_label ltx_ref_self">LABEL:fig:right_hand_deletion</span><span class="translated-text">），删除最重要的电极将置信度从近 0.95 降低到删除 20% 时的约 0.75，删除 40% 时置信度从近 0.95 降低到约 0.70，删除 60% 时置信度略有恢复到约 0.80。相比之下，删除最不重要的渠道造成的变化可以忽略不计。</span><span class="original-text">), deleting the most important electrodes reduced confidence from nearly 0.95 to around 0.75 at 20% deletion and to about 0.70 at 40%, with a slight recovery to approximately 0.80 at 60%. In contrast, removing the least important channels caused negligible changes.</span></p>
+</div>
+<div class="ltx_para" id="S6.p6">
+<p class="ltx_p" id="S6.p6.1"><span class="translated-text">总体而言，通过删除最重要和最不重要的电极获得的删除曲线之间的清晰分离支持了所提出的解释方法的有效性。然而，曲线下较高的面积表明，虽然该方法捕获了主要的判别模式，但它可能无法完全解释有助于模型决策的所有细粒度特征。</span><span class="original-text">Overall, the clear separation between the deletion curves obtained by removing the most and the least important electrodes supports the validity of the proposed interpretation method. However, the moderately high area under the curves suggests that, while the method captures the dominant discriminative patterns, it may not fully account for all fine-grained features contributing to the model’s decisions.</span></p>
+</div>
+<figure class="ltx_figure" id="S6.1">
+<div class="ltx_block" id="S6.1.1">
+<figure class="ltx_figure" id="S6.F5.sf1">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S6.F5.sf1.2.1.1" style="font-size:90%;">(a)</span> </span><span class="ltx_text" id="S6.F5.sf1.3.2" style="font-size:90%;"> EEG-MFTNet’s average prediction confidence during Class-specific electrode deletion tests. Blue: most important electrodes deleted; Orange: least important deleted; shaded areas show standard deviation.</span></figcaption>
+</figure>
+<section class="ltx_section" id="S7">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">VII </span><span class="ltx_text ltx_font_smallcaps" id="S7.1.1">Conclusion and Future Work</span>
+</h2>
+<div class="ltx_para" id="S7.p1">
+<p class="ltx_p" id="S7.p1.1">This work introduced EEG-MFTNet, a deep learning model for motor imagery EEG classification. Extending EEGNet, it integrates a multi-scale temporal convolutional block and a parallel Transformer encoder to capture frequency-specific patterns and long-range dependencies, addressing cross-session variability. Evaluated on the SHU dataset under a subject-dependent cross-session protocol, EEG-MFTNet achieved 58.9% accuracy, outperforming EEGNet, AA-EEGNet, and EEG-GENet. Despite slightly higher complexity, it maintained low latency and few parameters. Ablation study confirmed the value of both modules, while interpretability analyses revealed attention to class-specific electrodes. Future work will explore cross-session adaptation, broader datasets, and online learning.</p>
+</div>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib27">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">I. A. Abdellaoui, J. G. Fernández, C. Sahinli, and S. Mehrkanoon</span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Enhancing brain decoding using attention augmented deep neural networks</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of European Symposium on Artificial Neural Networks, Computational Intelligence and Machine Learning</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 183–188</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib2">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">H. Altaheri, G. Muhammad, M. Alsulaiman, S. U. Amin, G. A. Altuwaijri, W. Abdul, M. A. Bencherif, and M. Faisal</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Deep learning techniques for classification of electroencephalogram (eeg) motor imagery (mi) signals: a review</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Neural Computing and Applications</span> <span class="ltx_text ltx_bib_volume">35</span> (<span class="ltx_text ltx_bib_number">20</span>), <span class="ltx_text ltx_bib_pages"> pp. 14681–14722</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S1.p2.2" title="I Introduction ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S1.p3.1" title="I Introduction ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib23">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">K. K. Ang, Z. Y. Chin, H. Zhang, and C. Guan</span><span class="ltx_text ltx_bib_year"> (2008)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Filter bank common spatial pattern (fbcsp) in brain-computer interface</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2008 IEEE international joint conference on neural networks (IEEE world congress on computational intelligence)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 2390–2397</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.2" title="I Introduction ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib30">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Cui, L. Yuan, Z. Wang, R. Li, and T. Jiang</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Towards best practice of interpreting deep learning models for eeg-based brain computer interfaces</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Frontiers in Computational Neuroscience</span> <span class="ltx_text ltx_bib_volume">17</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.3389/fncom.2023.1232925" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://doi.org/10.3389/fncom.2023.1232925" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S6.p1.1" title="VI Model Interpretation ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§VI</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib33">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">B. J. Edelman, S. Zhang, G. Schalk, P. Brunner, G. Müller-Putz, C. Guan, and B. He</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Non-invasive brain-computer interfaces: state of the art and trends</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE reviews in biomedical engineering</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.2" title="I Introduction ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib14">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. El Ouahidi, V. Gripon, B. Pasdeloup, G. Bouallegue, N. Farrugia, and G. Lioi</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A strong and simple deep learning baseline for bci motor imagery decoding</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Transactions on Neural Systems and Rehabilitation Engineering</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib15">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">C. Fan, B. Yang, X. Li, S. Gao, and P. Zan</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">EEG-based feature classification combining 3d-convolutional neural networks with generative adversarial networks for motor imagery</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Journal of Integrative Neuroscience</span> <span class="ltx_text ltx_bib_volume">23</span> (<span class="ltx_text ltx_bib_number">8</span>), <span class="ltx_text ltx_bib_pages"> pp. 153</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib26">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">L. Goené and S. Mehrkanoon</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Dual stream graph transformer fusion networks for enhanced brain decoding</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of European Symposium on Artificial Neural Networks, Computational Intelligence and
+Machine Learning (ESANN)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 375–380</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§II</span></a>,
+<a class="ltx_ref" href="#S3.p1.1" title="III Proposed Model ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§III</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib21">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Hong, X. Zeng, F. Wu, and J. Wang</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">MAFNet: multi-domain features attention-based fusion network for cross-subject motor imagery classification</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2024 International Joint Conference on Neural Networks (IJCNN)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 1–7</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib9">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">T. M. Ingolfsson, M. Hersche, X. Wang, N. Kobayashi, L. Cavigelli, and L. Benini</span><span class="ltx_text ltx_bib_year"> (2020)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">EEG-tcnet: an accurate temporal convolutional network for embedded motor-imagery brain–machine interfaces</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2020 IEEE International Conference on Systems, Man, and Cybernetics (SMC)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 2958–2965</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib34">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Kazatzidis and S. Mehrkanoon</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A novel dual-stream time-frequency contrastive pretext tasks framework for sleep stage classification</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of International Joint Conference on Neural Networks (IJCNN)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 1–8</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib35">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Kuang, J. Shi, K. van der Heijden, and S. Mehrkanoon</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">BAST-Mamba: binaural audio spectrogram mamba transformer for binaural sound localization</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Neurocomputing</span>, <span class="ltx_text ltx_bib_pages"> pp. 130804</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib8">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">V. J. Lawhern, A. J. Solon, N. R. Waytowich, S. M. Gordon, C. P. Hung, and B. J. Lance</span><span class="ltx_text ltx_bib_year"> (2018)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">EEGNet: a compact convolutional neural network for eeg-based brain–computer interfaces</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Journal of neural engineering</span> <span class="ltx_text ltx_bib_volume">15</span> (<span class="ltx_text ltx_bib_number">5</span>), <span class="ltx_text ltx_bib_pages"> pp. 056013</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§II</span></a>,
+<a class="ltx_ref" href="#S3.p1.1" title="III Proposed Model ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§III</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib19">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">X. Li, Z. Yang, X. Tu, J. Wang, and J. Huang</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">MFRC-net: multi-scale feature residual convolutional neural network for motor imagery decoding</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Journal of Biomedical and Health Informatics</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.2" title="I Introduction ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib13">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">T. Liang, X. Yu, X. Liu, H. Wang, X. Liu, and B. Dong</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">EEG-cdilnet: a lightweight and accurate cnn network using circular dilated convolution for motor imagery classification</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Journal of Neural Engineering</span> <span class="ltx_text ltx_bib_volume">20</span> (<span class="ltx_text ltx_bib_number">4</span>), <span class="ltx_text ltx_bib_pages"> pp. 046031</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib6">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Ma, B. Yang, W. Qiu, Y. Li, S. Gao, and X. Xia</span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A large eeg dataset for studying cross-session variability in motor imagery brain-computer interface</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Scientific Data</span> <span class="ltx_text ltx_bib_volume">9</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 531</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.I1.i2.p1.1" title="In I Introduction ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">2nd item</span></a>,
+<a class="ltx_ref" href="#S4.p1.1" title="IV Data Description ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§IV</span></a>,
+<a class="ltx_ref" href="#S5.SS1.p1.1" title="V-A Experimental Setup ‣ V Experimental Results and Discussion ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">V-A</span></span></a>,
+<a class="ltx_ref" href="#S5.SS1.p2.1" title="V-A Experimental Setup ‣ V Experimental Results and Discussion ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">V-A</span></span></a>,
+<a class="ltx_ref" href="#S5.SS1.p3.1" title="V-A Experimental Setup ‣ V Experimental Results and Discussion ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">V-A</span></span></a>,
+<a class="ltx_ref" href="#S5.SS2.p1.1" title="V-B Results and Comparison with State-of-the-Art ‣ V Experimental Results and Discussion ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">V-B</span></span></a>,
+<a class="ltx_ref" href="#S5.T2.6.2" title="In V-D Ablation Study ‣ V Experimental Results and Discussion ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">TABLE II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib32">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Meng, Y. Wei, X. Mai, S. Li, X. Wang, R. Luo, M. Ji, and X. Zhu</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Paradigms and methods of noninvasive brain-computer interfaces in motor or communication assistance and rehabilitation: a systematic review</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Medical &amp; Biological Engineering &amp; Computing</span>, <span class="ltx_text ltx_bib_pages"> pp. 1–25</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib1">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">L. F. Nicolas-Alonso and J. Gomez-Gil</span><span class="ltx_text ltx_bib_year"> (2012)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Brain computer interfaces, a review</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Sensors</span> <span class="ltx_text ltx_bib_volume">12</span> (<span class="ltx_text ltx_bib_number">2</span>), <span class="ltx_text ltx_bib_pages"> pp. 1211–1279</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.3390/s120201211" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://doi.org/10.3390/s120201211" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib4">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">N. Padfield, J. Zabalza, H. Zhao, V. Masero, and J. Ren</span><span class="ltx_text ltx_bib_year"> (2019)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">EEG-based brain-computer interfaces using motor-imagery: techniques and challenges</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Sensors (Basel, Switzerland)</span> <span class="ltx_text ltx_bib_volume">19</span> (<span class="ltx_text ltx_bib_number">6</span>), <span class="ltx_text ltx_bib_pages"> pp. 1423</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.3390/s19061423" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://doi.org/10.3390/s19061423" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.2" title="I Introduction ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib3">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">R. A. Ramadan and A. V. Vasilakos</span><span class="ltx_text ltx_bib_year"> (2017)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Brain computer interface: control signals review</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Neurocomputing</span> <span class="ltx_text ltx_bib_volume">223</span>, <span class="ltx_text ltx_bib_pages"> pp. 26–44</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib25">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">H. Ramoser, J. Muller-Gerking, and G. Pfurtscheller</span><span class="ltx_text ltx_bib_year"> (2000)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Optimal spatial filtering of single trial eeg during imagined hand movement</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE transactions on rehabilitation engineering</span> <span class="ltx_text ltx_bib_volume">8</span> (<span class="ltx_text ltx_bib_number">4</span>), <span class="ltx_text ltx_bib_pages"> pp. 441–446</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.2" title="I Introduction ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib10">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Riyad, M. Khalil, and A. Adib</span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">MI-eegnet: a novel convolutional neural network for motor imagery classification</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Journal of Neuroscience Methods</span> <span class="ltx_text ltx_bib_volume">353</span>, <span class="ltx_text ltx_bib_pages"> pp. 109037</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§II</span></a>,
+<a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§II</span></a>,
+<a class="ltx_ref" href="#S3.p1.1" title="III Proposed Model ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§III</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib29">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Saibene, M. Caglioni, S. Corchs, and F. Gasparini</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">EEG-based bcis on motor imagery paradigm using wearable technologies: a systematic review</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Sensors</span> <span class="ltx_text ltx_bib_volume">23</span> (<span class="ltx_text ltx_bib_number">5</span>), <span class="ltx_text ltx_bib_pages"> pp. 2798</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.3390/s23052798" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://doi.org/10.3390/s23052798" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.2" title="I Introduction ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib12">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Salami, J. Andreu-Perez, and H. Gillmeister</span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">EEG-itnet: an explainable inception temporal convolutional network for motor imagery classification</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Access</span> <span class="ltx_text ltx_bib_volume">10</span>, <span class="ltx_text ltx_bib_pages"> pp. 36672–36685</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§II</span></a>,
+<a class="ltx_ref" href="#S3.p1.1" title="III Proposed Model ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§III</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib7">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">R. T. Schirrmeister, J. T. Springenberg, L. D. J. Fiederer, M. Glasstetter, K. Eggensperger, M. Tangermann, F. Hutter, W. Burgard, and T. Ball</span><span class="ltx_text ltx_bib_year"> (2017)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Deep learning with convolutional neural networks for eeg decoding and visualization</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Human brain mapping</span> <span class="ltx_text ltx_bib_volume">38</span> (<span class="ltx_text ltx_bib_number">11</span>), <span class="ltx_text ltx_bib_pages"> pp. 5391–5420</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib31">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Sun, X. Chen, B. Liu, L. Liang, Y. Wang, S. Gao, and X. Gao</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Signal acquisition of brain–computer interfaces: a medical-engineering crossover perspective review</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Fundamental Research</span> <span class="ltx_text ltx_bib_volume">5</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 3–16</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib11">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">H. Wang, H. Yu, and H. Wang</span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">EEG_GENet: a feature-level graph embedding method for motor imagery classification based on eeg signals</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Biocybernetics and Biomedical Engineering</span> <span class="ltx_text ltx_bib_volume">42</span> (<span class="ltx_text ltx_bib_number">3</span>), <span class="ltx_text ltx_bib_pages"> pp. 1023–1040</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib5">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">X. Wang, V. Liesaputra, Z. Liu, Y. Wang, and Z. Huang</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">An in-depth survey on deep learning-based motor imagery electroencephalogram (eeg) classification</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Artificial intelligence in medicine</span> <span class="ltx_text ltx_bib_volume">147</span>, <span class="ltx_text ltx_bib_pages"> pp. 102738</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="I Introduction ‣ EEG-MFTNet: An Enhanced EEGNet Architecture with Multi-Scale Temporal Convolutions and Transformer Fusion for Cross-Session Motor Imagery Decoding"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</section>
+</div>
+</figure>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2604.05843v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
