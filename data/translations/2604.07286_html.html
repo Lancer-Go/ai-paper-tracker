@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">CADENCE：上下文自适应深度估计以提高导航和计算效率</span><span class="original-text">CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 4 月 8 日星期三 16:46:32 生成 http://dlmf.nist.gov/LaTeXML/。</span><span class="original-text">Generated on Wed Apr  8 16:46:32 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2604.07286" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2604.07286" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">描述：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2604.07286v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2604.07286v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<a class="header-button color-tog" href="javascript:toggleColorScheme();" title="Toggle dark/light mode">
+<label class="toggle-icon automatic-tog" title="Switch to light mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon light-tog" title="Switch to dark mode">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+<label class="toggle-icon dark-tog" title="Switch to system preference">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</label>
+</a>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S1" title="In CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">I </span><span class="ltx_text ltx_font_smallcaps">Introduction</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S1.SS1" title="In I Introduction ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">I-A</span> </span><span class="ltx_text ltx_font_italic">Contributions</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S2" title="In CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">II </span><span class="ltx_text ltx_font_smallcaps">Related Works</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S3" title="In CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">III </span><span class="ltx_text ltx_font_smallcaps">Problem Formulation</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">IV </span><span class="ltx_text ltx_font_smallcaps">Methods</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In IV Methods ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-A</span> </span><span class="ltx_text ltx_font_italic">Perception: Slimmable MDE Network</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS2" title="In IV Methods ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-B</span> </span><span class="ltx_text ltx_font_italic">Navigation and Adaptation Policy</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S5" title="In CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">V </span><span class="ltx_text ltx_font_smallcaps">Results</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS1" title="In V Results ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-A</span> </span><span class="ltx_text ltx_font_italic">Testbed</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS2" title="In V Results ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-B</span> </span><span class="ltx_text ltx_font_italic">Benchmarking</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS3" title="In V Results ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-C</span> </span><span class="ltx_text ltx_font_italic">Slimmable MDE Network</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS4" title="In V Results ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">V-D</span> </span><span class="ltx_text ltx_font_italic">Navigation and Adaptation</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S6" title="In CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">VI </span><span class="ltx_text ltx_font_smallcaps">Conclusions</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：arXiv.org 永久非独占许可证</span><span class="original-text">License: arXiv.org perpetual non-exclusive license</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2604.07286v1 [cs.RO] 2026 年 4 月 8 日</span><span class="original-text">arXiv:2604.07286v1 [cs.RO] 08 Apr 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">CADENCE：上下文自适应深度估计以提高导航和计算效率</span><span class="original-text">CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency</span><br class="ltx_break"/>
+</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+Timothy K Johnsen<sup class="ltx_sup" id="id5.5.id1"><span class="ltx_text ltx_font_italic" id="id5.5.id1.1">1</span></sup> and Marco Levorato<sup class="ltx_sup" id="id6.6.id2"><span class="ltx_text ltx_font_italic" id="id6.6.id2.1">2</span></sup>
+</span><span class="ltx_author_notes"><sup class="ltx_sup" id="id7.7.id1"><span class="ltx_text ltx_font_italic" id="id7.7.id1.1">1</span></sup>Timothy Johnsen is a PhD candidate in the Computational Science joint program with San Diego State University and The University of California, Irvine in CA, USA.
+<span class="ltx_text ltx_font_typewriter" id="id8.8.id2" style="font-size:90%;">tjohnsen@uci.edu</span><sup class="ltx_sup" id="id9.9.id1"><span class="ltx_text ltx_font_italic" id="id9.9.id1.1">2</span></sup>Marco Levorato is a full professor in the Computer Science department at the University of California, Irvine in CA, USA.
+<span class="ltx_text ltx_font_typewriter" id="id10.10.id2" style="font-size:90%;">levorato@uci.edu</span></span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">部署在远程环境中的自动驾驶汽车通常依赖于嵌入式处理器、紧凑型电池和轻型传感器。这些硬件限制与获得强大的环境表示的需求相冲突，这通常需要执行计算密集型深度神经网络来进行感知。为了应对这一挑战，我们提出了 CADENCE，这是一种自适应系统，可以根据导航需求和环境背景动态扩展可精简单目深度估计网络的计算复杂性。通过闭合感知保真度和驱动要求之间的循环，CADENCE 确保仅在关键任务时使用高精度计算。我们对已发布的开源测试平台进行了评估，该测试平台将 Microsoft AirSim 与 NVIDIA Jetson Orin Nano 集成。与最先进的静态方法相比，CADENCE 将传感器采集、功耗和推理延迟分别降低了 9.67%、16.1% 和 74.8%。结果表明，能源消耗总体减少了 75.0%，导航精度提高了 7.43%。</span><span class="original-text">Autonomous vehicles deployed in remote environments typically rely on embedded processors, compact batteries, and lightweight sensors. These hardware limitations conflict with the need to derive robust representations of the environment, which often requires executing computationally intensive deep neural networks for perception. To address this challenge, we present CADENCE, an adaptive system that dynamically scales the computational complexity of a slimmable monocular depth estimation network in response to navigation needs and environmental context. By closing the loop between perception fidelity and actuation requirements, CADENCE ensures high-precision computing is only used when mission-critical. We conduct evaluations on our released open-source testbed that integrates Microsoft AirSim with an NVIDIA Jetson Orin Nano. As compared to a state-of-the-art static approach, CADENCE decreases sensor acquisitions, power consumption, and inference latency by 9.67%, 16.1%, and 74.8%, respectively. The results demonstrate an overall reduction in energy expenditure by 75.0%, along with an increase in navigation accuracy by 7.43%.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span class="ltx_text ltx_font_smallcaps" id="S1.1.1"><span class="translated-text">简介</span><span class="original-text">Introduction</span></span>
+</h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">无人机等小型自动驾驶车辆依赖轻型传感器，而这些传感器通常缺乏导航未知地形所需的精确 3D 环境数据。为了弥补这一缺陷，现代系统使用深度神经网络 (DNN) 来执行复杂的计算机视觉任务，例如单目深度估计 (MDE) 和对象检测。然而，这些 DNN 的高计算需求与有限的机载资源发生冲突，存在因电池耗尽或延迟处理而导致任务失败的风险。</span><span class="original-text">Small autonomous vehicles, like drones, rely on lightweight sensors that often lack the precise 3D environmental data required to navigate unknown terrains. To compensate, modern systems use deep neural networks (DNNs) for complex computer vision tasks like monocular depth estimation (MDE) and object detection. However, the high computational demands of these DNNs clash with limited onboard resources, risking mission failure through battery depletion or delayed processing.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">当前减轻此类计算需求的研究遵循两种主要方法。第一个是静态模型简化，通过剪枝简化 DNN</span><span class="original-text">Current research in mitigating such computational demands follows two primary methodologies. The first, static model reduction, simplifies DNNs via pruning</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib29" title="What is the state of neural network pruning?">1</a>]</cite><span class="translated-text">、知识蒸馏</span><span class="original-text">, knowledge distillation</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib5" title="Distilling the knowledge in a neural network">5</a>]</cite><span class="translated-text">, 量化</span><span class="original-text">, quantization</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="Qonnx: representing arbitrary-precision quantized neural networks">16</a>]</cite><span class="translated-text">，以及直接设计</span><span class="original-text">, and direct design</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="SqueezeNext: hardware-aware neural network design">3</a>]</cite><span class="translated-text">。虽然有效，但它们常常会导致任务准确性下降。此外，它们必须足够复杂才能处理最具挑战性的场景，这会导致在遇到更简单的场景时，推理延迟、功耗和能源支出方面的效率不理想。第二种方法，边缘计算</span><span class="original-text">. While effective, they often incur a degradation in task accuracy. Further, they must be complex enough to handle the most challenging scenarios, which leads to suboptimal efficiency in terms of inference latency, power consumption, and energy expenditure when encountering simpler scenarios. The second approach, edge computing</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib10" title="VideoEdge: processing camera streams using hierarchical clusters">7</a>]</cite><span class="translated-text">，将感知任务卸载到远程服务器，这在建立和维护延迟、数据隐私和连接方面的不稳定通信链路时引入了严重漏洞。</span><span class="original-text">, offloads perception tasks to remote servers, which introduces critical vulnerabilities when establishing and maintaining volatile communication links in terms of latency, data privacy, and connectivity.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">为了应对这些挑战，我们采用了第三种适应动态 DNN 的方法</span><span class="original-text">To address these challenges, we adopt a third methodology that adapts dynamic DNNs</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib56" title="An overview of adaptive dynamic deep neural networks via slimmable and gated architectures">9</a>]</cite><span class="translated-text">在运行时根据上下文缩放计算。这消除了边缘计算中使用的不稳定通信链路的需要，并减轻了静态模型简化中固有的次优效率和准确性下降。该框架的主要挑战是开发自适应逻辑。</span><span class="original-text">to scale computations at runtime in response to context. This removes the need for volatile communication links as used in edge computing, and mitigates the suboptimal efficiency and accuracy degradation inherent in static model reduction. The primary challenge of this framework is in developing the adaptive logic.</span></p>
+</div>
+<figure class="ltx_figure" id="S1.F1">
+<p class="ltx_p ltx_align_center" id="S1.F1.1"><span class="ltx_text" id="S1.F1.1.1"><img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="103" id="S1.F1.1.1.g1" src="https://arxiv.org/html/2604.07286v1/figures/system.png" width="214"/></span></p>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>System environment that contains an autonomous drone equipped with an embedded computer, GPS, distance sensor, and monocular camera.</figcaption>
+</figure>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">我们的目标是在未知地形中以最佳方式导航无人机，同时最大限度地减少计算开销（如图 1 所示）。</span><span class="original-text">Our objective is to optimally navigate a drone through an unknown terrain while minimizing computational overhead (as shown in Fig.</span><a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ I Introduction ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">）。具体来说，我们提出了 CADENCE（用于导航和计算效率的上下文自适应深度估计），这是一个完整的自主堆栈，它通过响应导航和环境上下文动态缩放感知保真度来关闭传感驱动循环。</span><span class="original-text">). Specifically, we present CADENCE (Context-Adaptive Depth Estimation for Navigation and Computational Efficiency), a full autonomy stack that closes the sensing-actuation loop by dynamically scaling perception fidelity in response to navigation and environmental context.</span></p>
+</div>
+<section class="ltx_subsection" id="S1.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S1.SS1.4.1.1"><span class="translated-text">Ⅰ-A</span><span class="original-text">I-A</span></span> </span><span class="ltx_text ltx_font_italic" id="S1.SS1.5.2"><span class="translated-text">贡献</span><span class="original-text">Contributions</span></span>
+</h3>
+<div class="ltx_para ltx_noindent" id="S1.SS1.p1">
+<p class="ltx_p" id="S1.SS1.p1.1"><math alttext="\bullet" class="ltx_Math" display="inline" id="S1.SS1.p1.1.m1" intent=":literal"><semantics><mo>∙</mo><annotation encoding="application/x-tex">\bullet</annotation></semantics></math><span class="translated-text">我们修改了最先进的 (SoTA) MDE 架构</span><span class="original-text">We modify a state-of-the-art (SoTA) MDE architecture</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib34" title="Single-image real-time rain removal based on depth-guided non-local features">6</a>]</cite><span class="translated-text">通过将其训练为可精简网络，允许在运行时在线动态缩放计算资源。</span><span class="original-text">by training it to be a slimmable network, allowing for online dynamic scaling of computational resources at runtime.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.SS1.p2">
+<p class="ltx_p" id="S1.SS1.p2.1"><math alttext="\bullet" class="ltx_Math" display="inline" id="S1.SS1.p2.1.m1" intent=":literal"><semantics><mo>∙</mo><annotation encoding="application/x-tex">\bullet</annotation></semantics></math><span class="translated-text">我们提出了一种统一的导航和适应策略，联合预测运动动作和瘦身因子，消除了 SoTA 模型中采用的两个单独的辅助和导航策略的计算开销</span><span class="original-text">We propose a unified navigation-and-adaptation policy that jointly predicts motion actions and slimming factors, eliminating the computational overhead of two separate auxiliary and navigation policies as adopted in SoTA models</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib31" title="NaviSlim: adaptive context-aware navigation and sensing via dynamic slimmable networks">11</a>]</cite>.</p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.SS1.p3">
+<p class="ltx_p" id="S1.SS1.p3.1"><math alttext="\bullet" class="ltx_Math" display="inline" id="S1.SS1.p3.1.m1" intent=":literal"><semantics><mo>∙</mo><annotation encoding="application/x-tex">\bullet</annotation></semantics></math><span class="translated-text">我们推出了 CADENCE，这是一个完全自主的堆栈，可以根据具体情况调整计算效率。我们进一步开发了一个强大的多阶段培训程序。</span><span class="original-text">We present CADENCE, a full autonomy stack that adapts computing efficiency in response to case-by-case context. We further develop a robust multi-stage training procedure.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.SS1.p4">
+<p class="ltx_p" id="S1.SS1.p4.1"><math alttext="\bullet" class="ltx_Math" display="inline" id="S1.SS1.p4.1.m1" intent=":literal"><semantics><mo>∙</mo><annotation encoding="application/x-tex">\bullet</annotation></semantics></math><span class="translated-text">我们发布了硬件在环 (HIL) Python 存储库</span><span class="original-text">We release a hardware-in-the-loop (HIL) Python repository</span><span class="ltx_note ltx_role_footnote" id="footnote1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span>https://github.com/WreckItTim/OmniNaviPy</span></span></span><span class="translated-text">。集成了 Microsoft AirSim</span><span class="original-text">. that integrates Microsoft AirSim</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib12" title="Airsim: high-fidelity visual and physical simulation for autonomous vehicles">17</a>]</cite><span class="translated-text">、NVIDIA Jetson 基准测试代码、具有可精简网络的 MDE、收集的数据集、经过训练的模型和保留评估工具。</span><span class="original-text">, NVIDIA Jetson benchmarking code, MDE with slimmable networks, collected datasets, trained models, and hold-out evaluation tools.</span></p>
+</div>
+<div class="ltx_para" id="S1.SS1.p5">
+<p class="ltx_p" id="S1.SS1.p5.1"><span class="translated-text">与非自适应 SoTA 管道相比，CADENCE 减少了 9.67% 的传感器采集数量； MDE网络的推理时延、功耗和能源消耗分别降低了74.8%、16.1%和75.0%；导航精度提高7.43%。</span><span class="original-text">As compared to a non-adaptive SoTA pipeline, CADENCE decreases the number of sensor acquisitions by 9.67%; decreases the inference latency, power consumption, and energy expenditure of the MDE network by 74.8%, 16.1%, and 75.0%; and increases the navigation accuracy by 7.43%.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span class="ltx_text ltx_font_smallcaps" id="S2.1.1"><span class="translated-text">相关作品</span><span class="original-text">Related Works</span></span>
+</h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="translated-text">SoTA 方法通过具有 RGB 深度输入的深度强化学习 (DRL) 实现自主机器人</span><span class="original-text">SoTA approaches enable autonomous robotics via deep reinforcement learning (DRL) with RGB-Depth inputs</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib33" title="Representation learning for event-based visuomotor policies">19</a>]</cite><span class="translated-text">。然而，此类应用通常依赖于静态 DNN，要求模型复杂性能够匹配最具挑战性的操作条件。这会导致在要求较低的情况下出现不必要的高资源使用率。相比之下，我们提出了一种动态方法，其中一部分计算在运行时进行缩放，仅在导航可靠性必要时才保持高保真感知。</span><span class="original-text">. However, such applications typically rely on static DNNs, requiring the model complexity to match the most challenging operating conditions. This results in unnecessarily high resource usage during less demanding situations. In contrast, we present a dynamic approach where a portion of the computing is scaled at runtime, maintaining high-fidelity perception only when necessary for navigation reliability.</span></p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="translated-text">动态 DNN</span><span class="original-text">Dynamic DNNs</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib56" title="An overview of adaptive dynamic deep neural networks via slimmable and gated architectures">9</a>]</cite><span class="translated-text">利用提前退出扩大运营规模</span><span class="original-text">scale operations using early exits</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib20" title="Split computing and early exiting for deep learning applications: survey and research challenges">13</a>]</cite><span class="translated-text">, 可精简网络</span><span class="original-text">, slimmable networks</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib11" title="Slimmable neural networks">21</a>]</cite><span class="translated-text">，或其他架构属性。与在运行时交换模型并随后产生上下文切换延迟的方法不同，动态 DNN 在运行前加载。文献中只有少数方法可以根据内在的潜在特征或外在的环境因素来调整缩放比例</span><span class="original-text">, or other architectural attributes. Unlike methods that swap models at runtime and subsequently incur context-switching latency, dynamic DNNs are loaded before runtime. Only a few approaches exist in literature that adapt scaling in response to intrinsic latent features or extrinsic environmental factors</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib21" title="HydraFusion: context-aware selective sensor fusion for robust and efficient autonomous vehicle perception">12</a>, <a class="ltx_ref" href="#bib.bib22" title="Testudo: collaborative intelligence for latency-critical autonomous systems">15</a>, <a class="ltx_ref" href="#bib.bib25" title="Dynamic slimmable denoising network">8</a>]</cite><span class="translated-text">。以前的工作</span><span class="original-text">. Previous work</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib31" title="NaviSlim: adaptive context-aware navigation and sensing via dynamic slimmable networks">11</a>]</cite><span class="translated-text">探索使用可精简 MLP 的自适应机载导航；然而，与 CNN 相比，MLP 提供的效率增益较小，并且</span><span class="original-text">explores adaptive onboard navigation using slimmable MLPs; however, MLPs offer smaller efficiency gains compared to CNNs, and</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib31" title="NaviSlim: adaptive context-aware navigation and sensing via dynamic slimmable networks">11</a>]</cite><span class="translated-text">通过依赖来自机载深度传感器的地面实况深度信息，忽略了感知 DNN（如 MDE）的计算开销。</span><span class="original-text">ignores the computational overhead of perception DNNs, like MDE, by relying on ground truth depth information derived from onboard depth sensors.</span></p>
+</div>
+<div class="ltx_para" id="S2.p3">
+<p class="ltx_p" id="S2.p3.1"><span class="translated-text">为了适应轻量级设备，SoTA MDE 网络</span><span class="original-text">To fit lightweight devices, SoTA MDE networks</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib34" title="Single-image real-time rain removal based on depth-guided non-local features">6</a>]</cite><span class="translated-text">采用静态模型简化或边缘计算，例如在</span><span class="original-text">employ static model reduction or edge computing, such as done in</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib62" title="Repmono: a lightweight self-supervised monocular depth estimation architecture for high-speed inference">22</a>]</cite><span class="translated-text">直接设计，</span><span class="original-text">with direct design,</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib63" title="Improving accuracy and efficiency of monocular depth estimation in power grid environments using point cloud optimization and knowledge distillation">20</a>]</cite><span class="translated-text">通过知识蒸馏，以及</span><span class="original-text">with knowledge distillation, and</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib40" title="Navisplit: dynamic multi-branch split dnns for efficient distributed autonomous navigation">10</a>]</cite><span class="translated-text">具有自适应分割计算。虽然动态 DNN 已在个别情况下应用于 MDE（</span><span class="original-text">with adaptive split computing. While dynamic DNNs have been applied to MDE in isolated cases (</span><span class="ltx_text ltx_font_italic" id="S2.p3.1.1"><span class="translated-text">例如，</span><span class="original-text">e.g.,</span></span><span class="translated-text">通过提前退出</span><span class="original-text">via early exits</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="Energy-quality scalable monocular depth estimation on low-power cpus">2</a>]</cite><span class="translated-text">），文献中仍然缺乏根据导航目标和环境因素选择机载缩放因子的方法。据我们所知，CADENCE 是第一个采用机载动态 MDE 网络来提高自主导航期间计算效率的方法。</span><span class="original-text">), methodologies for selecting onboard scaling factors based on navigation goals and environmental factors remain absent in literature. To our knowledge, CADENCE is the first approach to adapt onboard dynamic MDE networks to improve computational efficiency during autonomous navigation.</span></p>
+</div>
+<figure class="ltx_figure" id="S2.F2">
+<p class="ltx_p ltx_align_center" id="S2.F2.1"><span class="ltx_text" id="S2.F2.1.1"><img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="191" id="S2.F2.1.1.g1" src="https://arxiv.org/html/2604.07286v1/figures/cadence.png" width="476"/></span></p>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Illustrated is the flow of data from raw sensor acquisition to intelligent decision-making through the full autonomy stack, CADENCE.</figcaption>
+</figure>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section"><span class="translated-text">三、</span><span class="original-text">III</span></span><span class="ltx_text ltx_font_smallcaps" id="S3.1.1"><span class="translated-text">问题表述</span><span class="original-text">Problem Formulation</span></span>
+</h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="translated-text">考虑制定政策</span><span class="original-text">Consider the development of policy</span><math alttext="\phi" class="ltx_Math" display="inline" id="S3.p1.1.m1" intent=":literal"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math><span class="translated-text">它生成一系列动作，以可靠且高效地到达未知地形中的目标位置。执行策略会导致逐步执行连续的传感-计算-执行阶段，直到车辆达到目标（成功）或超过时间限制（失败）。</span><span class="original-text">that generates sequences of actions to both reliably and efficiently reach a target position within an unknown terrain. Executing the policy results in stepping through consecutive sensing-computing-acting stages that continue until the vehicle reaches a target (success) or a time limit is exceeded (failure).</span></p>
+</div>
+<div class="ltx_para" id="S3.p2">
+<p class="ltx_p" id="S3.p2.8"><span class="translated-text">在传感阶段，从机载传感器获取一组观测值，并将其添加到先进先出 (FIFO) 队列中，</span><span class="original-text">During the sensing stage, a set of observations are acquired from onboard sensors that are added to a first-in-first-out (FIFO) queue,</span><math alttext="X" class="ltx_Math" display="inline" id="S3.p2.1.m1" intent=":literal"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math><span class="translated-text">，时间长度</span><span class="original-text">, of temporal length</span><math alttext="\tau" class="ltx_Math" display="inline" id="S3.p2.2.m2" intent=":literal"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math><span class="translated-text">。在计算阶段，</span><span class="original-text">. During the computing stage,</span><math alttext="X" class="ltx_Math" display="inline" id="S3.p2.3.m3" intent=":literal"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math><span class="translated-text">通过自适应管道进行处理以预测：(1) 运动动作，</span><span class="original-text">is processed via an adaptive pipeline to predict: (1) motion actions,</span><math alttext="A" class="ltx_Math" display="inline" id="S3.p2.4.m4" intent=":literal"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math><span class="translated-text">，将车辆置于朝向目标的最佳长度轨迹上； (2) 门值，</span><span class="original-text">, that place the vehicle on a length-optimal trajectory towards the target; and (2) a gate value,</span><math alttext="G" class="ltx_Math" display="inline" id="S3.p2.5.m5" intent=":literal"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math><span class="translated-text">，对应于模型参数的特定子集，</span><span class="original-text">, that corresponds to a specific subset of model parameters,</span><math alttext="\hat{\theta}\subseteq\theta" class="ltx_Math" display="inline" id="S3.p2.6.m6" intent=":literal"><semantics><mrow><mover accent="true"><mi>θ</mi><mo>^</mo></mover><mo>⊆</mo><mi>θ</mi></mrow><annotation encoding="application/x-tex">\hat{\theta}\subseteq\theta</annotation></semantics></math><span class="translated-text">，供下一个计算阶段的管道使用。在行动阶段，车辆执行</span><span class="original-text">, to be utilized by the pipeline at the next computing stage. During the acting stage, the vehicle executes</span><math alttext="A" class="ltx_Math" display="inline" id="S3.p2.7.m7" intent=":literal"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math><span class="translated-text">并根据需要分配适当的计算资源</span><span class="original-text">and allocates the proper computing resources as required by</span><math alttext="G" class="ltx_Math" display="inline" id="S3.p2.8.m8" intent=":literal"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="S3.p3">
+<p class="ltx_p" id="S3.p3.3"><span class="translated-text">我们认为整个处理管道分为：（1）具有可扩展计算能力的动态组件，以及（2）下游静态组件，接收来自动态部分的输入并进一步处理它以获得最终输出值。处理管道的动态部分，</span><span class="original-text">We consider that the entire processing pipeline is split into: (1) a dynamic component that has scalable computing capabilities, and (2) a downstream static component that receives input from the dynamic portion and further processes it for final output values. The dynamic portion of the processing pipeline,</span><math alttext="f" class="ltx_Math" display="inline" id="S3.p3.1.m1" intent=":literal"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math><span class="translated-text">，产生中间输出，</span><span class="original-text">, produces an intermediate output,</span><math alttext="Y" class="ltx_Math" display="inline" id="S3.p3.2.m2" intent=":literal"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math><span class="translated-text">，在步骤</span><span class="original-text">, at step</span><math alttext="t" class="ltx_Math" display="inline" id="S3.p3.3.m3" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>:</p>
+<table class="ltx_equationgroup ltx_eqn_table" id="S3.E1">
+<tbody>
+<tr class="ltx_equation ltx_eqn_row ltx_align_baseline" id="S3.E1X">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_td ltx_align_right ltx_eqn_cell"><math alttext="\displaystyle Y^{(t)}=f_{\theta}(X_{f}^{(t)},G^{(t)})," class="ltx_Math" display="inline" id="S3.E1X.2.1.1.m1" intent=":literal"><semantics><mrow><mrow><msup><mi>Y</mi><mrow><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo></mrow></msup><mo>=</mo><mrow><msub><mi>f</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msubsup><mi>X</mi><mi>f</mi><mrow><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo></mrow></msubsup><mo>,</mo><msup><mi>G</mi><mrow><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo></mrow></msup><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\displaystyle Y^{(t)}=f_{\theta}(X_{f}^{(t)},G^{(t)}),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equationgroup ltx_align_right">(1)</span></td>
+</tr>
+</tbody>
+</table>
+<p class="ltx_p" id="S3.p3.8"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="X_{f}^{(t)}" class="ltx_Math" display="inline" id="S3.p3.4.m1" intent=":literal"><semantics><msubsup><mi>X</mi><mi>f</mi><mrow><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo></mrow></msubsup><annotation encoding="application/x-tex">X_{f}^{(t)}</annotation></semantics></math><span class="translated-text">是的子集</span><span class="original-text">is the subset of</span><math alttext="X" class="ltx_Math" display="inline" id="S3.p3.5.m2" intent=":literal"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math><span class="translated-text">需要计算</span><span class="original-text">required to compute</span><math alttext="f" class="ltx_Math" display="inline" id="S3.p3.6.m3" intent=":literal"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="Y" class="ltx_Math" display="inline" id="S3.p3.7.m4" intent=":literal"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math><span class="translated-text">输入到处理管道的静态部分，</span><span class="original-text">is input into the static portion of the processing pipeline,</span><math alttext="g" class="ltx_Math" display="inline" id="S3.p3.8.m5" intent=":literal"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>:</p>
+<table class="ltx_equationgroup ltx_eqn_table" id="S3.E2">
+<tbody>
+<tr class="ltx_equation ltx_eqn_row ltx_align_baseline" id="S3.E2X">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_td ltx_align_right ltx_eqn_cell"><math alttext="\displaystyle=g_{\psi}(Y^{(t)},X_{g}^{(t)})," class="ltx_Math" display="inline" id="S3.E2X.2.1.1.m1" intent=":literal"><semantics><mrow><mrow><mi></mi><mo>=</mo><mrow><msub><mi>g</mi><mi>ψ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msup><mi>Y</mi><mrow><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo></mrow></msup><mo>,</mo><msubsup><mi>X</mi><mi>g</mi><mrow><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo></mrow></msubsup><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\displaystyle=g_{\psi}(Y^{(t)},X_{g}^{(t)}),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equationgroup ltx_align_right">(2)</span></td>
+</tr>
+</tbody>
+</table>
+<p class="ltx_p" id="S3.p3.13"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\psi" class="ltx_Math" display="inline" id="S3.p3.9.m1" intent=":literal"><semantics><mi>ψ</mi><annotation encoding="application/x-tex">\psi</annotation></semantics></math><span class="translated-text">表示使用的模型参数</span><span class="original-text">represents the model parameters used by</span><math alttext="g" class="ltx_Math" display="inline" id="S3.p3.10.m2" intent=":literal"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="X_{g}^{(t)}" class="ltx_Math" display="inline" id="S3.p3.11.m3" intent=":literal"><semantics><msubsup><mi>X</mi><mi>g</mi><mrow><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo></mrow></msubsup><annotation encoding="application/x-tex">X_{g}^{(t)}</annotation></semantics></math><span class="translated-text">是的子集</span><span class="original-text">is the subset of</span><math alttext="X" class="ltx_Math" display="inline" id="S3.p3.12.m4" intent=":literal"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math><span class="translated-text">需要计算</span><span class="original-text">required to compute</span><math alttext="g" class="ltx_Math" display="inline" id="S3.p3.13.m5" intent=":literal"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math><span class="translated-text">。我们进一步将 CADENCE 的目标表述为优化问题：</span><span class="original-text">. We further formulate the objective for CADENCE as an optimization problem:</span></p>
+</div>
+<div class="ltx_para" id="S3.p4">
+<table class="ltx_equationgroup ltx_eqn_table" id="S3.E3">
+<tbody>
+<tr class="ltx_equation ltx_eqn_row ltx_align_baseline" id="S3.E3X">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_td ltx_align_right ltx_eqn_cell"><math alttext="\displaystyle argmin_{\phi}\;\left\langle E_{\phi}\right\rangle" class="ltx_Math" display="inline" id="S3.E3X.2.1.1.m1" intent=":literal"><semantics><mrow><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>g</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><msub><mi>n</mi><mi>ϕ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo>⟨</mo><msub><mi>E</mi><mi>ϕ</mi></msub><mo>⟩</mo></mrow></mrow><annotation encoding="application/x-tex">\displaystyle argmin_{\phi}\;\left\langle E_{\phi}\right\rangle</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="2"><span class="ltx_tag ltx_tag_equationgroup ltx_align_right">(3)</span></td>
+</tr>
+<tr class="ltx_equation ltx_eqn_row ltx_align_baseline" id="S3.E3Xa">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_td ltx_align_right ltx_eqn_cell"><math alttext="\displaystyle\textrm{s.t.}\;\left\langle\eta_{\phi}\right\rangle\geq\eta_{0}" class="ltx_Math" display="inline" id="S3.E3Xa.2.1.1.m1" intent=":literal"><semantics><mrow><mrow><mtext>s.t.</mtext><mo lspace="0.280em" rspace="0em">​</mo><mrow><mo>⟨</mo><msub><mi>η</mi><mi>ϕ</mi></msub><mo>⟩</mo></mrow></mrow><mo>≥</mo><msub><mi>η</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">\displaystyle\textrm{s.t.}\;\left\langle\eta_{\phi}\right\rangle\geq\eta_{0}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr>
+</tbody>
+</table>
+<p class="ltx_p" id="S3.p4.11"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\left\langle E_{\phi}\right\rangle" class="ltx_Math" display="inline" id="S3.p4.1.m1" intent=":literal"><semantics><mrow><mo>⟨</mo><msub><mi>E</mi><mi>ϕ</mi></msub><mo>⟩</mo></mrow><annotation encoding="application/x-tex">\left\langle E_{\phi}\right\rangle</annotation></semantics></math><span class="translated-text">是在政策下运行时的预期效率</span><span class="original-text">is the expected efficiency when operating under policy</span><math alttext="\phi" class="ltx_Math" display="inline" id="S3.p4.2.m2" intent=":literal"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math>, <math alttext="\eta" class="ltx_Math" display="inline" id="S3.p4.3.m3" intent=":literal"><semantics><mi>η</mi><annotation encoding="application/x-tex">\eta</annotation></semantics></math><span class="translated-text">表示可靠性，并且</span><span class="original-text">denotes reliability, and</span><math alttext="\eta_{0}" class="ltx_Math" display="inline" id="S3.p4.4.m4" intent=":literal"><semantics><msub><mi>η</mi><mn>0</mn></msub><annotation encoding="application/x-tex">\eta_{0}</annotation></semantics></math><span class="translated-text">是表示基线可靠性阈值的常数。在这项工作中，可靠性</span><span class="original-text">is a constant representing a baseline reliability threshold. In this work, reliability</span><math alttext="\eta" class="ltx_Math" display="inline" id="S3.p4.5.m5" intent=":literal"><semantics><mi>η</mi><annotation encoding="application/x-tex">\eta</annotation></semantics></math><span class="translated-text">表示导航精度，其中</span><span class="original-text">represents navigation accuracy, with</span><math alttext="\eta_{0}" class="ltx_Math" display="inline" id="S3.p4.6.m6" intent=":literal"><semantics><msub><mi>η</mi><mn>0</mn></msub><annotation encoding="application/x-tex">\eta_{0}</annotation></semantics></math><span class="translated-text">设置为从静态、高保真基线实现的最大精度。效率</span><span class="original-text">set to the maximum accuracy achieved from a static, high-fidelity baseline. Efficiency</span><math alttext="E" class="ltx_Math" display="inline" id="S3.p4.7.m7" intent=":literal"><semantics><mi>E</mi><annotation encoding="application/x-tex">E</annotation></semantics></math><span class="translated-text">定义为计算阶段消耗的能量，与功耗和推理延迟相关。动作动作</span><span class="original-text">is defined as the energy expended during the computing stage, which is correlated to power consumption and inference latency. The motion actions</span><math alttext="A" class="ltx_Math" display="inline" id="S3.p4.8.m8" intent=":literal"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math><span class="translated-text">控制自主无人机和门控制</span><span class="original-text">control an autonomous drone, and the gate control</span><math alttext="G" class="ltx_Math" display="inline" id="S3.p4.9.m9" intent=":literal"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math><span class="translated-text">对应于缩放可精简 MDE 网络。计算阶段的静态部分是导航和适应策略，用于将估计深度、IMU 和 GPS 数据转换为</span><span class="original-text">corresponds to scaling a slimmable MDE network. The static portion of the computing stage is a navigation-and-adaptation policy used to transform the estimated depths, IMU, and GPS data into</span><math alttext="A" class="ltx_Math" display="inline" id="S3.p4.10.m10" intent=":literal"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="G" class="ltx_Math" display="inline" id="S3.p4.11.m11" intent=":literal"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>.</p>
+</div>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span class="ltx_text ltx_font_smallcaps" id="S4.1.1"><span class="translated-text">方法</span><span class="original-text">Methods</span></span>
+</h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">CADENCE 架构如图 1 所示。</span><span class="original-text">The CADENCE architecture is illustrated in Fig.</span><a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ II Related Works ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">，由两个主要部分组成。感知组件由可精简的 MDE 网络组成，该网络不仅可以从单目 RGB 图像中准确提取 3D 深度信息，而且经过专门训练，以便可以在运行时缩放 DNN 的宽度，以实现动态保真度和计算效率。逻辑组件由经过 DRL 训练的统一导航和适应策略组成，以生成控制机器人轨迹和上游感知组件缩放的长视野动作。</span><span class="original-text">, and consists of two primary components. The perception component consists of a slimmable MDE network that not only accurately extracts 3D depth information from a monocular RGB image, but is specifically trained so that the width of the DNN can be scaled at runtime for dynamic fidelity and computing efficiency. The logic component consists of a unified navigation-and-adaptation policy trained with DRL to generate long-horizon actions that control both the robot’s trajectory and the scaling of the upstream perception component.</span></p>
+</div>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS1.4.1.1">IV-A</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS1.5.2"><span class="translated-text">感知：可精简的 MDE 网络</span><span class="original-text">Perception: Slimmable MDE Network</span></span>
+</h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.2"><span class="translated-text">Perception 提取 2D 深度图，</span><span class="original-text">Perception extracts a 2D depth map,</span><math alttext="\widehat{\mathbf{D}}" class="ltx_Math" display="inline" id="S4.SS1.p1.1.m1" intent=":literal"><semantics><mover accent="true"><mi>𝐃</mi><mo>^</mo></mover><annotation encoding="application/x-tex">\widehat{\mathbf{D}}</annotation></semantics></math><span class="translated-text">，来自 RGB 图像，</span><span class="original-text">, from an RGB image,</span><math alttext="\mathbf{I}" class="ltx_Math" display="inline" id="S4.SS1.p1.2.m2" intent=":literal"><semantics><mi>𝐈</mi><annotation encoding="application/x-tex">\mathbf{I}</annotation></semantics></math><span class="translated-text">。我们使用类似于 DGNLNet 中使用的 CNN 超参数结构</span><span class="original-text">. We use a CNN hyper-parameter structure like that used in DGNLNet</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib34" title="Single-image real-time rain removal based on depth-guided non-local features">6</a>]</cite><span class="translated-text">。标准 MDE 网络本质上是静态的，并且需要在每次推理时完全执行，从而导致大量的能源浪费和次优的推理延迟。我们将这种架构转变为一个可精简的网络，可以在运行时动态扩展其计算开销。</span><span class="original-text">. Standard MDE networks are inherently static and require full execution at every inference, leading to significant energy waste and suboptimal inference latency. We transform this architecture into a slimmable network that can dynamically scale its computational overhead at runtime.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p2">
+<p class="ltx_p" id="S4.SS1.p2.2"><span class="translated-text">让</span><span class="original-text">Let</span><math alttext="\boldsymbol{\rho}=[\rho_{1},\rho_{i},....,\rho_{n}]" class="ltx_math_unparsed" display="inline" id="S4.SS1.p2.1.m1" intent=":literal"><semantics><mrow><mi>𝝆</mi><mo>=</mo><mrow><mo stretchy="false">[</mo><msub><mi>ρ</mi><mn>1</mn></msub><mo>,</mo><msub><mi>ρ</mi><mi>i</mi></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo lspace="0em" rspace="0.167em">.</mo><mo>,</mo><msub><mi>ρ</mi><mi>n</mi></msub><mo stretchy="false">]</mo></mrow></mrow><annotation encoding="application/x-tex">\boldsymbol{\rho}=[\rho_{1},\rho_{i},....,\rho_{n}]</annotation></semantics></math><span class="translated-text">是一组可选的精简因子，其值均在 (0, 1] 范围内，表示每个隐藏层中活动通道的百分比。计算阶段的这个动态部分，</span><span class="original-text">be a set of selectable slimming factors whose values are each in the range (0, 1], representing the percent of active channels in each hidden layer. This dynamic portion of the computing stage,</span><math alttext="f" class="ltx_Math" display="inline" id="S4.SS1.p2.2.m2" intent=":literal"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math><span class="translated-text">，定义为：</span><span class="original-text">, is defined as:</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p3">
+<table class="ltx_equationgroup ltx_eqn_table" id="S4.E4">
+<tbody>
+<tr class="ltx_equation ltx_eqn_row ltx_align_baseline" id="S4.E4X">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_td ltx_align_right ltx_eqn_cell"><math alttext="\displaystyle\widehat{\mathbf{D}}=f_{\theta}(\mathbf{I},\rho)," class="ltx_Math" display="inline" id="S4.E4X.2.1.1.m1" intent=":literal"><semantics><mrow><mrow><mover accent="true"><mi>𝐃</mi><mo>^</mo></mover><mo>=</mo><mrow><msub><mi>f</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>𝐈</mi><mo>,</mo><mi>ρ</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\displaystyle\widehat{\mathbf{D}}=f_{\theta}(\mathbf{I},\rho),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equationgroup ltx_align_right">(4)</span></td>
+</tr>
+</tbody>
+</table>
+<p class="ltx_p" id="S4.SS1.p3.2"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\theta" class="ltx_Math" display="inline" id="S4.SS1.p3.1.m1" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math><span class="translated-text">表示优化后的模型参数。 CADENCE 独有的，当</span><span class="original-text">represents the optimized model parameters. Unique to CADENCE, when</span><math alttext="\rho=0" class="ltx_Math" display="inline" id="S4.SS1.p3.2.m2" intent=":literal"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\rho=0</annotation></semantics></math><span class="translated-text">，系统完全绕过图像采集和网络执行，而是提供零填充的深度图。该状态代表最大的节能模式、最快的推理时间和最小的功耗。可精简 MDE 网络通过最小化以下损失函数来训练：</span><span class="original-text">, the system entirely bypasses image acquisition and network execution, instead providing a zero-filled depth map. This state represents the maximum energy-saving mode, quickest inference time, and smallest power consumption. The slimmable MDE network is trained by minimizing the following loss function:</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p4">
+<table class="ltx_equationgroup ltx_eqn_table" id="S4.E5">
+<tbody>
+<tr class="ltx_equation ltx_eqn_row ltx_align_baseline" id="S4.E5X">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_td ltx_align_right ltx_eqn_cell"><math alttext="\displaystyle argmin_{\theta}\;\left\langle loss(\mathbf{D},\widehat{\mathbf{D}}^{(\rho)})\;\forall\;\rho\in\boldsymbol{\rho}\right\rangle," class="ltx_Math" display="inline" id="S4.E5X.2.1.1.m1" intent=":literal"><semantics><mrow><mrow><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>g</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><msub><mi>n</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo>⟨</mo><mrow><mrow><mi>l</mi><mo lspace="0em" rspace="0em">​</mo><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>𝐃</mi><mo>,</mo><msup><mover accent="true"><mi>𝐃</mi><mo>^</mo></mover><mrow><mo stretchy="false">(</mo><mi>ρ</mi><mo stretchy="false">)</mo></mrow></msup><mo stretchy="false">)</mo></mrow><mo lspace="0.447em" rspace="0em">​</mo><mrow><mo rspace="0.447em">∀</mo><mi>ρ</mi></mrow></mrow><mo>∈</mo><mi>𝝆</mi></mrow><mo>⟩</mo></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\displaystyle argmin_{\theta}\;\left\langle loss(\mathbf{D},\widehat{\mathbf{D}}^{(\rho)})\;\forall\;\rho\in\boldsymbol{\rho}\right\rangle,</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equationgroup ltx_align_right">(5)</span></td>
+</tr>
+</tbody>
+</table>
+<p class="ltx_p" id="S4.SS1.p4.9"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\widehat{\mathbf{D}}^{(\rho)}" class="ltx_Math" display="inline" id="S4.SS1.p4.1.m1" intent=":literal"><semantics><msup><mover accent="true"><mi>𝐃</mi><mo>^</mo></mover><mrow><mo stretchy="false">(</mo><mi>ρ</mi><mo stretchy="false">)</mo></mrow></msup><annotation encoding="application/x-tex">\widehat{\mathbf{D}}^{(\rho)}</annotation></semantics></math><span class="translated-text">是使用给定瘦身因子时的预测深度图</span><span class="original-text">is the predicted depth map when using the given slimming factor</span><math alttext="\rho" class="ltx_Math" display="inline" id="S4.SS1.p4.2.m2" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="\mathbf{D}" class="ltx_Math" display="inline" id="S4.SS1.p4.3.m3" intent=":literal"><semantics><mi>𝐃</mi><annotation encoding="application/x-tex">\mathbf{D}</annotation></semantics></math><span class="translated-text">是地面真实深度图。优化时存在独特的挑战</span><span class="original-text">is the ground truth depth map. There are unique challenges when optimizing</span><math alttext="\theta" class="ltx_Math" display="inline" id="S4.SS1.p4.4.m4" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math><span class="translated-text">既可以作为可精简的 DNN，也可以用于 MDE。在优化器的每次迭代中，现在必须计算梯度</span><span class="original-text">both as a slimmable DNN, and for MDE. At each iteration of the optimizer, the gradient must now be calculated</span><math alttext="n" class="ltx_Math" display="inline" id="S4.SS1.p4.5.m5" intent=":literal"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math><span class="translated-text">次数（对于每个值</span><span class="original-text">number of times (for each value of</span><math alttext="\rho" class="ltx_Math" display="inline" id="S4.SS1.p4.6.m6" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">）。这可能会导致梯度不稳定，这就是我们使用开关批量归一化的原因</span><span class="original-text">). This can lead to unstable gradients, which is why we use switch batch normalization</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib11" title="Slimmable neural networks">21</a>]</cite><span class="translated-text">分别计算每个值的网络统计信息</span><span class="original-text">to calculate the network statistics separately for each value of</span><math alttext="\rho" class="ltx_Math" display="inline" id="S4.SS1.p4.7.m7" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">。对于 MDE 的特定任务，我们进一步使用权重衰减和 L1 损失，这在训练静态 MDE 网络的文献中很常见</span><span class="original-text">. For the specific task of MDE, we further use weight decay and L1-loss, common in literature for training static MDE networks</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib34" title="Single-image real-time rain removal based on depth-guided non-local features">6</a>]</cite><span class="translated-text">。请注意，每个隐藏层中的最大通道数由恒定的缩放值控制，</span><span class="original-text">. Note that the maximum number of channels in each hidden layer is controlled by a constant scaling value,</span><math alttext="\alpha" class="ltx_Math" display="inline" id="S4.SS1.p4.8.m8" intent=":literal"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math><span class="translated-text">，如图所示</span><span class="original-text">, as shown in Fig.</span><a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ II Related Works ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">，这是运行前设置的静态值。在运行时，动态值</span><span class="original-text">, which is a static value set before runtime. At runtime, the dynamic value of</span><math alttext="\rho" class="ltx_Math" display="inline" id="S4.SS1.p4.9.m9" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">在推理过程中设置。</span><span class="original-text">is set during inference.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS2.4.1.1">IV-B</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS2.5.2"><span class="translated-text">导航和适应政策</span><span class="original-text">Navigation and Adaptation Policy</span></span>
+</h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.7"><span class="translated-text">我们提出了统一的导航和适应政策（</span><span class="original-text">We propose a unified navigation-and-adaptation policy (</span><a class="ltx_ref" href="#S4.E6" title="In IV-B Navigation and Adaptation Policy ‣ IV Methods ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">）共同预测运动动作</span><span class="original-text">) that jointly predicts the motion action</span><math alttext="a" class="ltx_Math" display="inline" id="S4.SS2.p1.1.m1" intent=":literal"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math><span class="translated-text">和瘦身因子</span><span class="original-text">and slimming factor</span><math alttext="\rho" class="ltx_Math" display="inline" id="S4.SS2.p1.2.m2" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">。这种联合表述解决了感知和控制之间固有的相互依赖关系：</span><span class="original-text">. This joint formulation addresses the inherent interdependence between perception and control:</span><math alttext="\rho" class="ltx_Math" display="inline" id="S4.SS2.p1.3.m3" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">改变的质量</span><span class="original-text">changes the quality of</span><math alttext="\widehat{\mathbf{D}}" class="ltx_Math" display="inline" id="S4.SS2.p1.4.m4" intent=":literal"><semantics><mover accent="true"><mi>𝐃</mi><mo>^</mo></mover><annotation encoding="application/x-tex">\widehat{\mathbf{D}}</annotation></semantics></math><span class="translated-text">这直接影响最佳行动的预测</span><span class="original-text">which directly impacts the prediction of optimal actions</span><math alttext="a" class="ltx_Math" display="inline" id="S4.SS2.p1.5.m5" intent=":literal"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math><span class="translated-text">。相反，</span><span class="original-text">. Conversely,</span><math alttext="a" class="ltx_Math" display="inline" id="S4.SS2.p1.6.m6" intent=":literal"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math><span class="translated-text">改变无人机的轨迹和未来的环境背景，这可能会改变</span><span class="original-text">alters the drone’s trajectory and future environmental context, which may alter optimal values of</span><math alttext="\rho" class="ltx_Math" display="inline" id="S4.SS2.p1.7.m7" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="S4.SS2.p2">
+<table class="ltx_equationgroup ltx_eqn_table" id="S4.E6">
+<tbody>
+<tr class="ltx_equation ltx_eqn_row ltx_align_baseline" id="S4.E6X">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_td ltx_align_right ltx_eqn_cell"><math alttext="\displaystyle=g_{\psi}(\widehat{\mathbf{D}},\textbf{p})," class="ltx_Math" display="inline" id="S4.E6X.2.1.1.m1" intent=":literal"><semantics><mrow><mrow><mi></mi><mo>=</mo><mrow><msub><mi>g</mi><mi>ψ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mover accent="true"><mi>𝐃</mi><mo>^</mo></mover><mo>,</mo><mtext class="ltx_mathvariant_bold">p</mtext><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\displaystyle=g_{\psi}(\widehat{\mathbf{D}},\textbf{p}),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equationgroup ltx_align_right">(6)</span></td>
+</tr>
+</tbody>
+</table>
+<p class="ltx_p" id="S4.SS2.p2.1"><span class="translated-text">哪里</span><span class="original-text">where</span><span class="ltx_text ltx_markedasmath ltx_font_bold" id="S4.SS2.p2.1.1">p</span><span class="translated-text">是无人机相对位姿。目标。</span><span class="original-text">is the relative pose of the drone w.r.t. the target.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p3">
+<p class="ltx_p" id="S4.SS2.p3.4"><span class="translated-text">图。</span><span class="original-text">Fig.</span><a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ II Related Works ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">说明了联合导航和适应策略的 DNN 结构，该结构明显小于主要的 MDE DNN。该架构具有处理输入深度图的 CNN 主干。其输出的潜在特征被展平并与源自机载 GPS 和 IMU 的无人机相对姿态连接起来。为了合并时间上下文，观测被构造为 FIFO 队列，存储</span><span class="original-text">illustrates the DNN structure for the joint navigation-and-adaptation policy, which is significantly smaller than the primary MDE DNN. The architecture features a CNN backbone that processes input depth maps. Its output latent features are flattened and concatenated with the drone’s relative pose, derived from onboard GPS and IMU. To incorporate temporal context, observations are structured as a FIFO queue storing the</span><math alttext="\tau" class="ltx_Math" display="inline" id="S4.SS2.p3.1.m1" intent=":literal"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math><span class="translated-text">最近的时间步。灵感来自</span><span class="original-text">most recent time steps. Inspired by</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib43" title="Human-level control through deep reinforcement learning">14</a>]</cite><span class="translated-text">，CNN主干接受</span><span class="original-text">, the CNN backbone accepts</span><math alttext="\tau" class="ltx_Math" display="inline" id="S4.SS2.p3.2.m2" intent=":literal"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math><span class="translated-text">输入通道，并且相对姿势类似地连接在这些通道上</span><span class="original-text">input channels, and the relative poses are similarly concatenated across these</span><math alttext="\tau" class="ltx_Math" display="inline" id="S4.SS2.p3.3.m3" intent=":literal"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math><span class="translated-text">步骤。对于轨迹的初始步骤，缺失的观测值用零填充（标准化期间保留的值）。与现有文献保持一致</span><span class="original-text">steps. For the initial steps of a trajectory, missing observations are zero-padded (a value reserved during normalization). Aligning with existing literature</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib43" title="Human-level control through deep reinforcement learning">14</a>]</cite><span class="translated-text">，我们凭经验发现</span><span class="original-text">, we empirically find</span><math alttext="\tau=3" class="ltx_Math" display="inline" id="S4.SS2.p3.4.m4" intent=":literal"><semantics><mrow><mi>τ</mi><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">\tau=3</annotation></semantics></math><span class="translated-text">具有高度鲁棒性。</span><span class="original-text">to be highly robust.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p4">
+<p class="ltx_p" id="S4.SS2.p4.2"><span class="translated-text">实现最佳减肥因子是一个棘手的问题，因为两者之间固有的相互依赖性导致了无限的状态空间。</span><span class="original-text">Realizing the optimal slimming factors is an intractable problem, due to the infinite state-space resulting from the inherent interdependence between</span><math alttext="a" class="ltx_Math" display="inline" id="S4.SS2.p4.1.m1" intent=":literal"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="\rho" class="ltx_Math" display="inline" id="S4.SS2.p4.2.m2" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">。因此，我们使用 DRL 来训练策略，特别是使用双深度 Q 网络 (DQN)</span><span class="original-text">. Thus we train the policy using DRL, specifically with a double Deep Q-Network (DQN)</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib28" title="Deep reinforcement learning with double q-learning">18</a>]</cite><span class="translated-text">。该 DNN 结构将连续输入映射到离散输出。我们通过替代模型的实证结果发现了一个强大的奖励函数：</span><span class="original-text">. This DNN structure maps a continuous input to discrete output. We shape a robust reward function as found through empirical findings with surrogate models:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E7">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="reward=\begin{cases}-10&amp;\text{time constraint}\\
+40&amp;\text{goal}\\
+-d-E(\rho)-1&amp;\text{otherwise}\end{cases}" class="ltx_Math" display="block" id="S4.E7.m1" intent=":literal"><semantics><mrow><mrow><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>w</mi><mo lspace="0em" rspace="0em">​</mo><mi>a</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>d</mi></mrow><mo>=</mo><mrow><mo>{</mo><mtable columnspacing="5pt" displaystyle="true" rowspacing="0pt"><mtr><mtd class="ltx_align_left" columnalign="left"><mrow><mo>−</mo><mn>10</mn></mrow></mtd><mtd class="ltx_align_left" columnalign="left"><mtext>time constraint</mtext></mtd></mtr><mtr><mtd class="ltx_align_left" columnalign="left"><mn>40</mn></mtd><mtd class="ltx_align_left" columnalign="left"><mtext>goal</mtext></mtd></mtr><mtr><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mo>−</mo><mi>d</mi></mrow><mo>−</mo><mrow><mi>E</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>ρ</mi><mo stretchy="false">)</mo></mrow></mrow><mo>−</mo><mn>1</mn></mrow></mtd><mtd class="ltx_align_left" columnalign="left"><mtext>otherwise</mtext></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">reward=\begin{cases}-10&amp;\text{time constraint}\\
+40&amp;\text{goal}\\
+-d-E(\rho)-1&amp;\text{otherwise}\end{cases}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(7)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S4.SS2.p4.4"><span class="translated-text">这将根据任务成功应用最终条件：如果情节违反时间限制，则进行惩罚；如果无人机到达目标，则进行奖励。对于非最终步骤，它施加惩罚以鼓励有效的进展：</span><span class="original-text">This applies terminal conditions based on task success: a penalty if the episode violates the time constraint, and a reward if the drone reaches the target. For non-terminal steps, it applies penalties to encourage efficient progress:</span><math alttext="d" class="ltx_Math" display="inline" id="S4.SS2.p4.3.m1" intent=":literal"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math><span class="translated-text">惩罚到目标的欧几里得距离；</span><span class="original-text">penalizes the Euclidean distance to the target;</span><math alttext="E(\rho)" class="ltx_Math" display="inline" id="S4.SS2.p4.4.m2" intent=":literal"><semantics><mrow><mi>E</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>ρ</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">E(\rho)</annotation></semantics></math><span class="translated-text">惩罚 NVIDIA Jetson Orin Nano（构成 CADENCE 的 HIL 组件）上可精简 MDE 网络消耗的能量；持续的惩罚会阻止长时间的发作。</span><span class="original-text">penalizes the energy expended by the slimmable MDE network on an NVIDIA Jetson Orin Nano (constituting the HIL component of CADENCE); and a constant penalty discourages long episodes.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p5">
+<p class="ltx_p" id="S4.SS2.p5.6"><span class="translated-text">DQN 的每个输出节点对应于成对的运动动作和瘦身因子。有</span><span class="original-text">Each output node of the DQN corresponds to a paired motion action and slimming factor. There are</span><math alttext="n*m" class="ltx_Math" display="inline" id="S4.SS2.p5.1.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo lspace="0.222em" rspace="0.222em">∗</mo><mi>m</mi></mrow><annotation encoding="application/x-tex">n*m</annotation></semantics></math><span class="translated-text">许多输出节点，其中</span><span class="original-text">many output nodes, where</span><math alttext="n" class="ltx_Math" display="inline" id="S4.SS2.p5.2.m2" intent=":literal"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math><span class="translated-text">对应于可选值的数量</span><span class="original-text">corresponds to the number of selectable values of</span><math alttext="\rho" class="ltx_Math" display="inline" id="S4.SS2.p5.3.m3" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="m" class="ltx_Math" display="inline" id="S4.SS2.p5.4.m4" intent=":literal"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math><span class="translated-text">对应于</span><span class="original-text">corresponds to that of</span><math alttext="a" class="ltx_Math" display="inline" id="S4.SS2.p5.5.m5" intent=":literal"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math><span class="translated-text">。 DQN 从任一方向和旋转中的几个离散幅度中进行选择。较大幅度的平移移动（以米为单位）将对应于步骤之间较长的间隔。无人机实时执行动作，直到完成动作的幅度或通过短程距离传感器检测到刚性表面，从而幅度决定可变的导航频率</span><span class="original-text">. The DQN selects from several discrete magnitudes in either direction, and in rotations. Translational moves with larger magnitudes, measured in meters, will correspond to longer intervals in-between steps. The drone executes the action in real-time until either the magnitude of the action is fulfilled or a rigid surface is detected via a short-range distance sensor, thus the magnitude determines a variable navigation frequency</span><math alttext="\nu" class="ltx_Math" display="inline" id="S4.SS2.p5.6.m6" intent=":literal"><semantics><mi>ν</mi><annotation encoding="application/x-tex">\nu</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="S4.SS2.p6">
+<p class="ltx_p" id="S4.SS2.p6.2"><span class="translated-text">我们使用课程学习计划来逐步增加用于训练 DQN 的片段的难度。独特的情节由其起始位置和目标位置定义。每次课程学习计划“升级”时，都会增加采样独特情节的最大难度。我们在每 10,000 个采样集后升级，并设置一个</span><span class="original-text">We use a curriculum learning schedule to incrementally increase the difficulty of episodes used to train the DQN. A unique episode is defined by its starting and target positions. Each time the curriculum learning schedule “levels up”, it increases the maximum difficulty that unique episodes can be sampled from. We level up after every 10,000 sampled episodes, and set a</span><math alttext="70\%" class="ltx_Math" display="inline" id="S4.SS2.p6.1.m1" intent=":literal"><semantics><mrow><mn>70</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">70\%</annotation></semantics></math><span class="translated-text">有机会从最高难度中采样一集</span><span class="original-text">chance to sample an episode from the highest difficulty and a</span><math alttext="30\%" class="ltx_Math" display="inline" id="S4.SS2.p6.2.m2" intent=":literal"><semantics><mrow><mn>30</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">30\%</annotation></semantics></math><span class="translated-text">有机会从任何较低的难度中进行采样。我们从较低的难度中进行采样，以避免灾难性遗忘，这是 DRL 中遇到的一种现象，如果旧数据不再位于重放缓冲区中，策略将忘记以前学到的行为。达到最高级别后，所有难度级别均使用均匀分布进行采样。学习循环在两百万集后终止。每 10,000 集，就会根据静态验证集对模型进行评估。训练后，对应于最高验证准确度的 DQN 权重用于对保留测试集进行最终评估。</span><span class="original-text">chance to sample from any lower difficulty. We sample from lower difficulties to avoid catastrophic forgetting, which is a phenomenon encountered in DRL where the policy will forget previously learned behavior if old data are no longer in the replay buffer. After the highest level is reached, all difficulty levels are sampled from using a uniform distribution. The learning loop terminates after two million episodes. Every 10,000 episodes, the model is evaluated against a static validation set. After training, the DQN weights corresponding to the highest validation accuracy are used for final evaluations on the hold-out test set.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p7">
+<p class="ltx_p" id="S4.SS2.p7.1"><span class="translated-text">我们使用 A* 最短路径算法</span><span class="original-text">We utilize an A* shortest path algorithm</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib48" title="A formal basis for the heuristic determination of minimum cost paths">4</a>]</cite><span class="translated-text">生成一组真实长度最优路径。路径按难度排序，难度由达到目标所需的操作数量决定。这些仅用于：(a) 确定随机提出的起始位置和目标位置之间是否存在可行路径，(b) 评估路径的难度，以及 (c) 生成用于验证和测试的静态保留集。</span><span class="original-text">to generate a set of ground truth length-optimal paths. The paths are sorted by difficulty, as determined by the number of actions required to reach the target. These are only used to: (a) determine if there is a viable path between randomly proposed start and target locations, (b) evaluate the difficulty of a path, and (c) generate static hold-out sets used for validation and testing.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span class="ltx_text ltx_font_smallcaps" id="S5.1.1"><span class="translated-text">结果</span><span class="original-text">Results</span></span>
+</h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">我们使用我们发布的存储库来训练和评估 CADENCE，该存储库将无人机模拟器与机器学习、基准测试、数据收集、处理和可视化工具集成在一起。评估重点是：(1) 量化嵌入式物联网硬件的效率增益，以及 (2) 评估自适应感知对导航可靠性的影响。</span><span class="original-text">We train and evaluate CADENCE using our released repository that integrates a drone simulator with tools for machine learning, benchmarking, data collection, processing, and visualization. Evaluations focus on: (1) quantifying the efficiency gains on embedded IoT hardware, and (2) assessing the impact of adaptive perception on navigation reliability.</span></p>
+</div>
+<section class="ltx_subsection" id="S5.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS1.4.1.1">V-A</span> </span><span class="ltx_text ltx_font_italic" id="S5.SS1.5.2"><span class="translated-text">试验台</span><span class="original-text">Testbed</span></span>
+</h3>
+<div class="ltx_para" id="S5.SS1.p1">
+<p class="ltx_p" id="S5.SS1.p1.1"><span class="translated-text">为了弥合模拟和实际部署之间的差距，我们利用 HIL 测试台。使用Microsoft AirSim模拟导航环境</span><span class="original-text">To bridge the gap between simulation and real-world deployment, we utilize a HIL testbed. The navigation environment is simulated using Microsoft AirSim</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib12" title="Airsim: high-fidelity visual and physical simulation for autonomous vehicles">17</a>]</cite><span class="translated-text">它提供高保真物理和逼真的 RGB 深度传感器数据。 CADENCE 在 NVIDIA Jetson Orin Nano 上执行，用于评估计算效率并定义方程中的能量函数</span><span class="original-text">which provides high-fidelity physics and photo-realistic RGB-Depth sensor data. CADENCE is executed on an NVIDIA Jetson Orin Nano to evaluate computing efficiency and define the energy function in equation</span><a class="ltx_ref" href="#S4.E7" title="In IV-B Navigation and Adaptation Policy ‣ IV Methods ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">7</span></a><span class="translated-text">。我们使用“AirSimNH”地图进行实验，该地图模拟有房屋、汽车和树木的城市环境。我们使用地图的右下三个象限进行训练，使用左上角的三个象限进行验证和测试。</span><span class="original-text">. We conduct experiments using the “AirSimNH” map, which simulates an urban environment with houses, cars, and trees. We use the bottom-right three quadrants of the map for training and the top-left one for validation and testing.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS1.p2">
+<p class="ltx_p" id="S5.SS1.p2.1"><span class="translated-text">由于需要大量的剧集、模拟器接口延迟以及 DRL 对随机种子的敏感性（需要多次重启），训练 DQN 进行收敛非常耗时。因此，在奖励塑造过程中需要代理模型（不会在完整数据集上训练完成），并且详细的迭代和比较过程（分析各种参数和方法的细粒度效果）是不可行的。为了加速训练过程，我们将工作负载分布在多个服务器上，并完全使用自定义数据工具（在我们发布的存储库中提供）来绕过模拟器延迟，该工具根据离散地图位置缓存传感器观测结果。</span><span class="original-text">Training a DQN to convergence is highly time-intensive due to the vast number of required episodes, simulator interfacing latency, and DRL’s sensitivity to random seeds (which necessitates multiple restarts). Consequently, surrogate models (which do not train to completion on a full dataset) are needed during reward shaping, and elaborate iterative and comparative processes (which analyze fine-grained effects of various parameters and methods) are not feasible. To accelerate the training process, we distribute the workload across multiple servers and bypass simulator latency entirely using a custom data tool (provided in our released repository) that caches sensor observations based on discretized map locations.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S5.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS2.4.1.1">V-B</span> </span><span class="ltx_text ltx_font_italic" id="S5.SS2.5.2"><span class="translated-text">标杆管理</span><span class="original-text">Benchmarking</span></span>
+</h3>
+<figure class="ltx_table" id="S5.T1">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE I: </span></figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S5.T1.1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S5.T1.1.1.1">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S5.T1.1.1.1.1"><math alttext="\alpha" class="ltx_Math" display="inline" id="S5.T1.1.1.1.1.m1" intent=":literal"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S5.T1.1.1.1.2">power [mW]</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S5.T1.1.1.1.3">latency [ms]</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S5.T1.1.1.1.4">energy [mJ]</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S5.T1.1.1.2.1">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t" id="S5.T1.1.1.2.1.1">256</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t" id="S5.T1.1.1.2.1.2">17740</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.1.1.2.1.3">117.1</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T1.1.1.2.1.4">2078.1</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.1.1.3.2">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S5.T1.1.1.3.2.1">128</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S5.T1.1.1.3.2.2">18351</th>
+<td class="ltx_td ltx_align_center" id="S5.T1.1.1.3.2.3">30.0</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.1.1.3.2.4">550.0</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.1.1.4.3">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S5.T1.1.1.4.3.1">64</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S5.T1.1.1.4.3.2">17808</th>
+<td class="ltx_td ltx_align_center" id="S5.T1.1.1.4.3.3">11.0</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.1.1.4.3.4">196.4</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.1.1.5.4">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S5.T1.1.1.5.4.1">32</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S5.T1.1.1.5.4.2">12961</th>
+<td class="ltx_td ltx_align_center" id="S5.T1.1.1.5.4.3">6.5</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.1.1.5.4.4">83.9</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.1.1.6.5">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S5.T1.1.1.6.5.1">16</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S5.T1.1.1.6.5.2">7375</th>
+<td class="ltx_td ltx_align_center" id="S5.T1.1.1.6.5.3">7.0</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.1.1.6.5.4">51.6</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.1.1.7.6">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S5.T1.1.1.7.6.1">8</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S5.T1.1.1.7.6.2">6123</th>
+<td class="ltx_td ltx_align_center" id="S5.T1.1.1.7.6.3">6.7</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.1.1.7.6.4">41.1</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.1.1.8.7">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S5.T1.1.1.8.7.1">4</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S5.T1.1.1.8.7.2">5224</th>
+<td class="ltx_td ltx_align_center" id="S5.T1.1.1.8.7.3">6.5</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.1.1.8.7.4">34.1</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.1.1.9.8">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S5.T1.1.1.9.8.1">2</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S5.T1.1.1.9.8.2">4968</th>
+<td class="ltx_td ltx_align_center" id="S5.T1.1.1.9.8.3">6.0</td>
+<td class="ltx_td ltx_align_center" id="S5.T1.1.1.9.8.4">29.8</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.1.1.10.9">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_bb" id="S5.T1.1.1.10.9.1">1</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_bb" id="S5.T1.1.1.10.9.2">4788</th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T1.1.1.10.9.3">6.0</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T1.1.1.10.9.4">28.7</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S5.SS2.p1">
+<p class="ltx_p" id="S5.SS2.p1.5"><span class="translated-text">我们框架的主要目标是减少 MDE 带来的计算瓶颈。表</span><span class="original-text">The primary objective of our framework is to reduce the computational bottleneck imposed by MDE. Table</span><a class="ltx_ref" href="#S5.T1" title="TABLE I ‣ V-B Benchmarking ‣ V Results ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">I</span></a><span class="translated-text">总结了 MDE 网络在各种规模下的性能，定义为</span><span class="original-text">summarizes the performance of the MDE network across its various sizes as defined by</span><math alttext="\alpha" class="ltx_Math" display="inline" id="S5.SS2.p1.1.m1" intent=":literal"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math><span class="translated-text">（见图。</span><span class="original-text">(see Fig.</span><a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ II Related Works ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">），固定值为</span><span class="original-text">) with a fixed value of</span><math alttext="\rho=1" class="ltx_Math" display="inline" id="S5.SS2.p1.2.m2" intent=":literal"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\rho=1</annotation></semantics></math><span class="translated-text">。使用本机 NVIDIA API 直接查询功耗，并在整个板上进行测量，包括静态内存存储和其他辅助计算成本的影响。基准测试是通过迭代处理一组 RGB 图像并测量由此产生的推理延迟和功耗来进行的。此过程会重复多次，并且顺序是随机的，以减轻长期运行过程的影响。总推理和功效都是所有前向传递的平均值。能量是通过将功率乘以延迟来计算的。在</span><span class="original-text">. The power consumption is directly queried using the native NVIDIA API and is measured across the entire board, including effects from static memory storage and other auxiliary computational costs. Benchmarking is conducted by iteratively processing a set of RGB images and measuring the resulting inference latency and power consumption. This process is repeated multiple times, and the order is randomized to mitigate effects of running the processes over a long period. Both the total inference and power is averaged over all forward passes. Energy is calculated by integrating power multiplied by latency. At</span><math alttext="\alpha" class="ltx_Math" display="inline" id="S5.SS2.p1.3.m3" intent=":literal"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math><span class="translated-text">值在 64 到 256 之间，表示正在使用最大功率；然而，推理延迟发生了相当大的变化。或者，在</span><span class="original-text">values between 64 to 256, the maximum power is being used; however, there are quite significant changes in inference latency. Alternatively, at</span><math alttext="\alpha" class="ltx_Math" display="inline" id="S5.SS2.p1.4.m4" intent=":literal"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math><span class="translated-text">值在 4 到 32 之间时，功耗的变化比推理延迟的变化更显着。在</span><span class="original-text">values between 4 to 32, there are more significant changes in power consumption rather than in inference latency. At</span><math alttext="\alpha" class="ltx_Math" display="inline" id="S5.SS2.p1.5.m5" intent=":literal"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math><span class="translated-text">值低于 4，功率和延迟都有标称变化。这会显示一组有趣的配置文件，具体取决于网络大小。</span><span class="original-text">values below 4, there are nominal changes in both power and latency. This displays an interesting set of profiles that depend on the network size.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS2.p2">
+<p class="ltx_p" id="S5.SS2.p2.2"><span class="translated-text">为了提供上下文，以最大功率执行 MDE 网络，</span><span class="original-text">To provide context, executing the MDE network at maximum power,</span><math alttext="\alpha&gt;32" class="ltx_Math" display="inline" id="S5.SS2.p2.1.m1" intent=":literal"><semantics><mrow><mi>α</mi><mo>&gt;</mo><mn>32</mn></mrow><annotation encoding="application/x-tex">\alpha&gt;32</annotation></semantics></math><span class="translated-text">，消耗当今市场上商用无人机总能量的近三分之一。这种开销显着减少了飞行时间并增加了任务失败的风险。然而，缩小规模</span><span class="original-text">, consumes nearly one-third of the total energy capacity onboard a commercially available drone on today’s market. This overhead significantly reduces flight duration and increases the risk of mission failure. However, scaling down the</span><math alttext="\alpha" class="ltx_Math" display="inline" id="S5.SS2.p2.2.m2" intent=":literal"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math><span class="translated-text">值减少了推理延迟，同时降低了能量消耗并缩短了反应时间。此外，CADENCE 的可变导航频率（第</span><span class="original-text">value reduces inference latency, which simultaneously lowers energy expenditure and improves reaction time. Furthermore, CADENCE’s variable navigation frequency (Section</span><a class="ltx_ref" href="#S4.SS2" title="IV-B Navigation and Adaptation Policy ‣ IV Methods ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">IV-B</span></span></a><span class="translated-text">）最大限度地减少所需的 MDE 执行总数，进一步保护能量储备。</span><span class="original-text">) minimizes the total number of MDE executions required, further preserving the energy reservoir.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S5.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS3.4.1.1"><span class="translated-text">电压-C</span><span class="original-text">V-C</span></span> </span><span class="ltx_text ltx_font_italic" id="S5.SS3.5.2"><span class="translated-text">可精简的 MDE 网络</span><span class="original-text">Slimmable MDE Network</span></span>
+</h3>
+<div class="ltx_para" id="S5.SS3.p1">
+<p class="ltx_p" id="S5.SS3.p1.1"><span class="translated-text">我们比较了可精简 MDE 网络的几种配置，以分析深度精度、能耗和导航策略之间的权衡。</span><span class="original-text">We compare several configurations of the slimmable MDE network to analyze the trade-offs between depth accuracy, energy consumption, and the navigation policy.</span></p>
+</div>
+<figure class="ltx_figure" id="S5.F3">
+<p class="ltx_p ltx_align_center" id="S5.F3.1"><span class="ltx_text" id="S5.F3.1.1"><img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="160" id="S5.F3.1.1.g1" src="https://arxiv.org/html/2604.07286v1/figures/depth_example.png" width="476"/></span></p>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Example RGB image, ground truth depth map, and predicted depth maps for both static and slimmable networks with varying network sizes.</figcaption>
+</figure>
+<div class="ltx_para" id="S5.SS3.p2">
+<p class="ltx_p" id="S5.SS3.p2.5"><span class="translated-text">我们对数据集进行采样</span><span class="original-text">We sample a dataset of</span><math alttext="20,000" class="ltx_Math" display="inline" id="S5.SS3.p2.1.m1" intent=":literal"><semantics><mrow><mn>20</mn><mo>,</mo><mn>000</mn></mrow><annotation encoding="application/x-tex">20,000</annotation></semantics></math><span class="translated-text">RGB-深度对，并将它们分成</span><span class="original-text">RGB-Depth pairs, and split them into</span><math alttext="40\%" class="ltx_Math" display="inline" id="S5.SS3.p2.2.m2" intent=":literal"><semantics><mrow><mn>40</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">40\%</annotation></semantics></math><span class="translated-text">培训，</span><span class="original-text">training,</span><math alttext="10\%" class="ltx_Math" display="inline" id="S5.SS3.p2.3.m3" intent=":literal"><semantics><mrow><mn>10</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">10\%</annotation></semantics></math><span class="translated-text">验证，以及</span><span class="original-text">validation, and</span><math alttext="50\%" class="ltx_Math" display="inline" id="S5.SS3.p2.4.m4" intent=":literal"><semantics><mrow><mn>50</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">50\%</annotation></semantics></math><span class="translated-text">测试。图。</span><span class="original-text">testing. Fig.</span><a class="ltx_ref" href="#S5.F3" title="Figure 3 ‣ V-C Slimmable MDE Network ‣ V Results ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">比较 RGB 图像、地面真实深度以及从静态或可精简网络估计的深度。网络大小通过乘以计算</span><span class="original-text">compares an RGB image, the ground truth depth, and depths estimated from either a static or slimmable network. Network size is calculated by multiplying</span><math alttext="\alpha*\rho" class="ltx_Math" display="inline" id="S5.SS3.p2.5.m5" intent=":literal"><semantics><mrow><mi>α</mi><mo lspace="0.222em" rspace="0.222em">∗</mo><mi>ρ</mi></mrow><annotation encoding="application/x-tex">\alpha*\rho</annotation></semantics></math><span class="translated-text">。网络规模较小时，物体边缘的深度预测更加模糊——这说明了较高保真度 MDE 的优势。</span><span class="original-text">. Depth predictions are more blurred around the edges of objects at lower network sizes – illustrating advantages of higher fidelity MDE.</span></p>
+</div>
+<figure class="ltx_figure" id="S5.F4">
+<p class="ltx_p ltx_align_center" id="S5.F4.1"><span class="ltx_text" id="S5.F4.1.1"><img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="132" id="S5.F4.1.1.g1" src="https://arxiv.org/html/2604.07286v1/figures/r2_plot2.png" width="214"/></span></p>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Test <math alttext="R^{2}" class="ltx_Math" display="inline" id="S5.F4.3.m1" intent=":literal"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^{2}</annotation></semantics></math>-scores of various trained MDE network configurations.</figcaption>
+</figure>
+<div class="ltx_para" id="S5.SS3.p3">
+<p class="ltx_p" id="S5.SS3.p3.6"><span class="translated-text">结果表明预期深度值和预测深度值之间存在很强的线性相关性，实现</span><span class="original-text">Results indicate a strong linear correlation between expected and predicted depth values, achieving</span><math alttext="R^{2}" class="ltx_Math" display="inline" id="S5.SS3.p3.1.m1" intent=":literal"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^{2}</annotation></semantics></math><span class="translated-text">- 分数高达 0.9033。在大深度量级上偶尔会出现高误差，主要是沿着物体边缘和树叶等稀疏结构内，导致图 1 中所示的模糊伪影。</span><span class="original-text">-scores up to 0.9033. High errors occasionally occur at large depth magnitudes, primarily along object edges and within sparse structures like leaves, causing the blurring artifacts shown in Fig.</span><a class="ltx_ref" href="#S5.F3" title="Figure 3 ‣ V-C Slimmable MDE Network ‣ V Results ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">。图。</span><span class="original-text">. Fig.</span><a class="ltx_ref" href="#S5.F4" title="Figure 4 ‣ V-C Slimmable MDE Network ‣ V Results ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">比较</span><span class="original-text">compares the</span><math alttext="R^{2}" class="ltx_Math" display="inline" id="S5.SS3.p3.2.m2" intent=":literal"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^{2}</annotation></semantics></math><span class="translated-text">-跨两种配置的静态和可精简 MDE 网络的分数（</span><span class="original-text">-scores of static and slimmable MDE networks across two configurations (</span><math alttext="\alpha=256" class="ltx_Math" display="inline" id="S5.SS3.p3.3.m3" intent=":literal"><semantics><mrow><mi>α</mi><mo>=</mo><mn>256</mn></mrow><annotation encoding="application/x-tex">\alpha=256</annotation></semantics></math><span class="translated-text">）。配置 I 采用四种最大尺寸并具有瘦身系数</span><span class="original-text">). Configuration I utilizes the four largest sizes with slimming factors</span><math alttext="\boldsymbol{\rho}=[1,1/2,1/4,1/8]" class="ltx_Math" display="inline" id="S5.SS3.p3.4.m4" intent=":literal"><semantics><mrow><mi>𝝆</mi><mo>=</mo><mrow><mo stretchy="false">[</mo><mn>1</mn><mo>,</mo><mrow><mn>1</mn><mo>/</mo><mn>2</mn></mrow><mo>,</mo><mrow><mn>1</mn><mo>/</mo><mn>4</mn></mrow><mo>,</mo><mrow><mn>1</mn><mo>/</mo><mn>8</mn></mrow><mo stretchy="false">]</mo></mrow></mrow><annotation encoding="application/x-tex">\boldsymbol{\rho}=[1,1/2,1/4,1/8]</annotation></semantics></math><span class="translated-text">，而配置 II 采用积极的减少策略，使用</span><span class="original-text">, while Configuration II adopts an aggressive reduction strategy using</span><math alttext="\boldsymbol{\rho}=[1,1/32,1/64]" class="ltx_Math" display="inline" id="S5.SS3.p3.5.m5" intent=":literal"><semantics><mrow><mi>𝝆</mi><mo>=</mo><mrow><mo stretchy="false">[</mo><mn>1</mn><mo>,</mo><mrow><mn>1</mn><mo>/</mo><mn>32</mn></mrow><mo>,</mo><mrow><mn>1</mn><mo>/</mo><mn>64</mn></mrow><mo stretchy="false">]</mo></mrow></mrow><annotation encoding="application/x-tex">\boldsymbol{\rho}=[1,1/32,1/64]</annotation></semantics></math><span class="translated-text">。与调查结果一致</span><span class="original-text">. Consistent with findings in</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib11" title="Slimmable neural networks">21</a>]</cite><span class="translated-text">，可精简网络实现更高</span><span class="original-text">, the slimmable networks achieve higher</span><math alttext="R^{2}" class="ltx_Math" display="inline" id="S5.SS3.p3.6.m6" intent=":literal"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^{2}</annotation></semantics></math><span class="translated-text">- 其最大尺寸的分数高于静态基线。扩大精简因子的范围（如配置 II 中所示）以及精简因子的数量（为简洁起见未显示）会降低相对于静态网络的整体精度。</span><span class="original-text">-scores than static baselines at their largest sizes. Expanding the range of slimming factors (as seen in Configuration II), along with the number of slimming factors (not shown for brevity), degrades overall accuracy relative to the static networks.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S5.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS4.4.1.1"><span class="translated-text">维-D</span><span class="original-text">V-D</span></span> </span><span class="ltx_text ltx_font_italic" id="S5.SS4.5.2"><span class="translated-text">导航和适应</span><span class="original-text">Navigation and Adaptation</span></span>
+</h3>
+<figure class="ltx_figure" id="S5.F5">
+<p class="ltx_p ltx_align_center" id="S5.F5.1"><span class="ltx_text" id="S5.F5.1.1"><img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="114" id="S5.F5.1.1.g1" src="https://arxiv.org/html/2604.07286v1/figures/drl_learning_curve.png" width="238"/></span></p>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Learning curve from training the navigation-and-adaptation policy.</figcaption>
+</figure>
+<div class="ltx_para" id="S5.SS4.p1">
+<p class="ltx_p" id="S5.SS4.p1.1"><span class="translated-text">图。</span><span class="original-text">Fig.</span><a class="ltx_ref" href="#S5.F5" title="Figure 5 ‣ V-D Navigation and Adaptation ‣ V Results ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">显示了使用 DRL 训练导航和适应策略后的学习曲线。当验证精度开始与训练数据过度拟合时，验证精度会收敛。通过选择与最高验证精度相对应的模型状态来应用早期停止。</span><span class="original-text">shows a learning curve after training the navigation-and-adaptation policy with DRL. The validation accuracy converges as it begins to overfit to the training data. Early stopping is applied by selecting the model state corresponding to the highest validation accuracy.</span></p>
+</div>
+<figure class="ltx_figure" id="S5.F6">
+<p class="ltx_p ltx_align_center" id="S5.F6.1"><span class="ltx_text" id="S5.F6.1.1"><img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="178" id="S5.F6.1.1.g1" src="https://arxiv.org/html/2604.07286v1/figures/energy_accuracy2.png" width="238"/></span></p>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>Final evaluations on the static holdout test set of ground truth A* paths, for each trained policy. The x-axis shows the energy expended while computing the MDE network over all paths. The hollow blue markers correspond to using a SoTA static MDE network with size <math alttext="\alpha" class="ltx_Math" display="inline" id="S5.F6.6.m1" intent=":literal"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>, and a navigation DQN policy that predicts <math alttext="a" class="ltx_Math" display="inline" id="S5.F6.7.m2" intent=":literal"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>. The solid orange markers correspond to using a slimmable MDE network with a navigation-and-adaptation DQN that predicts both <math alttext="a" class="ltx_Math" display="inline" id="S5.F6.8.m3" intent=":literal"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math> and <math alttext="\rho" class="ltx_Math" display="inline" id="S5.F6.9.m4" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>. The green dashed line corresponds to a navigation DQN that bypasses MDE and instead directly uses the AirSim ground truth depth maps.</figcaption>
+</figure>
+<div class="ltx_para" id="S5.SS4.p2">
+<p class="ltx_p" id="S5.SS4.p2.1"><span class="translated-text">图。</span><span class="original-text">Fig.</span><a class="ltx_ref" href="#S5.F6" title="Figure 6 ‣ V-D Navigation and Adaptation ‣ V Results ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">强调了 CADENCE 的一个关键成果，提出了优化问题的两种解决方案（</span><span class="original-text">highlights a key outcome of CADENCE, presenting two solutions to the optimization problem in (</span><a class="ltx_ref" href="#S3.E3" title="In III Problem Formulation ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">）。仅使用静态 SoTA 模型优先考虑导航精度需要选择最大的变体（</span><span class="original-text">). Prioritizing navigation accuracy using solely static SoTA models necessitates selecting the largest variant (</span><math alttext="\alpha=256" class="ltx_Math" display="inline" id="S5.SS4.p2.1.m1" intent=":literal"><semantics><mrow><mi>α</mi><mo>=</mo><mn>256</mn></mrow><annotation encoding="application/x-tex">\alpha=256</annotation></semantics></math><span class="translated-text">），这会产生大量的能源成本。两种动态自适应配置在能源效率和导航精度方面都优于最大的静态网络。此外，准确度会下降。较小的静态网络需要复杂性适应。值得注意的是，配置 I 的精度甚至比地面真实深度数据还要高。我们假设较小网络输出中固有的部分模糊的作用与高斯噪声注入类似，从而增强了模型的鲁棒性和泛化性。因此，模糊带来了一种权衡：当需要紧密边缘导航时，它有拟合不足的风险，但可以减轻对新数据的过度拟合。通过提供多种网络大小，CADENCE 使适应逻辑能够根据直接环境上下文动态平衡这些影响。</span><span class="original-text">), which incurs substantial energy costs. Both dynamic adaptation configurations outperform the largest static network in terms of energy efficiency and navigation accuracy. Furthermore, the accuracy decline w.r.t. smaller static networks warrants the need for complexity adaptation. Notably, Configuration I achieves higher accuracy than even the ground truth depth data. We posit that the partial blurring inherent in smaller network outputs acts similarly to Gaussian noise injection, enhancing model robustness and generalization. Consequently, blurring presents a trade-off: it risks underfitting when tight edge navigation is required, but mitigates overfitting on novel data. By providing multiple network sizes, CADENCE empowers the adaptation logic to dynamically balance these effects based on the immediate environmental context.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS4.p3">
+<p class="ltx_p" id="S5.SS4.p3.11"><span class="translated-text">为了验证这一理论，我们分析了不同静态 DQN 策略成功导航的不同路径。让</span><span class="original-text">To validate this theory, we analyze the distinct paths successfully navigated by different static DQN policies. Let</span><math alttext="P" class="ltx_Math" display="inline" id="S5.SS4.p3.1.m1" intent=":literal"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math><span class="translated-text">是完整的测试路径集，并且</span><span class="original-text">be the complete set of test paths, and</span><math alttext="A_{i}\subset P" class="ltx_Math" display="inline" id="S5.SS4.p3.2.m2" intent=":literal"><semantics><mrow><msub><mi>A</mi><mi>i</mi></msub><mo>⊂</mo><mi>P</mi></mrow><annotation encoding="application/x-tex">A_{i}\subset P</annotation></semantics></math><span class="translated-text">是成功完成的路径的子集</span><span class="original-text">be the subset of paths successfully completed by the</span><math alttext="i" class="ltx_Math" display="inline" id="S5.SS4.p3.3.m3" intent=":literal"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math><span class="translated-text">-th 模型。我们定义</span><span class="original-text">-th model. We define</span><math alttext="B=\bigcup_{i=1}^{n}A_{i}" class="ltx_Math" display="inline" id="S5.SS4.p3.4.m4" intent=":literal"><semantics><mrow><mi>B</mi><mo rspace="0.111em">=</mo><mrow><msubsup><mo>⋃</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></msubsup><msub><mi>A</mi><mi>i</mi></msub></mrow></mrow><annotation encoding="application/x-tex">B=\bigcup_{i=1}^{n}A_{i}</annotation></semantics></math><span class="translated-text">作为独特成功路径的结合</span><span class="original-text">as the union of unique successful paths across</span><math alttext="n" class="ltx_Math" display="inline" id="S5.SS4.p3.5.m5" intent=":literal"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math><span class="translated-text">独立的政策。我们的目标是饱和</span><span class="original-text">independent policies. Our goal is to saturate</span><math alttext="B" class="ltx_Math" display="inline" id="S5.SS4.p3.6.m6" intent=":literal"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math><span class="translated-text">使用最少数量的策略（即，增加</span><span class="original-text">utilizing the fewest number of policies (i.e., where increasing</span><math alttext="n" class="ltx_Math" display="inline" id="S5.SS4.p3.7.m7" intent=":literal"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math><span class="translated-text">只产生边际收益）。按网络规模降序迭代添加模型可达到饱和</span><span class="original-text">yields only marginal gains). Iteratively adding models in descending order of network size achieves saturation at</span><math alttext="\alpha=32" class="ltx_Math" display="inline" id="S5.SS4.p3.8.m8" intent=":literal"><semantics><mrow><mi>α</mi><mo>=</mo><mn>32</mn></mrow><annotation encoding="application/x-tex">\alpha=32</annotation></semantics></math><span class="translated-text">，要求政策</span><span class="original-text">, requiring policies with</span><math alttext="\alpha\in\{256,128,64,32\}" class="ltx_Math" display="inline" id="S5.SS4.p3.9.m9" intent=":literal"><semantics><mrow><mi>α</mi><mo>∈</mo><mrow><mo stretchy="false">{</mo><mn>256</mn><mo>,</mo><mn>128</mn><mo>,</mo><mn>64</mn><mo>,</mo><mn>32</mn><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">\alpha\in\{256,128,64,32\}</annotation></semantics></math><span class="translated-text">。这是配置 I（见图 1）。</span><span class="original-text">. This is Configuration I (see Fig.</span><a class="ltx_ref" href="#S5.F6" title="Figure 6 ‣ V-D Navigation and Adaptation ‣ V Results ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">）。贪婪方法，迭代添加扩展最显着的模型</span><span class="original-text">). A greedy approach, iteratively adding the model that most significantly expands</span><math alttext="B" class="ltx_Math" display="inline" id="S5.SS4.p3.10.m10" intent=":literal"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math><span class="translated-text">，无论网络规模如何，仅用三个策略即可饱和：</span><span class="original-text">, regardless of network size, saturates with just three policies:</span><math alttext="\alpha\in\{256,8,4\}" class="ltx_Math" display="inline" id="S5.SS4.p3.11.m11" intent=":literal"><semantics><mrow><mi>α</mi><mo>∈</mo><mrow><mo stretchy="false">{</mo><mn>256</mn><mo>,</mo><mn>8</mn><mo>,</mo><mn>4</mn><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">\alpha\in\{256,8,4\}</annotation></semantics></math><span class="translated-text">、镜像配置二．这些饱和动态证明，虽然两种策略可能表现出相似的整体精度，但它们的路径求解行为却截然不同。我们假设这种行为差异源于大小相关的模糊，适应策略在不同的场景中控制这种模糊。</span><span class="original-text">, mirroring Configuration II. These saturation dynamics prove that while two policies may exhibit similar overall accuracies, their path-solving behaviors differ drastically. We posit that this behavioral variance stems from size-dependent blurring, which the adaptation policy controls across diverse scenarios.</span></p>
+</div>
+<figure class="ltx_figure" id="S5.F7">
+<p class="ltx_p ltx_align_center" id="S5.F7.1"><span class="ltx_text" id="S5.F7.1.1"><img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="121" id="S5.F7.1.1.g1" src="https://arxiv.org/html/2604.07286v1/figures/egrid.png" width="238"/></span></p>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 7: </span>Average slimming factor when computing the slimmable MDE network at each of the given (x, y) locations. Compared is the drone moving in an arbitrary direction versus moving only to the left.</figcaption>
+</figure>
+<div class="ltx_para" id="S5.SS4.p4">
+<p class="ltx_p" id="S5.SS4.p4.4"><span class="translated-text">DNN 本质上缺乏对为何做出预测的理解。在部署自动驾驶汽车使用的控制算法时，这会导致安全性和可靠性问题。我们检查相关性，这可能有助于阐明为什么训练有素的导航和适应策略（配置 I）预测特定的值</span><span class="original-text">DNNs inherently have a lack of understanding into why predictions are made. This leads to safety and reliability issues when deploying to control algorithms used by autonomous vehicles. We examine correlations that may help illuminate why the trained navigation-and-adaption policy (Configuration I) predicts particular values of</span><math alttext="a" class="ltx_Math" display="inline" id="S5.SS4.p4.1.m1" intent=":literal"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="\rho" class="ltx_Math" display="inline" id="S5.SS4.p4.2.m2" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">。图。</span><span class="original-text">. Fig.</span><a class="ltx_ref" href="#S5.F7" title="Figure 7 ‣ V-D Navigation and Adaptation ‣ V Results ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">7</span></a><span class="translated-text">显示整个测试区域的平均预测瘦身因子，表明房屋密度较高的区域对应于较高的值</span><span class="original-text">shows the average predicted slimming factor throughout the test region, indicating that areas with higher densities of houses correspond to higher values of</span><math alttext="\rho" class="ltx_Math" display="inline" id="S5.SS4.p4.3.m3" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">。当无人机沿着房屋之间的小巷移动（向左移动）的轨迹时，这种相关性变得更加突出。这保证了拥有更高保真度深度图以更好地在对象之间导航的优势，并且训练有素的策略在预测最佳适应值时考虑导航目标以及当前轨迹</span><span class="original-text">. This correlation becomes more prominent when the drone is on a trajectory moving through small alleyways in-between houses (moving to the left). This warrants the advantage of having higher fidelity depth maps to better navigate between objects, and that the trained policy is considering navigation objectives along with the current trajectory when predicting the optimal adaptation value</span><math alttext="\rho" class="ltx_Math" display="inline" id="S5.SS4.p4.4.m4" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math>.</p>
+</div>
+<figure class="ltx_figure" id="S5.F8">
+<p class="ltx_p ltx_align_center" id="S5.F8.1"><span class="ltx_text" id="S5.F8.1.1"><img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="112" id="S5.F8.1.1.g1" src="https://arxiv.org/html/2604.07286v1/figures/meter_correlations.png" width="229"/></span></p>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">Figure 8: </span>Correlation between the adaptation parameter <math alttext="\rho" class="ltx_Math" display="inline" id="S5.F8.3.m1" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math> and two environmental factors: obstacle density, as measured by the mean value of the FIFO queue of recent depth map predictions, and distance to target.</figcaption>
+</figure>
+<div class="ltx_para" id="S5.SS4.p5">
+<p class="ltx_p" id="S5.SS4.p5.6"><span class="translated-text">图。</span><span class="original-text">Fig.</span><a class="ltx_ref" href="#S5.F8" title="Figure 8 ‣ V-D Navigation and Adaptation ‣ V Results ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">8</span></a><span class="translated-text">表明当附近物体密度较高时，CADENCE 会预测更大的精简因子，这进一步保证了需要更高保真度的感知来导航更复杂的场景。相反，较小的值</span><span class="original-text">indicates that CADENCE is predicting larger slimming factors when there is a higher density of nearby objects – which further warrants that higher fidelity perception is needed to navigate through more complex scenarios. Conversely, smaller values of</span><math alttext="\rho" class="ltx_Math" display="inline" id="S5.SS4.p5.1.m1" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">预测无人机何时接近目标。这可能是因为随着目标更加直接可见，详细的路径规划变得不那么重要。还有其他几个与预测值相关的环境和导航因素</span><span class="original-text">are predicted when the drone is closer to the target. This is likely because detailed path planning becomes less important as the target is more directly visible. There are several other environmental and navigation factors correlated to the predicted values of</span><math alttext="\rho" class="ltx_Math" display="inline" id="S5.SS4.p5.2.m2" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">。当触发避免碰撞时，自适应模型倾向于预测一个值</span><span class="original-text">. When collision avoidance is triggered, the adaptation model tends to predict a value of</span><math alttext="\rho=0" class="ltx_Math" display="inline" id="S5.SS4.p5.3.m3" intent=":literal"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\rho=0</annotation></semantics></math><span class="translated-text">比未触发回避时更多。这可能是因为该策略优先考虑在其前面的对象周围移动，并且 FIFO 队列中存在可用于在其周围导航的先前深度图。当导航组件预测大台阶时，对应于沿着大型开放走廊移动（</span><span class="original-text">more than when avoidance is not triggered. This is possibly because the policy prioritizes moving around the object in front of it, and there is previous depth maps in the FIFO queue that can be used to navigate around it. When the navigation component is predicting large steps, corresponding to moving down a large open corridor (</span><span class="ltx_text ltx_font_italic" id="S5.SS4.p5.6.1"><span class="translated-text">即</span><span class="original-text">i.e.</span></span><span class="translated-text">、道路或树木之间），它也往往会预测较小的值</span><span class="original-text">, a road or between trees), it tends to also predict a smaller value of</span><math alttext="\rho" class="ltx_Math" display="inline" id="S5.SS4.p5.4.m4" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">。预测值</span><span class="original-text">. The predicted value of</span><math alttext="\rho" class="ltx_Math" display="inline" id="S5.SS4.p5.5.m5" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">通常与上一步中的结果相匹配，这意味着该模型的预测基于持续的环境条件。最优值之间的关系</span><span class="original-text">often matches the one from the previous step, implying that the model bases its predictions on persistent environmental conditions. The relationship between optimal values of</span><math alttext="\rho" class="ltx_Math" display="inline" id="S5.SS4.p5.6.m6" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">、导航特性和环境因素相当复杂。然而，这些相关性表明，适应逻辑是由学习的上下文特征驱动的，而不是随机特征，保证了该策略展示了强大且可解释的适应策略。</span><span class="original-text">, navigation features, and environmental factors is quite complex. However, these correlations demonstrate that the adaptation logic is driven by learned context features rather than stochastic ones, warranting that the policy demonstrates a robust and interpretable adaptation strategy.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">VI </span><span class="ltx_text ltx_font_smallcaps" id="S6.1.1"><span class="translated-text">结论</span><span class="original-text">Conclusions</span></span>
+</h2>
+<div class="ltx_para" id="S6.p1">
+<p class="ltx_p" id="S6.p1.1"><span class="translated-text">我们提出了 CADENCE，这是一种自适应感知和控制系统，旨在克服资源受限的自动驾驶车辆上单目深度估计 (MDE) 的计算瓶颈。通过利用可精简的 MDE 网络和统一的导航和适应策略来优化效率和可靠性之间的权衡，CADENCE 成功地闭合了传感和驱动之间的循环。我们的方法超越了静态模型简化，通过实时智能扩展计算，为关键任务导航和环境环境保留高保真感知。</span><span class="original-text">We presented CADENCE, an adaptive perception-and-control system designed to overcome the computational bottleneck of monocular depth estimation (MDE) on resource-constrained autonomous vehicles. By optimizing the trade-off between efficiency and reliability through utilizing a slimmable MDE network and a unified navigation-and-adaptation policy, CADENCE successfully closes the loop between sensing and actuation. Our approach moves beyond static model reduction by intelligently scaling computations in real-time, reserving high-fidelity perception for mission-critical navigation and environmental contexts.</span></p>
+</div>
+<div class="ltx_para" id="S6.p2">
+<p class="ltx_p" id="S6.p2.1"><span class="translated-text">使用 NVIDIA Jetson Orin Nano 和 Microsoft AirSim 的硬件在环 (HIL) 测试台上的实验结果表明，与静态最先进 (SoTA) 基准相比，CADENCE 实现了能源消耗减少 75.0%、功耗改善 16.1%、推理延迟减少 74.8%。至关重要的是，这些效率提升伴随着导航精度提高 7.43%，证明上下文感知感知实际上可以提高自主飞行的可靠性，而模型简化方法通常会伴随着精度的下降。这些发现凸显了绿色物联网框架在实现轻型车辆自主化方面的潜力。这不仅可以减少由于能量储备耗尽或违反时间限制而导致的任务失败，还可以通过减少总能量消耗来改善飞行时间，通过减少计算时间和功耗来改善对环境的反应时间，从而使设备能够同时主持其他操作。</span><span class="original-text">Experimental results on a hardware-in-the-loop (HIL) testbed, using an NVIDIA Jetson Orin Nano with Microsoft AirSim, demonstrate that CADENCE achieves a 75.0% reduction in energy expenditure, 16.1% improvement in power consumption, and a 74.8% decrease in inference latency compared to static state-of-the-art (SoTA) baselines. Crucially, these efficiency gains are accompanied by a 7.43% improvement in navigation accuracy, proving that context-aware perception can actually improve reliability in autonomous flight, whereas model reduction approaches are typically accompanied with a degradation in accuracy. These findings highlight the potential for green IoT frameworks to enable autonomy on lightweight vehicles. This has implications in not only reducing mission failures due to depleted energy reserves or violated time constraints, but also improves flight time by reducing the total energy expenditure, reaction time to the environment by reducing the time spent computing, and power consumption which enables the device to concurrently host other operations.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="Sx1">
+<h2 class="ltx_title ltx_font_smallcaps ltx_title_section"><span class="translated-text">致谢</span><span class="original-text">ACKNOWLEDGMENTS</span></h2>
+<div class="ltx_para" id="Sx1.p1">
+<p class="ltx_p" id="Sx1.p1.1"><span class="translated-text">这项工作得到了美国国家科学院的部分支持
+科学基金资助号：CCF-2140154。</span><span class="original-text">This work was partially supported by the U. S. National
+Science Foundation under Grant No. CCF-2140154.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib29">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D. Blalock, J. J. Gonzalez Ortiz, J. Frankle, and J. Guttag</span><span class="ltx_text ltx_bib_year"> (2020)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">What is the state of neural network pruning?</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Proceedings of machine learning and systems</span> <span class="ltx_text ltx_bib_volume">2</span>, <span class="ltx_text ltx_bib_pages"> pp. 129–146</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib1">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Cipolletta, V. Peluso, A. Calimera, M. Poggi, F. Tosi, F. Aleotti, and S. Mattoccia</span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Energy-quality scalable monocular depth estimation on low-power cpus</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Internet of Things Journal</span> <span class="ltx_text ltx_bib_volume">9</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 25–36</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p3.1" title="II Related Works ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib8">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Gholami, K. Kwon, B. Wu, Z. Tai, X. Yue, P. Jin, S. Zhao, and K. Keutzer</span><span class="ltx_text ltx_bib_year"> (2018)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">SqueezeNext: hardware-aware neural network design</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">1803.10615</span></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib48">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">P. E. Hart, N. J. Nilsson, and B. Raphael</span><span class="ltx_text ltx_bib_year"> (1968)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A formal basis for the heuristic determination of minimum cost paths</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE transactions on Systems Science and Cybernetics</span> <span class="ltx_text ltx_bib_volume">4</span> (<span class="ltx_text ltx_bib_number">2</span>), <span class="ltx_text ltx_bib_pages"> pp. 100–107</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.SS2.p7.1" title="IV-B Navigation and Adaptation Policy ‣ IV Methods ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">IV-B</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib5">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">G. Hinton, O. Vinyals, and J. Dean</span><span class="ltx_text ltx_bib_year"> (2015)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Distilling the knowledge in a neural network</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:1503.02531</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib34">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">X. Hu, L. Zhu, T. Wang, C. Fu, and P. Heng</span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Single-image real-time rain removal based on depth-guided non-local features</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Transactions on Image Processing</span> <span class="ltx_text ltx_bib_volume">30</span>, <span class="ltx_text ltx_bib_pages"> pp. 1759–1770</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.SS1.p1.1" title="I-A Contributions ‣ I Introduction ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">I-A</span></span></a>,
+<a class="ltx_ref" href="#S2.p3.1" title="II Related Works ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§II</span></a>,
+<a class="ltx_ref" href="#S4.SS1.p1.2" title="IV-A Perception: Slimmable MDE Network ‣ IV Methods ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">IV-A</span></span></a>,
+<a class="ltx_ref" href="#S4.SS1.p4.9" title="IV-A Perception: Slimmable MDE Network ‣ IV Methods ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">IV-A</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib10">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">C. Hung, G. Ananthanarayanan, P. Bodik, L. Golubchik, M. Yu, P. Bahl, and M. Philipose</span><span class="ltx_text ltx_bib_year"> (2018)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">VideoEdge: processing camera streams using hierarchical clusters</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2018 IEEE/ACM Symposium on Edge Computing (SEC)</span>,
+</span>
+<span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume"></span>, <span class="ltx_text ltx_bib_pages"> pp. 115–131</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1109/SEC.2018.00016" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib25">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Z. Jiang, C. Li, X. Chang, L. Chen, J. Zhu, and Y. Yang</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Dynamic slimmable denoising network</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Transactions on Image Processing</span> <span class="ltx_text ltx_bib_volume">32</span>, <span class="ltx_text ltx_bib_pages"> pp. 1583–1598</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Works ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib56">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">T. K. Johnsen, I. Harshbarger, and M. Levorato</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">An overview of adaptive dynamic deep neural networks via slimmable and gated architectures</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2024 15th International Conference on Information and Communication Technology Convergence (ICTC)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 252–256</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="I Introduction ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p2.1" title="II Related Works ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib40">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">T. K. Johnsen, I. Harshbarger, Z. Xia, and M. Levorato</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Navisplit: dynamic multi-branch split dnns for efficient distributed autonomous navigation</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2024 IEEE 25th International Symposium on a World of Wireless, Mobile and Multimedia Networks (WoWMoM)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 196–201</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p3.1" title="II Related Works ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib31">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">T. K. Johnsen and M. Levorato</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">NaviSlim: adaptive context-aware navigation and sensing via dynamic slimmable networks</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2024 IEEE/ACM Ninth International Conference on Internet-of-Things Design and Implementation (IoTDI)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 110–121</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.SS1.p2.1" title="I-A Contributions ‣ I Introduction ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">I-A</span></span></a>,
+<a class="ltx_ref" href="#S2.p2.1" title="II Related Works ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib21">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. V. Malawade, T. Mortlock, and M. A. Al Faruque</span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">HydraFusion: context-aware selective sensor fusion for robust and efficient autonomous vehicle perception</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2022 ACM/IEEE 13th International Conference on Cyber-Physical Systems (ICCPS)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 68–79</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Works ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib20">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Matsubara, M. Levorato, and F. Restuccia</span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Split computing and early exiting for deep learning applications: survey and research challenges</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">ACM Computing Surveys</span> <span class="ltx_text ltx_bib_volume">55</span> (<span class="ltx_text ltx_bib_number">5</span>), <span class="ltx_text ltx_bib_pages"> pp. 1–30</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Works ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib43">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">V. Mnih, K. Kavukcuoglu, D. Silver, A. A. Rusu, J. Veness, M. G. Bellemare, A. Graves, M. Riedmiller, A. K. Fidjeland, G. Ostrovski, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2015)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Human-level control through deep reinforcement learning</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">nature</span> <span class="ltx_text ltx_bib_volume">518</span> (<span class="ltx_text ltx_bib_number">7540</span>), <span class="ltx_text ltx_bib_pages"> pp. 529–533</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.SS2.p3.4" title="IV-B Navigation and Adaptation Policy ‣ IV Methods ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">IV-B</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib22">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Odema, L. Chen, M. Levorato, and M. A. Al Faruque</span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Testudo: collaborative intelligence for latency-critical autonomous systems</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Works ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib2">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Pappalardo, Y. Umuroglu, M. Blott, J. Mitrevski, B. Hawks, N. Tran, V. Loncar, S. Summers, H. Borras, J. Muhizi, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Qonnx: representing arbitrary-precision quantized neural networks</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2206.07527</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib12">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Shah, D. Dey, C. Lovett, and A. Kapoor</span><span class="ltx_text ltx_bib_year"> (2018)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Airsim: high-fidelity visual and physical simulation for autonomous vehicles</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Field and Service Robotics: Results of the 11th International Conference</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 621–635</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.SS1.p4.1" title="I-A Contributions ‣ I Introduction ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">I-A</span></span></a>,
+<a class="ltx_ref" href="#S5.SS1.p1.1" title="V-A Testbed ‣ V Results ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">V-A</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib28">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">H. Van Hasselt, A. Guez, and D. Silver</span><span class="ltx_text ltx_bib_year"> (2016)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Deep reinforcement learning with double q-learning</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the AAAI conference on artificial intelligence</span>,
+</span>
+<span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume">30</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.SS2.p4.2" title="IV-B Navigation and Adaptation Policy ‣ IV Methods ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">IV-B</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib33">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Vemprala, S. Mian, and A. Kapoor</span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Representation learning for event-based visuomotor policies</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Advances in Neural Information Processing Systems</span> <span class="ltx_text ltx_bib_volume">34</span>, <span class="ltx_text ltx_bib_pages"> pp. 4712–4724</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Works ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib63">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Xiao, K. Zhang, X. Xu, S. Liu, S. Wu, Z. Huang, and L. Li</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Improving accuracy and efficiency of monocular depth estimation in power grid environments using point cloud optimization and knowledge distillation</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Energies</span> <span class="ltx_text ltx_bib_volume">17</span> (<span class="ltx_text ltx_bib_number">16</span>), <span class="ltx_text ltx_bib_pages"> pp. 4068</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p3.1" title="II Related Works ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib11">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Yu, L. Yang, N. Xu, J. Yang, and T. Huang</span><span class="ltx_text ltx_bib_year"> (2018)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Slimmable neural networks</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:1812.08928</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Works ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§II</span></a>,
+<a class="ltx_ref" href="#S4.SS1.p4.9" title="IV-A Perception: Slimmable MDE Network ‣ IV Methods ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">IV-A</span></span></a>,
+<a class="ltx_ref" href="#S5.SS3.p3.6" title="V-C Slimmable MDE Network ‣ V Results ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">V-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib62">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">G. Zhang, X. Tang, L. Wang, H. Cui, T. Fei, H. Tang, and S. Jiang</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Repmono: a lightweight self-supervised monocular depth estimation architecture for high-speed inference</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Complex &amp; Intelligent Systems</span> <span class="ltx_text ltx_bib_volume">10</span> (<span class="ltx_text ltx_bib_number">6</span>), <span class="ltx_text ltx_bib_pages"> pp. 7927–7941</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p3.1" title="II Related Works ‣ CADENCE: Context-Adaptive Depth Estimation for Navigation and Computational Efficiency"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2604.07286v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
