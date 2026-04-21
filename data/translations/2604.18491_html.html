@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">设计更快：通过经过专家验证的 CFD 训练的神经代理实现交互式空气动力学</span><span class="original-text">Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 4 月 20 日星期一 16:37:46 生成 http://dlmf.nist.gov/LaTeXML/。</span><span class="original-text">Generated on Mon Apr 20 16:37:46 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2604.18491" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2604.18491" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2604.18491v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2604.18491v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#Sx1" title="In Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#Sx2" title="In Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Methodology</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#Sx2.SSx1" title="In Methodology ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Dataset</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#Sx2.SSx2" title="In Methodology ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Neural operators</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#Sx2.SSx2.SSS0.Px1" title="In Neural operators ‣ Methodology ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Evolution of Neural Operators</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#Sx2.SSx2.SSS0.Px2" title="In Neural operators ‣ Methodology ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">GIST</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#Sx3" title="In Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Results</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#Sx3.SSx1" title="In Results ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Model results</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#Sx3.SSx2" title="In Results ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Study on the optimization of rear diffuser</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#Sx3.SSx3" title="In Results ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Next steps</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#Sx4" title="In Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Conclusions</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY-SA 4.0</span><span class="original-text">License: CC BY-SA 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2604.18491v1 [cs.LG] 2026 年 4 月 20 日</span><span class="original-text">arXiv:2604.18491v1 [cs.LG] 20 Apr 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">设计更快：通过经过专家验证的 CFD 训练的神经代理实现交互式空气动力学</span><span class="original-text">Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+Nicholas Thumiger<sup class="ltx_sup" id="id1.1.id1">1</sup>,
+Andrea Bartezzaghi<sup class="ltx_sup" id="id2.2.id2">1</sup>,
+Mattia Rigotti<sup class="ltx_sup" id="id3.3.id3">1</sup>,
+Cezary Skura<sup class="ltx_sup" id="id4.4.id4">1</sup>,
+Thomas Frick<sup class="ltx_sup" id="id5.5.id5">1</sup>,
+<br class="ltx_break"/>Elisa Serioli<sup class="ltx_sup" id="id6.6.id6">2</sup>,
+Fabrizio Arbucci<sup class="ltx_sup" id="id7.7.id7">2</sup>,
+A. Cristiano I. Malossi<sup class="ltx_sup" id="id8.8.id8">1</sup>
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">计算流体动力学 (CFD) 是赛车空气动力学开发的核心，但其成本（每次高保真度评估需要数万个核心小时）严重限制了在现实预算内可行的设计空间探索。
+基于人工智能的替代模型有望缓解这一瓶颈，但进展受到公共数据集有限复杂性的限制，这些数据集以平滑的客车形状为主，无法在控制赛车性能的薄、复杂、高负载组件上运用替代模型。
+这项工作提出了三个主要贡献。
+首先，我们引入了一个高保真 RANS 数据集，该数据集建立在参数化 LMP2 级 CAD 模型的基础上，涵盖涵盖直线和转弯状态的六个操作条件（地图点），由 Dallara 的空气动力学专家生成和验证，以保留与工业赛车运动相关的特征。
+其次，我们提出了规范不变频谱变换器（GIST），这是一种基于图的神经算子，其频谱嵌入对网格连接进行编码，以增强对紧密堆积的复杂几何形状的预测。
+GIST 保证离散化不变性，并随网格大小线性缩放，在公共基准和拟议的赛车数据集上实现最先进的精度。
+第三，我们证明 GIST 达到了适合早期空气动力学设计的预测精度水平，首次验证了工业赛车工作流程中交互式设计空间探索的概念——工程师在 CFD 求解器的位置查询替代项。</span><span class="original-text">Computational Fluid Dynamics (CFD) is central to race-car aerodynamic development, yet its cost — tens of thousands of core-hours per high-fidelity evaluation — severely limits the design space exploration feasible within realistic budgets.
+AI-based surrogate models promise to alleviate this bottleneck, but progress has been constrained by the limited complexity of public datasets, which are dominated by smoothed passenger-car shapes that fail to exercise surrogates on the thin, complex, highly loaded components governing motorsport performance.
+This work presents three primary contributions.
+First, we introduce a high-fidelity RANS dataset built on a parametric LMP2-class CAD model and spanning six operating conditions (map points) covering straight-line and cornering regimes, generated and validated by aerodynamics experts at Dallara to preserve features relevant to industrial motorsport.
+Second, we present the Gauge-Invariant Spectral Transformer (GIST), a graph-based neural operator whose spectral embeddings encode mesh connectivity to enhance predictions on tightly packed, complex geometries.
+GIST guarantees discretization invariance and scales linearly with mesh size, achieving state-of-the-art accuracy on both public benchmarks and the proposed race-car dataset.
+Third, we demonstrate that GIST achieves a level of predictive accuracy suitable for early-stage aerodynamic design, providing a first validation of the concept of interactive design-space exploration — where engineers query a surrogate in place of the CFD solver — within industrial motorsport workflows.</span></p>
+</div>
+<section class="ltx_section" id="Sx1">
+<h2 class="ltx_title ltx_title_section"><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="Sx1.p1">
+<p class="ltx_p" id="Sx1.p1.1"><span class="translated-text">计算流体动力学 (CFD) 是现代赛车空气动力学开发的核心，它推动团队在严格的监管和预算限制下提取阻力和下压力等空气动力学指标的迭代循环。
+然而，CFD 的计算成本很高：对整车进行一次高保真稳态评估通常会消耗数千个核心小时，而有意义的设计探索需要扫描几何参数（例如机翼轮廓、端板、地板下几何形状）和操作条件（即定义升沉、俯仰、偏航、侧倾和转向的地图点）。
+这种探索的组合成本是赛车空气动力学设计的基本瓶颈，直接限制了在时间和资源预算内可行评估的概念数量。</span><span class="original-text">Computational Fluid Dynamics (CFD) sits at the core of modern race-car aerodynamic development, driving the iterative loop through which teams extract aero metrics such as drag and downforce under tight regulatory and budget constraints.
+Yet, CFD is computationally expensive: a single high-fidelity steady-state evaluation of a full car typically consumes thousands of core-hours, and meaningful design exploration requires sweeping both geometric parameters — such as wing profiles, endplates, underfloor geometry — and operating conditions, i.e., the map points defining heave, pitch, yaw, roll and steer.
+The combinatorial cost of this exploration is a fundamental bottleneck of motorsport aerodynamic design, directly limiting the number of concepts feasible to evaluate within time and resource budget.</span></p>
+</div>
+<div class="ltx_para" id="Sx1.p2">
+<p class="ltx_p" id="Sx1.p2.1"><span class="translated-text">基于 AI 的代理模型通过用学习的近似器取代数值求解器，提供了加速设计周期的机会，该近似器可以预测流场和集成载荷，而成本只是 CFD 运行的一小部分</span><span class="original-text">AI-based surrogate models offer the opportunity to accelerate design cycles by replacing the numerical solver with a learned approximator that predicts flow fields and integrated loads at a fraction of the cost of a CFD run</span><cite class="ltx_cite ltx_citemacro_citep">(Azizzadenesheli<span class="ltx_text ltx_bib_etal"> et al.</span> <a class="ltx_ref" href="#bib.bib8" title="Neural operators for accelerating scientific simulations and design">2024</a>)</cite><span class="translated-text">。
+在这个领域中，数据驱动的方法直接从预先计算的模拟数据中学习，而不是将控制方程嵌入到训练目标中，已成为工业空气动力学中遇到的高维复杂几何配置的最实用途径。
+特别是神经算子极大地提高了偏微分方程控制问题的替代精度上限</span><span class="original-text">.
+Within this space, data-driven approaches, which learn directly from precomputed simulation data rather than embedding the governing equations into the training objective, have emerged as the most practical route for the high-dimensional geometrically complex configurations encountered in industrial aerodynamics.
+Neural operators in particular have substantially raised the ceiling of surrogate accuracy on PDE-governed problems</span><cite class="ltx_cite ltx_citemacro_citep">(Kovachki<span class="ltx_text ltx_bib_etal"> et al.</span> <a class="ltx_ref" href="#bib.bib9" title="Neural operator: learning maps between function spaces with applications to PDEs">2023</a>)</cite>.</p>
+</div>
+<div class="ltx_para" id="Sx1.p3">
+<p class="ltx_p" id="Sx1.p3.1"><span class="translated-text">然而，在汽车领域，公开可用的 CFD 数据集的复杂性有限，限制了进展。现有的基准以光滑的乘用车形状或学术钝体为主，其中没有一个包含主导赛车空气动力学的薄型、复杂的、高负载的部件（例如机翼、端板、边条、分流器、扩散器）。因此，根据此类数据进行训练或验证的替代者不会在对赛车运动至关重要的制度中得到运用。此外，公共领域提供的数值解决方案通常未经空气动力学专家验证。
+此外，现有数据集通常是在单一固定操作条件下生成的，而工业空气动力学开发需要扫描地图点（升沉、俯仰、偏航、侧倾和转向的组合）来表征车辆在整个赛道条件下的行为。</span><span class="original-text">However, in the automotive domain, progress has been constrained by the limited complexity of publicly available CFD datasets. Existing benchmarks are dominated by smoothed passenger-car shapes or academic bluff bodies, none of which contain the thin, complex, highly loaded components (e.g. wings, endplates, strakes, splitters, diffusers) that dominate race-car aerodynamics. Surrogates trained or validated on such data are therefore not exercised in the regimes that matter for motorsport. Moreover, numerical solutions available in the public domain are often not validated by aerodynamics experts.
+Additionally, existing datasets are typically generated at a single fixed operating condition, whereas industrial aerodynamic development requires sweeping map points — combinations of heave, pitch, yaw, roll, and steer — to characterize vehicle behaviour across the full range of track conditions.</span></p>
+</div>
+<div class="ltx_para" id="Sx1.p4">
+<p class="ltx_p" id="Sx1.p4.1"><span class="translated-text">这项工作提出了以下补充贡献：(i) 跨越直线和转弯条件下的六个地图点的高保真 CFD 数据集，旨在将代理模型暴露于赛车代表的几何形状和流动特征，并由 Dallara 的空气动力学领域专家开发和验证，(ii) GIST，一种基于图形的神经算子模型，旨在对此类复杂几何图形产生的图形进行操作，并缩放到此类问题所需的网格大小，以及(iii) 经验证据表明，GIST 在赛车数据集上的准确性足以进行早期空气动力学设计，表明其在工业工作流程中得到采用。</span><span class="original-text">This work presents the following complementary contributions: (i) a high-fidelity CFD dataset spanning six map points across straight-line and cornering conditions, built with the purpose to expose surrogate models to race-car-representative geometry and flow features, and developed and validated by aerodynamics domain experts at Dallara, (ii) GIST, a graph-based neural operator model designed to operate on the graphs that arise from such complex geometries, and to scale to the mesh sizes such problems entail, and (iii) empirical evidence that GIST’s accuracy on the race-car dataset is sufficient for early-stage aerodynamic design, pointing toward its adoption within industrial workflows.</span></p>
+</div>
+<div class="ltx_para" id="Sx1.p5">
+<p class="ltx_p" id="Sx1.p5.1"><span class="translated-text">我们首先介绍数据集，然后简要介绍方法，最后介绍在赛车数据集上获得的结果以及代理模型如何帮助优化几何设计的示例。</span><span class="original-text">We firstly present the dataset, then we briefly introduce the method, and finally we present results obtained on the race-car dataset and an example of how the surrogate model can aid optimization of geometrical design.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="Sx2">
+<h2 class="ltx_title ltx_title_section"><span class="translated-text">方法论</span><span class="original-text">Methodology</span></h2>
+<section class="ltx_subsection" id="Sx2.SSx1">
+<h3 class="ltx_title ltx_title_subsection"><span class="translated-text">数据集</span><span class="original-text">Dataset</span></h3>
+<div class="ltx_para" id="Sx2.SSx1.p1">
+<p class="ltx_p" id="Sx2.SSx1.p1.1"><span class="translated-text">该数据集是根据勒芒原型 2 (LMP2) 赛车的简化参数 CAD 模型生成的，该模型由 Dallara 空气动力学领域专家内部设计，以保留控制车辆规模空气动力学的特征：例如，封装在驾驶室中的旋转车轮会产生复杂的尾流，这些尾流与整个地板下（从前分流器到后扩散器）以地面效应（文丘里行为）相互作用。据我们所知，还没有关于汽车的公共 CFD 数据集将这种级别的空气动力学细节与专家驱动的生成和验证结合起来。</span><span class="original-text">The dataset is generated from a simplified parametric CAD model of a Le Mans Prototype 2 (LMP2) race car, designed in-house by aerodynamics domain experts at Dallara to retain the features that govern vehicle-scale aerodynamics: for example, the rotating wheels encapsulated into the wheelhouse create complex wakes, which interact with the complete underfloor, from front splitter to rear diffuser, in ground effect (Venturi behaviour). To our knowledge, no public CFD dataset on cars combines this level of aerodynamic detail with expert-driven generation and validation.</span></p>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.p2">
+<p class="ltx_p" id="Sx2.SSx1.p2.1"><span class="translated-text">参数化 CAD 模型的每种几何配置均在六个地图点进行评估，通过起伏、俯仰、偏航、侧倾和转向的不同组合再现直线和转弯轨道条件。
+据我们所知，现有的公共汽车 CFD 数据集没有以这种方式涵盖多种操作条件：标准基准固定单个流动条件，这妨碍了训练代理能够预测赛车开发中心地图点空间的空气动力学行为。
+汽车表面被分解为 20 个部件标识符 (PID)，每个标识符对应于不同的空气动力学组件或特殊表面（需进行相应处理）。各个 PID 可以单独处理，从而实现组件级分析，或者合并到单个防水表面网格中以进行全车代理训练和推理。
+之所以专门选择几何参数，是因为它们会引起流动的大的非局部变化：例如，对前驾驶室顶孔轮床的修改会重塑车轮尾流，以不同的方式向地板下输送，从而在本身未修改的部件上产生强烈的负载变化。因此，该数据集旨在强调代理模型捕获直接影响（参数化组件上的载荷和表面流动特征）和间接影响（汽车其余部分的载荷重新分配）的能力，这是由不可压缩纳维-斯托克斯方程定义的典型椭圆场。对于赛车空气动力学来说，全局空气动力学平衡至少与局部峰值负载一样重要，这种区别至关重要。</span><span class="original-text">Each geometric configuration of the parametric CAD model is evaluated at six map points, reproducing both straight-line and cornering track conditions through different combinations of heave, pitch, yaw, roll, and steer.
+To our knowledge, no existing public automotive CFD dataset covers multiple operating conditions in this way: standard benchmarks fix a single flow condition, which precludes training surrogates capable of predicting aerodynamic behaviour across the map-point space central to race-car development.
+The car surface is decomposed into 20 part identifiers (PIDs), each corresponding to a distinct aerodynamic component or to special surfaces (to be treated accordingly). Individual PIDs can be treated separately, enabling component-level analysis, or merged into a single watertight surface mesh for full-car surrogate training and inference.
+The geometric parameters are chosen specifically because they induce large, non-local changes in the flow: e.g., a modification on the top hole gurney of the front wheelhouse reshapes the wheel wake, feeding the underfloor differently, thus producing strong load variations on components that were not themselves modified. The dataset is therefore designed to stress a surrogate model’s ability to capture both the direct effect (loads and surface flow features on the parametrized component) and the indirect effect (load redistribution across the remainder of the car), as typical of the elliptic field defined by the incompressible Navier-Stokes equations. For race-car aerodynamics, where global aerodynamic balance is at least as important as local peak loads, this distinction is essential.</span></p>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.p3">
+<p class="ltx_p" id="Sx2.SSx1.p3.1"><span class="translated-text">该几何结构还包括一个建模为多孔介质的散热器，具有单个入口和出口（标记为不同的 PID），其中按照达西定律施加沿流动方向的压降。这捕捉到了冷却系统对外部空气动力学的影响，这种耦合在公共数据集中通常被忽视，但却对整体下压力和阻力产生重大影响。</span><span class="original-text">The geometry also includes a radiator modeled as a porous medium with a single inlet and outlet (marked as different PIDs), where a pressure drop across the flow direction is imposed following Darcy’s law. This captures the effect of the cooling system on the external aerodynamics, a coupling that is routinely neglected in public datasets yet materially affects global downforce and drag.</span></p>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.p4">
+<p class="ltx_p" id="Sx2.SSx1.p4.1"><span class="translated-text">CFD 模拟以不可压缩稳态 RANS 形式执行</span><span class="original-text">CFD simulations are performed as incompressible steady-state RANS</span><cite class="ltx_cite ltx_citemacro_citep">(Pope <a class="ltx_ref" href="#bib.bib7" title="Turbulent flows">2000</a>)</cite>:</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.p5">
+<table class="ltx_equation ltx_eqn_table" id="Sx2.Ex1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\frac{\partial\bar{u}_{i}}{\partial x_{i}}=0" class="ltx_Math" display="block" id="Sx2.Ex1.m1" intent=":literal"><semantics><mrow><mfrac><mrow><mo rspace="0em">∂</mo><msub><mover accent="true"><mi>u</mi><mo>¯</mo></mover><mi>i</mi></msub></mrow><mrow><mo rspace="0em">∂</mo><msub><mi>x</mi><mi>i</mi></msub></mrow></mfrac><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\frac{\partial\bar{u}_{i}}{\partial x_{i}}=0</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.p6">
+<table class="ltx_equation ltx_eqn_table" id="Sx2.Ex2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\overline{u}_{j}\frac{\partial\overline{u}_{i}}{\partial x_{j}}=-\frac{1}{\rho}\frac{\partial\overline{p}}{\partial x_{i}}+\nu\frac{\partial^{2}\overline{u}_{i}}{\partial x_{j}\partial x_{j}}-\frac{\partial}{\partial x_{j}}(\overline{u^{\prime}_{i}u^{\prime}_{j}})," class="ltx_Math" display="block" id="Sx2.Ex2.m1" intent=":literal"><semantics><mrow><mrow><mrow><msub><mover accent="true"><mi>u</mi><mo stretchy="true">¯</mo></mover><mi>j</mi></msub><mo lspace="0em" rspace="0em">​</mo><mfrac><mrow><mo rspace="0em">∂</mo><msub><mover accent="true"><mi>u</mi><mo stretchy="true">¯</mo></mover><mi>i</mi></msub></mrow><mrow><mo rspace="0em">∂</mo><msub><mi>x</mi><mi>j</mi></msub></mrow></mfrac></mrow><mo>=</mo><mrow><mrow><mrow><mo>−</mo><mrow><mfrac><mn>1</mn><mi>ρ</mi></mfrac><mo lspace="0em" rspace="0em">​</mo><mfrac><mrow><mo rspace="0em">∂</mo><mover accent="true"><mi>p</mi><mo stretchy="true">¯</mo></mover></mrow><mrow><mo rspace="0em">∂</mo><msub><mi>x</mi><mi>i</mi></msub></mrow></mfrac></mrow></mrow><mo>+</mo><mrow><mi>ν</mi><mo lspace="0em" rspace="0em">​</mo><mfrac><mrow><msup><mo>∂</mo><mn>2</mn></msup><msub><mover accent="true"><mi>u</mi><mo stretchy="true">¯</mo></mover><mi>i</mi></msub></mrow><mrow><mo rspace="0em">∂</mo><mrow><msub><mi>x</mi><mi>j</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo rspace="0em">∂</mo><msub><mi>x</mi><mi>j</mi></msub></mrow></mrow></mrow></mfrac></mrow></mrow><mo>−</mo><mrow><mfrac><mo>∂</mo><mrow><mo rspace="0em">∂</mo><msub><mi>x</mi><mi>j</mi></msub></mrow></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mover accent="true"><mrow><msubsup><mi>u</mi><mi>i</mi><mo>′</mo></msubsup><mo lspace="0em" rspace="0em">​</mo><msubsup><mi>u</mi><mi>j</mi><mo>′</mo></msubsup></mrow><mo stretchy="true">¯</mo></mover><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\overline{u}_{j}\frac{\partial\overline{u}_{i}}{\partial x_{j}}=-\frac{1}{\rho}\frac{\partial\overline{p}}{\partial x_{i}}+\nu\frac{\partial^{2}\overline{u}_{i}}{\partial x_{j}\partial x_{j}}-\frac{\partial}{\partial x_{j}}(\overline{u^{\prime}_{i}u^{\prime}_{j}}),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="Sx2.SSx1.p6.1"><span class="translated-text">其中雷诺应力张量</span><span class="original-text">where the Reynolds stress tensor</span><math alttext="(\overline{u^{\prime}_{i}u^{\prime}_{j}})" class="ltx_Math" display="inline" id="Sx2.SSx1.p6.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><mover accent="true"><mrow><msubsup><mi>u</mi><mi>i</mi><mo>′</mo></msubsup><mo lspace="0em" rspace="0em">​</mo><msubsup><mi>u</mi><mi>j</mi><mo>′</mo></msubsup></mrow><mo stretchy="true">¯</mo></mover><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(\overline{u^{\prime}_{i}u^{\prime}_{j}})</annotation></semantics></math><span class="translated-text">根据 Boussinesq 假设建模，该假设将应力与平均应变率联系起来：</span><span class="original-text">is modeled according to the Boussinesq hypothesis, which relates the stress to the mean strain rate:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="Sx2.Ex3">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="-\overline{u^{\prime}_{i}u^{\prime}_{j}}=\nu_{t}\left(\frac{\partial\overline{u}_{i}}{\partial x_{j}}+\frac{\partial\overline{u}_{j}}{\partial x_{i}}\right)-\frac{2}{3}k\delta_{ij}." class="ltx_Math" display="block" id="Sx2.Ex3.m1" intent=":literal"><semantics><mrow><mrow><mrow><mo>−</mo><mover accent="true"><mrow><msubsup><mi>u</mi><mi>i</mi><mo>′</mo></msubsup><mo lspace="0em" rspace="0em">​</mo><msubsup><mi>u</mi><mi>j</mi><mo>′</mo></msubsup></mrow><mo stretchy="true">¯</mo></mover></mrow><mo>=</mo><mrow><mrow><msub><mi>ν</mi><mi>t</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo>(</mo><mrow><mfrac><mrow><mo rspace="0em">∂</mo><msub><mover accent="true"><mi>u</mi><mo stretchy="true">¯</mo></mover><mi>i</mi></msub></mrow><mrow><mo rspace="0em">∂</mo><msub><mi>x</mi><mi>j</mi></msub></mrow></mfrac><mo>+</mo><mfrac><mrow><mo rspace="0em">∂</mo><msub><mover accent="true"><mi>u</mi><mo stretchy="true">¯</mo></mover><mi>j</mi></msub></mrow><mrow><mo rspace="0em">∂</mo><msub><mi>x</mi><mi>i</mi></msub></mrow></mfrac></mrow><mo>)</mo></mrow></mrow><mo>−</mo><mrow><mfrac><mn>2</mn><mn>3</mn></mfrac><mo lspace="0em" rspace="0em">​</mo><mi>k</mi><mo lspace="0em" rspace="0em">​</mo><msub><mi>δ</mi><mrow><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>j</mi></mrow></msub></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">-\overline{u^{\prime}_{i}u^{\prime}_{j}}=\nu_{t}\left(\frac{\partial\overline{u}_{i}}{\partial x_{j}}+\frac{\partial\overline{u}_{j}}{\partial x_{i}}\right)-\frac{2}{3}k\delta_{ij}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="Sx2.SSx1.p6.3"><span class="translated-text">的</span><span class="original-text">The</span><math alttext="k-\omega" class="ltx_Math" display="inline" id="Sx2.SSx1.p6.2.m1" intent=":literal"><semantics><mrow><mi>k</mi><mo>−</mo><mi>ω</mi></mrow><annotation encoding="application/x-tex">k-\omega</annotation></semantics></math><span class="translated-text">海温湍流模型</span><span class="original-text">SST turbulence model</span><cite class="ltx_cite ltx_citemacro_citep">(Menter <a class="ltx_ref" href="#bib.bib50" title="Improved two-equation k-omega turbulence models for aerodynamic flows">1992</a>)</cite><span class="translated-text">，由 Dallara 专家出于相关目的适当定制，被选择来模拟运动湍流粘度</span><span class="original-text">, properly customized by Dallara experts for correlation purposes, is chosen to model the kinematic turbulent viscosity</span><math alttext="\nu_{t}" class="ltx_Math" display="inline" id="Sx2.SSx1.p6.3.m2" intent=":literal"><semantics><msub><mi>ν</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\nu_{t}</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.p7">
+<p class="ltx_p" id="Sx2.SSx1.p7.1"><span class="translated-text">该网格是根据 Dallara 专家的最佳实践创建的，保留了高质量元素的几何特征，实现了边界层和解发生强梯度的体积区域的精细建模。
+速度-压力耦合求解器的二阶空间离散可确保高精度，并根据残差和空气动力学指标评估收敛性。
+每个样本存储在汽车表面上的目标场包括沿三个方向分量的平均压力和平均壁剪切应力。这些共同为负载积分和表面流诊断提供了足够的信息。</span><span class="original-text">The mesh has been created according to the best practices of Dallara experts, preserving geometric features with high-quality elements, realizing a fine modeling of the boundary layer and of the volumetric regions where strong gradients of the solution happen.
+Second order spatial discretization on the velocity-pressure coupled solver guarantees high accuracy, with convergence evaluated on both residuals and aerodynamics metrics.
+Target fields stored on the car surface for each sample include mean pressure and mean wall shear stress along the three directional components. Together, these provide sufficient information for both load integration and surface-flow diagnostics.</span></p>
+</div>
+<div class="ltx_para" id="Sx2.SSx1.p8">
+<p class="ltx_p" id="Sx2.SSx1.p8.1"><span class="translated-text">每个配置均由 Dallara 空气动力学工程师根据预期负载趋势进行审查和空气验证，提供基于赛车领域专业知识的专家级验证步骤。
+表中提供了关键数据集参数的摘要</span><span class="original-text">Every configuration has been reviewed and aero-verified by Dallara aerodynamic engineers against expected load trends, providing an expert-in-the-loop validation step grounded in motorsport domain expertise.
+A summary of the key dataset parameters is provided in Table</span><a class="ltx_ref" href="#Sx2.T1" title="Table 1 ‣ Dataset ‣ Methodology ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">。
+目前正在对数据集进行扩展，包括额外的地图点和几何形状的大幅细化。</span><span class="original-text">.
+Extensions to the dataset are currently in progress, including additional map points and a substantial refinement of the geometry.</span></p>
+</div>
+<figure class="ltx_table" id="Sx2.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>LMP2 race car dataset sample characteristics.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="Sx2.T1.3">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="Sx2.T1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_tt" id="Sx2.T1.1.1.2">Average points per sample</th>
+<td class="ltx_td ltx_align_right ltx_border_tt" id="Sx2.T1.1.1.1"><math alttext="\sim 4.8\text{M}" class="ltx_Math" display="inline" id="Sx2.T1.1.1.1.m1" intent=":literal"><semantics><mrow><mi></mi><mo>∼</mo><mrow><mn>4.8</mn><mo lspace="0em" rspace="0em">​</mo><mtext>M</mtext></mrow></mrow><annotation encoding="application/x-tex">\sim 4.8\text{M}</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="Sx2.T1.2.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="Sx2.T1.2.2.2">Average cells per sample</th>
+<td class="ltx_td ltx_align_right" id="Sx2.T1.2.2.1"><math alttext="\sim 2.4\text{M}" class="ltx_Math" display="inline" id="Sx2.T1.2.2.1.m1" intent=":literal"><semantics><mrow><mi></mi><mo>∼</mo><mrow><mn>2.4</mn><mo lspace="0em" rspace="0em">​</mo><mtext>M</mtext></mrow></mrow><annotation encoding="application/x-tex">\sim 2.4\text{M}</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="Sx2.T1.3.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="Sx2.T1.3.3.2">Average sample size</th>
+<td class="ltx_td ltx_align_right" id="Sx2.T1.3.3.1"><math alttext="360\text{ MB}" class="ltx_Math" display="inline" id="Sx2.T1.3.3.1.m1" intent=":literal"><semantics><mrow><mn>360</mn><mo lspace="0em" rspace="0em">​</mo><mtext> MB</mtext></mrow><annotation encoding="application/x-tex">360\text{ MB}</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="Sx2.T1.3.4.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="Sx2.T1.3.4.1.1">Map points per configuration</th>
+<td class="ltx_td ltx_align_right ltx_border_t" id="Sx2.T1.3.4.1.2">6</td>
+</tr>
+<tr class="ltx_tr" id="Sx2.T1.3.5.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="Sx2.T1.3.5.2.1">Operating conditions</th>
+<td class="ltx_td ltx_align_right" id="Sx2.T1.3.5.2.2">heave, pitch, yaw, roll, steer</td>
+</tr>
+<tr class="ltx_tr" id="Sx2.T1.3.6.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t" id="Sx2.T1.3.6.3.1">Total samples</th>
+<td class="ltx_td ltx_align_right ltx_border_bb ltx_border_t" id="Sx2.T1.3.6.3.2">625</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section class="ltx_subsection" id="Sx2.SSx2">
+<h3 class="ltx_title ltx_title_subsection"><span class="translated-text">神经算子</span><span class="original-text">Neural operators</span></h3>
+<section class="ltx_paragraph" id="Sx2.SSx2.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">神经算子的演变</span><span class="original-text">Evolution of Neural Operators</span></h4>
+<div class="ltx_para" id="Sx2.SSx2.SSS0.Px1.p1">
+<p class="ltx_p" id="Sx2.SSx2.SSS0.Px1.p1.1"><span class="translated-text">两个基本框架建立了操作员学习范式：FNO</span><span class="original-text">Two foundational frameworks established the operator-learning paradigm: FNO</span><cite class="ltx_cite ltx_citemacro_citep">(Li<span class="ltx_text ltx_bib_etal"> et al.</span> <a class="ltx_ref" href="#bib.bib18" title="Fourier neural operator for parametric partial differential equations">2020</a>)</cite><span class="translated-text">，它在傅立叶空间中应用谱卷积，以及 DeepONet</span><span class="original-text">, which applies spectral convolutions in Fourier space, and DeepONet</span><cite class="ltx_cite ltx_citemacro_citep">(Lu<span class="ltx_text ltx_bib_etal"> et al.</span> <a class="ltx_ref" href="#bib.bib5" title="Learning nonlinear operators via DeepONet based on the universal approximation theorem of operators">2021</a>)</cite><span class="translated-text">，它通过支干网络对来近似算子。
+早期数据驱动的 CFD 方法建立在这些想法之上：图网络模拟器，例如 MeshGraphNet</span><span class="original-text">, which approximates operators via branch-trunk network pairs.
+Early data-driven CFD methods built on these ideas: graph network simulators such as MeshGraphNet</span><cite class="ltx_cite ltx_citemacro_citep">(Pfaff<span class="ltx_text ltx_bib_etal"> et al.</span> <a class="ltx_ref" href="#bib.bib6" title="Learning mesh-based simulation with graph networks">2021</a>)</cite><span class="translated-text">证明了在非结构化网格上传递的学习消息可以重现复杂的流体动力学，而几何通知神经算子（GINO，</span><span class="original-text">demonstrated that learned message passing on unstructured meshes could reproduce complex fluid dynamics, while the Geometry-Informed Neural Operator (GINO,</span><cite class="ltx_cite ltx_citemacro_citet">Li<span class="ltx_text ltx_bib_etal"> et al.</span> <a class="ltx_ref" href="#bib.bib13" title="Geometry-informed neural operator for large-scale 3d pdes">2023</a></cite><span class="translated-text">）将图形编码器与基于 FNO 的架构相结合来处理 3D 汽车形状。
+随着该领域转向基于变压器的架构，标准注意力机制在应用于车辆空气动力学所需的大规模高分辨率网格时出现了严重的二次可扩展性问题。
+Transolver 通过将空间坐标投影到一组减少的上下文标记上来缓解这种可扩展性瓶颈。
+然而，这种效率本质上牺牲了高保真网格结构的忠实编码，限制了模型在不同网格分辨率下可靠泛化的能力</span><span class="original-text">) combined graph encoders with FNO-based architectures to handle 3D car shapes.
+As the field transitioned toward transformer-based architectures, standard attention mechanisms presented a severe quadratic scalability problem when applied to the massive, high-resolution meshes required for vehicle aerodynamics.
+Transolver mitigates this scalability bottleneck by projecting spatial coordinates onto a reduced set of context tokens.
+However, this efficiency inherently sacrifices the faithful encoding of the high-fidelity mesh structure, limiting the model’s ability to generalize reliably across varying grid resolutions</span><cite class="ltx_cite ltx_citemacro_citep">(Wu<span class="ltx_text ltx_bib_etal"> et al.</span> <a class="ltx_ref" href="#bib.bib12" title="Transolver: a fast transformer solver for pdes on general geometries">2024</a>)</cite><span class="translated-text">。
+几何感知运算符变压器（GAOT，</span><span class="original-text">.
+The Geometry Aware Operator Transformer (GAOT,</span><cite class="ltx_cite ltx_citemacro_citet">Wen<span class="ltx_text ltx_bib_etal"> et al.</span> <a class="ltx_ref" href="#bib.bib11" title="GAOT: geometry aware operator transformer">2025</a></cite><span class="translated-text">）类似地，将注意力图神经算子编码器与视觉变换处理器和几何感知嵌入相结合，在不同的 PDE 基准测试中实现了强大的性能。
+然而，与 Transolver 一样，GAOT 依赖于欧几里得近似来构建图，这使得它容易受到薄壁几何体上非物理跨表面相互作用的影响。</span><span class="original-text">) similarly combines an attentional graph neural operator encoder with a vision transformer processor and geometry-aware embeddings, achieving strong performance across diverse PDE benchmarks.
+Like Transolver, however, GAOT relies on Euclidean proximity for graph construction, making it susceptible to unphysical cross-surface interactions on thin-walled geometries.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="Sx2.SSx2.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">胃肠道间质瘤</span><span class="original-text">GIST</span></h4>
+<div class="ltx_para" id="Sx2.SSx2.SSS0.Px2.p1">
+<p class="ltx_p" id="Sx2.SSx2.SSS0.Px2.p1.1"><span class="translated-text">为了在不影响几何保真度的情况下解决现有架构的可扩展性限制，我们引入了规范不变频谱变换器（GIST），详细信息请参见</span><span class="original-text">To resolve the scalability limitations of existing architectures without compromising geometric fidelity, we introduce the Gauge-Invariant Spectral Transformer (GIST), detailed in</span><cite class="ltx_cite ltx_citemacro_citet">Rigotti<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib14" title="GIST: gauge-invariant spectral transformers for scalable graph neural operators">2026</a>)</cite>.</p>
+</div>
+<div class="ltx_para" id="Sx2.SSx2.SSS0.Px2.p2">
+<p class="ltx_p" id="Sx2.SSx2.SSS0.Px2.p2.13"><span class="translated-text">离散汽车 CAD 几何形状的表面网格是一个图形</span><span class="original-text">A surface mesh discretizing the car’s CAD geometry is a graph</span><math alttext="G=(V,\mathcal{E})" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p2.1.m1" intent=":literal"><semantics><mrow><mi>G</mi><mo>=</mo><mrow><mo stretchy="false">(</mo><mi>V</mi><mo>,</mo><mi class="ltx_font_mathcaligraphic">ℰ</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">G=(V,\mathcal{E})</annotation></semantics></math><span class="translated-text">，其中顶点</span><span class="original-text">, where vertices</span><math alttext="V" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p2.2.m2" intent=":literal"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math><span class="translated-text">是网格节点和边</span><span class="original-text">are the mesh nodes and edges</span><math alttext="\mathcal{E}" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p2.3.m3" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">ℰ</mi><annotation encoding="application/x-tex">\mathcal{E}</annotation></semantics></math><span class="translated-text">对它们的连接进行编码。
+将网格视为图而不是非结构化点云至关重要：它保留了仅欧几里得邻近度无法捕获的拓扑信息，例如薄翼相对两侧的两个顶点在几何上接近但在拓扑上较远。
+如果神经算子的预测在不同的网格分辨率和同一物理表面的采样之间保持一致，那么它就是离散化不变的，这是大多数架构在实践中违反的属性，因为它们的节点特征随着网格的变化而发生不平凡的变化。
+谱方法提供了通过归一化图拉普拉斯算子的原则路线</span><span class="original-text">encode their connectivity.
+Treating meshes as graphs rather than unstructured point clouds is critical: it preserves topological information that Euclidean proximity alone cannot capture, such as the fact that two vertices on opposite sides of a thin wing are geometrically close but topologically distant.
+A neural operator is discretization-invariant if its predictions are consistent across different mesh resolutions and samplings of the same physical surface, a property that most architectures violate in practice because their node features shift non-trivially as the mesh changes.
+Spectral methods offer a principled route through the normalized graph Laplacian</span><math alttext="L=I-D^{-1}A" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p2.4.m4" intent=":literal"><semantics><mrow><mi>L</mi><mo>=</mo><mrow><mi>I</mi><mo>−</mo><mrow><msup><mi>D</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo lspace="0em" rspace="0em">​</mo><mi>A</mi></mrow></mrow></mrow><annotation encoding="application/x-tex">L=I-D^{-1}A</annotation></semantics></math><span class="translated-text">（其中</span><span class="original-text">(where</span><math alttext="A" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p2.5.m5" intent=":literal"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math><span class="translated-text">是的邻接矩阵</span><span class="original-text">is the adjacency matrix of</span><math alttext="G" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p2.6.m6" intent=":literal"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="D" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p2.7.m7" intent=":literal"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math><span class="translated-text">是对角度矩阵），随着网格分辨率的增加，其谱收敛于连续 Laplace-Beltrami 算子的谱。
+然而，光谱方法在这种情况下面临两个复合障碍。
+首先，计算特征向量</span><span class="original-text">is the diagonal degree matrix), whose spectrum converges to that of the continuous Laplace-Beltrami operator as mesh resolution increases.
+However, spectral methods face two compounding obstacles in this setting.
+First, computing the eigenvectors of</span><math alttext="L" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p2.8.m8" intent=":literal"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math><span class="translated-text">通过完全特征分解成本</span><span class="original-text">via full eigendecomposition costs</span><math alttext="\mathcal{O}(N^{3})" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p2.9.m9" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">𝒪</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msup><mi>N</mi><mn>3</mn></msup><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{O}(N^{3})</annotation></semantics></math><span class="translated-text">对于网格</span><span class="original-text">for a mesh with</span><math alttext="N" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p2.10.m10" intent=":literal"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math><span class="translated-text">节点，这在</span><span class="original-text">nodes, which is entirely intractable at the</span><math alttext="{\sim}4.8" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p2.11.m11" intent=":literal"><semantics><mrow><mi></mi><mo>∼</mo><mn>4.8</mn></mrow><annotation encoding="application/x-tex">{\sim}4.8</annotation></semantics></math><span class="translated-text">我们数据集的 M 节点规模。
+二、特征向量</span><span class="original-text">M-node scale of our dataset.
+Second, eigenvectors of</span><math alttext="L" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p2.12.m12" intent=":literal"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math><span class="translated-text">遭受规范模糊：任何特征向量</span><span class="original-text">suffer from gauge ambiguity: any eigenvector</span><math alttext="u_{k}" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p2.13.m13" intent=":literal"><semantics><msub><mi>u</mi><mi>k</mi></msub><annotation encoding="application/x-tex">u_{k}</annotation></semantics></math><span class="translated-text">可以在简并特征空间内任意符号翻转或旋转，使得原始光谱坐标依赖于解算器，因此作为跨不同网格的节点特征是不可靠的。</span><span class="original-text">may be arbitrarily sign-flipped or rotated within degenerate eigenspaces, making raw spectral coordinates solver-dependent and therefore unreliable as node features across different meshes.</span></p>
+</div>
+<div class="ltx_para" id="Sx2.SSx2.SSS0.Px2.p3">
+<p class="ltx_p" id="Sx2.SSx2.SSS0.Px2.p3.10"><span class="translated-text">GIST 同时解决了这两个问题。它通过随机投影计算光谱嵌入来避免特征分解</span><span class="original-text">GIST resolves both problems simultaneously. It avoids eigendecomposition by computing spectral embeddings via random projection</span><cite class="ltx_cite ltx_citemacro_citep">(Chen<span class="ltx_text ltx_bib_etal"> et al.</span> <a class="ltx_ref" href="#bib.bib1" title="Fast and accurate network embeddings via very sparse random projection">2019</a>)</cite><span class="translated-text">，并且它仅从规范不变量中得出注意力权重。
+给定一个光谱滤波器</span><span class="original-text">, and it derives attention weights exclusively from gauge-invariant quantities.
+Given a spectral filter</span><math alttext="f" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p3.1.m1" intent=":literal"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math><span class="translated-text">和一个随机矩阵</span><span class="original-text">and a random matrix</span><math alttext="R\in\mathbb{R}^{N\times r}" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p3.2.m2" intent=":literal"><semantics><mrow><mi>R</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>N</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>r</mi></mrow></msup></mrow><annotation encoding="application/x-tex">R\in\mathbb{R}^{N\times r}</annotation></semantics></math><span class="translated-text">与</span><span class="original-text">with</span><math alttext="\mathbb{E}[RR^{\top}]=I" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p3.3.m3" intent=":literal"><semantics><mrow><mrow><mi>𝔼</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">[</mo><mrow><mi>R</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi>R</mi><mo>⊤</mo></msup></mrow><mo stretchy="false">]</mo></mrow></mrow><mo>=</mo><mi>I</mi></mrow><annotation encoding="application/x-tex">\mathbb{E}[RR^{\top}]=I</annotation></semantics></math><span class="translated-text">，每个节点</span><span class="original-text">, each node</span><math alttext="i" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p3.4.m4" intent=":literal"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math><span class="translated-text">被嵌入为</span><span class="original-text">is embedded as the</span><math alttext="i" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p3.5.m5" intent=":literal"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math><span class="translated-text">第-行</span><span class="original-text">-th row of</span><math alttext="\tilde{\Phi}=f(P)\cdot R\in\mathbb{R}^{N\times r}" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p3.6.m6" intent=":literal"><semantics><mrow><mover accent="true"><mi mathvariant="normal">Φ</mi><mo>~</mo></mover><mo>=</mo><mrow><mrow><mi>f</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>P</mi><mo rspace="0.055em" stretchy="false">)</mo></mrow></mrow><mo rspace="0.222em">⋅</mo><mi>R</mi></mrow><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>N</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>r</mi></mrow></msup></mrow><annotation encoding="application/x-tex">\tilde{\Phi}=f(P)\cdot R\in\mathbb{R}^{N\times r}</annotation></semantics></math><span class="translated-text">, 其中</span><span class="original-text">, where</span><math alttext="P=D^{-1}A" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p3.7.m7" intent=":literal"><semantics><mrow><mi>P</mi><mo>=</mo><mrow><msup><mi>D</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo lspace="0em" rspace="0em">​</mo><mi>A</mi></mrow></mrow><annotation encoding="application/x-tex">P=D^{-1}A</annotation></semantics></math><span class="translated-text">是随机游走矩阵</span><span class="original-text">is the random-walk matrix of</span><math alttext="G" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p3.8.m8" intent=":literal"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="r" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p3.9.m9" intent=":literal"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math><span class="translated-text">是嵌入维度。
+注意力权重是根据内积计算的</span><span class="original-text">is the embedding dimension.
+Attention weights are computed from inner products</span><math alttext="\langle\tilde{\phi}_{i},\tilde{\phi}_{j}\rangle" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p3.10.m10" intent=":literal"><semantics><mrow><mo stretchy="false">⟨</mo><msub><mover accent="true"><mi>ϕ</mi><mo>~</mo></mover><mi>i</mi></msub><mo>,</mo><msub><mover accent="true"><mi>ϕ</mi><mo>~</mo></mover><mi>j</mi></msub><mo stretchy="false">⟩</mo></mrow><annotation encoding="application/x-tex">\langle\tilde{\phi}_{i},\tilde{\phi}_{j}\rangle</annotation></semantics></math><span class="translated-text">，它们是规范不变核的无偏估计量</span><span class="original-text">, which are unbiased estimators of the gauge-invariant kernel</span></p>
+<table class="ltx_equation ltx_eqn_table" id="Sx2.Ex4">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="K(i,j)=\bigl[f(P)f(P)^{\top}\bigr]_{ij}=\sum_{\ell}f(\lambda_{\ell})^{2}\,(u_{\ell})_{i}\,(u_{\ell})_{j}," class="ltx_Math" display="block" id="Sx2.Ex4.m1" intent=":literal"><semantics><mrow><mrow><mrow><mi>K</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>i</mi><mo>,</mo><mi>j</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><msub><mrow><mo maxsize="1.200em" minsize="1.200em">[</mo><mrow><mi>f</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>P</mi><mo stretchy="false">)</mo></mrow><mo lspace="0em" rspace="0em">​</mo><mi>f</mi><mo lspace="0em" rspace="0em">​</mo><msup><mrow><mo stretchy="false">(</mo><mi>P</mi><mo stretchy="false">)</mo></mrow><mo>⊤</mo></msup></mrow><mo maxsize="1.200em" minsize="1.200em">]</mo></mrow><mrow><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>j</mi></mrow></msub><mo rspace="0.111em">=</mo><mrow><munder><mo movablelimits="false">∑</mo><mi mathvariant="normal">ℓ</mi></munder><mrow><mi>f</mi><mo lspace="0em" rspace="0em">​</mo><msup><mrow><mo stretchy="false">(</mo><msub><mi>λ</mi><mi mathvariant="normal">ℓ</mi></msub><mo stretchy="false">)</mo></mrow><mn>2</mn></msup><mo lspace="0em" rspace="0em">​</mo><msub><mrow><mo stretchy="false">(</mo><msub><mi>u</mi><mi mathvariant="normal">ℓ</mi></msub><mo stretchy="false">)</mo></mrow><mi>i</mi></msub><mo lspace="0em" rspace="0em">​</mo><msub><mrow><mo stretchy="false">(</mo><msub><mi>u</mi><mi mathvariant="normal">ℓ</mi></msub><mo stretchy="false">)</mo></mrow><mi>j</mi></msub></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">K(i,j)=\bigl[f(P)f(P)^{\top}\bigr]_{ij}=\sum_{\ell}f(\lambda_{\ell})^{2}\,(u_{\ell})_{i}\,(u_{\ell})_{j},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="Sx2.SSx2.SSS0.Px2.p3.15"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\lambda_{\ell}" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p3.11.m1" intent=":literal"><semantics><msub><mi>λ</mi><mi mathvariant="normal">ℓ</mi></msub><annotation encoding="application/x-tex">\lambda_{\ell}</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="u_{\ell}" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p3.12.m2" intent=":literal"><semantics><msub><mi>u</mi><mi mathvariant="normal">ℓ</mi></msub><annotation encoding="application/x-tex">u_{\ell}</annotation></semantics></math><span class="translated-text">是特征值和特征向量</span><span class="original-text">are the eigenvalues and eigenvectors of</span><math alttext="L" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p3.13.m3" intent=":literal"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math><span class="translated-text">，分别。
+自从</span><span class="original-text">, respectively.
+Since</span><math alttext="K(i,j)" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p3.14.m4" intent=":literal"><semantics><mrow><mi>K</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>i</mi><mo>,</mo><mi>j</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">K(i,j)</annotation></semantics></math><span class="translated-text">仅取决于操作员</span><span class="original-text">depends only on the operator</span><math alttext="P" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p3.15.m5" intent=":literal"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math><span class="translated-text">并且不是基于任何特定的特征向量，它不受符号翻转和特征空间旋转的影响。</span><span class="original-text">and not on any particular eigenvector basis, it is immune to sign flips and eigenspace rotations.</span></p>
+</div>
+<div class="ltx_para" id="Sx2.SSx2.SSS0.Px2.p4">
+<p class="ltx_p" id="Sx2.SSx2.SSS0.Px2.p4.4"><span class="translated-text">作为直接后果，GIST 承认其离散化失配误差存在正式界限。
+对于两个离散化</span><span class="original-text">As a direct consequence, GIST admits a formal bound on its discretization mismatch error.
+For two discretizations</span><math alttext="G_{n}" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p4.1.m1" intent=":literal"><semantics><msub><mi>G</mi><mi>n</mi></msub><annotation encoding="application/x-tex">G_{n}</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="G_{n^{\prime}}" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p4.2.m2" intent=":literal"><semantics><msub><mi>G</mi><msup><mi>n</mi><mo>′</mo></msup></msub><annotation encoding="application/x-tex">G_{n^{\prime}}</annotation></semantics></math><span class="translated-text">相同紧凑型的</span><span class="original-text">of the same compact</span><math alttext="m" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p4.3.m3" intent=":literal"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math><span class="translated-text">维黎曼流形</span><span class="original-text">-dimensional Riemannian manifold with</span><math alttext="n\leq n^{\prime}" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p4.4.m4" intent=":literal"><semantics><mrow><mi>n</mi><mo>≤</mo><msup><mi>n</mi><mo>′</mo></msup></mrow><annotation encoding="application/x-tex">n\leq n^{\prime}</annotation></semantics></math><span class="translated-text">节点，对应网格点的注意力核值满足：</span><span class="original-text">nodes, the attention kernel values at corresponding mesh points satisfy:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="Sx2.Ex5">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\bigl|\langle\tilde{\phi}_{i}^{n},\tilde{\phi}_{j}^{n}\rangle-\langle\tilde{\phi}_{i}^{n^{\prime}},\tilde{\phi}_{j}^{n^{\prime}}\rangle\bigr|=\mathcal{O}\!\left(n^{-\frac{1}{m+4}}\right)+\mathcal{O}\!\left(r^{-\frac{1}{2}}\right)." class="ltx_Math" display="block" id="Sx2.Ex5.m1" intent=":literal"><semantics><mrow><mrow><mrow><mo maxsize="1.200em" minsize="1.200em" stretchy="true">|</mo><mrow><mrow><mo stretchy="false">⟨</mo><msubsup><mover accent="true"><mi>ϕ</mi><mo>~</mo></mover><mi>i</mi><mi>n</mi></msubsup><mo>,</mo><msubsup><mover accent="true"><mi>ϕ</mi><mo>~</mo></mover><mi>j</mi><mi>n</mi></msubsup><mo stretchy="false">⟩</mo></mrow><mo>−</mo><mrow><mo stretchy="false">⟨</mo><msubsup><mover accent="true"><mi>ϕ</mi><mo>~</mo></mover><mi>i</mi><msup><mi>n</mi><mo>′</mo></msup></msubsup><mo>,</mo><msubsup><mover accent="true"><mi>ϕ</mi><mo>~</mo></mover><mi>j</mi><msup><mi>n</mi><mo>′</mo></msup></msubsup><mo stretchy="false">⟩</mo></mrow></mrow><mo maxsize="1.200em" minsize="1.200em" stretchy="true">|</mo></mrow><mo>=</mo><mrow><mrow><mpadded style="width:0.654em;" width="0.654em"><mi class="ltx_font_mathcaligraphic">𝒪</mi></mpadded><mo lspace="0em" rspace="0em">​</mo><mrow><mo>(</mo><msup><mi>n</mi><mrow><mo>−</mo><mfrac><mn>1</mn><mrow><mi>m</mi><mo>+</mo><mn>4</mn></mrow></mfrac></mrow></msup><mo>)</mo></mrow></mrow><mo>+</mo><mrow><mpadded style="width:0.654em;" width="0.654em"><mi class="ltx_font_mathcaligraphic">𝒪</mi></mpadded><mo lspace="0em" rspace="0em">​</mo><mrow><mo>(</mo><msup><mi>r</mi><mrow><mo>−</mo><mfrac><mn>1</mn><mn>2</mn></mfrac></mrow></msup><mo>)</mo></mrow></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\bigl|\langle\tilde{\phi}_{i}^{n},\tilde{\phi}_{j}^{n}\rangle-\langle\tilde{\phi}_{i}^{n^{\prime}},\tilde{\phi}_{j}^{n^{\prime}}\rangle\bigr|=\mathcal{O}\!\left(n^{-\frac{1}{m+4}}\right)+\mathcal{O}\!\left(r^{-\frac{1}{2}}\right).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="Sx2.SSx2.SSS0.Px2.p4.8"><span class="translated-text">第一项反映了 Laplace-Beltrami 算子的谱收敛性，并随着网格的细化而消失；第二个是独立控制的统计误差</span><span class="original-text">The first term reflects spectral convergence to the Laplace-Beltrami operator and vanishes as the mesh is refined; the second is a statistical error independently controlled by</span><math alttext="r" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p4.5.m1" intent=":literal"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math><span class="translated-text">，随机投影空间的大小。
+这种量化的速率是先前方法所缺乏的关键理论保证：GIST 不仅启发式地声明网格不变性，而且明确地限制了误差。
+最后，计算</span><span class="original-text">, the size of the random projection space.
+This quantified rate is the key theoretical guarantee absent from prior approaches: GIST does not merely claim mesh-invariance heuristically but bounds the error explicitly.
+Finally, computing</span><math alttext="\tilde{\Phi}" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p4.6.m2" intent=":literal"><semantics><mover accent="true"><mi mathvariant="normal">Φ</mi><mo>~</mo></mover><annotation encoding="application/x-tex">\tilde{\Phi}</annotation></semantics></math><span class="translated-text">通过迭代幂方法避免特征分解和成本</span><span class="original-text">via iterative power methods avoids eigendecomposition and costs</span><math alttext="\mathcal{O}(N\cdot r)" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p4.7.m3" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">𝒪</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><mi>N</mi><mo lspace="0.222em" rspace="0.222em">⋅</mo><mi>r</mi></mrow><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{O}(N\cdot r)</annotation></semantics></math><span class="translated-text">，产生随网格尺寸的线性缩放，使得 GIST 在</span><span class="original-text">, yielding linear scaling with mesh size that makes GIST practical on the</span><math alttext="{\sim}4.8" class="ltx_Math" display="inline" id="Sx2.SSx2.SSS0.Px2.p4.8.m4" intent=":literal"><semantics><mrow><mi></mi><mo>∼</mo><mn>4.8</mn></mrow><annotation encoding="application/x-tex">{\sim}4.8</annotation></semantics></math><span class="translated-text">我们数据集中的 M 点表面网格。
+有关该方法的更详细描述和完整的数学公式，请读者参考</span><span class="original-text">M-point surface meshes in our dataset.
+For a more detailed description of the method and the full mathematical formulation we refer the reader to</span><cite class="ltx_cite ltx_citemacro_citet">Rigotti<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib14" title="GIST: gauge-invariant spectral transformers for scalable graph neural operators">2026</a>)</cite>.</p>
+</div>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="Sx3">
+<h2 class="ltx_title ltx_title_section"><span class="translated-text">结果</span><span class="original-text">Results</span></h2>
+<figure class="ltx_figure" id="Sx3.F1">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_4">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="Sx3.F1.sf1">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1"><img alt="Refer to caption" class="ltx_graphics ltx_figure_panel ltx_img_square" height="740" id="Sx3.F1.sf1.g1" src="https://arxiv.org/html/2604.18491v1/Figures/FNO_front.png" width="598"/></div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1"><img alt="Refer to caption" class="ltx_graphics ltx_figure_panel ltx_img_landscape" height="353" id="Sx3.F1.sf1.g2" src="https://arxiv.org/html/2604.18491v1/Figures/FNO_diff.png" width="598"/></div>
+</div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(a) </span>FNO-Based Method</figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_4">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="Sx3.F1.sf2">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1"><img alt="Refer to caption" class="ltx_graphics ltx_figure_panel ltx_img_square" height="740" id="Sx3.F1.sf2.g1" src="https://arxiv.org/html/2604.18491v1/Figures/TRANS_front.png" width="598"/></div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1"><img alt="Refer to caption" class="ltx_graphics ltx_figure_panel ltx_img_landscape" height="353" id="Sx3.F1.sf2.g2" src="https://arxiv.org/html/2604.18491v1/Figures/TRANS_diff.png" width="598"/></div>
+</div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(b) </span>Transolver-Based Method</figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_4">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="Sx3.F1.sf3">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1"><img alt="Refer to caption" class="ltx_graphics ltx_figure_panel ltx_img_square" height="740" id="Sx3.F1.sf3.g1" src="https://arxiv.org/html/2604.18491v1/Figures/GIST_front.png" width="598"/></div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1"><img alt="Refer to caption" class="ltx_graphics ltx_figure_panel ltx_img_landscape" height="353" id="Sx3.F1.sf3.g2" src="https://arxiv.org/html/2604.18491v1/Figures/GIST_diff.png" width="598"/></div>
+</div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(c) </span>GIST</figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_4">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="Sx3.F1.sf4">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1"><img alt="Refer to caption" class="ltx_graphics ltx_figure_panel ltx_img_square" height="740" id="Sx3.F1.sf4.g1" src="https://arxiv.org/html/2604.18491v1/Figures/GT_front.png" width="598"/></div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1"><img alt="Refer to caption" class="ltx_graphics ltx_figure_panel ltx_img_landscape" height="353" id="Sx3.F1.sf4.g2" src="https://arxiv.org/html/2604.18491v1/Figures/GT_diff.png" width="598"/></div>
+</div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure">(d) </span>Ground Truth</figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Qualitative comparison of the pressure field predicted by different AI-surrogate models on the front area (top row) and on the rear area (bottom row) of the LMP2 race car. The pressure calculated by the GIST model is the closest to the reference CFD ground truth.</figcaption>
+</figure>
+<div class="ltx_para" id="Sx3.p1">
+<p class="ltx_p" id="Sx3.p1.1"><span class="translated-text">公开可用的复杂 CFD 数据集的稀缺阻碍了社区识别现有神经算子方法的核心局限性。一个基本问题是通常将网格视为简单的点云，这忽略了底层的网格连接性。最近的架构，例如</span><span class="original-text">The scarcity of publicly available, complex CFD datasets has hindered the community from identifying core limitations in existing neural operator approaches. A fundamental issue is the common treatment of meshes as simple point clouds, which neglects underlying mesh connectivity. Recent architectures, such as those by</span><cite class="ltx_cite ltx_citemacro_citep">(Alkin<span class="ltx_text ltx_bib_etal"> et al.</span> <a class="ltx_ref" href="#bib.bib10" title="AB-upt: scaling neural cfd surrogates for high-fidelity automotive aerodynamics simulations via anchored-branched universal physics transformers">2025</a>)</cite><span class="translated-text">和</span><span class="original-text">and</span><cite class="ltx_cite ltx_citemacro_citep">(Wu<span class="ltx_text ltx_bib_etal"> et al.</span> <a class="ltx_ref" href="#bib.bib12" title="Transolver: a fast transformer solver for pdes on general geometries">2024</a>)</cite><span class="translated-text">，依赖于欧几里得邻近度和本地元数据（例如表面法线）提供充分的几何表示的假设。然而，对于具有薄部件的复杂赛车几何形状，两个顶点可能在空间上接近但在拓扑上较远。一个主要的例子是位于薄扰流板或影片相对侧的一对顶点。</span><span class="original-text">, rely on the assumption that Euclidean proximity and local metadata (e.g., surface normals) provide a sufficient representation of geometry. However, for complex race-car geometries featuring thin components, two vertices may be spatially proximate yet topologically distant. A primary example is a pair of vertices located on opposite sides of a thin spoiler or flick.</span></p>
+</div>
+<div class="ltx_para" id="Sx3.p2">
+<p class="ltx_p" id="Sx3.p2.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#Sx3.F1" title="Figure 1 ‣ Results ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">说明了这一现象。基于傅立叶神经算子 (FNO) 的模型利用有符号距离函数作为 FNO 层的输入，并利用图神经算子 (GNO) 作为返回网格的解码器。这种方法引入了反映底层 FNO 网格（在前面的轻弹中可见）的规则错误模式，并由于规则网格中无效点的干扰而在表面上产生非物理预测。同样，虽然 GAOT 和基于 Transolver 的方法可以产生更平滑的场预测，但它们在薄表面上的精度较差，这可能是由于相对侧顶点之间的非物理相互作用造成的。通过规范不变核从网格图的谱结构构造顶点嵌入</span><span class="original-text">illustrates this phenomenon. The Fourier Neural Operator (FNO) based model utilizes a signed distance function as input to the FNO layer and a graph neural operator (GNO) as a decoder back onto the mesh. This approach introduces a regular error pattern reflecting the underlying FNO grid (visible on the front flick) and produces unphysical predictions on the surface due to interference from invalid points in the regular grid. Similarly, while GAOT and Transolver-based methods produce smoother field predictions, they suffer from poor accuracy on thin surfaces, likely due to unphysical interactions between vertices on opposing sides. By constructing vertex embeddings from the spectral structure of the mesh graph via the gauge-invariant kernel</span><math alttext="K(i,j)" class="ltx_Math" display="inline" id="Sx3.p2.1.m1" intent=":literal"><semantics><mrow><mi>K</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>i</mi><mo>,</mo><mi>j</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">K(i,j)</annotation></semantics></math><span class="translated-text">，GIST 确保欧几里得空间中靠近的点在拓扑上较远的情况下保持较大的嵌入差异，这正是扰流板和轻弹等薄赛车部件所暴露的故障模式。因此，GIST 保留了点云表示的灵活性，同时严格将表面视为流形网格。</span><span class="original-text">, GIST ensures that points close in Euclidean space maintain a large embedding difference if they are topologically distant, precisely the failure mode exposed by thin race-car components such as spoilers and flicks. Consequently, GIST retains the flexibility of a point-cloud representation while rigorously treating the surface as a manifold mesh.</span></p>
+</div>
+<div class="ltx_para" id="Sx3.p3">
+<p class="ltx_p" id="Sx3.p3.3"><span class="translated-text">由于这些考虑因素以及 GIST 有利的可扩展性特性，与其他方法相比，获得了显着的性能提升。
+为了评估所述性能，我们评估了逐点场精度以及在几何形状中的每个点上运行推理时产生的集成空气动力载荷。该模型的主要目标是预测表面压力</span><span class="original-text">As a result of these considerations and the favorable scalability properties of GIST, significant performance gains are obtained over other methods.
+To evaluate said performance, we assess both point-wise field accuracy and the resulting integrated aerodynamic loads when inference is run on every point in the geometry. The primary objective of the model is to predict the surface pressure</span><math alttext="p" class="ltx_Math" display="inline" id="Sx3.p3.1.m1" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math><span class="translated-text">和壁面剪应力</span><span class="original-text">and wall shear stress</span><math alttext="\tau" class="ltx_Math" display="inline" id="Sx3.p3.2.m2" intent=":literal"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math><span class="translated-text">在每个顶点。我们使用均方误差 (MSE) 和决定系数 (</span><span class="original-text">at every vertex. We quantify the error using Mean Squared Error (MSE) and the Coefficient of Determination (</span><math alttext="R^{2}" class="ltx_Math" display="inline" id="Sx3.p3.3.m3" intent=":literal"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^{2}</annotation></semantics></math>):</p>
+<table class="ltx_equation ltx_eqn_table" id="Sx3.Ex6">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\text{MSE}=\frac{1}{N}\sum_{i=1}^{N}(y_{i}-\hat{y}_{i})^{2},\quad R^{2}=1-\frac{\sum_{i}(y_{i}-\hat{y}_{i})^{2}}{\sum_{i}(y_{i}-\bar{y})^{2}}" class="ltx_Math" display="block" id="Sx3.Ex6.m1" intent=":literal"><semantics><mrow><mrow><mtext>MSE</mtext><mo>=</mo><mrow><mfrac><mn>1</mn><mi>N</mi></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><munderover><mo movablelimits="false" rspace="0em">∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><msup><mrow><mo stretchy="false">(</mo><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mover accent="true"><mi>y</mi><mo>^</mo></mover><mi>i</mi></msub></mrow><mo stretchy="false">)</mo></mrow><mn>2</mn></msup></mrow></mrow></mrow><mo rspace="1.167em">,</mo><mrow><msup><mi>R</mi><mn>2</mn></msup><mo>=</mo><mrow><mn>1</mn><mo>−</mo><mfrac><mrow><msub><mo>∑</mo><mi>i</mi></msub><msup><mrow><mo lspace="0em" stretchy="false">(</mo><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><msub><mover accent="true"><mi>y</mi><mo>^</mo></mover><mi>i</mi></msub></mrow><mo stretchy="false">)</mo></mrow><mn>2</mn></msup></mrow><mrow><msub><mo>∑</mo><mi>i</mi></msub><msup><mrow><mo lspace="0em" stretchy="false">(</mo><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><mover accent="true"><mi>y</mi><mo>¯</mo></mover></mrow><mo stretchy="false">)</mo></mrow><mn>2</mn></msup></mrow></mfrac></mrow></mrow></mrow><annotation encoding="application/x-tex">\text{MSE}=\frac{1}{N}\sum_{i=1}^{N}(y_{i}-\hat{y}_{i})^{2},\quad R^{2}=1-\frac{\sum_{i}(y_{i}-\hat{y}_{i})^{2}}{\sum_{i}(y_{i}-\bar{y})^{2}}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="Sx3.p3.8"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="N" class="ltx_Math" display="inline" id="Sx3.p3.4.m1" intent=":literal"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math><span class="translated-text">是表面网格的顶点数，</span><span class="original-text">is the number of vertices of the surface mesh,</span><math alttext="y_{i}" class="ltx_Math" display="inline" id="Sx3.p3.5.m2" intent=":literal"><semantics><msub><mi>y</mi><mi>i</mi></msub><annotation encoding="application/x-tex">y_{i}</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="\hat{y}_{i}" class="ltx_Math" display="inline" id="Sx3.p3.6.m3" intent=":literal"><semantics><msub><mover accent="true"><mi>y</mi><mo>^</mo></mover><mi>i</mi></msub><annotation encoding="application/x-tex">\hat{y}_{i}</annotation></semantics></math><span class="translated-text">表示顶点处的真实值 (CFD) 和预测值</span><span class="original-text">represent the ground truth (CFD) and predicted values at vertex</span><math alttext="i" class="ltx_Math" display="inline" id="Sx3.p3.7.m4" intent=":literal"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math><span class="translated-text">，分别是，和</span><span class="original-text">, respectively, and</span><math alttext="\bar{y}" class="ltx_Math" display="inline" id="Sx3.p3.8.m5" intent=":literal"><semantics><mover accent="true"><mi>y</mi><mo>¯</mo></mover><annotation encoding="application/x-tex">\bar{y}</annotation></semantics></math><span class="translated-text">是真实值的平均值。</span><span class="original-text">is the mean of the ground truth values.</span></p>
+</div>
+<div class="ltx_para" id="Sx3.p4">
+<p class="ltx_p" id="Sx3.p4.1"><span class="translated-text">此外，代理模型必须准确地再现赛车开发中使用的集成负载。我们通过积分表面网格上的力和扭矩贡献来计算六个空气动力系数。
+不赘述，假设表面网格在表面网格单元中离散化，则作用在单元上的力</span><span class="original-text">Furthermore, the surrogate model must accurately reproduce the integrated loads used in race car development. We compute six aerodynamic coefficients by integrating force and torque contributions over the surface mesh.
+Without going into details, assuming the surface mesh being discretized in surface mesh elements, the force acting on element</span><math alttext="k" class="ltx_Math" display="inline" id="Sx3.p4.1.m1" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math><span class="translated-text">近似为：</span><span class="original-text">is approximated as:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="Sx3.Ex7">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="F_{k}=(\bar{p}_{k}n_{k}+\bar{\tau}_{k,\text{wall}})A_{k}" class="ltx_Math" display="block" id="Sx3.Ex7.m1" intent=":literal"><semantics><mrow><msub><mi>F</mi><mi>k</mi></msub><mo>=</mo><mrow><mrow><mo stretchy="false">(</mo><mrow><mrow><msub><mover accent="true"><mi>p</mi><mo>¯</mo></mover><mi>k</mi></msub><mo lspace="0em" rspace="0em">​</mo><msub><mi>n</mi><mi>k</mi></msub></mrow><mo>+</mo><msub><mover accent="true"><mi>τ</mi><mo>¯</mo></mover><mrow><mi>k</mi><mo>,</mo><mtext>wall</mtext></mrow></msub></mrow><mo stretchy="false">)</mo></mrow><mo lspace="0em" rspace="0em">​</mo><msub><mi>A</mi><mi>k</mi></msub></mrow></mrow><annotation encoding="application/x-tex">F_{k}=(\bar{p}_{k}n_{k}+\bar{\tau}_{k,\text{wall}})A_{k}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="Sx3.p4.9"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\bar{p}_{k}" class="ltx_Math" display="inline" id="Sx3.p4.2.m1" intent=":literal"><semantics><msub><mover accent="true"><mi>p</mi><mo>¯</mo></mover><mi>k</mi></msub><annotation encoding="application/x-tex">\bar{p}_{k}</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="\bar{\tau}_{k,\text{wall}}" class="ltx_Math" display="inline" id="Sx3.p4.3.m2" intent=":literal"><semantics><msub><mover accent="true"><mi>τ</mi><mo>¯</mo></mover><mrow><mi>k</mi><mo>,</mo><mtext>wall</mtext></mrow></msub><annotation encoding="application/x-tex">\bar{\tau}_{k,\text{wall}}</annotation></semantics></math><span class="translated-text">分别是代表性静压力和壁剪应力矢量，根据单元顶点的逐点预测值计算得出</span><span class="original-text">are representative static pressure and wall shear stress vector, respectively, computed from the point-wise predicted values on the vertices of the element</span><math alttext="k" class="ltx_Math" display="inline" id="Sx3.p4.4.m3" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>, <math alttext="n_{k}" class="ltx_Math" display="inline" id="Sx3.p4.5.m4" intent=":literal"><semantics><msub><mi>n</mi><mi>k</mi></msub><annotation encoding="application/x-tex">n_{k}</annotation></semantics></math><span class="translated-text">是朝外的法线，</span><span class="original-text">is the outward-facing normal and</span><math alttext="A_{k}" class="ltx_Math" display="inline" id="Sx3.p4.6.m5" intent=":literal"><semantics><msub><mi>A</mi><mi>k</mi></msub><annotation encoding="application/x-tex">A_{k}</annotation></semantics></math><span class="translated-text">是面积。
+为了将这些力解析到空气动力学框架中，我们利用风向坐标系。
+阻力的空气动力系数（</span><span class="original-text">is the area.
+To resolve these forces into the aerodynamic frame, we utilize the wind-aligned coordinate system.
+The aerodynamic coefficients for drag (</span><math alttext="C_{x}S" class="ltx_Math" display="inline" id="Sx3.p4.7.m6" intent=":literal"><semantics><mrow><msub><mi>C</mi><mi>x</mi></msub><mo lspace="0em" rspace="0em">​</mo><mi>S</mi></mrow><annotation encoding="application/x-tex">C_{x}S</annotation></semantics></math><span class="translated-text">), 侧向力 (</span><span class="original-text">), side force (</span><math alttext="C_{y}S" class="ltx_Math" display="inline" id="Sx3.p4.8.m7" intent=":literal"><semantics><mrow><msub><mi>C</mi><mi>y</mi></msub><mo lspace="0em" rspace="0em">​</mo><mi>S</mi></mrow><annotation encoding="application/x-tex">C_{y}S</annotation></semantics></math><span class="translated-text">）和下压力（</span><span class="original-text">), and downforce (</span><math alttext="C_{z}S" class="ltx_Math" display="inline" id="Sx3.p4.9.m8" intent=":literal"><semantics><mrow><msub><mi>C</mi><mi>z</mi></msub><mo lspace="0em" rspace="0em">​</mo><mi>S</mi></mrow><annotation encoding="application/x-tex">C_{z}S</annotation></semantics></math><span class="translated-text">）通过标准化综合贡献来计算：</span><span class="original-text">) are calculated by normalizing the integrated contributions:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="Sx3.Ex8">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="C_{\{x,y,z\}}S=\frac{\sum_{k}(F_{k}\cdot e_{\{x,y,z\},\text{wind}})}{0.5\rho_{\infty}V_{\infty}^{2}}," class="ltx_Math" display="block" id="Sx3.Ex8.m1" intent=":literal"><semantics><mrow><mrow><mrow><msub><mi>C</mi><mrow><mo stretchy="false">{</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo stretchy="false">}</mo></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mi>S</mi></mrow><mo>=</mo><mfrac><mrow><msub><mo>∑</mo><mi>k</mi></msub><mrow><mo lspace="0em" stretchy="false">(</mo><mrow><msub><mi>F</mi><mi>k</mi></msub><mo lspace="0.222em" rspace="0.222em">⋅</mo><msub><mi>e</mi><mrow><mrow><mo stretchy="false">{</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo stretchy="false">}</mo></mrow><mo>,</mo><mtext>wind</mtext></mrow></msub></mrow><mo stretchy="false">)</mo></mrow></mrow><mrow><mn>0.5</mn><mo lspace="0em" rspace="0em">​</mo><msub><mi>ρ</mi><mi mathvariant="normal">∞</mi></msub><mo lspace="0em" rspace="0em">​</mo><msubsup><mi>V</mi><mi mathvariant="normal">∞</mi><mn>2</mn></msubsup></mrow></mfrac></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">C_{\{x,y,z\}}S=\frac{\sum_{k}(F_{k}\cdot e_{\{x,y,z\},\text{wind}})}{0.5\rho_{\infty}V_{\infty}^{2}},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="Sx3.p4.12"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\rho_{\infty}=1.225\text{ kg/m}^{3}" class="ltx_Math" display="inline" id="Sx3.p4.10.m1" intent=":literal"><semantics><mrow><msub><mi>ρ</mi><mi mathvariant="normal">∞</mi></msub><mo>=</mo><mrow><mn>1.225</mn><mo lspace="0em" rspace="0em">​</mo><msup><mtext> kg/m</mtext><mn>3</mn></msup></mrow></mrow><annotation encoding="application/x-tex">\rho_{\infty}=1.225\text{ kg/m}^{3}</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="V_{\infty}=50\text{ m/s}" class="ltx_Math" display="inline" id="Sx3.p4.11.m2" intent=":literal"><semantics><mrow><msub><mi>V</mi><mi mathvariant="normal">∞</mi></msub><mo>=</mo><mrow><mn>50</mn><mo lspace="0em" rspace="0em">​</mo><mtext> m/s</mtext></mrow></mrow><annotation encoding="application/x-tex">V_{\infty}=50\text{ m/s}</annotation></semantics></math><span class="translated-text">。扭矩系数（</span><span class="original-text">. Torque coefficients (</span><math alttext="C_{mx}S,C_{my}S,C_{mz}S" class="ltx_Math" display="inline" id="Sx3.p4.12.m3" intent=":literal"><semantics><mrow><mrow><msub><mi>C</mi><mrow><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>x</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mi>S</mi></mrow><mo>,</mo><mrow><msub><mi>C</mi><mrow><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>y</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mi>S</mi></mrow><mo>,</mo><mrow><msub><mi>C</mi><mrow><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>z</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mi>S</mi></mrow></mrow><annotation encoding="application/x-tex">C_{mx}S,C_{my}S,C_{mz}S</annotation></semantics></math><span class="translated-text">) 类似地积分为：</span><span class="original-text">) are similarly integrated as:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="Sx3.Ex9">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="C_{m\{x,y,z\}}S=\frac{\sum_{k}(M_{k}\cdot e_{\{x,y,z\},\text{wind}})}{0.5\rho_{\infty}V_{\infty}^{2}L_{ref}}" class="ltx_Math" display="block" id="Sx3.Ex9.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>C</mi><mrow><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">{</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo stretchy="false">}</mo></mrow></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mi>S</mi></mrow><mo>=</mo><mfrac><mrow><msub><mo>∑</mo><mi>k</mi></msub><mrow><mo lspace="0em" stretchy="false">(</mo><mrow><msub><mi>M</mi><mi>k</mi></msub><mo lspace="0.222em" rspace="0.222em">⋅</mo><msub><mi>e</mi><mrow><mrow><mo stretchy="false">{</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo stretchy="false">}</mo></mrow><mo>,</mo><mtext>wind</mtext></mrow></msub></mrow><mo stretchy="false">)</mo></mrow></mrow><mrow><mn>0.5</mn><mo lspace="0em" rspace="0em">​</mo><msub><mi>ρ</mi><mi mathvariant="normal">∞</mi></msub><mo lspace="0em" rspace="0em">​</mo><msubsup><mi>V</mi><mi mathvariant="normal">∞</mi><mn>2</mn></msubsup><mo lspace="0em" rspace="0em">​</mo><msub><mi>L</mi><mrow><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>f</mi></mrow></msub></mrow></mfrac></mrow><annotation encoding="application/x-tex">C_{m\{x,y,z\}}S=\frac{\sum_{k}(M_{k}\cdot e_{\{x,y,z\},\text{wind}})}{0.5\rho_{\infty}V_{\infty}^{2}L_{ref}}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="Sx3.p4.16"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="L_{ref}" class="ltx_Math" display="inline" id="Sx3.p4.13.m1" intent=":literal"><semantics><msub><mi>L</mi><mrow><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>f</mi></mrow></msub><annotation encoding="application/x-tex">L_{ref}</annotation></semantics></math><span class="translated-text">是特征长度并且</span><span class="original-text">is the characteristic length and</span><math alttext="M_{k}=(\bar{r}_{k}-r_{0})\times F_{k}" class="ltx_Math" display="inline" id="Sx3.p4.14.m2" intent=":literal"><semantics><mrow><msub><mi>M</mi><mi>k</mi></msub><mo>=</mo><mrow><mrow><mo stretchy="false">(</mo><mrow><msub><mover accent="true"><mi>r</mi><mo>¯</mo></mover><mi>k</mi></msub><mo>−</mo><msub><mi>r</mi><mn>0</mn></msub></mrow><mo rspace="0.055em" stretchy="false">)</mo></mrow><mo rspace="0.222em">×</mo><msub><mi>F</mi><mi>k</mi></msub></mrow></mrow><annotation encoding="application/x-tex">M_{k}=(\bar{r}_{k}-r_{0})\times F_{k}</annotation></semantics></math><span class="translated-text">是元件的扭矩</span><span class="original-text">is the torque of element</span><math alttext="k" class="ltx_Math" display="inline" id="Sx3.p4.15.m3" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math><span class="translated-text">相对于原点</span><span class="original-text">relative to the origin</span><math alttext="r_{0}" class="ltx_Math" display="inline" id="Sx3.p4.16.m4" intent=":literal"><semantics><msub><mi>r</mi><mn>0</mn></msub><annotation encoding="application/x-tex">r_{0}</annotation></semantics></math><span class="translated-text">。在本文中，为简单起见，我们提出了阻力和下压力空气动力系数。</span><span class="original-text">. For this paper, we present for simplicity the drag and downforce aerodynamic coefficients.</span></p>
+</div>
+<section class="ltx_subsection" id="Sx3.SSx1">
+<h3 class="ltx_title ltx_title_subsection"><span class="translated-text">模型结果</span><span class="original-text">Model results</span></h3>
+<figure class="ltx_figure" id="Sx3.F2">
+<table class="ltx_tabular ltx_centering ltx_align_middle" id="Sx3.F2.2">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="Sx3.F2.1.1">
+<td class="ltx_td ltx_align_justify ltx_align_top" id="Sx3.F2.1.1.1">
+<span class="ltx_inline-block ltx_align_top" id="Sx3.F2.1.1.1.1">
+<span class="ltx_p" id="Sx3.F2.1.1.1.1.1" style="width:505.9pt;"><img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="266" id="Sx3.F2.1.1.1.1.1.g1" src="https://arxiv.org/html/2604.18491v1/Figures/ROT_Pred_TOP_no_title.png" width="698"/></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="Sx3.F2.2.2">
+<td class="ltx_td ltx_align_justify ltx_align_top" id="Sx3.F2.2.2.1">
+<span class="ltx_inline-block ltx_align_top" id="Sx3.F2.2.2.1.1">
+<span class="ltx_p" id="Sx3.F2.2.2.1.1.1" style="width:505.9pt;"><img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="252" id="Sx3.F2.2.2.1.1.1.g1" src="https://arxiv.org/html/2604.18491v1/Figures/Pred_Bottom.png" width="698"/></span>
+</span>
+</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Pressure field distribution on the complete LMP2 race car. Top row: front view. Bottom row: back view. Left: CFD ground truth. Center: GIST prediction. Right: delta.</figcaption>
+</figure>
+<figure class="ltx_table" id="Sx3.T2">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Performance comparison on the Dallara LMP2 dataset. Metrics include MSE (units of <math alttext="10^{-2}" class="ltx_Math" display="inline" id="Sx3.T2.6.m1" intent=":literal"><semantics><msup><mn>10</mn><mrow><mo>−</mo><mn>2</mn></mrow></msup><annotation encoding="application/x-tex">10^{-2}</annotation></semantics></math>) and <math alttext="R^{2}" class="ltx_Math" display="inline" id="Sx3.T2.7.m2" intent=":literal"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^{2}</annotation></semantics></math> for surface pressure, and Mean Percentage Error (%) for integrated drag (<math alttext="C_{d}" class="ltx_Math" display="inline" id="Sx3.T2.8.m3" intent=":literal"><semantics><msub><mi>C</mi><mi>d</mi></msub><annotation encoding="application/x-tex">C_{d}</annotation></semantics></math>) and downforce (<math alttext="C_{l}" class="ltx_Math" display="inline" id="Sx3.T2.9.m4" intent=":literal"><semantics><msub><mi>C</mi><mi>l</mi></msub><annotation encoding="application/x-tex">C_{l}</annotation></semantics></math>) coefficients. Higher is better for <math alttext="R^{2}" class="ltx_Math" display="inline" id="Sx3.T2.10.m5" intent=":literal"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^{2}</annotation></semantics></math>; lower is better for all other metrics.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="Sx3.T2.18">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="Sx3.T2.11.1">
+<th class="ltx_td ltx_th ltx_th_row ltx_border_tt" id="Sx3.T2.11.1.2"></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="2" id="Sx3.T2.11.1.1">
+<span class="ltx_text ltx_font_bold" id="Sx3.T2.11.1.1.1">Pressure</span> (<math alttext="p" class="ltx_Math" display="inline" id="Sx3.T2.11.1.1.m1" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>)</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="2" id="Sx3.T2.11.1.3">
+<span class="ltx_text ltx_font_bold" id="Sx3.T2.11.1.3.1">Integral Coeffs</span> (% error)</th>
+</tr>
+<tr class="ltx_tr" id="Sx3.T2.18.8">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row" id="Sx3.T2.18.8.8"><span class="ltx_text ltx_font_bold" id="Sx3.T2.18.8.8.1">Model</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="Sx3.T2.12.2.1"><span class="ltx_text ltx_font_bold" id="Sx3.T2.12.2.1.1">MSE <math alttext="\downarrow" class="ltx_Math" display="inline" id="Sx3.T2.12.2.1.1.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math></span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="Sx3.T2.14.4.3">
+<math alttext="R^{2}" class="ltx_Math" display="inline" id="Sx3.T2.13.3.2.m1" intent=":literal"><semantics><msup><mi>R</mi><mn>2</mn></msup><annotation encoding="application/x-tex">R^{2}</annotation></semantics></math><span class="ltx_text ltx_font_bold" id="Sx3.T2.14.4.3.1"> <math alttext="\uparrow" class="ltx_Math" display="inline" id="Sx3.T2.14.4.3.1.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math></span>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="Sx3.T2.16.6.5">
+<math alttext="C_{d}" class="ltx_Math" display="inline" id="Sx3.T2.15.5.4.m1" intent=":literal"><semantics><msub><mi>C</mi><mi>d</mi></msub><annotation encoding="application/x-tex">C_{d}</annotation></semantics></math><span class="ltx_text ltx_font_bold" id="Sx3.T2.16.6.5.1"> <math alttext="\downarrow" class="ltx_Math" display="inline" id="Sx3.T2.16.6.5.1.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math></span>
+</th>
+<th class="ltx_td ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_t" id="Sx3.T2.18.8.7">
+<math alttext="C_{l}" class="ltx_Math" display="inline" id="Sx3.T2.17.7.6.m1" intent=":literal"><semantics><msub><mi>C</mi><mi>l</mi></msub><annotation encoding="application/x-tex">C_{l}</annotation></semantics></math><span class="ltx_text ltx_font_bold" id="Sx3.T2.18.8.7.1"> <math alttext="\downarrow" class="ltx_Math" display="inline" id="Sx3.T2.18.8.7.1.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math></span>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="Sx3.T2.18.9.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="Sx3.T2.18.9.1.1">FNO-based</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="Sx3.T2.18.9.1.2">6.82</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="Sx3.T2.18.9.1.3">0.968</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="Sx3.T2.18.9.1.4">4.0%</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="Sx3.T2.18.9.1.5">3.6%</td>
+</tr>
+<tr class="ltx_tr" id="Sx3.T2.18.10.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="Sx3.T2.18.10.2.1">Transolver</th>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.18.10.2.2">4.12</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.18.10.2.3">0.980</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.18.10.2.4">1.2%</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="Sx3.T2.18.10.2.5">1.2%</td>
+</tr>
+<tr class="ltx_tr" id="Sx3.T2.18.11.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="Sx3.T2.18.11.3.1">GAOT</th>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.18.11.3.2">3.55</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.18.11.3.3">0.983</td>
+<td class="ltx_td ltx_align_center" id="Sx3.T2.18.11.3.4">0.9%</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="Sx3.T2.18.11.3.5">1.0%</td>
+</tr>
+<tr class="ltx_tr" id="Sx3.T2.18.12.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="Sx3.T2.18.12.4.1"><span class="ltx_text ltx_font_bold" id="Sx3.T2.18.12.4.1.1">GIST (ours)</span></th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="Sx3.T2.18.12.4.2"><span class="ltx_text ltx_font_bold" id="Sx3.T2.18.12.4.2.1">1.88</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="Sx3.T2.18.12.4.3"><span class="ltx_text ltx_font_bold" id="Sx3.T2.18.12.4.3.1">0.987</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="Sx3.T2.18.12.4.4"><span class="ltx_text ltx_font_bold" id="Sx3.T2.18.12.4.4.1">0.6%</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb" id="Sx3.T2.18.12.4.5"><span class="ltx_text ltx_font_bold" id="Sx3.T2.18.12.4.5.1">0.7%</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="Sx3.SSx1.p1">
+<p class="ltx_p" id="Sx3.SSx1.p1.1"><span class="translated-text">结果见表</span><span class="original-text">The results in Table</span><a class="ltx_ref" href="#Sx3.T2" title="Table 2 ‣ Model results ‣ Results ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">证明 GIST 相对于现有最先进方法的优越性。 GAOT 和 GINO 等基线需要通过随机子采样对输入数据进行大量下采样，以适应训练期间的 GPU 内存限制。虽然这种下采样对于 ShapeNet 或 DrivAerNet 等较简单的数据集来说可能可以忽略不计，但它对以尖锐特征和复杂扰动为特征的复杂赛车几何形状的性能具有可衡量的影响。相比之下，GIST 将网格视为连通图的能力保留了这些关键特征，同时提高了测试时的推理效率。</span><span class="original-text">demonstrate GIST’s superiority over existing state-of-the-art methods. Baselines such as GAOT and GINO require significant downsampling of the input data via random subsampling to accommodate GPU memory constraints during training. While such downsampling may be negligible for simpler datasets like ShapeNet or DrivAerNet, it has a measurable impact on performance for complex race-car geometries characterized by sharp features and intricate perturbations. In contrast, GIST’s ability to treat the mesh as a connected graph preserves these critical features while simultaneously improving inference efficiency at test time.</span></p>
+</div>
+<div class="ltx_para" id="Sx3.SSx1.p2">
+<p class="ltx_p" id="Sx3.SSx1.p2.1"><span class="translated-text">从定性的角度来看，即使在高复杂性区域内，该模型也能准确预测总体压力趋势。与许多数据驱动方法一致，GIST 表现出平滑高频特征的趋势，例如陡峭的压力梯度或间接几何耦合产生的局部流动结构。</span><span class="original-text">From a qualitative standpoint, the model accurately predicts general pressure trends even within high-complexity regions. Consistent with many data-driven methods, GIST exhibits a tendency to smooth high-frequency features, such as steep pressure gradients or localized flow structures resulting from indirect geometric coupling.</span></p>
+</div>
+<div class="ltx_para" id="Sx3.SSx1.p3">
+<p class="ltx_p" id="Sx3.SSx1.p3.1"><span class="translated-text">例如，在分流器的上表面（通过空气动力相互作用产生涡流），模型正确地识别了涡流结构，但低估了翼尖处最尖锐的压力梯度。尽管如此，代理捕获全局解决方案轮廓的能力和关键空气动力学特征的存在为快速设计探索和迭代优化提供了足够的保真度。</span><span class="original-text">For instance, on the upper surface of the splitter—where a vortex is generated via aerodynamic interaction—the model correctly identifies the vortical structure but under-predicts the sharpest pressure gradients at the wingtip. Nevertheless, the surrogate’s ability to capture the global solution profile and the presence of critical aerodynamic features provides sufficient fidelity for rapid design exploration and iterative optimization.</span></p>
+</div>
+<figure class="ltx_figure" id="Sx3.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="236" id="Sx3.F3.g1" src="https://arxiv.org/html/2604.18491v1/Figures/drag_thresholds_no_title.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Absolute drag coefficient error calculated as the difference between the GIST model prediction and the CFD ground truth on each of the twenty car PIDs. The usability threshold is met for every part, while the CFD replacement threshold is met by 18/20 parts.</figcaption>
+</figure>
+<div class="ltx_para" id="Sx3.SSx1.p4">
+<p class="ltx_p" id="Sx3.SSx1.p4.1"><span class="translated-text">为了评估模型的实用性，Dallara 提前建立了特定的绝对误差阈值，以便将 AI 集成到其 CFD 仿真流程中。图</span><span class="original-text">To evaluate the model’s practical utility, Dallara established specific absolute error thresholds in advance for integrating AI into their CFD simulation pipeline. Figure</span><a class="ltx_ref" href="#Sx3.F3" title="Figure 3 ‣ Model results ‣ Results ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">说明了车辆每个部件的预测阻力系数的平均绝对误差。红线表示“可用性阈值”，表示设计人员可靠地使用替代品进行快速概念探索和配置测试所需的准确度水平。黄线代表更严格的“CFD 替代阈值”，在该阈值下，替代物有可能替代特定设计阶段的高保真模拟。虽然为了保密而对具体数值进行了编辑，但结果证实 GIST 达到了适合在 Dallara 工业工作流程中立即生产使用的性能水平。目标不是完全取代经典数值求解器，而是显着加速迭代设计周期。</span><span class="original-text">illustrates the average absolute error for the predicted drag coefficient across each component of the vehicle. The red line denotes the “usability threshold”, indicating the accuracy level required for designers to reliably use the surrogate for rapid concept exploration and configuration testing. The yellow line represents a more stringent “CFD-replacement threshold”, at which the surrogate could potentially substitute for high-fidelity simulations in specific design phases. While the specific numerical values are redacted for confidentiality, the results confirm that GIST achieves a performance level suitable for immediate productive use within Dallara’s industrial workflow. The objective is not to replace classical numerical solvers entirely, but to significantly accelerate iterative design cycles.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="Sx3.SSx2">
+<h3 class="ltx_title ltx_title_subsection"><span class="translated-text">后扩散器优化研究</span><span class="original-text">Study on the optimization of rear diffuser</span></h3>
+<div class="ltx_para" id="Sx3.SSx2.p1">
+<p class="ltx_p" id="Sx3.SSx2.p1.2"><span class="translated-text">经过训练的代理的一个关键用例是快速参数扫描，这对于完整的 CFD 活动来说将非常昂贵。
+为了说明这一点，我们研究后扩散器角度对两个主要设计目标的影响：阻力（</span><span class="original-text">A key use case for a trained surrogate is rapid parameter sweeps that would be highly expensive with a full CFD campaign.
+To illustrate this, we study the effect of rear diffuser angle on the two primary design objectives: drag (</span><math alttext="C_{d}" class="ltx_Math" display="inline" id="Sx3.SSx2.p1.1.m1" intent=":literal"><semantics><msub><mi>C</mi><mi>d</mi></msub><annotation encoding="application/x-tex">C_{d}</annotation></semantics></math><span class="translated-text">）和下压力（</span><span class="original-text">) and downforce (</span><math alttext="C_{l}" class="ltx_Math" display="inline" id="Sx3.SSx2.p1.2.m2" intent=":literal"><semantics><msub><mi>C</mi><mi>l</mi></msub><annotation encoding="application/x-tex">C_{l}</annotation></semantics></math><span class="translated-text">）。
+图</span><span class="original-text">).
+Figure</span><a class="ltx_ref" href="#Sx3.F4" title="Figure 4 ‣ Study on the optimization of rear diffuser ‣ Results ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">显示了 GIST 预测的两个系数以及整个扩散器角度范围内的 CFD 地面实况评估，证明了替代项和求解器之间的高度一致性。</span><span class="original-text">shows both coefficients predicted by GIST alongside CFD ground-truth evaluations across the full range of diffuser angles, demonstrating strong agreement between the surrogate and the solver.</span></p>
+</div>
+<figure class="ltx_figure" id="Sx3.F4"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_portrait" height="982" id="Sx3.F4.g1" src="https://arxiv.org/html/2604.18491v1/x1.png" width="789"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Downforce (top) and drag (bottom) coefficients as a function of rear diffuser angle. GIST predictions (orange) closely track CFD ground truth (blue) across the full sweep range. The shaded region highlights the optimal interval (<math alttext="1" class="ltx_Math" display="inline" id="Sx3.F4.4.m1" intent=":literal"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>–<math alttext="2^{\circ}" class="ltx_Math" display="inline" id="Sx3.F4.5.m2" intent=":literal"><semantics><msup><mn>2</mn><mo>∘</mo></msup><annotation encoding="application/x-tex">2^{\circ}</annotation></semantics></math>), where the downforce-to-drag ratio is maximized before downforce saturates. Note that downforce is a negative force, thus lower values mean more downforce. Values at <math alttext="4^{\circ}" class="ltx_Math" display="inline" id="Sx3.F4.6.m3" intent=":literal"><semantics><msup><mn>4</mn><mo>∘</mo></msup><annotation encoding="application/x-tex">4^{\circ}</annotation></semantics></math> are out of domain for the AI model: no training samples were produced near that value.</figcaption>
+</figure>
+<div class="ltx_para" id="Sx3.SSx2.p2">
+<p class="ltx_p" id="Sx3.SSx2.p2.6"><span class="translated-text">这两个目标呈现出相互竞争的趋势。
+在整个范围内，阻力随角度单调增加。
+相比之下，下压力大小在负角度和小正角度时急剧增加，但在超过大约</span><span class="original-text">The two objectives exhibit competing trends.
+Drag increases monotonically with angle across the entire range.
+Downforce magnitude, by contrast, grows steeply for negative and small positive angles but saturates beyond approximately</span><math alttext="1.5" class="ltx_Math" display="inline" id="Sx3.SSx2.p2.1.m1" intent=":literal"><semantics><mn>1.5</mn><annotation encoding="application/x-tex">1.5</annotation></semantics></math>–<math alttext="2^{\circ}" class="ltx_Math" display="inline" id="Sx3.SSx2.p2.2.m2" intent=":literal"><semantics><msup><mn>2</mn><mo>∘</mo></msup><annotation encoding="application/x-tex">2^{\circ}</annotation></semantics></math><span class="translated-text">：增加角度可进一步减少额外下压力。
+这种饱和会产生自然的效率拐点，在该区域中，每单位阻力损失的空气动力增益最大化。
+设计师可以将其形式化为优化效率</span><span class="original-text">: increasing the angle further delivers diminishing additional downforce.
+This saturation creates a natural efficiency knee, a region where the aerodynamic gain per unit drag penalty is maximized.
+A designer can formalize this as optimizing the efficiency</span><math alttext="E=|C_{l}|/C_{d}" class="ltx_Math" display="inline" id="Sx3.SSx2.p2.3.m3" intent=":literal"><semantics><mrow><mi>E</mi><mo>=</mo><mrow><mrow><mo stretchy="false">|</mo><msub><mi>C</mi><mi>l</mi></msub><mo stretchy="false">|</mo></mrow><mo>/</mo><msub><mi>C</mi><mi>d</mi></msub></mrow></mrow><annotation encoding="application/x-tex">E=|C_{l}|/C_{d}</annotation></semantics></math><span class="translated-text">，或等效地，最大化</span><span class="original-text">, or equivalently, maximizing</span><math alttext="|C_{l}|" class="ltx_Math" display="inline" id="Sx3.SSx2.p2.4.m4" intent=":literal"><semantics><mrow><mo stretchy="false">|</mo><msub><mi>C</mi><mi>l</mi></msub><mo stretchy="false">|</mo></mrow><annotation encoding="application/x-tex">|C_{l}|</annotation></semantics></math><span class="translated-text">受电路要求或法规施加的阻力预算的影响。
+两种公式都确定了最佳角度</span><span class="original-text">subject to a drag budget imposed by circuit requirements or regulations.
+Both formulations identify an optimal angle in the</span><math alttext="1" class="ltx_Math" display="inline" id="Sx3.SSx2.p2.5.m5" intent=":literal"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>–<math alttext="2^{\circ}" class="ltx_Math" display="inline" id="Sx3.SSx2.p2.6.m6" intent=":literal"><semantics><msup><mn>2</mn><mo>∘</mo></msup><annotation encoding="application/x-tex">2^{\circ}</annotation></semantics></math><span class="translated-text">范围，超过该范围增加的下压力不再证明阻力成本是合理的。</span><span class="original-text">range, beyond which added downforce no longer justifies the drag cost.</span></p>
+</div>
+<div class="ltx_para" id="Sx3.SSx2.p3">
+<p class="ltx_p" id="Sx3.SSx2.p3.1"><span class="translated-text">至关重要的是，GIST 在单个 GPU 上在几秒钟内即可完成全面扫描，而同等 CFD 活动则需要数万个核心小时。
+这种加速将扩散器角度选择从离线批量研究转变为交互式设计探索，使工程师能够近乎实时地响应法规变化或新电路要求。</span><span class="original-text">Crucially, GIST produces this full sweep in seconds on a single GPU, compared to the tens of thousands of core-hours an equivalent CFD campaign would require.
+This acceleration transforms diffuser angle selection from an offline batch study into an interactive design exploration, enabling engineers to respond to regulation changes or new circuit requirements in near real time.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="Sx3.SSx3">
+<h3 class="ltx_title ltx_title_subsection"><span class="translated-text">后续步骤</span><span class="original-text">Next steps</span></h3>
+<div class="ltx_para" id="Sx3.SSx3.p1">
+<p class="ltx_p" id="Sx3.SSx3.p1.1"><span class="translated-text">达拉拉数据集实现了当前公共基准不可能实现的研究轨迹。我们的重点是通过利用数据中固有的独特的全局和局部边界条件，从静态预测转向动态的、物理感知的设计工具。与专注于固定操作条件的标准数据集不同，我们的工作利用“地图点”——涵盖多种风速下不同升沉、俯仰、偏航、横滚和转向的模拟。这允许在不同的流态下训练模型，预测复杂瞬态操纵（如高速转弯或强力制动）期间的空气动力学性能。</span><span class="original-text">The Dallara dataset enables research trajectories impossible with current public benchmarks. Our focus is moving from static prediction to a dynamic, physics-aware design tool by leveraging the unique global and local boundary conditions inherent in our data. Unlike standard datasets that focus on fixed operating conditions, our work utilizes “map points” — simulations covering varying heave, pitch, yaw, roll, and steer at multiple wind speeds. This allows for training models conditioned on diverse flow regimes, predicting aerodynamic performance during complex transient maneuvers like high-speed cornering or heavy braking.</span></p>
+</div>
+<div class="ltx_para" id="Sx3.SSx3.p2">
+<p class="ltx_p" id="Sx3.SSx3.p2.1"><span class="translated-text">我们最直接和可实现的目标是集成内部冷却空气动力学。虽然学术数据集通常将车身视为空心壳，但我们数据集中的每个模型都包含通过达西流方程建模的功能齐全的内部散热器。由于这些多孔介质标签已经存在于我们的数据中，因此我们可以独特地训练替代品来考虑“冷却阻力”及其对性能的影响。这为热管理和空气动力效率之间的权衡提供了实时决策工具——目前文献中任何现有人工智能模型都不支持这一功能集。</span><span class="original-text">Our most immediate and achievable objective is the integration of internal cooling aerodynamics. While academic datasets typically treat car bodies as hollow shells, each model in our dataset includes a fully functional internal radiator modeled via Darcy-flow equations. Because these porous medium labels are already present in our data, we can uniquely train the surrogate to account for “cooling drag” and its impact on the performance. This provides a real-time decision-making tool for the trade-off between thermal management and aerodynamic efficiency—a feature set currently unsupported by any existing AI models in the literature.</span></p>
+</div>
+<div class="ltx_para" id="Sx3.SSx3.p3">
+<p class="ltx_p" id="Sx3.SSx3.p3.1"><span class="translated-text">有原则的不确定性量化是另一个有前途的方向。为 GIST 配备认知不确定性估计</span><span class="original-text">Principled uncertainty quantification is another promising direction. Equipping GIST with epistemic uncertainty estimates</span><cite class="ltx_cite ltx_citemacro_citep">(Frick<span class="ltx_text ltx_bib_etal"> et al.</span> <a class="ltx_ref" href="#bib.bib3" title="MC layer normalization for calibrated uncertainty in deep learning">2024</a>)</cite><span class="translated-text">将识别设计空间中预测不太可靠的区域，而无分布的共形预测区间</span><span class="original-text">would identify regions of the design space where predictions are less reliable, while distribution-free conformal prediction intervals</span><cite class="ltx_cite ltx_citemacro_citep">(Deutschmann<span class="ltx_text ltx_bib_etal"> et al.</span> <a class="ltx_ref" href="#bib.bib4" title="Adaptive conformal regression with split-jackknife+ scores">2024</a>)</cite><span class="translated-text">可以提供综合载荷的统计保证覆盖范围，为工程师提供何时遵循完整 CFD 求解器的严格标准。</span><span class="original-text">could provide statistically guaranteed coverage on integrated loads, giving engineers a rigorous criterion for when to defer to the full CFD solver.</span></p>
+</div>
+<div class="ltx_para" id="Sx3.SSx3.p4">
+<p class="ltx_p" id="Sx3.SSx3.p4.1"><span class="translated-text">将可解释性嵌入到 GIST 转换器中，例如通过基于概念的注意力机制</span><span class="original-text">Embedding interpretability into the GIST transformer, for instance through concept-based attention mechanisms</span><cite class="ltx_cite ltx_citemacro_citep">(Rigotti<span class="ltx_text ltx_bib_etal"> et al.</span> <a class="ltx_ref" href="#bib.bib2" title="Attention-based interpretability with concept transformers">2022</a>)</cite><span class="translated-text">，可以进一步对人类可读的空气动力学概念和表面不明显的跨组件耦合进行地面预测，加深工程师的信任并指导有针对性的设计探索。</span><span class="original-text">, could further ground predictions in human-readable aerodynamic concepts and surface non-obvious cross-component couplings, deepening engineer trust and guiding targeted design exploration.</span></p>
+</div>
+<div class="ltx_para" id="Sx3.SSx3.p5">
+<p class="ltx_p" id="Sx3.SSx3.p5.1"><span class="translated-text">最后，我们利用 GIST 架构的可微性来开发逆向建模框架。通过将梯度从目标性能系数传播回输入几何形状，该模型可以自动建议对组件进行最佳调整，从扩散器角度到更复杂和非线性的区域。为了确保工业可靠性，我们的目标是使用多保真度方法弥合“模拟与真实”的差距，利用稀疏、高精度的风洞和轨迹数据对 RANS 训练的模型进行微调。这种校准允许替代者纠正固有的 RANS 限制，例如流量分离不准确，使人工智能预测与地面测量的物理现实保持一致。</span><span class="original-text">Finally, we are leveraging the differentiability of the GIST architecture to develop an Inverse Modeling framework. By propagating gradients from target performance coefficients back to input geometries, the model can automatically suggest optimal tweaks to components, from the diffuser angle to more complex and nonlinear areas. To ensure industrial reliability, we aim to bridge the “sim-to-real” gap using a multi-fidelity approach, fine-tuning the RANS-trained model with sparse, high-accuracy wind tunnel and track data. This calibration allows the surrogate to correct for inherent RANS limitations, such as flow separation inaccuracies, aligning AI predictions with the physical reality measured on the ground.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="Sx4">
+<h2 class="ltx_title ltx_title_section"><span class="translated-text">结论</span><span class="original-text">Conclusions</span></h2>
+<div class="ltx_para" id="Sx4.p1">
+<p class="ltx_p" id="Sx4.p1.1"><span class="translated-text">这项工作通过引入高保真度、经过专家验证的简化 LMP2 数据集和规范不变频谱变换器 (GIST)，解决了赛车空气动力学开发的计算瓶颈。通过光谱嵌入对网格连接进行显式编码，GIST 克服了基于点云的代理的局限性，准确捕获薄型、高负载赛车组件的复杂流动物理特性。我们的结果表明，GIST 不仅在公共基准测试中实现了最先进的性能，而且还满足达拉拉工业部署所需的严格准确性阈值。最终，这项工作为下一代空气动力学设计工具提供了可扩展、离散化不变的基础，从被动场预测过渡到动态、物理感知优化和实时“模拟到真实”校准。</span><span class="original-text">This work addresses the computational bottleneck of motorsport aerodynamic development by introducing a high-fidelity, expert-validated simplified-LMP2 dataset and the Gauge-Invariant Spectral Transformer (GIST). By explicitly encoding mesh connectivity through spectral embeddings, GIST overcomes the limitations of point-cloud-based surrogates, accurately capturing the complex flow physics of thin, highly loaded race-car components. Our results demonstrate that GIST not only achieves state-of-the-art performance on public benchmarks but also meets the rigorous accuracy thresholds required for industrial deployment at Dallara. Ultimately, this work provides a scalable, discretization-invariant foundation for the next generation of aerodynamic design tools, transitioning from passive field prediction toward dynamic, physics-aware optimization and real-time “sim-to-real” calibration.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib10">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">B. Alkin, M. Bleeker, R. Kurle, T. Kronlachner, R. Sonnleitner, M. Dorfer, and J. Brandstetter (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">AB-upt: scaling neural cfd surrogates for high-fidelity automotive aerodynamics simulations via anchored-branched universal physics transformers</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2502.09692</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#Sx3.p1.1" title="Results ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Results</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib8">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">K. Azizzadenesheli, N. Kovachki, Z. Li, M. Liu-Schiaffini, J. Kossaifi, and A. Anandkumar (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Neural operators for accelerating scientific simulations and design</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Nature Reviews Physics</span> <span class="ltx_text ltx_bib_volume">6</span>, <span class="ltx_text ltx_bib_pages"> pp. 320–328</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#Sx1.p2.1" title="Introduction ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Introduction</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib1">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">H. Chen, S. F. Sultan, Y. Tian, M. Chen, and S. Skiena (2019)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Fast and accurate network embeddings via very sparse random projection</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 28th ACM International Conference on Information and Knowledge Management</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#Sx2.SSx2.SSS0.Px2.p3.10" title="GIST ‣ Neural operators ‣ Methodology ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">GIST</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib4">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">N. Deutschmann, M. Rigotti, and M. Rodriguez Martinez (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Adaptive conformal regression with split-jackknife+ scores</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Transactions on Machine Learning Research</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://openreview.net/forum?id=1fbTGC3BUD" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#Sx3.SSx3.p3.1" title="Next steps ‣ Results ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Next steps</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib3">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">T. Frick, D. Antognini, I. Giurgiu, B. Grewe, C. Malossi, R. J.B. Zhu, and M. Rigotti (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">MC layer normalization for calibrated uncertainty in deep learning</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Transactions on Machine Learning Research</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://openreview.net/forum?id=bG3ICt3E0C" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#Sx3.SSx3.p3.1" title="Next steps ‣ Results ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Next steps</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib9">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">N. Kovachki, Z. Li, B. Liu, K. Azizzadenesheli, K. Bhattacharya, A. Stuart, and A. Anandkumar (2023)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Neural operator: learning maps between function spaces with applications to PDEs</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Journal of Machine Learning Research</span> <span class="ltx_text ltx_bib_volume">24</span> (<span class="ltx_text ltx_bib_number">89</span>), <span class="ltx_text ltx_bib_pages"> pp. 1–97</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#Sx1.p2.1" title="Introduction ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Introduction</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib18">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Z. Li, N. Kovachki, K. Azizzadenesheli, B. Liu, K. Bhattacharya, A. Stuart, and A. Anandkumar (2020)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Fourier neural operator for parametric partial differential equations</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2010.08895</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#Sx2.SSx2.SSS0.Px1.p1.1" title="Evolution of Neural Operators ‣ Neural operators ‣ Methodology ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Evolution of Neural Operators</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib13">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Z. Li, N. Kovachki, C. Choy, B. Li, J. Kossaifi, S. Otta, M. A. Nabian, M. Stadler, C. Hundt, K. Azizzadenesheli, <span class="ltx_text ltx_bib_etal">et al.</span> (2023)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Geometry-informed neural operator for large-scale 3d pdes</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Advances in Neural Information Processing Systems</span> <span class="ltx_text ltx_bib_volume">36</span>, <span class="ltx_text ltx_bib_pages"> pp. 35836–35854</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#Sx2.SSx2.SSS0.Px1.p1.1" title="Evolution of Neural Operators ‣ Neural operators ‣ Methodology ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Evolution of Neural Operators</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib5">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">L. Lu, P. Jin, G. Pang, Z. Zhang, and G. E. Karniadakis (2021)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Learning nonlinear operators via DeepONet based on the universal approximation theorem of operators</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Nature Machine Intelligence</span> <span class="ltx_text ltx_bib_volume">3</span>, <span class="ltx_text ltx_bib_pages"> pp. 218–229</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#Sx2.SSx2.SSS0.Px1.p1.1" title="Evolution of Neural Operators ‣ Neural operators ‣ Methodology ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Evolution of Neural Operators</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_report" id="bib.bib50">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">F. R. Menter (1992)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Improved two-equation k-omega turbulence models for aerodynamic flows</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_type">Technical report</span>
+</span>
+<span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">NASA Technical Memorandum</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#Sx2.SSx1.p6.3" title="Dataset ‣ Methodology ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Dataset</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib6">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">T. Pfaff, M. Fortunato, A. Sanchez-Gonzalez, and P. W. Battaglia (2021)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Learning mesh-based simulation with graph networks</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">International Conference on Learning Representations</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#Sx2.SSx2.SSS0.Px1.p1.1" title="Evolution of Neural Operators ‣ Neural operators ‣ Methodology ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Evolution of Neural Operators</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_book" id="bib.bib7">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">S. B. Pope (2000)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Turbulent flows</span>.
+</span>
+<span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">Cambridge University Press</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#Sx2.SSx1.p4.1" title="Dataset ‣ Methodology ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Dataset</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib2">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">M. Rigotti, C. Miksovic, I. Giurgiu, T. Gschwind, and P. Scotton (2022)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Attention-based interpretability with concept transformers</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">International Conference on Learning Representations</span>,
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://openreview.net/forum?id=kAa9eDS0RdO" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#Sx3.SSx3.p4.1" title="Next steps ‣ Results ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Next steps</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib14">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">M. Rigotti, N. Thumiger, and T. Frick (2026)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">GIST: gauge-invariant spectral transformers for scalable graph neural operators</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2603.16849</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#Sx2.SSx2.SSS0.Px2.p1.1" title="GIST ‣ Neural operators ‣ Methodology ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">GIST</span></a>,
+<a class="ltx_ref" href="#Sx2.SSx2.SSS0.Px2.p4.8" title="GIST ‣ Neural operators ‣ Methodology ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">GIST</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib11">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">S. Wen, A. Kumbhat, L. Lingsch, S. Mousavi, Y. Zhao, P. Chandrashekar, and S. Mishra (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">GAOT: geometry aware operator transformer</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2505.18781</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#Sx2.SSx2.SSS0.Px1.p1.1" title="Evolution of Neural Operators ‣ Neural operators ‣ Methodology ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Evolution of Neural Operators</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib12">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">H. Wu, H. Luo, H. Wang, J. Wang, and M. Long (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Transolver: a fast transformer solver for pdes on general geometries</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2402.02366</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#Sx2.SSx2.SSS0.Px1.p1.1" title="Evolution of Neural Operators ‣ Neural operators ‣ Methodology ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Evolution of Neural Operators</span></a>,
+<a class="ltx_ref" href="#Sx3.p1.1" title="Results ‣ Faster by Design: Interactive Aerodynamics via Neural Surrogates Trained on Expert-Validated CFD"><span class="ltx_text ltx_ref_title">Results</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2604.18491v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div aria-hidden="true" id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
