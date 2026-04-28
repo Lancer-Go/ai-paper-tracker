@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">AgentWard：自主 AI 代理的生命周期安全架构</span><span class="original-text">AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 4 月 27 日星期一 16:16:56 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Mon Apr 27 16:16:56 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2604.24657" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2604.24657" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2604.24657v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2604.24657v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">I </span><span class="ltx_text ltx_font_smallcaps">Introduction</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">II </span><span class="ltx_text ltx_font_smallcaps">A Lifecycle Security View of Threats</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS1" title="In II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-A</span> </span><span class="ltx_text ltx_font_italic">Threats to Agents Lifecycle</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS2" title="In II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-B</span> </span><span class="ltx_text ltx_font_italic">Cross-Stage Risk Propagation</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">III </span><span class="ltx_text ltx_font_smallcaps">AgentWard Architecture</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-A</span> </span><span class="ltx_text ltx_font_italic">Design Rationale</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S3.SS2" title="In III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-B</span> </span><span class="ltx_text ltx_font_italic">Five-Layer Protection Design</span></span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS1" title="In III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-B</span>1 </span>Foundation Scan Layer</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS2" title="In III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-B</span>2 </span>Input Sanitization Layer</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS3" title="In III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-B</span>3 </span>Cognition Protection Layer</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS4" title="In III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-B</span>4 </span>Decision Alignment Layer</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS5" title="In III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-B</span>5 </span>Execution Control Layer</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS3" title="In III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-C</span> </span><span class="ltx_text ltx_font_italic">Cross-layer Coordination</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">IV </span><span class="ltx_text ltx_font_smallcaps">Implementation and Case Studies</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In IV Implementation and Case Studies ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-A</span> </span><span class="ltx_text ltx_font_italic">Prototype Implementation</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S4.SS2" title="In IV Implementation and Case Studies ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-B</span> </span><span class="ltx_text ltx_font_italic">Case Studies</span></span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS2.SSS1" title="In IV-B Case Studies ‣ IV Implementation and Case Studies ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-B</span>1 </span>Case 1: Malicious Skill to Unauthorized Data Access</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS2.SSS2" title="In IV-B Case Studies ‣ IV Implementation and Case Studies ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-B</span>2 </span>Case 2: Indirect Prompt Injection to Persistent Backdoor and DoS</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S5" title="In AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">V </span><span class="ltx_text ltx_font_smallcaps">Conclusion</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：arXiv.org 永久非独占许可证</span><span class="original-text">License: arXiv.org perpetual non-exclusive license</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2604.24657v1 [cs.CR] 2026 年 4 月 27 日</span><span class="original-text">arXiv:2604.24657v1 [cs.CR] 27 Apr 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">
+<span class="ltx_text ltx_font_smallcaps" id="id1.id1"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">：自主人工智能代理的生命周期安全架构</span><span class="original-text">: A Lifecycle Security Architecture for Autonomous AI Agents</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Yixiang Zhang,
+Xinhao Deng,
+Jiaqing Wu,
+Yue Xiao,
+Ke Xu,
+Qi Li
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">自主人工智能代理将大型语言模型扩展到完整的运行时系统，该系统加载技能、摄取外部内容、维护内存、规划多步骤操作并调用特权工具。在此类系统中，安全故障很少局限于单个接口；相反，它们可以在初始化、输入处理、内存、决策和执行中传播，通常只有当有害影响在环境中出现时才会变得明显。
+本文介绍了</span><span class="original-text">Autonomous AI agents extend large language models into full runtime systems that load skills, ingest external content, maintain memory, plan multi-step actions, and invoke privileged tools. In such systems, security failures rarely remain confined to a single interface; instead, they can propagate across initialization, input processing, memory, decision-making, and execution, often becoming apparent only when harmful effects materialize in the environment.
+This paper presents</span><span class="ltx_text ltx_font_smallcaps"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">，一种面向生命周期的深度防御架构，系统地组织跨这五个阶段的保护。</span><span class="original-text">, a lifecycle-oriented, defense-in-depth architecture that systematically organizes protection across these five stages.</span><span class="ltx_text ltx_font_smallcaps"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">将特定阶段的异构控制与跨层协调相集成，从而能够沿着传播路径拦截威胁，同时保护关键资产。
+我们详细介绍了五个协调保护层的设计原理和架构，并在 OpenClaw 上实现了一个插件原生原型以证明实际可行性。这一视角为构建运行时安全控制、管理信任传播以及在自主人工智能代理中实施执行遏制提供了具体的蓝图。</span><span class="original-text">integrates stage-specific, heterogeneous controls with cross-layer coordination, enabling threats to be intercepted along their propagation paths while safeguarding critical assets.
+We detail the design rationale and architecture of five coordinated protection layers, and implement a plugin-native prototype on OpenClaw to demonstrate practical feasibility. This perspective provides a concrete blueprint for structuring runtime security controls, managing trust propagation, and enforcing execution containment in autonomous AI agents.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span class="ltx_text ltx_font_smallcaps" id="S1.1.1"><span class="translated-text">简介</span><span class="original-text">Introduction</span></span>
+</h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">大型语言模型（LLM）集成系统已经从纯文本问答聊天机器人发展到能够执行脚本生成和网络搜索等短期任务的工具增强代理，最近又发展到可以委派和执行端到端任务（包括项目管理和综合研究）的高度自治的运行时系统</span><span class="original-text">Large language model (LLM)-integrated systems have evolved from text-only question–answering chatbots to tool-augmented agents capable of short-term tasks, such as script generation and web search, and more recently to highly autonomous runtime systems that can delegate and execute end-to-end tasks, including project management and comprehensive research</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib21" title="ReAct: synergizing reasoning and acting in language models">19</a>, <a class="ltx_ref" href="#bib.bib22" title="Toolformer: language models can teach themselves to use tools">13</a>, <a class="ltx_ref" href="#bib.bib14" title="OpenClaw: personal AI assistant">15</a>]</cite><span class="translated-text">。
+这一进步不仅是由基础模型的规划和工具使用能力的进步推动的，也是由代理架构的演变推动的。系统已经从简单的工具调用管道发展到更复杂的设计，支持动态技能获取、长期记忆和持久工作空间，从而实现更复杂和持续的代理行为</span><span class="original-text">.
+This progression is driven not only by advances in planning and tool-use capabilities of foundation models, but also by the evolution of agent architectures. Systems have evolved from simple tool-invocation pipelines to more sophisticated designs that support dynamic skill acquisition, long-term memory, and persistent workspaces, thereby enabling more complex and sustained agent behaviors</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib23" title="MemGPT: towards LLMs as operating systems">12</a>]</cite><span class="translated-text">。
+开爪</span><span class="original-text">.
+OpenClaw</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib19" title="Taming openclaw: security analysis and mitigation of autonomous llm agent threats">4</a>, <a class="ltx_ref" href="#bib.bib14" title="OpenClaw: personal AI assistant">15</a>]</cite><span class="translated-text">体现了这一趋势。它支持社区贡献的技能，在跨会话的持久工作空间中维护结构化的短期和长期记忆，并通过在实际运行时权限下对主机工具的受控访问来执行特权任务。</span><span class="original-text">exemplifies this trend. It supports community-contributed skills, maintains structured short- and long-term memory within a persistent workspace across sessions, and executes privileged tasks through controlled access to host tools under real runtime permissions.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">这种架构和功能的演变拓宽了安全边界，从内容安全到完整的运行时系统安全。在传统的聊天机器人设置中，安全问题主要集中在不安全的输入或输出上；通过工具集成，源自用户和模型外部的间接提示注入和工具选择操作可能会进一步产生风险</span><span class="original-text">This architectural and capability evolution broadens the security boundary from content safety to full runtime system security. In traditional chatbot settings, security concerns primarily focus on unsafe inputs or outputs; with tool integration, risks can further arise from indirect prompt injection and tool-selection manipulation originating outside both the user and the model</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="Not what you’ve signed up for: compromising real-world LLM-integrated applications with indirect prompt injection">6</a>, <a class="ltx_ref" href="#bib.bib7" title="Prompt injection attack against LLM-integrated applications">8</a>, <a class="ltx_ref" href="#bib.bib11" title="AgentDojo: a dynamic environment to evaluate prompt injection attacks and defenses for LLM agents">3</a>]</cite><span class="translated-text">。
+自主代理通过引入复杂的运行时模块、中间状态、动态执行路径和扩展特权来放大这些风险，这些共同扩大了攻击面并增加了故障的潜在影响。因此，技能受损、内存中毒或局部推理错误可能会升级为文件修改、服务中断或数据泄露</span><span class="original-text">.
+Autonomous agents amplify these risks by introducing complex runtime modules, intermediate states, dynamic execution paths, and expanded privileges, which together enlarge the attack surface and increase the potential impact of failures. As a result, compromised skills, poisoned memory, or localized reasoning errors can escalate into file modification, service disruption, or data exfiltration</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib15" title="Agent skills in the wild: an empirical study of security vulnerabilities at scale">9</a>, <a class="ltx_ref" href="#bib.bib24" title="Memory injection attacks on LLM agents via query-only interaction">5</a>, <a class="ltx_ref" href="#bib.bib17" title="A-memguard: a proactive defense framework for LLM-based agent memory">17</a>, <a class="ltx_ref" href="#bib.bib12" title="AgentHarm: a benchmark for measuring harmfulness of LLM agents">1</a>]</cite><span class="translated-text">。这些威胁通常会在运行时管道中传播：攻击可能会在一个阶段进入，持续通过中间状态，并在稍后表现为有害执行。此类模式超出了逐点防御的范围，例如输入过滤和端到端运行时安全性调用。例如，多步间接提示注入可能会逃避输入级分析、毒害内存，并随后触发有害操作，而内存完整性检查和行为级分析可以在攻击成功之前暴露异常状态和不一致的执行模式。</span><span class="original-text">. These threats often propagate across the runtime pipeline: an attack may enter at one stage, persist through intermediate state, and manifest only later as harmful execution. Such patterns exceed the scope of pointwise defenses such as input filtering and call for end-to-end runtime security. For instance, a multi-step indirect prompt injection may evade input-level analysis, poison memory, and later trigger harmful actions, whereas memory integrity checks and behavior-level analysis can expose anomalous state and inconsistent execution patterns before the attack succeeds.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">本文介绍</span><span class="original-text">This article presents</span><span class="ltx_text ltx_font_smallcaps" id="S1.p3.1.1"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">作为面向生命周期的自主人工智能代理的深度防御架构。我们将代理运行时生命周期描述为五个关键阶段：初始化、输入、内存、决策和执行。该框架将保护组织为与这些阶段一致的五个协调层，提供全面的覆盖范围，同时破坏攻击传播路径并保护关键资产：</span><span class="original-text">as a lifecycle-oriented, defense-in-depth architecture for autonomous AI agents. We characterize the agent runtime lifecycle into five key stages: initialization, input, memory, decision, and execution. The framework organizes protection into five coordinated layers aligned with these stages, providing comprehensive coverage while disrupting attack propagation paths and safeguarding critical assets:</span></p>
+<ul class="ltx_itemize" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i1.p1.1.1"><span class="translated-text">基础扫描层</span><span class="original-text">Foundation Scan Layer</span></span><span class="translated-text">：建立可信基线，重点关注基础系统组件的完整性。</span><span class="original-text">: Establishes a trusted baseline, focusing on the integrity of foundational system components.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i2.p1.1.1"><span class="translated-text">输入清理层</span><span class="original-text">Input Sanitization Layer</span></span><span class="translated-text">：检查运行时输入，防止恶意数据的入站输入和后续传播。</span><span class="original-text">: Inspects runtime inputs, preventing the inbound entry and subsequent propagation of malicious data.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i3.p1.1.1"><span class="translated-text">认知保护层</span><span class="original-text">Cognition Protection Layer</span></span><span class="translated-text">：维护内部状态，防止风险持续存在和内部升级。</span><span class="original-text">: Safeguards the internal state, preventing the persistence and internal escalation of risks.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i4.p1">
+<p class="ltx_p" id="S1.I1.i4.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i4.p1.1.1"><span class="translated-text">决策调整层</span><span class="original-text">Decision Alignment Layer</span></span><span class="translated-text">：约束推理过程，限制风险从推理到行动的传播。</span><span class="original-text">: Constrains the inference process, limiting the propagation of risks from reasoning to action.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i5" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i5.p1">
+<p class="ltx_p" id="S1.I1.i5.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i5.p1.1.1"><span class="translated-text">执行控制层</span><span class="original-text">Execution Control Layer</span></span><span class="translated-text">：控制环境副作用，防止有害行为转化为外部结果。</span><span class="original-text">: Governs environment-side effects, preventing the realization of harmful actions into external outcomes.</span></p>
+</div>
+</li>
+</ul>
+<p class="ltx_p" id="S1.p3.2"><span class="translated-text">通过利用异构和互补的防御机制跨越整个生命周期，</span><span class="original-text">By spanning the full lifecycle with heterogeneous and complementary defense mechanisms,</span><span class="ltx_text ltx_font_smallcaps" id="S1.p3.2.1"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">缓解复杂、持续和不断变化的威胁。总的来说，这些层隔离了典型的风险传播路径并相互加强，从而增强了整个系统的稳健性。</span><span class="original-text">mitigates complex, persistent, and evolving threats. Collectively, these layers isolate typical risk propagation paths and reinforce one another, thereby enhancing overall system robustness.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span class="ltx_text ltx_font_smallcaps" id="S2.1.1"><span class="translated-text">威胁的生命周期安全视图</span><span class="original-text">A Lifecycle Security View of Threats</span></span>
+</h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="translated-text">自主人工智能代理充当为完成任务而设计的迭代系统。由初始提示触发，代理利用大型语言模型（LLM）对外部知识和操作指导进行推理，维护其内部状态，并在反馈驱动的循环中重复调用工具，直到完成任务。这个运行时过程可以分为五个不同的阶段：初始化、输入、内存、决策和执行</span><span class="original-text">Autonomous AI agents function as iterative systems designed for task completion. Triggered by an initial prompt, the agent leverages a large language model (LLM) to reason over external knowledge and operational guidance, maintains its internal state, and repeatedly invokes tools in a feedback-driven loop until the task is accomplished. This runtime process can be broken down into five distinct stages: initialization, input, memory, decision, and execution</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib19" title="Taming openclaw: security analysis and mitigation of autonomous llm agent threats">4</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="translated-text">在初始化阶段，代理通过加载必要的配置、插件、技能和其他能力来建立其运行环境。这些组件提供执行复杂任务所需的外部知识和工具接口。
+在输入阶段，各种输入，例如提示、文档、网页、检索结果、工具响应等，都被合并到当前上下文中。
+在记忆阶段，短期记忆和长期记忆都受到管理。短期记忆在会话内维护，当对话超出模型的上下文窗口时可能会被压缩，而长期记忆则持久存储并在会话之间共享，并在必要时检索。此外，用户偏好和规则可以写入工作区文件中，例如</span><span class="original-text">At the initialization stage, the agent establishes its operating environment by loading necessary configurations, plugins, skills, and other capabilities. These components provide the external knowledge and tool interfaces required for performing complex tasks.
+During the input stage, various inputs, such as prompts, documents, webpages, retrieval results, and tool responses, are incorporated into the current context.
+In the memory stage, both short-term and long-term memory are managed. Short-term memory is maintained within the session and may be compressed when the dialogue exceeds the model’s context window, while long-term memory is persistently stored and shared across sessions, retrieved as necessary. Additionally, user preferences and rules may be written into workspace files, such as</span><span class="ltx_text ltx_font_typewriter" id="S2.p2.1.1"><span class="translated-text">代理.md</span><span class="original-text">AGENTS.md</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_typewriter" id="S2.p2.1.2"><span class="translated-text">用户名.md</span><span class="original-text">USER.md</span></span><span class="translated-text">。
+决策阶段将可用技能、可调用工具、会话历史记录、内存和当前用户请求集成到模型输入中，以进行推理、计划制定和工具选择。
+最后，在执行阶段，代理将其决策转化为具体行动，产生完成任务的外部副作用。</span><span class="original-text">.
+The decision stage integrates available skills, callable tools, session history, memory, and the current user request into model inputs for reasoning, plan formulation, and tool selection.
+Finally, during the execution stage, the agent translates its decisions into concrete actions, producing external side effects that complete the task.</span></p>
+</div>
+<section class="ltx_subsection" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S2.SS1.4.1.1"><span class="translated-text">Ⅱ-A</span><span class="original-text">II-A</span></span> </span><span class="ltx_text ltx_font_italic" id="S2.SS1.5.2"><span class="translated-text">对代理生命周期的威胁</span><span class="original-text">Threats to Agents Lifecycle</span></span>
+</h3>
+<div class="ltx_para" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.1"><span class="translated-text">这五个生命周期阶段暴露了不同的安全问题。在初始化时，关键问题是代理是否从值得信赖的基线开始，因为恶意插件、中毒技能、不安全的依赖项或过度特权的配置可能会在任何任务开始之前损害功能集</span><span class="original-text">These five lifecycle stages expose distinct security problems. At initialization, the key concern is whether the agent begins from a trustworthy baseline, since malicious plugins, poisoned skills, unsafe dependencies, or over-privileged configurations can compromise the capability set before any task begins</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib15" title="Agent skills in the wild: an empirical study of security vulnerabilities at scale">9</a>, <a class="ltx_ref" href="#bib.bib20" title="Backstabber’s knife collection: a review of open source software supply chain attacks">10</a>]</cite><span class="translated-text">。
+在输入时，核心问题是不受信任的外部内容是否作为被动数据被允许进入工作上下文，或者被误解为可操作的控制信号，从而实现间接提示注入和相关的上下文污染攻击</span><span class="original-text">.
+At input, the central problem is whether untrusted external content is admitted into the working context as passive data or misinterpreted as actionable control signals, enabling indirect prompt injection and related context-contamination attacks</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="Not what you’ve signed up for: compromising real-world LLM-integrated applications with indirect prompt injection">6</a>, <a class="ltx_ref" href="#bib.bib7" title="Prompt injection attack against LLM-integrated applications">8</a>, <a class="ltx_ref" href="#bib.bib10" title="StruQ: defending against prompt injection with structured queries">2</a>]</cite><span class="translated-text">。
+在内存中，风险从短暂的影响转变为持续的损坏，因为对会话状态或长期内存的不安全更新可能会将本地操作转变为持久的行为偏差</span><span class="original-text">.
+At memory, the risk shifts from transient influence to persistent corruption, because unsafe updates to session state or long-term memory can turn a local manipulation into durable behavioral bias</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib24" title="Memory injection attacks on LLM agents via query-only interaction">5</a>, <a class="ltx_ref" href="#bib.bib25" title="MemoryGraft: persistent compromise of LLM agents via poisoned experience retrieval">14</a>, <a class="ltx_ref" href="#bib.bib17" title="A-memguard: a proactive defense framework for LLM-based agent memory">17</a>]</cite><span class="translated-text">。
+在决策时，主要问题是代理的计划、工具选择和参数是否与授权任务保持一致</span><span class="original-text">.
+At decision, the main problem is whether the agent’s plan, tool choice, and parameters remain aligned with the authorized task</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib9" title="The instruction hierarchy: training LLMs to prioritize privileged instructions">16</a>, <a class="ltx_ref" href="#bib.bib18" title="ToolSafety: a comprehensive dataset for enhancing safety in LLM-based agent tool invocations">18</a>]</cite><span class="translated-text">。
+在执行时，这些上游偏差会变成具体的外部影响，包括不安全的命令执行、未经授权的文件或服务修改、数据泄露和资源滥用</span><span class="original-text">.
+At execution, those upstream deviations become concrete external effects, including unsafe command execution, unauthorized file or service modification, data exfiltration, and resource abuse</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="OS-Harm: a benchmark for measuring safety of computer use agents">7</a>, <a class="ltx_ref" href="#bib.bib12" title="AgentHarm: a benchmark for measuring harmfulness of LLM agents">1</a>]</cite>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S2.SS2.4.1.1"><span class="translated-text">Ⅱ-B</span><span class="original-text">II-B</span></span> </span><span class="ltx_text ltx_font_italic" id="S2.SS2.5.2"><span class="translated-text">跨阶段风险传播</span><span class="original-text">Cross-Stage Risk Propagation</span></span>
+</h3>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.1"><span class="translated-text">在自主代理中，许多真正的攻击不会停留在它们首次出现的阶段，而是沿着生命周期演变为跨阶段的威胁轨迹。因此，诸如提示注入之类的常见技术可以更好地理解为进入运行时和改变中间状态的机制，而不是最终危害本身。威胁可能来自多个点，包括受损的初始化工件、不受信任的外部输入、中毒的内存或内部生成的决策错误（例如幻觉和客观漂移）。一旦上下文、内存或计划状态被破坏，这些中间状态不仅成为攻击的受害者，而且成为将风险传播到后续阶段的中继点。例如，在输入时引入的恶意内容可能首先毒害存储器，并且中毒的存储器随后可能重新进入检索和上下文构建，从而使后续决策产生偏差。当这些决策转化为输出和行动时，威胁会进一步放大为面向用户的错误响应、未经授权的计划、不安全的工具调用或有害的执行结果。因此，自主代理威胁应被理解为整个生命周期中复杂、持久且部分隐藏的传播路径，而不是绑定到单个接口的孤立攻击实例</span><span class="original-text">In autonomous agents, many real attacks do not remain local to the stage where they first appear, but instead evolve as cross-stage threat trajectories along the lifecycle. Common techniques such as prompt injection are therefore better understood as mechanisms for entering the runtime and altering intermediate state than as the final harm itself. Threats may originate from multiple points, including compromised initialization artifacts, untrusted external inputs, poisoned memory, or internally generated decision errors such as hallucination and objective drift. Once context, memory, or planning state is corrupted, these intermediate states become not only victims of attack but also relay points that propagate risk into later stages. For example, malicious content introduced at input may first poison memory, and the poisoned memory may later re-enter retrieval and context construction, thereby biasing subsequent decisions. As those decisions are translated into outputs and actions, the threat is further amplified into false user-facing responses, unauthorized plans, unsafe tool calls, or harmful execution outcomes. Autonomous-agent threats should therefore be understood as complex, persistent, and partially hidden paths of propagation across the lifecycle rather than as isolated attack instances tied to a single interface</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="Not what you’ve signed up for: compromising real-world LLM-integrated applications with indirect prompt injection">6</a>, <a class="ltx_ref" href="#bib.bib24" title="Memory injection attacks on LLM agents via query-only interaction">5</a>, <a class="ltx_ref" href="#bib.bib25" title="MemoryGraft: persistent compromise of LLM agents via poisoned experience retrieval">14</a>]</cite>.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section"><span class="translated-text">三、</span><span class="original-text">III</span></span><span class="ltx_text ltx_font_smallcaps" id="S3.1.1"><span class="translated-text">AgentWard 架构</span><span class="original-text">AgentWard Architecture</span></span>
+</h2>
+<figure class="ltx_figure" id="S3.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="360" id="S3.F1.g1" src="https://arxiv.org/html/2604.24657v1/x1.png" width="660"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Architectural overview of <span class="ltx_text ltx_font_smallcaps" id="S3.F1.2.1">AgentWard</span>. The framework attaches to lifecycle-relevant runtime events, organizes protection through five layers aligned with initialization, input, memory, decision, and execution, and carries security judgments forward through shared state and reusable analysis capabilities.</figcaption>
+</figure>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="translated-text">在本节中，我们介绍</span><span class="original-text">In this section, we introduce</span><span class="ltx_text ltx_font_smallcaps" id="S3.p1.1.1"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">，一个面向生命周期的自主人工智能代理运行时防御框架。</span><span class="original-text">, a lifecycle-oriented runtime defense framework for autonomous AI agents.</span><span class="ltx_text ltx_font_smallcaps" id="S3.p1.1.2"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">采用分层纵深防御架构，将特定阶段的异构控制与跨层协调相结合，使威胁在整个代理生命周期中传播时能够被持续检测、约束和中断。我们首先解释全生命周期安全的基本原理以及由此产生的五层架构，然后详细说明每层的角色、边界、输入、输出和协调。图</span><span class="original-text">adopts a layered defense-in-depth architecture that combines stage-specific heterogeneous controls with cross-layer coordination, enabling threats to be continuously detected, constrained, and interrupted as they propagate through the agent lifecycle. We first explain the rationale for full-lifecycle security and the resulting five-layer architecture, and then detail the role, boundary, inputs, outputs, and coordination of each layer. Figure</span><a class="ltx_ref" href="#S3.F1" title="Figure 1 ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">说明了 OpenClaw 运行时循环中的这种组织，其中</span><span class="original-text">illustrates this organization in the OpenClaw runtime loop, where</span><span class="ltx_text ltx_font_smallcaps" id="S3.p1.1.3"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">集成到生命周期管道中，并通过五个协调层提供安全保证：基础扫描、输入清理、认知保护、决策调整和执行控制。</span><span class="original-text">is integrated into the lifecycle pipeline and provides security assurance through five coordinated layers: Foundation Scan, Input Sanitization, Cognition Protection, Decision Alignment, and Execution Control.</span></p>
+</div>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS1.4.1.1"><span class="translated-text">Ⅲ-A</span><span class="original-text">III-A</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS1.5.2"><span class="translated-text">设计原理</span><span class="original-text">Design Rationale</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">的设计</span><span class="original-text">The design of</span><span class="ltx_text ltx_font_smallcaps" id="S3.SS1.p1.1.1"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">以四个实际问题为指导：
+框架应该保护什么？
+框架应该采取什么安全态势？
+防御应该如何组织？
+这些问题激发了四个互补的设计原则：全生命周期覆盖、零信任执行、异构防御和跨层协调。</span><span class="original-text">is guided by four practical questions:
+What should the framework protect?
+What security posture should the framework adopt?
+How should the defenses be organized?
+These questions motivate four complementary design principles: full-lifecycle coverage, zero-trust enforcement, heterogeneous defense, and cross-layer coordination.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p2">
+<p class="ltx_p" id="S3.SS1.p2.1"><span class="ltx_text ltx_font_bold" id="S3.SS1.p2.1.1"><span class="translated-text">全生命周期覆盖</span><span class="original-text">Full-lifecycle Coverage</span></span>:
+<span class="ltx_text ltx_font_smallcaps" id="S3.SS1.p2.1.2"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">旨在保护整个代理运行时系统，包括代理、其托管的资产、其运行的环境以及其服务的用户。它还旨在在可能的攻击传播路径造成外部损害之前中断它们。为此，</span><span class="original-text">aims to protect the entire agent runtime system, including the agent, the assets it hosts, the environment in which it operates, and the users it serves. It also aims to interrupt plausible attack propagation paths before they result in external harm. To this end,</span><span class="ltx_text ltx_font_smallcaps" id="S3.SS1.p2.1.3"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">涵盖自治代理的整个生命周期，从初始化到执行。这种设计是必要的，因为针对自主代理的威胁通常跨越阶段边界，而不是局限于单个接口。因此，全生命周期覆盖减少了运行时管道中的盲点，并使攻击能够在传播路径上的多个点被拦截。</span><span class="original-text">covers the full lifecycle of an autonomous agent, from initialization to execution. This design is necessary because threats against autonomous agents often cross stage boundaries rather than remaining confined to a single interface. Full-lifecycle coverage therefore reduces blind spots in the runtime pipeline and enables attacks to be intercepted at multiple points along their propagation paths.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p3">
+<p class="ltx_p" id="S3.SS1.p3.1"><span class="ltx_text ltx_font_bold" id="S3.SS1.p3.1.1"><span class="translated-text">零信任执行</span><span class="original-text">Zero-trust Enforcement</span></span>:
+<span class="ltx_text ltx_font_smallcaps" id="S3.SS1.p3.1.2"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">采用最坏情况的运行时态势：攻击可能在任何阶段进入，污染任何对象，并通过任何接口传播。考虑到运行时攻击的多样性和隐蔽性，每一层都应该假设上游组件、保留状态和外部信号可能已经受到损害或受到敌对影响。因此，每一层都在零信任状态下评估本地输入、状态、信号和行为，而不是仅仅依赖于先前层做出的允许决策。因此，较早的允许决策不会自动授予下游通道，并且后面的层仍然可以在故障安全状态下阻止、限制或升级危险行为。</span><span class="original-text">adopts a worst-case runtime posture: an attack may enter at any stage, contaminate any object, and propagate through any interface. Given the diversity and stealthiness of runtime attacks, each layer should assume that upstream components, retained state, and external signals may already be compromised or adversarially influenced. Accordingly, every layer evaluates local inputs, states, signals, and behaviors under a zero-trust posture, rather than relying solely on allow decisions made by preceding layers. As a result, an earlier allow decision does not automatically grant downstream passage, and later layers can still block, constrain, or escalate risky behavior under a fail-safe posture.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p4">
+<p class="ltx_p" id="S3.SS1.p4.1"><span class="ltx_text ltx_font_bold" id="S3.SS1.p4.1.1"><span class="translated-text">异构防御</span><span class="original-text">Heterogeneous Defense</span></span><span class="translated-text">：
+鉴于攻击技术和传播路径的多样性，任何单一类别的防御机制都不足以提供全面的保护。如果所有层都依赖于类似的检测逻辑或干预策略，攻击者可能会利用常见的旁路模式，导致整个框架出现相关故障。为了提高鲁棒性并减少共同的故障模式，</span><span class="original-text">:
+Given the diversity of attack techniques and propagation paths, no single class of defense mechanism is sufficient for comprehensive protection. If all layers rely on similar detection logic or intervention strategies, an attacker may exploit a common bypass pattern that causes correlated failures across the framework. To improve robustness and reduce shared failure modes,</span><span class="ltx_text ltx_font_smallcaps" id="S3.SS1.p4.1.2"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">采用跨层异构机制。这些机制基于不同的防御原则，保护不同的安全对象，利用不同形式的证据，并通过不同的手段干预危险行为。</span><span class="original-text">employs heterogeneous mechanisms across layers. These mechanisms are grounded in different defensive principles, protect different security objects, leverage different forms of evidence, and intervene in risky behavior through different means.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p5">
+<p class="ltx_p" id="S3.SS1.p5.1"><span class="ltx_text ltx_font_bold" id="S3.SS1.p5.1.1"><span class="translated-text">跨层协调</span><span class="original-text">Cross-layer Coordination</span></span><span class="translated-text">：
+尽管每一层都做出本地安全决策，但这些层不应该孤立运行。从全球角度来看，一次攻击可能会跨多个阶段传播，在一个阶段留下微弱的信号，而在另一个阶段只表现出有害影响。单阶段观察可能会显得可疑，但不足以做出自信的决定；通过共享背景和积累风险证据，</span><span class="original-text">:
+Although each layer makes local security decisions, the layers should not operate in isolation. From a global perspective, an attack may propagate across multiple stages, leave weak signals in one stage, and only manifest harmful effects in another. A single-stage observation may appear suspicious but insufficient for a confident decision; by sharing context and accumulating risk evidence,</span><span class="ltx_text ltx_font_smallcaps" id="S3.SS1.p5.1.2"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">可以将分散的信号连接成更完整的攻击视图，从而提高检测准确性并实现更有针对性的响应。此外，某些层可能会产生可重用的分析结果、风险标签或可由后续层继承的安全状态。</span><span class="original-text">can connect dispersed signals into a more complete view of the attack, thereby improving detection accuracy and enabling more targeted responses. In addition, some layers may produce reusable analysis results, risk labels, or security states that can be inherited by subsequent layers.</span><span class="ltx_text ltx_font_smallcaps" id="S3.SS1.p5.1.3"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">因此，推进共享背景、积累的证据、风险注释和可重复使用的分析输出，使后期阶段能够完善早期发现，避免冗余分析，逐步升级应对措施，并防止相互冲突的干预措施。</span><span class="original-text">therefore carries forward shared context, accumulated evidence, risk annotations, and reusable analysis outputs, allowing later stages to refine earlier findings, avoid redundant analysis, escalate responses progressively, and prevent conflicting interventions.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS2.4.1.1"><span class="translated-text">Ⅲ-B</span><span class="original-text">III-B</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS2.5.2"><span class="translated-text">五层防护设计</span><span class="original-text">Five-Layer Protection Design</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">遵循这些原则，</span><span class="original-text">Following these principles,</span><span class="ltx_text ltx_font_smallcaps" id="S3.SS2.p1.1.1"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">将其防御组织为五个保护层，共同覆盖自主代理的整个生命周期，如表所示</span><span class="original-text">organizes its defenses into five protection layers that collectively cover the full lifecycle of an autonomous agent, as shown in Table</span><a class="ltx_ref" href="#S3.T1" title="TABLE I ‣ III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">I</span></a><span class="translated-text">。每一层都保护特定的生命周期阶段，而共享的安全状态和可重用的分析功能将各层连接成一个紧密结合的防御系统。共享状态携带跨阶段的风险证据和注释，而可重用的分析功能提供了用于检查相关对象（例如技能、输入、内存、计划和操作）的通用机制。这种协调允许一层不足以积累的证据并由后续层重新考虑，并允许过去的检测为未来对类似攻击面的评估提供信息。这样，</span><span class="original-text">. Each layer protects a specific lifecycle stage, while shared security state and reusable analysis capabilities connect the layers into a cohesive defense system. The shared state carries risk evidence and annotations across stages, while reusable analysis capabilities provide common mechanisms for inspecting related objects, such as skills, inputs, memory, plans, and actions. This coordination allows evidence that is insufficient for one layer to be accumulated and reconsidered by later layers, and allows past detections to inform future assessments of similar attack surfaces. In this way,</span><span class="ltx_text ltx_font_smallcaps" id="S3.SS2.p1.1.2"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">形成一个连接的信任边界，可以在威胁在运行时生命周期中传播时检测、约束和中断威胁，而不是将生命周期视为一系列孤立的检查点。</span><span class="original-text">forms a connected trust boundary that can detect, constrain, and interrupt threats as they propagate through the runtime lifecycle, rather than treating the lifecycle as a sequence of isolated checkpoints.</span></p>
+</div>
+<figure class="ltx_table" id="S3.T1">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE I: </span>Lifecycle stages, protection layers, trust boundaries, and security objectives in <span class="ltx_text ltx_font_smallcaps" id="S3.T1.2.1">AgentWard</span>.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T1.3">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T1.3.1.1">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T1.3.1.1.1"><span class="ltx_text ltx_font_bold" id="S3.T1.3.1.1.1.1" style="font-size:90%;">Lifecycle Stage</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T1.3.1.1.2"><span class="ltx_text ltx_font_bold" id="S3.T1.3.1.1.2.1" style="font-size:90%;">Protection Layer</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T1.3.1.1.3"><span class="ltx_text ltx_font_bold" id="S3.T1.3.1.1.3.1" style="font-size:90%;">Trust Boundary</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T1.3.1.1.4"><span class="ltx_text ltx_font_bold" id="S3.T1.3.1.1.4.1" style="font-size:90%;">Security Objective</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T1.3.2.1">
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.3.2.1.1"><span class="ltx_text" id="S3.T1.3.2.1.1.1" style="font-size:90%;">Initialization</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.3.2.1.2"><span class="ltx_text" id="S3.T1.3.2.1.2.1" style="font-size:90%;">Foundation Scan</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.3.2.1.3"><span class="ltx_text" id="S3.T1.3.2.1.3.1" style="font-size:90%;">Runtime–Supply Chain</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.3.2.1.4"><span class="ltx_text" id="S3.T1.3.2.1.4.1" style="font-size:90%;">Trusted operating baseline</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.3.3.2">
+<td class="ltx_td ltx_align_center" id="S3.T1.3.3.2.1"><span class="ltx_text" id="S3.T1.3.3.2.1.1" style="font-size:90%;">Input</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.3.3.2.2"><span class="ltx_text" id="S3.T1.3.3.2.2.1" style="font-size:90%;">Input Sanitization</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.3.3.2.3"><span class="ltx_text" id="S3.T1.3.3.2.3.1" style="font-size:90%;">Instruction–Data</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.3.3.2.4"><span class="ltx_text" id="S3.T1.3.3.2.4.1" style="font-size:90%;">Active-context integrity</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.3.4.3">
+<td class="ltx_td ltx_align_center" id="S3.T1.3.4.3.1"><span class="ltx_text" id="S3.T1.3.4.3.1.1" style="font-size:90%;">Memory</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.3.4.3.2"><span class="ltx_text" id="S3.T1.3.4.3.2.1" style="font-size:90%;">Cognition Protection</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.3.4.3.3"><span class="ltx_text" id="S3.T1.3.4.3.3.1" style="font-size:90%;">Transient–Persistent State</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.3.4.3.4"><span class="ltx_text" id="S3.T1.3.4.3.4.1" style="font-size:90%;">Internal-state integrity</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.3.5.4">
+<td class="ltx_td ltx_align_center" id="S3.T1.3.5.4.1"><span class="ltx_text" id="S3.T1.3.5.4.1.1" style="font-size:90%;">Decision</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.3.5.4.2"><span class="ltx_text" id="S3.T1.3.5.4.2.1" style="font-size:90%;">Decision Alignment</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.3.5.4.3"><span class="ltx_text" id="S3.T1.3.5.4.3.1" style="font-size:90%;">Intent–Plan</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.3.5.4.4"><span class="ltx_text" id="S3.T1.3.5.4.4.1" style="font-size:90%;">Authorized plan formation</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.3.6.5">
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T1.3.6.5.1"><span class="ltx_text" id="S3.T1.3.6.5.1.1" style="font-size:90%;">Execution</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T1.3.6.5.2"><span class="ltx_text" id="S3.T1.3.6.5.2.1" style="font-size:90%;">Execution Control</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T1.3.6.5.3"><span class="ltx_text" id="S3.T1.3.6.5.3.1" style="font-size:90%;">Agent–Environment</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T1.3.6.5.4"><span class="ltx_text" id="S3.T1.3.6.5.4.1" style="font-size:90%;">Safe least-privilege execution</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<section class="ltx_subsubsection" id="S3.SS2.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S3.SS2.SSS1.4.1.1"><span class="translated-text">Ⅲ-B</span><span class="original-text">III-B</span></span>1 </span><span class="translated-text">基础扫描层</span><span class="original-text">Foundation Scan Layer</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS1.p1">
+<p class="ltx_p" id="S3.SS2.SSS1.p1.1"><span class="translated-text">基础扫描层在生命周期开始时建立代理的可信操作基线。它在运行时和不受信任的基础组件之间的运行时供应链边界运行，包括配置、插件、技能、依赖项和权限声明。该层应在引入、升级或修改技能时检查技能，验证配置以识别不安全的默认值或过度特权的设置，并检查插件和依赖项是否存在已知漏洞和完整性风险。它保护运行时信任根和批准的能力基线，因为后续阶段继承初始化期间接受的组件、权限和默认假设。</span><span class="original-text">The Foundation Scan Layer establishes the agent’s trusted operating baseline at the beginning of the lifecycle. It operates at the runtime-supply chain boundary between the runtime and untrusted foundational components, including configurations, plugins, skills, dependencies, and permission declarations. This layer should inspect skills when they are introduced, upgraded, or modified, validate configurations to identify unsafe defaults or over-privileged settings, and examine plugins and dependencies for known vulnerabilities and integrity risks. It protects the runtime trust root and the approved capability baseline, because subsequent stages inherit the components, permissions, and default assumptions accepted during initialization.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS1.p2">
+<p class="ltx_p" id="S3.SS2.SSS1.p2.1"><span class="translated-text">该层的输入包括依赖项元数据、​​供应链来源、配置文件、插件清单、技能定义和权限声明。其输出包括初始化信任标签、警告、策略约束和批准的能力基线，后续阶段在形成本地信任假设时可以使用这些基线。如图所示</span><span class="original-text">The inputs to this layer include dependency metadata, supply-chain provenance, configuration files, plugin manifests, skill definitions, and permission declarations. Its outputs include initialization trust labels, warnings, policy constraints, and an approved capability baseline that later stages can use when forming local trust assumptions. As illustrated in Fig.</span><a class="ltx_ref" href="#S3.F1" title="Figure 1 ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">，代表性架构首先对语义描述和代码级依赖关系进行依赖关系分析，以识别运行时每个技能所需的组件。然后，它应用供应链验证来评估依赖性完整性和可信度，并应用配置验证来检测不安全或易受攻击的设置。汇总所得证据以用于漏洞发现和基线批准。在受损组件影响上下文处理、内存更新、决策或工具访问之前，这些检查使初始化风险变得明确和有限</span><span class="original-text">, a representative architecture first performs dependency analysis over both semantic descriptions and code-level dependencies to identify the components required by each skill at runtime. It then applies supply-chain verification to assess dependency integrity and trustworthiness, together with configuration validation to detect unsafe or vulnerable settings. The resulting evidence is aggregated for vulnerability discovery and baseline approval. These checks make initialization risks explicit and bounded before compromised components can influence context handling, memory updates, decision-making, or tool access</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib15" title="Agent skills in the wild: an empirical study of security vulnerabilities at scale">9</a>, <a class="ltx_ref" href="#bib.bib20" title="Backstabber’s knife collection: a review of open source software supply chain attacks">10</a>]</cite>.</p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS2.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S3.SS2.SSS2.4.1.1"><span class="translated-text">Ⅲ-B</span><span class="original-text">III-B</span></span>2 </span><span class="translated-text">输入清理层</span><span class="original-text">Input Sanitization Layer</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS2.p1">
+<p class="ltx_p" id="S3.SS2.SSS2.p1.1"><span class="translated-text">输入清理层控制信息进入代理的活动工作环境。它附加到消息入口、检索结果、文档和网页访问以及工具响应摄取，其中来自通信渠道、知识源和环境观察的外部内容可能开始影响模型。该层保护指令数据边界以及后续内存和决策逻辑消耗的活动上下文。</span><span class="original-text">The Input Sanitization Layer governs the admission of information into the agent’s active working context. It attaches to message ingress, retrieval results, document and webpage access, and tool-response ingestion, where external content from communication channels, knowledge sources, and environmental observations may begin to influence the model. This layer protects the instruction-data boundary and the active context consumed by subsequent memory and decision logic.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS2.p2">
+<p class="ltx_p" id="S3.SS2.SSS2.p2.1"><span class="translated-text">该层的输入包括多源外部内容，例如面向用户的消息、检索到的段落、网页、文件和工具输出。其输出包括出处标签、检疫决定、限制使用标签、经过净化或重写的内容以及可在后续阶段重复使用的输入风险标记。如图所示</span><span class="original-text">The inputs to this layer include multi-source external content, such as user-facing messages, retrieved passages, webpages, files, and tool outputs. Its outputs include provenance tags, quarantine decisions, restricted-use labels, sanitized or rewritten content, and input risk markers that can be reused by later stages. As illustrated in Fig.</span><a class="ltx_ref" href="#S3.F1" title="Figure 1 ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">，代表性设计结合了补充检查，包括对输入内容的语义一致性分析、针对分割或分布式攻击的碎片检测，以及针对跨文本、图像和其他模态的内容的多模态一致性分析。当识别出不安全的段时，这些检查之后会进行恶意内容替换或重写。该层的作用是保留有用的信息，同时确保对抗性指令在污染下游状态、内存或规划之前被检测到、降级、隔离或重写。</span><span class="original-text">, a representative design combines complementary checks, including semantic consistency analysis over input content, fragmented detection for split or distributed attacks, and multimodal consistency analysis for content spanning text, images, and other modalities. When unsafe segments are identified, these checks are followed by malicious-content replacement or rewriting. The role of this layer is to preserve useful information while ensuring that adversarial instructions are detected, downgraded, quarantined, or rewritten before they can contaminate downstream state, memory, or planning</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="Not what you’ve signed up for: compromising real-world LLM-integrated applications with indirect prompt injection">6</a>, <a class="ltx_ref" href="#bib.bib7" title="Prompt injection attack against LLM-integrated applications">8</a>, <a class="ltx_ref" href="#bib.bib10" title="StruQ: defending against prompt injection with structured queries">2</a>]</cite>.</p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS2.SSS3">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S3.SS2.SSS3.4.1.1"><span class="translated-text">Ⅲ-B</span><span class="original-text">III-B</span></span>3 </span><span class="translated-text">认知保护层</span><span class="original-text">Cognition Protection Layer</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS3.p1">
+<p class="ltx_p" id="S3.SS2.SSS3.p1.1"><span class="translated-text">认知保护层管理代理的上下文和持久状态。它监视内存写入、会话摘要、上下文合并以及文件支持状态的更新。其主要功能是确保对上下文或内存的更改有效、一致且不受污染。该层保护内存工件、工作区状态、会话上下文和其他持久状态表示，因为这些对象中的损坏可能会影响后续任务中的推理和行为。</span><span class="original-text">The Cognition Protection Layer governs the agent’s context and persistent state. It monitors memory writes, session summaries, context merges, and updates to file-backed state. Its primary function is to ensure that changes to context or memory are valid, consistent, and free from contamination. This layer protects memory artifacts, workspace state, session context, and other durable state representations, because corruption in these objects can bias reasoning and behavior in subsequent tasks.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS3.p2">
+<p class="ltx_p" id="S3.SS2.SSS3.p2.1"><span class="translated-text">该层的输入包括状态更新、内存有效负载、会话摘要、工作区写入和状态差异。其输出包括可信状态更新、持久性批准、内存读取授权、回滚标记、降级到临时决策和异常警告。如图所示。</span><span class="original-text">The inputs to this layer include state updates, memory payloads, session summaries, workspace writes, and state differences. Its outputs include trusted state updates, persistence approvals, memory read authorizations, rollback markers, downgrade-to-ephemeral decisions, and anomaly warnings. As shown in Fig.</span><a class="ltx_ref" href="#S3.F1" title="Figure 1 ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">，该层检查上下文漂移、有害内存内容和一致性违规。它还可能使用恶意内存模式库来检测已知的中毒策略。通过控制哪些状态转换变得持久并通过管理内存读取，该层可以防止短期污染演变成长期行为偏差</span><span class="original-text">, this layer checks for context drift, harmful memory content, and consistency violations. It may also use a library of malicious-memory patterns to detect known poisoning strategies. By controlling which state transitions become persistent and by governing memory reads, this layer prevents short-term contamination from evolving into long-term behavioral bias</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib24" title="Memory injection attacks on LLM agents via query-only interaction">5</a>, <a class="ltx_ref" href="#bib.bib25" title="MemoryGraft: persistent compromise of LLM agents via poisoned experience retrieval">14</a>, <a class="ltx_ref" href="#bib.bib17" title="A-memguard: a proactive defense framework for LLM-based agent memory">17</a>]</cite>.</p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS2.SSS4">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S3.SS2.SSS4.4.1.1"><span class="translated-text">Ⅲ-B</span><span class="original-text">III-B</span></span>4 </span><span class="translated-text">决策调整层</span><span class="original-text">Decision Alignment Layer</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS4.p1">
+<p class="ltx_p" id="S3.SS2.SSS4.p1.1"><span class="translated-text">决策协调层在外部副作用发生之前审查行动形成。它在运行时组装计划、选择工具或生成执行就绪参数之后、但在执行建议的操作之前运行。在此阶段，操作仍可以修改、升级以供批准或阻止。该层通过检查建议的操作是否符合用户的授权任务、适用的安全策略以及迄今为止积累的可接受的生命周期上下文来保护意图计划的一致性和决策质量。</span><span class="original-text">The Decision Alignment Layer reviews action formation before external side effects occur. It operates after the runtime has assembled a plan, selected tools, or generated execution-ready parameters, but before the proposed action is executed. At this stage, the action can still be revised, escalated for approval, or blocked. This layer protects intent-plan alignment and decision quality by checking whether the proposed action is justified by the user’s authorized task, applicable security policies, and the accepted lifecycle context accumulated so far.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS4.p2">
+<p class="ltx_p" id="S3.SS2.SSS4.p2.1"><span class="translated-text">该层的输入包括用户意图、接受的上下文、记忆状态、全局信息和建议的操作。其输出包括一致性分数、风险等级、批准要求、重写或阻止的计划以及可由执行阶段继承的可信决策标记。如图所示。</span><span class="original-text">The inputs to this layer include user intent, accepted context, memory state, global information, and the proposed action. Its outputs include alignment scores, risk tiers, approval requirements, rewritten or blocked plans, and trusted-decision markers that can be inherited by the execution stage. As shown in Fig.</span><a class="ltx_ref" href="#S3.F1" title="Figure 1 ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">，代表性设计包括全局信息审计、意图一致性检查、推理逻辑审查、敏感参数验证和高风险决策重写。因此，这一层充当主要的语义审查点，在调用任何工具之前，污染状态、不安全推理或微妙的目标漂移仍然可以转化为受控决策</span><span class="original-text">, a representative design consists of global information auditing, intent-consistency checking, inference-logic review, sensitive-parameter validation, and high-risk decision rewriting. This layer therefore serves as the primary semantic review point, where contaminated state, unsafe reasoning, or subtle goal drift can still be transformed into a controlled decision before any tool is invoked</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib18" title="ToolSafety: a comprehensive dataset for enhancing safety in LLM-based agent tool invocations">18</a>]</cite>.</p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS2.SSS5">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S3.SS2.SSS5.4.1.1"><span class="translated-text">Ⅲ-B</span><span class="original-text">III-B</span></span>5 </span><span class="translated-text">执行控制层</span><span class="original-text">Execution Control Layer</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS5.p1">
+<p class="ltx_p" id="S3.SS2.SSS5.p1.1"><span class="translated-text">执行控制层管理最终的代理环境边界，其中代理的内部决策被转换为外部环境中的操作。它附加到工具调用、shell 命令、文件操作、API 调用、资源访问和网络通信。该层保护面向环境的资产，包括可能受代理执行影响的文件、服务、设备和网络可访问资源。</span><span class="original-text">The Execution Control Layer governs the final agent-environment boundary, where an agent’s internal decisions are translated into actions in the external environment. It attaches to tool calls, shell commands, file operations, API invocations, resource access, and network communication. This layer protects environment-facing assets, including files, services, devices, and network-accessible resources that may be affected by agent execution.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS5.p2">
+<p class="ltx_p" id="S3.SS2.SSS5.p2.1"><span class="translated-text">该层的输入包括具体的操作请求、执行上下文、工具元数据以及早期层生成的上游风险注释。其输出包括允许和拒绝决策、最低权限约束、沙箱策略、批准门、回滚操作、终止信号和受控执行状态。如图所示。</span><span class="original-text">The inputs to this layer include concrete action requests, execution context, tool metadata, and upstream risk annotations produced by earlier layers. Its outputs include allow and deny decisions, least-privilege constraints, sandboxing policies, approval gates, rollback actions, kill signals, and controlled execution status. As shown in Fig.</span><a class="ltx_ref" href="#S3.F1" title="Figure 1 ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">，一个代表性的设计结合了最小权限执行、预执行检查、高风险指令拦截、状态回滚、资源监控、流量监控和基于 eBPF 的系统监控器。通过在语义风险可能产生具体影响的点强制执行运行时约束，该层关闭了生命周期控制循环，并防止在环境中实现有害操作</span><span class="original-text">, a representative design combines least-privilege enforcement, pre-execution checking, high-risk instruction interception, state rollback, resource monitoring, traffic monitoring, and an eBPF-based system monitor. By enforcing runtime constraints at the point where semantic risks can become concrete effects, this layer closes the lifecycle control loop and prevents harmful actions from being realized in the environment</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib5" title="Agentic AI – threats and mitigations">11</a>, <a class="ltx_ref" href="#bib.bib13" title="OS-Harm: a benchmark for measuring safety of computer use agents">7</a>, <a class="ltx_ref" href="#bib.bib12" title="AgentHarm: a benchmark for measuring harmfulness of LLM agents">1</a>, <a class="ltx_ref" href="#bib.bib18" title="ToolSafety: a comprehensive dataset for enhancing safety in LLM-based agent tool invocations">18</a>]</cite>.</p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS3.4.1.1"><span class="translated-text">Ⅲ-C</span><span class="original-text">III-C</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS3.5.2"><span class="translated-text">跨层协调</span><span class="original-text">Cross-layer Coordination</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.1"><span class="translated-text">跨层协调对于保护自主代理免受复杂攻击链和隐秘多轮攻击至关重要。在</span><span class="original-text">Cross-layer coordination is essential for defending autonomous agents against complex attack chains and stealthy multi-turn attacks. In</span><span class="ltx_text ltx_font_smallcaps" id="S3.SS3.p1.1.1"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">，每一层不仅应该做出本地安全决策，还应该将其观察结果贡献给共享安全上下文。该上下文记录了会话级风险证据、信任注释以及对关键攻击面的特定层判断，包括技能、内存、工具、任务和执行请求。</span><span class="original-text">, each layer should not only make local security decisions, but also contribute its observations to a shared security context. This context records session-level risk evidence, trust annotations, and layer-specific judgments over key attack surfaces, including skills, memory, tools, tasks, and execution requests.</span><span class="ltx_text ltx_font_smallcaps" id="S3.SS3.p1.1.2"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">还应维护一个攻击路径知识库，以捕获风险如何进入生命周期、跨阶段传播以及导致有害结果。这种设计允许框架将威胁视为不断发展的轨迹而不是孤立的事件。</span><span class="original-text">should also maintain an attack-path knowledge base that captures how risks enter the lifecycle, propagate across stages, and lead to harmful outcomes. This design allows the framework to reason about threats as evolving trajectories rather than isolated events.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.p2">
+<p class="ltx_p" id="S3.SS3.p2.1"><span class="translated-text">这种协调有两个主要目的。首先，它可以实现会话级风险累积。单层可能会观察到薄弱或模糊的证据，例如可疑的输入内容、不确定的内存更新或不寻常的规划决策，但证据可能不足以证明立即阻止的合理性。通过将这些信号向前传送，后面的层可以将它们与新的观察结果聚合起来，并形成更可靠的评估。例如，如果输入清理层将文档标记为不明确，但无法确认提示注入尝试，则认知保护层和决策调整层可以在评估是否应保留、检索内容或用于证明高风险操作的合理性时重用此标记。累积的风险上下文也可以由执行控制层继承，执行控制层可以应用更严格的执行策略，例如减少工具权限、额外的审批门、沙盒执行或细粒度的运行时监控。这样，不确定的风险可以逐步升级并转化为更强的下游控制，而不是在阶段边界被丢弃。</span><span class="original-text">This coordination serves two main purposes. First, it enables session-level risk accumulation. A single layer may observe weak or ambiguous evidence, such as suspicious input content, an uncertain memory update, or an unusual planning decision, but the evidence may be insufficient to justify immediate blocking. By carrying these signals forward, later layers can aggregate them with new observations and form a more reliable assessment. For example, if the Input Sanitization Layer marks a document as ambiguous but cannot confirm a prompt injection attempt, the Cognition Protection Layer and Decision Alignment Layer can reuse this marker when evaluating whether the content should be persisted, retrieved, or used to justify a high-risk action. The accumulated risk context can also be inherited by the Execution Control Layer, which may apply stricter execution policies, such as reduced tool permissions, additional approval gates, sandboxed execution, or fine-grained runtime monitoring. In this way, uncertain risks can be progressively escalated and translated into stronger downstream controls instead of being discarded at stage boundaries.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.p3">
+<p class="ltx_p" id="S3.SS3.p3.1"><span class="translated-text">其次，跨层协调可以实现历史感知的防御适应。由于自主代理通过跨回合、任务和会话的迭代生命周期循环进行操作，因此安全判断不应被视为在单个阶段或交互后消失的一次性决策。相反，可以重用在先前生命周期迭代中积累的风险概况和攻击路径知识来完善未来对类似行为的评估。如果之前观察到特定的注入模式、内存中毒策略或不安全的工具使用顺序，则相应的证据应该为后续分析提供信息，并允许相关层应用更保守的判断。这种适应也可以跨层不对称。攻击可能会绕过早期语义检查和内存验证，但随后在尝试触发高风险操作时会被执行控制层拦截。由此产生的证据不应保留在执行过程中；相反，它应该被抽象为可重用的攻击路径知识，并传播回早期层，从而能够在以后的生命周期迭代中更早地识别类似的策略。</span><span class="original-text">Second, cross-layer coordination enables history-aware defense adaptation. Since autonomous agents operate through iterative lifecycle loops across turns, tasks, and sessions, security judgments should not be treated as one-time decisions that disappear after a single stage or interaction. Instead, risk profiles and attack-path knowledge accumulated in previous lifecycle iterations can be reused to refine future assessments of similar behaviors. If a particular injection pattern, memory-poisoning strategy, or unsafe tool-use sequence has been observed before, the corresponding evidence should inform subsequent analysis and allow relevant layers to apply more conservative judgments. This adaptation can also be asymmetric across layers. An attack may bypass early semantic checks and memory validation, but later be intercepted by the Execution Control Layer when it attempts to trigger a high-risk operation. The resulting evidence should not remain local to execution; rather, it should be abstracted into reusable attack-path knowledge and propagated back to earlier layers, enabling earlier recognition of similar tactics in later lifecycle iterations.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.p4">
+<p class="ltx_p" id="S3.SS3.p4.1"><span class="translated-text">通过共享安全状态和可重用的攻击知识连接层本地判断，跨层协调降低了孤立层故障的风险。它允许微弱信号在会话中累积，使先前的经验能够改善跨生命周期迭代的未来防御，并允许异构层在整个代理生命周期中相互加强。</span><span class="original-text">By connecting layer-local judgments through shared security state and reusable attack knowledge, cross-layer coordination reduces the risk of isolated layer failures. It allows weak signals to accumulate within a session, enables prior experience to improve future defenses across lifecycle iterations, and allows heterogeneous layers to reinforce one another throughout the agent lifecycle.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span class="ltx_text ltx_font_smallcaps" id="S4.1.1"><span class="translated-text">实施和案例研究</span><span class="original-text">Implementation and Case Studies</span></span>
+</h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">本节理由</span><span class="original-text">This section grounds</span><span class="ltx_text ltx_font_smallcaps" id="S4.p1.1.1"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">在运行的原型中，然后检查跨多个生命周期阶段展开的两个攻击链。重点是控制布局、跨层协调和操作影响，而不是基准总数。我们的目标是展示当威胁在初始化、上下文处理、内存突变、规划和执行过程中持续存在时，框架如何表现。</span><span class="original-text">in a running prototype and then examines two attack chains that unfold across multiple lifecycle stages. The emphasis is on control placement, cross-layer coordination, and operational implication rather than on benchmark totals. Our goal is to show how the framework behaves when threats continue across initialization, context handling, memory mutation, planning, and execution.</span></p>
+</div>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS1.4.1.1">IV-A</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS1.5.2"><span class="translated-text">原型实施</span><span class="original-text">Prototype Implementation</span></span>
+</h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.1"><span class="translated-text">目前的原型实现了</span><span class="original-text">The current prototype implements</span><span class="ltx_text ltx_font_smallcaps" id="S4.SS1.p1.1.1"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">作为 OpenClaw 的插件本机扩展</span><span class="original-text">as a plugin-native extension to OpenClaw</span><span class="ltx_note ltx_role_footnote" id="footnote1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span><span class="translated-text">代码可在以下位置获取：</span><span class="original-text">Code is available at:</span><span class="ltx_ref ltx_nolink ltx_url ltx_font_typewriter ltx_ref_self">https://github.com/FIND-Lab/AgentWard</span></span></span></span> <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib19" title="Taming openclaw: security analysis and mitigation of autonomous llm agent threats">4</a>]</cite><span class="translated-text">。该原型基于 OpenClaw 的插件架构，引入了双向插件设计。统一的适配器层收集与生命周期相关的运行时挂钩，并将它们规范化为五个保护层的安全事件，而特定于层的插件则使用这些事件并返回结构化输出，包括警告类型、威胁描述、判断证据和阻止指令。
+具体来说，Foundation Scan 附于</span><span class="original-text">. Building on OpenClaw’s plugin architecture, the prototype introduces a bidirectional plugin design. A unified adapter layer collects lifecycle-relevant runtime hooks and normalizes them into security events for the five protection layers, while layer-specific plugins consume these events and return structured outputs, including warning types, threat descriptions, judgment evidence, and block directives.
+Concretely, Foundation Scan is attached to</span><span class="ltx_text ltx_font_typewriter" id="S4.SS1.p1.1.2">before_prompt_build</span><span class="translated-text">。输入清理和决策对齐附于</span><span class="original-text">. Input Sanitization and Decision Alignment are attached to</span><span class="ltx_text ltx_font_typewriter" id="S4.SS1.p1.1.3"><span class="translated-text">消息写入之前</span><span class="original-text">before_message_write</span></span><span class="translated-text">，并应用于消息</span><span class="original-text">, and are applied to messages with the</span><span class="ltx_text ltx_font_typewriter" id="S4.SS1.p1.1.4"><span class="translated-text">工具</span><span class="original-text">tool</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_typewriter" id="S4.SS1.p1.1.5"><span class="translated-text">助理</span><span class="original-text">assistant</span></span><span class="translated-text">分别扮演角色。认知保护和执行控制附于</span><span class="original-text">roles, respectively. Cognition Protection and Execution Control are attached to</span><span class="ltx_text ltx_font_typewriter" id="S4.SS1.p1.1.6"><span class="translated-text">工具调用之前</span><span class="original-text">before_tool_call</span></span><span class="translated-text">;前者仅在内存文件即将被修改时触发，而后者则监视所有工具调用。每个会话的安全状态都会带来警告和临时阻止，使后面的层能够继承早期的发现并采取行动。
+当前的实现涵盖初始化期间的恶意技能和错误配置检查、输入时的工具结果污染检测、认知时的内存文件修改异常检测、决策时基于LLM判断的响应审查以及执行时基于模式的危险命令拦截。这个范围对于下面的两个案例研究来说已经足够了，这两个案例研究的目的是演示正在运行的代理系统中的分层拦截和跨阶段协调，而不是提供详尽的基准覆盖范围。</span><span class="original-text">; the former is triggered only when memory files are about to be modified, whereas the latter monitors all tool calls. Per-session security state carries warnings and temporary blocks across turns, enabling later layers to inherit and act on earlier findings.
+The current implementation covers malicious-skill and misconfiguration checks during initialization, tool-result contamination detection at input, memory-file modification anomaly detection at cognition, LLM-judge-based response review at decision, and pattern-based dangerous-command interception at execution. This scope is sufficient for the two case studies below, which aim to demonstrate layered interception and cross-stage coordination in a running agent system rather than to provide exhaustive benchmark coverage.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS2.4.1.1">IV-B</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS2.5.2"><span class="translated-text">案例研究</span><span class="original-text">Case Studies</span></span>
+</h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.1"><span class="translated-text">我们不是每层展示一个案例，而是检查两个跨越多个边界的生命周期攻击链。这个组织使框架的作用更加清晰：</span><span class="original-text">Rather than presenting one case per layer, we examine two lifecycle attack chains that cross multiple boundaries. This organization makes the framework’s role clearer:</span><span class="ltx_text ltx_font_smallcaps" id="S4.SS2.p1.1.1"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">当早期发现限制了后续阶段可以存储、计划或执行的内容时，它是最有用的，而不是保留没有下游影响的本地信号。</span><span class="original-text">is most useful when an early finding constrains what later stages may store, plan, or execute, instead of remaining a local signal with no downstream effect.</span></p>
+</div>
+<section class="ltx_subsubsection" id="S4.SS2.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S4.SS2.SSS1.4.1.1">IV-B</span>1 </span><span class="translated-text">案例一：恶意技术未经授权访问数据</span><span class="original-text">Case 1: Malicious Skill to Unauthorized Data Access</span></h4>
+<div class="ltx_para" id="S4.SS2.SSS1.p1">
+<p class="ltx_p" id="S4.SS2.SSS1.p1.1"><span class="translated-text">第一种情况涉及用户安装的技能，其描述看似良性，而其文件包含混淆的指令，这些指令引导代理进行未经授权的凭据访问或数据导出</span><span class="original-text">The first case involves a user-installed skill whose description appears benign, while its files contain obfuscated instructions that steer the agent toward unauthorized credential access or data export</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib15" title="Agent skills in the wild: an empirical study of security vulnerabilities at scale">9</a>]</cite><span class="translated-text">。攻击首先出现在运行时供应链边界，基础扫描层在第一个推理轮之前检查技能。该层检测到声明的能力与实际技能内容之间不匹配，但证据被部分隐藏，可能不足以立即阻止。因此，它将发现结果记录为风险标记，并将警告传播到下游层。</span><span class="original-text">. The attack first appears at the runtime-supply chain boundary, where the Foundation Scan Layer inspects the skill before the first reasoning turn. The layer detects a mismatch between the declared capability and the actual skill content, but the evidence is partially concealed and may be insufficient for immediate blocking. It therefore records the finding as a risk marker and propagates the warning to downstream layers.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.SSS1.p2">
+<p class="ltx_p" id="S4.SS2.SSS1.p2.1"><span class="translated-text">受此技能的影响，良性编程任务逐渐转向读取敏感文件、打包其内容并准备传输到外部目的地。在决策阶段，决策调整层会比较原始用户意图、接受的上下文、基础扫描警告和建议的操作。此次审查发现，新出现的计划超出了授权任务，并且与用户的意图相冲突。然后，累积的风险将由执行控制层继承，该层对会话应用更严格的工具权限。当代理尝试读取敏感文件或调用高风险命令时，该操作会在影响环境之前被阻止。</span><span class="original-text">Influenced by this skill, a benign programming task gradually shifts toward reading a sensitive file, packaging its contents, and preparing transmission to an external destination. At the decision stage, the Decision Alignment Layer compares the original user intent, the accepted context, the Foundation Scan warning, and the proposed action. This review identifies that the emerging plan exceeds the authorized task and conflicts with the user’s intent. The accumulated risk is then inherited by the Execution Control Layer, which applies stricter tool permissions for the session. When the agent attempts to read the sensitive file or invoke a high-risk command, the action is blocked before it affects the environment.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.SSS1.p3">
+<p class="ltx_p" id="S4.SS2.SSS1.p3.1"><span class="translated-text">这一案例说明初始化风险不能作为一次性筛选问题来处理。恶意技能作为能力工件进入，但其有害影响只有在影响计划或达到执行后才可能显现出来。</span><span class="original-text">This case illustrates that initialization risk cannot be handled as a one-time screening problem. A malicious skill enters as a capability artifact, but its harmful effect may only become visible after it influences planning or reaches execution.</span><span class="ltx_text ltx_font_smallcaps" id="S4.SS2.SSS1.p3.1.1"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">保持跨层的连续性：初始化警告会降低下游信任，决策调整会暴露未经授权的计划偏差，执行控制通过最终权限执行来限制剩余的爆炸半径。</span><span class="original-text">preserves continuity across layers: an initialization warning lowers downstream trust, decision alignment exposes unauthorized plan drift, and execution control limits the remaining blast radius through final permission enforcement.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S4.SS2.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S4.SS2.SSS2.4.1.1">IV-B</span>2 </span><span class="translated-text">案例2：间接即时注入持久后门和DoS</span><span class="original-text">Case 2: Indirect Prompt Injection to Persistent Backdoor and DoS</span></h4>
+<div class="ltx_para" id="S4.SS2.SSS2.p1">
+<p class="ltx_p" id="S4.SS2.SSS2.p1.1"><span class="translated-text">当网页或工具结果包含间接提示注入时，第二种情况开始，该注入看起来足够良性，可以进入工作上下文，特别是在仅检测输入过滤的情况下。这种攻击首先跨越指令数据边界。输入清理层检查返回内容中的提示模板标记、越狱短语和危险指令模式。当识别出可疑内容时，该层可以警告代理、暂时限制工具调用权限，或防止持久保存受污染的工具结果和派生响应</span><span class="original-text">The second case begins when a webpage or tool result contains an indirect prompt injection that appears sufficiently benign to enter the working context, especially under detection-only input filtering. This attack first crosses the instruction-data boundary. The Input Sanitization Layer examines returned content for prompt-template markers, jailbreak phrases, and dangerous instruction patterns. When suspicious content is identified, the layer can warn the agent, temporarily restrict tool-call permissions, or prevent contaminated tool results and derived responses from being persisted</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib9" title="The instruction hierarchy: training LLMs to prioritize privileged instructions">16</a>, <a class="ltx_ref" href="#bib.bib10" title="StruQ: defending against prompt injection with structured queries">2</a>]</cite><span class="translated-text">。
+如果受污染的内容仍然影响会话，则攻击可能会从短暂的上下文操纵升级为持久的危害。典型的下一步是将恶意指令写入持久状态工件，例如</span><span class="original-text">.
+If the contaminated content still influences the session, the attack may escalate from transient context manipulation to persistent compromise. A typical next step is to write malicious instructions into durable state artifacts, such as</span><span class="ltx_text ltx_font_typewriter" id="S4.SS2.SSS2.p1.1.1"><span class="translated-text">内存.md</span><span class="original-text">MEMORY.md</span></span>, <span class="ltx_text ltx_font_typewriter" id="S4.SS2.SSS2.p1.1.2"><span class="translated-text">代理.md</span><span class="original-text">AGENTS.md</span></span><span class="translated-text">，或相关的工作区文件。认知保护层在工具边界检查这些状态更改操作并阻止可疑的内存突变，从而防止注入的指令在以后的会话中成为可信上下文</span><span class="original-text">, or related workspace files. The Cognition Protection Layer inspects these state-changing operations at the tool boundary and blocks suspicious memory mutations, preventing the injected instructions from becoming trusted context in later sessions</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib24" title="Memory injection attacks on LLM agents via query-only interaction">5</a>, <a class="ltx_ref" href="#bib.bib25" title="MemoryGraft: persistent compromise of LLM agents via poisoned experience retrieval">14</a>, <a class="ltx_ref" href="#bib.bib17" title="A-memguard: a proactive defense framework for LLM-based agent memory">17</a>]</cite><span class="translated-text">。在此链中，写入端干预至关重要，因为它可以防止未来的内存加载步骤重新激活后门。</span><span class="original-text">. In this chain, the write-side intervention is critical because it prevents a future memory-loading step from reactivating the backdoor.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.SSS2.p2">
+<p class="ltx_p" id="S4.SS2.SSS2.p2.1"><span class="translated-text">如果此持久性路径保持打开状态，则可以在以后的对话中检索中毒内存并引导代理进行有害行为，例如发出创建拒绝服务循环的命令。</span><span class="original-text">If this persistence path were left open, the poisoned memory could be retrieved in a later conversation and steer the agent toward harmful behavior, such as issuing commands that create a denial-of-service loop.</span><span class="ltx_text ltx_font_smallcaps" id="S4.SS2.SSS2.p2.1.1"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">因此将攻击限制在两个时间范围内。当尝试持久化时，认知保护会阻止长期状态损坏，而如果在运行时仍然提出有害操作，执行控制会阻止最终命令模式。这个案例凸显了内存在生命周期安全中的独特作用：内存既是中毒的目标，也是未来妥协的中继点。因此，保护​​它不仅会改变当前的交互，还会改变后续会话的攻击面。</span><span class="original-text">therefore constrains the attack at two temporal horizons. Cognition Protection blocks long-lived state corruption when persistence is attempted, while Execution Control blocks the final command pattern if a harmful action is still proposed at runtime. This case highlights the distinctive role of memory in lifecycle security: memory is both a target of poisoning and a relay point for future compromise. Protecting it therefore changes not only the current interaction, but also the attack surface of subsequent sessions.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.SSS2.p3">
+<p class="ltx_p" id="S4.SS2.SSS2.p3.1"><span class="translated-text">架构教训是，当威胁持续存在时，仅输入过滤是不够的。生命周期防御既需要专用的认知边界以防止受污染状态变得持久，又需要硬执行边界以在绕过早期防御时遏制有害的重新激活。</span><span class="original-text">The architectural lesson is that input filtering alone is insufficient when threats can persist across time. A lifecycle defense requires both a dedicated cognition boundary to prevent contaminated state from becoming durable, and a hard execution boundary to contain harmful reactivation if earlier defenses are bypassed.</span></p>
+</div>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span class="ltx_text ltx_font_smallcaps" id="S5.1.1"><span class="translated-text">结论</span><span class="original-text">Conclusion</span></span>
+</h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">自主代理应作为具有显式运行时控制的端到端系统进行保护。实用的防御架构始于观察到不同的生命周期阶段保护不同的资产，因此需要不同的控制方式。初始化和执行需要确定性的执行。输入、内存和决策阶段受益于语义推理，但前提是相应的保护层将其输出保留为结构化安全状态。</span><span class="original-text">Autonomous agents should be secured as end-to-end systems with explicit runtime controls. A practical defense architecture starts from the observation that different lifecycle stages protect different assets and therefore require different control styles. Initialization and execution demand deterministic enforcement. Input, memory, and decision stages benefit from semantic reasoning, but only when the corresponding protection layers preserve their outputs as structured security state.</span></p>
+</div>
+<div class="ltx_para" id="S5.p2">
+<p class="ltx_p" id="S5.p2.1"><span class="translated-text">这是建筑学的核心课程</span><span class="original-text">That is the central architectural lesson of</span><span class="ltx_text ltx_font_smallcaps" id="S5.p2.1.1"><span class="translated-text">特工沃德</span><span class="original-text">AgentWard</span></span><span class="translated-text">。它的价值在于结合了用于运行时事件的统一适配器层、与生命周期一致的五个保护层、可重用的检测功能以及用于警告、策略标志和干预指令的小型共享控制词汇。如果代理构建者可以将职责映射到这些层，跨阶段保留出处和信任标签，限制持久状态转换，在行动之前验证计划，并在边缘强制执行硬执行边界，那么他们将能够更好地部署有用的代理，而无需假设任何单个模型或护栏都会保存它们。通往值得信赖的自主代理的道路是架构清晰性与协调的生命周期控制相结合。</span><span class="original-text">. Its value lies in combining a unified adapter layer for runtime events, five protection layers aligned with the lifecycle, reusable detection capabilities, and a small shared control vocabulary for warnings, policy flags, and intervention directives. If agent builders can map responsibilities to those layers, preserve provenance and trust labels across stages, restrict durable state transitions, validate plans before action, and enforce hard execution boundaries at the edge, they will be better positioned to deploy useful agents without assuming that any single model or guardrail will save them. The path to trustworthy autonomous agents is architectural clarity combined with coordinated lifecycle control.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib12">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Andriushchenko, A. Souly, M. Dziemian, D. Duenas, M. Lin, J. Wang, D. Hendrycks, A. Zou, J. Z. Kolter, M. Fredrikson, Y. Gal, and X. Davies</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">AgentHarm: a benchmark for measuring harmfulness of LLM agents</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">International Conference on Learning Representations</span>,
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">ICLR 2025 poster. Accessed on Apr. 2, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://openreview.net/forum?id=AC5n7xHuR1" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p1.1" title="II-A Threats to Agents Lifecycle ‣ II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>,
+<a class="ltx_ref" href="#S3.SS2.SSS5.p2.1" title="III-B5 Execution Control Layer ‣ III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-B</span>5</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib10">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Chen, J. Piet, C. Sitawarin, and D. Wagner</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">StruQ: defending against prompt injection with structured queries</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">34th USENIX Security Symposium (USENIX Security 25)</span>,
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">Accessed on Apr. 2, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://www.usenix.org/conference/usenixsecurity25/presentation/chen-sizhe" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="II-A Threats to Agents Lifecycle ‣ II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>,
+<a class="ltx_ref" href="#S3.SS2.SSS2.p2.1" title="III-B2 Input Sanitization Layer ‣ III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-B</span>2</span></a>,
+<a class="ltx_ref" href="#S4.SS2.SSS2.p1.1" title="IV-B2 Case 2: Indirect Prompt Injection to Persistent Backdoor and DoS ‣ IV-B Case Studies ‣ IV Implementation and Case Studies ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">IV-B</span>2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib11">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">E. Debenedetti, J. Zhang, M. Balunovic, L. Beurer-Kellner, M. Fischer, and F. Tramèr</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">AgentDojo: a dynamic environment to evaluate prompt injection attacks and defenses for LLM agents</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Advances in Neural Information Processing Systems, Datasets and Benchmarks Track</span>,
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">NeurIPS 2024 Datasets and Benchmarks Track poster. Accessed on Apr. 2, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://openreview.net/forum?id=m1YYAQjO3w" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib19">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">X. Deng, Y. Zhang, J. Wu, J. Bai, S. Yi, Z. Zou, Y. Xiao, R. Qiu, J. Ma, J. Chen, X. Du, X. Yang, S. Cui, C. Meng, W. Wang, J. Song, K. Xu, and Q. Li</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Taming openclaw: security analysis and mitigation of autonomous llm agent threats</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2603.11619</span>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2603.11619" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p1.1" title="II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§II</span></a>,
+<a class="ltx_ref" href="#S4.SS1.p1.1" title="IV-A Prototype Implementation ‣ IV Implementation and Case Studies ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">IV-A</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib24">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Dong, S. Xu, P. He, Y. Li, J. Tang, T. Liu, H. Liu, and Z. Xiang</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Memory injection attacks on LLM agents via query-only interaction</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">Accessed on Apr. 27, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2503.03704</span>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.48550/arXiv.2503.03704" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2503.03704" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p1.1" title="II-A Threats to Agents Lifecycle ‣ II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>,
+<a class="ltx_ref" href="#S2.SS2.p1.1" title="II-B Cross-Stage Risk Propagation ‣ II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>,
+<a class="ltx_ref" href="#S3.SS2.SSS3.p2.1" title="III-B3 Cognition Protection Layer ‣ III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-B</span>3</span></a>,
+<a class="ltx_ref" href="#S4.SS2.SSS2.p1.1" title="IV-B2 Case 2: Indirect Prompt Injection to Persistent Backdoor and DoS ‣ IV-B Case Studies ‣ IV Implementation and Case Studies ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">IV-B</span>2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib8">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">K. Greshake, S. Abdelnabi, S. Mishra, C. Endres, T. Holz, and M. Fritz</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Not what you’ve signed up for: compromising real-world LLM-integrated applications with indirect prompt injection</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">Accessed on Apr. 16, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2302.12173</span>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2302.12173" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p1.1" title="II-A Threats to Agents Lifecycle ‣ II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>,
+<a class="ltx_ref" href="#S2.SS2.p1.1" title="II-B Cross-Stage Risk Propagation ‣ II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>,
+<a class="ltx_ref" href="#S3.SS2.SSS2.p2.1" title="III-B2 Input Sanitization Layer ‣ III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-B</span>2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib13">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">T. Kuntz, A. Duzan, H. Zhao, F. Croce, J. Z. Kolter, N. Flammarion, and M. Andriushchenko</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">OS-Harm: a benchmark for measuring safety of computer use agents</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Advances in Neural Information Processing Systems, Datasets and Benchmarks Track</span>,
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">NeurIPS 2025 Datasets and Benchmarks Track spotlight. Accessed on Apr. 9, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://openreview.net/forum?id=Di30GwhQSX" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="II-A Threats to Agents Lifecycle ‣ II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>,
+<a class="ltx_ref" href="#S3.SS2.SSS5.p2.1" title="III-B5 Execution Control Layer ‣ III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-B</span>5</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib7">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Liu, G. Deng, Y. Li, K. Wang, Z. Wang, X. Wang, T. Zhang, Y. Liu, H. Wang, Y. Zheng, L. Y. Zhang, and Y. Liu</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Prompt injection attack against LLM-integrated applications</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">Accessed on Apr. 2, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2306.05499</span>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.48550/arXiv.2306.05499" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2306.05499" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p1.1" title="II-A Threats to Agents Lifecycle ‣ II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>,
+<a class="ltx_ref" href="#S3.SS2.SSS2.p2.1" title="III-B2 Input Sanitization Layer ‣ III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-B</span>2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib15">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Liu, W. Wang, R. Feng, Y. Zhang, G. Xu, G. Deng, Y. Li, and L. Zhang</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Agent skills in the wild: an empirical study of security vulnerabilities at scale</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">Accessed on Apr. 16, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2601.10338</span>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2601.10338" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p1.1" title="II-A Threats to Agents Lifecycle ‣ II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>,
+<a class="ltx_ref" href="#S3.SS2.SSS1.p2.1" title="III-B1 Foundation Scan Layer ‣ III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-B</span>1</span></a>,
+<a class="ltx_ref" href="#S4.SS2.SSS1.p1.1" title="IV-B1 Case 1: Malicious Skill to Unauthorized Data Access ‣ IV-B Case Studies ‣ IV Implementation and Case Studies ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">IV-B</span>1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib20">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Ohm, H. Plate, A. Sykosch, and M. Meier</span><span class="ltx_text ltx_bib_year"> (2020)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Backstabber’s knife collection: a review of open source software supply chain attacks</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">Accessed on Apr. 27, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2005.09535</span>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.48550/arXiv.2005.09535" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2005.09535" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="II-A Threats to Agents Lifecycle ‣ II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>,
+<a class="ltx_ref" href="#S3.SS2.SSS1.p2.1" title="III-B1 Foundation Scan Layer ‣ III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-B</span>1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib5">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">OWASP Agentic Security Initiative</span><span class="ltx_text ltx_bib_year"> (2025-02)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Agentic AI – threats and mitigations</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">Published Feb. 17, 2025. Accessed on Apr. 2, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://genai.owasp.org/resource/agentic-ai-threats-and-mitigations/" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS2.SSS5.p2.1" title="III-B5 Execution Control Layer ‣ III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-B</span>5</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib23">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">C. Packer, S. Wooders, K. Lin, V. Fang, S. G. Patil, I. Stoica, and J. E. Gonzalez</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">MemGPT: towards LLMs as operating systems</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">Accessed on Apr. 27, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2310.08560</span>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.48550/arXiv.2310.08560" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2310.08560" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib22">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">T. Schick, J. Dwivedi-Yu, R. Dessì, R. Raileanu, M. Lomeli, L. Zettlemoyer, N. Cancedda, and T. Scialom</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Toolformer: language models can teach themselves to use tools</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">Accessed on Apr. 27, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2302.04761</span>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.48550/arXiv.2302.04761" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2302.04761" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib25">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. S. Srivastava and H. He</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">MemoryGraft: persistent compromise of LLM agents via poisoned experience retrieval</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">Accessed on Apr. 27, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2512.16962</span>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.48550/arXiv.2512.16962" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2512.16962" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="II-A Threats to Agents Lifecycle ‣ II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>,
+<a class="ltx_ref" href="#S2.SS2.p1.1" title="II-B Cross-Stage Risk Propagation ‣ II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>,
+<a class="ltx_ref" href="#S3.SS2.SSS3.p2.1" title="III-B3 Cognition Protection Layer ‣ III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-B</span>3</span></a>,
+<a class="ltx_ref" href="#S4.SS2.SSS2.p1.1" title="IV-B2 Case 2: Indirect Prompt Injection to Persistent Backdoor and DoS ‣ IV-B Case Studies ‣ IV Implementation and Case Studies ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">IV-B</span>2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib14">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">P. Steinberger and the OpenClaw contributors</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">OpenClaw: personal AI assistant</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">GitHub repository. Accessed on Apr. 16, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://github.com/openclaw/openclaw" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib9">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">E. Wallace, K. Xiao, R. Leike, L. Weng, J. Heidecke, and A. Beutel</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">The instruction hierarchy: training LLMs to prioritize privileged instructions</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">Accessed on Apr. 2, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2404.13208</span>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.48550/arXiv.2404.13208" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2404.13208" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="II-A Threats to Agents Lifecycle ‣ II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>,
+<a class="ltx_ref" href="#S4.SS2.SSS2.p1.1" title="IV-B2 Case 2: Indirect Prompt Injection to Persistent Backdoor and DoS ‣ IV-B Case Studies ‣ IV Implementation and Case Studies ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">IV-B</span>2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib17">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Q. Wei, T. Yang, Y. Wang, X. Li, L. Li, Z. Yin, Y. Zhan, T. Holz, Z. Lin, and X. Wang</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A-memguard: a proactive defense framework for LLM-based agent memory</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">Accessed on Apr. 27, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2510.02373</span>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.48550/arXiv.2510.02373" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2510.02373" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p1.1" title="II-A Threats to Agents Lifecycle ‣ II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>,
+<a class="ltx_ref" href="#S3.SS2.SSS3.p2.1" title="III-B3 Cognition Protection Layer ‣ III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-B</span>3</span></a>,
+<a class="ltx_ref" href="#S4.SS2.SSS2.p1.1" title="IV-B2 Case 2: Indirect Prompt Injection to Persistent Backdoor and DoS ‣ IV-B Case Studies ‣ IV Implementation and Case Studies ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">IV-B</span>2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib18">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Xie, Y. Yuan, W. Wang, F. Mo, J. Guo, and P. He</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">ToolSafety: a comprehensive dataset for enhancing safety in LLM-based agent tool invocations</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing</span>,
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">Accessed on Apr. 12, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.18653/v1/2025.emnlp-main.714" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://aclanthology.org/2025.emnlp-main.714/" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="II-A Threats to Agents Lifecycle ‣ II A Lifecycle Security View of Threats ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>,
+<a class="ltx_ref" href="#S3.SS2.SSS4.p2.1" title="III-B4 Decision Alignment Layer ‣ III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-B</span>4</span></a>,
+<a class="ltx_ref" href="#S3.SS2.SSS5.p2.1" title="III-B5 Execution Control Layer ‣ III-B Five-Layer Protection Design ‣ III AgentWard Architecture ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-B</span>5</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib21">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Yao, J. Zhao, D. Yu, N. Du, I. Shafran, K. Narasimhan, and Y. Cao</span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">ReAct: synergizing reasoning and acting in language models</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">Accessed on Apr. 27, 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2210.03629</span>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.48550/arXiv.2210.03629" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2210.03629" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ AgentWard: A Lifecycle Security Architecture for Autonomous AI Agents"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2604.24657v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div aria-hidden="true" id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
