@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">通过可控 2D 切片导航任务进行 3D MRI 图像预训练</span><span class="original-text">3D MRI Image Pretraining via Controllable 2D Slice Navigation Task</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 5 月 7 日星期四 16:00:53 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Thu May  7 16:00:53 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2605.06487" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2605.06487" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2605.06487v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2605.06487v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Related Work</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S2.SS0.SSS0.Px1" title="In 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_title">Self-supervised and spatially aware medical representation learning.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S2.SS0.SSS0.Px2" title="In 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_title">World models and medical world modeling.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Methods</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In 3 Methods ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Overall</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS2" title="In 3 Methods ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Controllable MRI slice trajectories</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS3" title="In 3 Methods ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.3 </span>World-model pretraining objective</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS4" title="In 3 Methods ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.4 </span>Transfer to downstream tasks</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Experiments</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>Experimental setup</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS2" title="In 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2 </span>Main downstream results</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS3" title="In 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3 </span>Effect of slice-video context length</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS4" title="In 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.4 </span>Action-use diagnostics</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S5" title="In 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Conclusion and Limitations</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY-NC-ND 4.0</span><span class="original-text">License: CC BY-NC-ND 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2605.06487v1 [cs.CV] 2026 年 5 月 7 日</span><span class="original-text">arXiv:2605.06487v1 [cs.CV] 07 May 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">通过可控 2D 切片导航任务进行 3D MRI 图像预训练</span><span class="original-text">3D MRI Image Pretraining via Controllable 2D Slice Navigation Task</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Yu Wang
+<br class="ltx_break"/>Beijing University of Posts and Telecommunications
+<br class="ltx_break"/><span class="ltx_text ltx_font_typewriter" id="id1.1.id1">wywork@bupt.edu.cn</span>
+<br class="ltx_break"/>&amp;Qingchao Chen
+<br class="ltx_break"/>Peking University
+<br class="ltx_break"/><span class="ltx_text ltx_font_typewriter" id="id2.2.id2">qingchao.chen@pku.edu.cn</span>
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">自监督预训练已成为从未标记扫描中学习 MRI 表示的主流方法。然而，大多数现有目标仍然主要将每次扫描视为切片、补丁或卷的静态聚合。我们通过将 3D 体积转换为可控的 2D 渲染序列，询问是否存在与重建遮罩补丁不同的自我监督信号的内在形式：通过在连续位置、方向和尺度上渲染切片，3D 体积可以转换为密集的视频动作序列，其控制是动作轨迹。我们用动作条件预训练目标来研究这个公式，其中分词器对切片观察进行编码，潜在动力学模型预测潜在特征的演变。在代表性的解剖和空间下游任务中，根据标准静态体积基线、仅标记器预训练和没有对齐动作的动态变体来评估所提出的预训练。这些结果表明，可控 MRI 切片导航提供了一个有用的补充预训练界面，用于从大量未标记的 MRI 集合中学习解剖和空间表示。</span><span class="original-text">Self-supervised pretraining has become the mainstream approach for learning MRI representations from unlabeled scans. However, most existing objectives still treat each scan primarily as static aggregations of slices, patches or volumes. We ask whether there exists an intrinsic form of self-supervision signal that is different from reconstructing the masked patches, through transforming the 3D volumes into controllable 2D rendered sequences: by rendering slices at continuous positions, orientations, and scales, a 3D volume can be converted into dense video-action sequences whose controls are the action trajectories. We study this formulation with an action-conditioned pretraining objective, where a tokenizer encodes slice observations and a latent dynamics model predicts the evolution of latent features. Across representative anatomical and spatial downstream tasks, the proposed pretraining is evaluated against standard static-volume baselines, tokenizer-only pretraining, and dynamics variants without aligned actions. These results suggest that controllable MRI slice navigation provides a useful complementary pretraining interface for learning anatomical and spatial representations from large unlabeled MRI collections.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">自监督预训练已成为从未标记扫描中学习 MRI 图像 3D 表示的核心策略</span><span class="original-text">Self-supervised pretraining has become a central strategy for learning 3D representations of MRI images from unlabeled scans</span><cite class="ltx_cite ltx_citemacro_citep">(Zeng<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib20" title="Self-supervised learning framework application for medical image analysis: a review and summary">2024</a>; Wald<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib19" title="Revisiting mae pre-training for 3d medical image segmentation">2025</a>; Hatamizadeh<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib14" title="UNETR: transformers for 3d medical image segmentation">2022</a>)</cite><span class="translated-text">。 MRI 是 3D 体积的，</span><span class="original-text">. MRI is volumetric in 3D,</span><span class="ltx_text ltx_font_italic" id="S1.p1.1.1"><span class="translated-text">但 2D 切片视图通常会影响人类的解释</span><span class="original-text">but 2D slice views often mediate human interpretation</span></span><span class="translated-text">：放射科医生倾向于通过滚动 2D 切片图像堆栈并在不同 2D 解剖平面之间切换来检查 MRI，而不是直接解释 3D 体积</span><span class="original-text">: radiologists tend to inspect MRI by scrolling stacks of 2D sliced images and switching among different 2D anatomical planes, rather than directly interpreting the 3D volumes</span><cite class="ltx_cite ltx_citemacro_citep">(Crowe<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib17" title="New approaches to the analysis of eye movement behaviour across expertise while viewing brain mris">2018</a>; Nakashima<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib18" title="Temporal characteristics of radiologists’ and novices’ lesion detection in viewing medical images presented rapidly and sequentially">2016</a>)</cite>. <span class="ltx_text ltx_font_italic" id="S1.p1.1.2"><span class="translated-text">这促使我们提出一个有针对性的研究问题：</span><span class="original-text">This motivates us to ask a focused research question:</span></span><span class="translated-text">如果可以从许多几何控制的 2D 切片状态中观察到单个 3D 扫描，那么它们的转变是否可以作为预训练的内在且有用的自监督信号？</span><span class="original-text">if a single 3D scan can be observed from many geometrically controlled 2D slice states, can their transitions serve as a intrinsic and useful self-supervised signal for pretraining?</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">如图所示</span><span class="original-text">As illustrated in Figure</span><a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">，3D MRI 体积可以重新渲染为多个 2D 切片观察，跨越常见的解剖平面（轴向、冠状和矢状）以及常规检查中不常用的倾斜视图。通常，生成 2D 切片需要一组特定的操作来定义其位置、方向和平面内缩放因子。因此，通过应用一系列参数，可以将 3D 体积转换为一系列 2D 可切片图像帧。这些动作参数不是任意的标签或仅仅是令人讨厌的增强；相反，它们指定了如何观察相同的解剖结构</span><span class="original-text">, a 3D MRI volume can be re-rendered as multiple 2D slice observations, spanning common anatomical planes– axial, coronal, and sagittal– as well as oblique views that are less frequently used in routine examinations. Typically, generating a 2D slice requires a specific set of action that defines its position, orientation and in-plane scaling factors. Therefore, by applying a sequence of parameters, a 3D volume can be transformed into a series of 2D sliceable image frames. These action parameters are not arbitrary labels or mere nuisance augmentations; rather, they specify how the same anatomical structure is observed</span><span class="ltx_text ltx_font_italic" id="S1.p2.1.1"><span class="translated-text">从一种观看状态到另一种观看状态</span><span class="original-text">from one viewing state to another</span></span><span class="translated-text">。因此，即使是未标记的卷也可以产生信息丰富的切片转换动作视频序列，包含并提供有关空间和结构关系的见解，超越静态、孤立的视图</span><span class="original-text">. Consequently, even an unlabeled volume can yield informative action-video sequences of slice transitions, containing and offering insights about spatial and structural relationships, that go beyond static, isolated views</span><cite class="ltx_cite ltx_citemacro_citep">(Zhang<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib16" title="Self-supervised learning for medical image data with anatomy-oriented imaging planes">2024</a>; Bai<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib13" title="Self-supervised learning for cardiac mr image segmentation by anatomical position prediction">2019b</a>, <a class="ltx_ref" href="#bib.bib22" title="Self-supervised learning for cardiac mr image segmentation by anatomical position prediction">a</a>)</cite>.</p>
+</div>
+<figure class="ltx_figure" id="S1.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="412" id="S1.F1.g1" src="https://arxiv.org/html/2605.06487v1/figs/Fig1.png" width="476"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Overview of controllable 2D slice navigation for 3D MRI pretraining. A fixed 3D MRI volume is re-rendered in Unity into arbitrary 2D slice videos, where each frame is generated by a recorded action controlling slice position, orientation, and scale. The resulting video-action sequences support tokenizer pretraining, action-conditioned latent dynamics pretraining, and downstream anatomical and spatial probes.</figcaption>
+</figure>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">尽管动作视频序列比被动视频包含更丰富的信息，但有效利用这些动作信号进行 MRI 预训练仍然是一个悬而未决的问题。最近的自然视频表示学习表明，从上下文预测潜在内容可以产生有意义的表示，而无需像素级重建。同时，世界模型方法通过学习动作条件的潜在动力学扩展了这一想法，从而将动作/控制参数纳入预训练中</span><span class="original-text">Although the action-video sequences contains richer information than the passive videos, effectively utilizing these action signals for MRI pretraining remains an open question. Recent natural video representation learning has shown that predicting latent content from context can yield meaningful representations without requiring the pixel-level reconstruction. Meanwhile, world-model methods extend the idea by learning action-conditioned latent dynamics, thereby incorporating the action/control parameters into the pretraining</span><cite class="ltx_cite ltx_citemacro_citep">(Assran<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib3" title="V-jepa 2: self-supervised video models enable understanding, prediction and planning">2025</a>; Mur-Labadia<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib4" title="V-jepa 2.1: unlocking dense features in video self-supervised learning">2026</a>; Maes<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib6" title="LeWorldModel: stable end-to-end joint-embedding predictive architecture from pixels">2026</a>; Hafner<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib5" title="Mastering diverse control tasks through world models">2025a</a>, <a class="ltx_ref" href="#bib.bib9" title="Training agents inside of scalable world models">b</a>)</cite><span class="translated-text">。与上述设置不同，我们预训练中的独特监督可能来自</span><span class="original-text">. Different from the above setup, the distinctive supervision in our pretraining may come from</span><span class="ltx_text ltx_font_italic" id="S1.p3.1.1"><span class="translated-text">已知的动作参数序列</span><span class="original-text">the known sequence of action parameters</span></span><span class="translated-text">在 3D MRI 渲染过程中。该过程传达了在给定一系列动作参数的情况下渲染切片观察的机制，指示切片平面如何移动、旋转或改变比例。因此，我们使用该机制并在以下预训练任务中制定它：给定 2D MRI 切片视频及其记录的切片动作，预训练模型学习预测潜在空间中的下一个切片表示</span><span class="original-text">in the 3D MRI rendering process. The process conveys the mechanism of rendering the slice observations given a sequence of action parameters, indicating how the slice plane moves, rotates, or changes scale. We therefore use the mechanism and formulate it in the following pretraining task: given a 2D MRI slice video and its recorded slice actions, the pretraining model learns to predict the next slice representation in the latent space</span><cite class="ltx_cite ltx_citemacro_citep">(Acuaviva<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib1" title="From generation to generalization: emergent few-shot learning in video diffusion models">2025</a>)</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">我们通过两阶段动作条件预训练管道来实现这个公式</span><span class="original-text">We implement this formulation with a two-stage action-conditioned pretraining pipeline</span><cite class="ltx_cite ltx_citemacro_citep">(Acuaviva<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib1" title="From generation to generalization: emergent few-shot learning in video diffusion models">2025</a>)</cite><span class="translated-text">。首先，在渲染的 2D MRI 切片上训练标记器以生成空间潜在标记。其次，随着标记生成器冻结，潜在动态模型接收切片标记序列及其动作，并学习预测后续视图的潜在表示。在这项工作中，动作只是固定体积的渲染控制：切片平面的位置、方向和面内比例。它不是临床干预、治疗决策、获取策略或学习导航策略。在微调阶段，我们将分词器特征与动态特征进行比较，其中冻结动态模型提供切片视频中的动作条件上下文，以进行密集的下游预测。因此，该动作用于添加可控视图转换信息。</span><span class="original-text">. First, a tokenizer is trained on rendered 2D MRI slices to produce spatial latent tokens. Second, with the tokenizer frozen, a latent dynamics model receives slice-token sequences together with their actions and learns to predict the latent representation of subsequent views. In this work, an action is simply a rendering control for a fixed volume: the position, orientation, and in-plane scale of the slice plane. It is not a clinical intervention, treatment decision, acquisition policy, or learned navigation policy. At finetune stage, we compare tokenizer features with dynamics features, where the frozen dynamics model provides action-conditioned context from the slice video for dense downstream prediction. Thus, the action is used to add controllable view-transition information.</span></p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">我们将此公式作为一种预训练方法进行评估，重点关注直接反映其预期效益的下游探针。脑区域分割和 GM/WM/CSF 分割测试解剖结构，而密集坐标场预测测试表示是否保留 3D 空间组织。为了隔离动作条件动力学的作用，我们比较了仅标记器特征、无动作动力学、洗牌动作变体和正确的动作条件动力学。对于分割，我们进一步与静态体积和固定轴切片基线进行比较</span><span class="original-text">We evaluate this formulation as a pretraining method, focusing on downstream probes that directly reflect its intended benefits. Brain-region segmentation and GM/WM/CSF segmentation test anatomical structure, while dense coordinate-field prediction tests whether the representation preserves 3D spatial organization. To isolate the role of action-conditioned dynamics, we compare tokenizer-only features, action-free dynamics, shuffled-action variants, and correctly action-conditioned dynamics. For segmentation, we further compare against static-volume and fixed-axis slice baselines</span><cite class="ltx_cite ltx_citemacro_citep">(Wald<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib19" title="Revisiting mae pre-training for 3d medical image segmentation">2025</a>; Hatamizadeh<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib14" title="UNETR: transformers for 3d medical image segmentation">2022</a>; Ma<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib33" title="Segment anything in medical images">2024</a>)</cite><span class="translated-text">，以便根据传统的 3D MRI 和基于 2D 切片的替代方案来评估所提出的公式。总之，这些实验提供了证据，证明可控切片动力学是 MRI 预训练的有用预训练信号。图</span><span class="original-text">, so that the proposed formulation is evaluated against both conventional 3D MRI and 2D slice-based alternatives. Together, these experiments provide evidence that controllable slice dynamics is a useful pretraining signal for MRI pretraining. Figure</span><a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">总结了所提出的可控 2D 切片导航公式和由此产生的预训练管道。</span><span class="original-text">summarizes the proposed controllable 2D slice-navigation formulation and the resulting pretraining pipeline.</span></p>
+</div>
+<div class="ltx_para" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1"><span class="translated-text">我们的贡献有三方面：</span><span class="original-text">Our contributions are threefold:</span></p>
+<ul class="ltx_itemize" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="translated-text">我们为 3D MRI 预训练定义了一种可控的 2D 切片导航公式，将每个未标记的体积转换为许多视频动作序列，并记录了对切片位置、方向和比例的控制。</span><span class="original-text">We define a controllable 2D slice-navigation formulation for 3D MRI pretraining, turning each unlabeled volume into many video-action sequences with recorded controls over slice position, orientation, and scale.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="translated-text">我们开发了一种动作条件预训练管道，它将切片标记化与潜在动态相结合，从而能够根据标记器加动态特征进行密集的下游预测。</span><span class="original-text">We develop an action-conditioned pretraining pipeline that combines slice tokenization with latent dynamics, enabling dense downstream prediction from tokenizer-plus-dynamics features.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1"><span class="translated-text">我们提供有针对性的证据，证明动作条件切片动力学是 MRI 预训练的有用信号，使用解剖分割、密集坐标预测、动作对齐诊断以及与静态体积和固定轴切片基线的比较。</span><span class="original-text">We provide targeted evidence that action-conditioned slice dynamics is a useful signal for MRI pretraining, using anatomical segmentation, dense coordinate prediction, action-alignment diagnostics, and comparisons with static-volume and fixed-axis slice baselines.</span></p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></h2>
+<section class="ltx_paragraph" id="S2.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">自我监督和空间感知的医学表征学习。</span><span class="original-text">Self-supervised and spatially aware medical representation learning.</span></h4>
+<div class="ltx_para" id="S2.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S2.SS0.SSS0.Px1.p1.1"><span class="translated-text">自监督预训练最初是为了应对医学成像中的注释瓶颈，后来成为从未标记扫描中学习可转移表示的标准途径。</span><span class="original-text">Self-supervised pretraining originated as a response to the annotation bottleneck in medical imaging, and it has since become a standard route for learning transferable representations from unlabeled scans.</span><cite class="ltx_cite ltx_citemacro_citep">(Zeng<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib20" title="Self-supervised learning framework application for medical image analysis: a review and summary">2024</a>; Wald<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib19" title="Revisiting mae pre-training for 3d medical image segmentation">2025</a>; Hatamizadeh<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib14" title="UNETR: transformers for 3d medical image segmentation">2022</a>)</cite><span class="translated-text">最近的评论和基础模型研究总结了一系列广泛的目标，包括重建、对比学习、掩蔽建模、蒸馏和跨模式的混合预训练</span><span class="original-text">Recent reviews and foundation-model studies summarize a broad family of objectives, including reconstruction, contrastive learning, masked modeling, distillation, and hybrid pretraining across modalities</span><cite class="ltx_cite ltx_citemacro_citep">(Zeng<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib20" title="Self-supervised learning framework application for medical image analysis: a review and summary">2024</a>; Zhang and Metaxas, <a class="ltx_ref" href="#bib.bib23" title="On the challenges and perspectives of foundation models for medical image analysis">2024</a>)</cite><span class="translated-text">。在 MRI 和其他体积设置中，LVM-Med、3D 掩模自动编码和 3DINO 等大规模工作进一步表明，未标记的医疗体积可以支持大规模的强大且可转移的表示</span><span class="original-text">. In MRI and other volumetric settings, large-scale efforts such as LVM-Med, 3D masked autoencoding, and 3DINO further show that unlabeled medical volumes can support strong and transferable representations at scale</span><cite class="ltx_cite ltx_citemacro_citep">(Xu<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib24" title="A generalizable 3d framework and model for self-supervised learning in medical imaging">2025</a>; Lang<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib26" title="Multispectral 3d masked autoencoders for anomaly detection in non-contrast enhanced breast mri">2023</a>; M. H. Nguyen<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib25" title="LVM-med: learning large-scale self-supervised vision models for medical imaging via second-order graph matching">2023</a>)</cite><span class="translated-text">。一项互补的工作源于对医学图像通常带有结构化几何的观察：可以利用面向解剖学的成像平面和内在空间信息来预训练编码相对平面关系或物理作物位置的表示</span><span class="original-text">. A complementary line of work originated from the observation that medical images often come with structured geometry: anatomy-oriented imaging planes and intrinsic spatial information can be exploited to pretrain representations that encode relative plane relations or physical crop location</span><cite class="ltx_cite ltx_citemacro_citep">(Zhang<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib16" title="Self-supervised learning for medical image data with anatomy-oriented imaging planes">2024</a>; Bai<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib13" title="Self-supervised learning for cardiac mr image segmentation by anatomical position prediction">2019b</a>, <a class="ltx_ref" href="#bib.bib22" title="Self-supervised learning for cardiac mr image segmentation by anatomical position prediction">a</a>)</cite><span class="translated-text">。然而，这些方法仍然主要将几何体视为静态目标或空间代理。相比之下，我们询问 MRI 观察本身的几何形状是否可以转化为密集的预训练信号，以便 3D 体积成为对齐的观察过渡的集合，而不是孤立的静态视图。</span><span class="original-text">. However, these methods still treat geometry mainly as a static target or a spatial proxy. In contrast, we ask whether the geometry of MRI observation itself can be turned into a dense pretraining signal, so that a 3D volume becomes a collection of aligned observation transitions rather than isolated static views.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S2.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">世界模型和医学世界建模。</span><span class="original-text">World models and medical world modeling.</span></h4>
+<div class="ltx_para" id="S2.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="S2.SS0.SSS0.Px2.p1.1"><span class="translated-text">世界模型起源于基于模型的强化学习，其中潜在动态是从动作观察轨迹而不是从独立框架中学习的，而最近的预测表示学习增强了预测潜在内容而不是重建像素的价值</span><span class="original-text">World models originated in model-based reinforcement learning, where latent dynamics are learned from action-observation trajectories rather than from independent frames, and recent predictive representation learning has reinforced the value of forecasting latent content instead of reconstructing pixels</span><cite class="ltx_cite ltx_citemacro_citep">(Battaglia<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib21" title="Simulation as an engine of physical scene understanding">2013</a>; Zhou<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib27" title="Deep reinforcement learning in medical imaging: a literature review">2021</a>; Hafner<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib5" title="Mastering diverse control tasks through world models">2025a</a>)</cite><span class="translated-text">。最近的医学工作已经开始探索相关的公式：CheXWorld 研究放射线照片的图像世界模型，医学世界模型模拟临床治疗决策下的疾病演变，Cardiac Copilot 使用世界模型进行超声心动图探头引导</span><span class="original-text">. Recent medical work has begun to explore related formulations: CheXWorld studies image world modeling for radiographs, Medical World Model simulates disease evolution under clinical treatment decisions, and Cardiac Copilot uses a world model for echocardiographic probe guidance</span><cite class="ltx_cite ltx_citemacro_citep">(Yue<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib28" title="CheXWorld: exploring image world modeling for radiograph representation learning">2025</a>; Yang<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib2" title="Medical world model">2025</a>; Jiang<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib29" title="Cardiac Copilot: Automatic Probe Guidance for Echocardiography with World Model">2024</a>)</cite><span class="translated-text">。这些研究表明，世界模型配方在医学中可能有用，但其作用空间与临床干预、疾病进展或获取政策相关。我们的设置更窄，更以数据为中心：我们将切片位置、方向和比例视为对固定 MRI 体积的回顾性观察控制，并且我们研究动作条件潜在动态是否可以作为学习可重复使用的解剖和空间表示的补充自我监督目标。</span><span class="original-text">. These studies establish that world-model formulations can be useful in medicine, but their action spaces are tied to clinical intervention, disease progression, or acquisition policy. Our setting is narrower and more data-centric: we treat the slice position, orientation, and scale as retrospective observation controls over a fixed MRI volume, and we study whether action-conditioned latent dynamics can serve as a complementary self-supervised objective for learning reusable anatomical and spatial representations.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">方法</span><span class="original-text">Methods</span></h2>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">整体</span><span class="original-text">Overall</span></h3>
+<figure class="ltx_figure" id="S3.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="256" id="S3.F2.g1" src="https://arxiv.org/html/2605.06487v1/figs/Fig2.png" width="476"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Data preparation pipeline for 2D action-video and downstream supervision. (1) Re-render: each T1 MRI volume is loaded with SimpleITK and re-rendered in Unity into a 2D slice. (2) Record: the action-video is recorded manually in Unity. (3) Replay: the recorded action sequence is replayed on MRI volumes and downstream tasks label volumes.</figcaption>
+</figure>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S3.F2" title="Figure 2 ‣ 3.1 Overall ‣ 3 Methods ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">概述了数据准备管道。我们使用 SimpleITK 加载每个 3D T1 MRI 体积</span><span class="original-text">gives an overview of data preparation pipeline. We load each 3D T1 MRI volume with SimpleITK</span><cite class="ltx_cite ltx_citemacro_citep">(Lowekamp<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib7" title="The design of simpleitk">2013</a>)</cite><span class="translated-text">并使用手动录制的自由观看动作序列在 Unity 中将其重新渲染为 2D 切片视频。我们的渲染器基于开源 UnityVolumeRendering 包构建</span><span class="original-text">and re-render it in Unity into 2D slice video using manually recorded free-view action sequences. Our renderer is built on the open-source UnityVolumeRendering package</span><cite class="ltx_cite ltx_citemacro_citep">(Lavik, <a class="ltx_ref" href="#bib.bib34" title="UnityVolumeRendering: a volume renderer for unity3d">2019</a>)</cite><span class="translated-text">。生成的动作视频数据用于预训练模型，该模型由标记器和动作条件潜在动态模型组成。在微调期间，我们在冻结的分词器编码器和动态模型之上训练特定于任务的下游头。</span><span class="original-text">. The resulting action-video data are used to pretrain a model, consisting of a tokenizer and an action-conditioned latent dynamics model. During finetuning, we train the task-specific downstream heads on top of the frozen tokenizer encoder and dynamics model.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span><span class="translated-text">可控 MRI 切片轨迹</span><span class="original-text">Controllable MRI slice trajectories</span></h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.5"><span class="translated-text">我们的创新设计和目标是捕捉</span><span class="original-text">Our innovative design and objective are to capture the</span><span class="ltx_text ltx_font_italic" id="S3.SS2.p1.5.1"><span class="translated-text">渲染的 2D 切片的时间过渡</span><span class="original-text">temporal transitions of the rendered 2D slices</span></span><span class="translated-text">，并将其转化为自监督预训练信号。让</span><span class="original-text">, and turn it into a self-supervised pretraining signal. Let</span><math alttext="V_{i}\in\mathbb{R}^{H\times W\times D}" class="ltx_Math" display="inline" id="S3.SS2.p1.1.m1" intent=":literal"><semantics><mrow><msub><mi>V</mi><mi>i</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>H</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>W</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>D</mi></mrow></msup></mrow><annotation encoding="application/x-tex">V_{i}\in\mathbb{R}^{H\times W\times D}</annotation></semantics></math><span class="translated-text">表示受试者的 T1 加权 MRI 体积</span><span class="original-text">denote a T1-weighted MRI volume from subject</span><math alttext="i" class="ltx_Math" display="inline" id="S3.SS2.p1.2.m2" intent=":literal"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math><span class="translated-text">。我们不是只对固定的解剖平面进行采样，而是渲染</span><span class="original-text">. Instead of sampling only a fixed anatomical plane, we render</span><math alttext="V_{i}" class="ltx_Math" display="inline" id="S3.SS2.p1.3.m3" intent=":literal"><semantics><msub><mi>V</mi><mi>i</mi></msub><annotation encoding="application/x-tex">V_{i}</annotation></semantics></math><span class="translated-text">通过可控的二维切片平面。对于框架</span><span class="original-text">through a controllable 2D slicing plane. For frame</span><math alttext="t" class="ltx_Math" display="inline" id="S3.SS2.p1.4.m4" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math><span class="translated-text">，Unity渲染器采用切片状态</span><span class="original-text">, the Unity renderer takes a slice state</span><math alttext="a_{t}" class="ltx_Math" display="inline" id="S3.SS2.p1.5.m5" intent=":literal"><semantics><msub><mi>a</mi><mi>t</mi></msub><annotation encoding="application/x-tex">a_{t}</annotation></semantics></math><span class="translated-text">和输出：</span><span class="original-text">and outputs:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="x_{t}=\mathcal{R}(V_{i},a_{t};\theta)," class="ltx_Math" display="block" id="S3.E1.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>=</mo><mrow><mi class="ltx_font_mathcaligraphic">ℛ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>V</mi><mi>i</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo>;</mo><mi>θ</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">x_{t}=\mathcal{R}(V_{i},a_{t};\theta),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS2.p1.9"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\mathcal{R}" class="ltx_Math" display="inline" id="S3.SS2.p1.6.m1" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">ℛ</mi><annotation encoding="application/x-tex">\mathcal{R}</annotation></semantics></math><span class="translated-text">是切片渲染运算符，</span><span class="original-text">is the slice rendering operator,</span><math alttext="\theta" class="ltx_Math" display="inline" id="S3.SS2.p1.7.m2" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math><span class="translated-text">表示固定渲染参数，并且</span><span class="original-text">denotes fixed rendering parameters, and</span><math alttext="x_{t}\in\mathbb{R}^{H\times W}" class="ltx_Math" display="inline" id="S3.SS2.p1.8.m3" intent=":literal"><semantics><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>H</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>W</mi></mrow></msup></mrow><annotation encoding="application/x-tex">x_{t}\in\mathbb{R}^{H\times W}</annotation></semantics></math><span class="translated-text">是渲染的切片观察。帧的切片状态</span><span class="original-text">is the rendered slice observation. The slice state of frame</span><math alttext="t" class="ltx_Math" display="inline" id="S3.SS2.p1.9.m4" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math><span class="translated-text">表示为 8 维归一化控制向量：</span><span class="original-text">is represented as an 8-dimensional normalized control vector:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="a_{t}=(p_{x},p_{y},p_{z},r_{\mathrm{pitch}},r_{\mathrm{yaw}},r_{\mathrm{roll}},s_{x},s_{z})_{t}\in[-1,1]^{8}." class="ltx_Math" display="block" id="S3.E2.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>a</mi><mi>t</mi></msub><mo>=</mo><msub><mrow><mo stretchy="false">(</mo><msub><mi>p</mi><mi>x</mi></msub><mo>,</mo><msub><mi>p</mi><mi>y</mi></msub><mo>,</mo><msub><mi>p</mi><mi>z</mi></msub><mo>,</mo><msub><mi>r</mi><mi>pitch</mi></msub><mo>,</mo><msub><mi>r</mi><mi>yaw</mi></msub><mo>,</mo><msub><mi>r</mi><mi>roll</mi></msub><mo>,</mo><msub><mi>s</mi><mi>x</mi></msub><mo>,</mo><msub><mi>s</mi><mi>z</mi></msub><mo stretchy="false">)</mo></mrow><mi>t</mi></msub><mo>∈</mo><msup><mrow><mo stretchy="false">[</mo><mrow><mo>−</mo><mn>1</mn></mrow><mo>,</mo><mn>1</mn><mo stretchy="false">]</mo></mrow><mn>8</mn></msup></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">a_{t}=(p_{x},p_{y},p_{z},r_{\mathrm{pitch}},r_{\mathrm{yaw}},r_{\mathrm{roll}},s_{x},s_{z})_{t}\in[-1,1]^{8}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div class="ltx_para" id="S3.SS2.p2">
+<p class="ltx_p" id="S3.SS2.p2.3"><span class="translated-text">这里</span><span class="original-text">Here</span><math alttext="(p_{x},p_{y},p_{z})" class="ltx_Math" display="inline" id="S3.SS2.p2.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><msub><mi>p</mi><mi>x</mi></msub><mo>,</mo><msub><mi>p</mi><mi>y</mi></msub><mo>,</mo><msub><mi>p</mi><mi>z</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(p_{x},p_{y},p_{z})</annotation></semantics></math><span class="translated-text">指定切片位置，</span><span class="original-text">specifies the slice position,</span><math alttext="(r_{\mathrm{pitch}},r_{\mathrm{yaw}},r_{\mathrm{roll}})" class="ltx_Math" display="inline" id="S3.SS2.p2.2.m2" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><msub><mi>r</mi><mi>pitch</mi></msub><mo>,</mo><msub><mi>r</mi><mi>yaw</mi></msub><mo>,</mo><msub><mi>r</mi><mi>roll</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(r_{\mathrm{pitch}},r_{\mathrm{yaw}},r_{\mathrm{roll}})</annotation></semantics></math><span class="translated-text">指定方向，并且</span><span class="original-text">specifies orientation, and</span><math alttext="(s_{x},s_{z})" class="ltx_Math" display="inline" id="S3.SS2.p2.3.m3" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>x</mi></msub><mo>,</mo><msub><mi>s</mi><mi>z</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(s_{x},s_{z})</annotation></semantics></math><span class="translated-text">指定平面内缩放因子。对于每个卷，我们手动采样或重放一系列切片状态并渲染相应的观察结果以获得动作视频序列：</span><span class="original-text">specifies in-plane scaling factors. For each volume, we manually sample or replay a sequence of slice states and render the corresponding observations to get the action-video sequences:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E3">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\tau_{i}=\{(x_{t},a_{t})\}_{t=0}^{T}." class="ltx_Math" display="block" id="S3.E3.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>τ</mi><mi>i</mi></msub><mo>=</mo><msubsup><mrow><mo stretchy="false">{</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow><mo stretchy="false">}</mo></mrow><mrow><mi>t</mi><mo>=</mo><mn>0</mn></mrow><mi>T</mi></msubsup></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\tau_{i}=\{(x_{t},a_{t})\}_{t=0}^{T}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS2.p2.6"><span class="translated-text">该结构的关键属性是对齐：</span><span class="original-text">The key property of this construction is alignment:</span><math alttext="a_{t}" class="ltx_Math" display="inline" id="S3.SS2.p2.4.m1" intent=":literal"><semantics><msub><mi>a</mi><mi>t</mi></msub><annotation encoding="application/x-tex">a_{t}</annotation></semantics></math><span class="translated-text">是用于生成的切片状态</span><span class="original-text">is the slice state used to generate</span><math alttext="x_{t}" class="ltx_Math" display="inline" id="S3.SS2.p2.5.m2" intent=":literal"><semantics><msub><mi>x</mi><mi>t</mi></msub><annotation encoding="application/x-tex">x_{t}</annotation></semantics></math><span class="translated-text">，以及连续对</span><span class="original-text">, and consecutive pairs</span><math alttext="(x_{t},a_{t}),(x_{t+1},a_{t+1})" class="ltx_Math" display="inline" id="S3.SS2.p2.6.m3" intent=":literal"><semantics><mrow><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow><mo>,</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>,</mo><msub><mi>a</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">(x_{t},a_{t}),(x_{t+1},a_{t+1})</annotation></semantics></math><span class="translated-text">描述观察到的解剖结构在不同切片状态下如何变化。得到的预训练数据集是</span><span class="original-text">describe how the observed anatomy changes under the varying slice states. The resulting pretraining dataset is</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E4">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{D}_{\mathrm{pre}}=\{\tau_{i}\}_{i=1}^{N}," class="ltx_Math" display="block" id="S3.E4.m1" intent=":literal"><semantics><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">𝒟</mi><mi>pre</mi></msub><mo>=</mo><msubsup><mrow><mo stretchy="false">{</mo><msub><mi>τ</mi><mi>i</mi></msub><mo stretchy="false">}</mo></mrow><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></msubsup></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathcal{D}_{\mathrm{pre}}=\{\tau_{i}\}_{i=1}^{N},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS2.p2.7"><span class="translated-text">它提供密集的动作观察监督，无需手动标签。</span><span class="original-text">which provides dense action-observation supervision without manual labels.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.p3">
+<p class="ltx_p" id="S3.SS2.p3.3"><span class="translated-text">生成帧匹配目标</span><span class="original-text">To produce frame-matched targets</span><math alttext="y_{i}" class="ltx_Math" display="inline" id="S3.SS2.p3.1.m1" intent=":literal"><semantics><msub><mi>y</mi><mi>i</mi></msub><annotation encoding="application/x-tex">y_{i}</annotation></semantics></math><span class="translated-text">，我们使用中的动作重放相同的状态序列</span><span class="original-text">, we replay the same state sequence using the actions in</span><math alttext="\tau_{i}" class="ltx_Math" display="inline" id="S3.SS2.p3.2.m2" intent=":literal"><semantics><msub><mi>τ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\tau_{i}</annotation></semantics></math><span class="translated-text">和下游目标量</span><span class="original-text">and the downstream target volumes</span><math alttext="Y_{i}" class="ltx_Math" display="inline" id="S3.SS2.p3.3.m3" intent=":literal"><semantics><msub><mi>Y</mi><mi>i</mi></msub><annotation encoding="application/x-tex">Y_{i}</annotation></semantics></math>:</p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E5">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="y_{i}=\mathcal{R}(Y_{i},a_{t};\theta)." class="ltx_Math" display="block" id="S3.E5.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>y</mi><mi>i</mi></msub><mo>=</mo><mrow><mi class="ltx_font_mathcaligraphic">ℛ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>Y</mi><mi>i</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo>;</mo><mi>θ</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">y_{i}=\mathcal{R}(Y_{i},a_{t};\theta).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(5)</span></td>
+</tr></tbody>
+</table>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span><span class="translated-text">世界模型预训练目标</span><span class="original-text">World-model pretraining objective</span></h3>
+<div class="ltx_para" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.1"><span class="translated-text">如图</span><span class="original-text">As shown in Figure</span><a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">，我们采用了编码器-解码器架构，并提出了一种使用 MRI 2D 动作视频对的新颖的两阶段预训练管道。的</span><span class="original-text">, we adopted an encoder-decoder architecture and proposed a novel two-stage pretraining pipeline using the MRI 2D action-video pairs. The</span><span class="ltx_text ltx_font_italic" id="S3.SS3.p1.1.1"><span class="translated-text">第一</span><span class="original-text">first</span></span><span class="translated-text">阶段学习一个标记器，将单个切片观察映射到潜在标记。的</span><span class="original-text">stage learns a tokenizer that maps individual slice observations to latent tokens. The</span><span class="ltx_text ltx_font_italic" id="S3.SS3.p1.1.2"><span class="translated-text">第二</span><span class="original-text">second</span></span><span class="translated-text">阶段冻结分词器并在动作视频序列上训练动作条件潜在动力学模型。这种分解将静态解剖编码与转换学习分开：标记器提供了紧凑的潜在特征空间</span><span class="original-text">stage freezes the tokenizer and trains an action-conditioned latent dynamics model on the action-video sequences. This decomposition separates static anatomical encoding from transition learning: the tokenizer provides a compact latent feature space</span><span class="ltx_text ltx_font_italic" id="S3.SS3.p1.1.3"><span class="translated-text">同时</span><span class="original-text">while</span></span><span class="translated-text">动力学模型学习如何</span><span class="original-text">the dynamics model learns how to</span><span class="ltx_text ltx_font_italic" id="S3.SS3.p1.1.4"><span class="translated-text">进化</span><span class="original-text">evolve</span></span><span class="translated-text">通过预测下一个潜在帧来预测解剖视图的潜在特征。</span><span class="original-text">latent features of anatomical views by predicting the next latent frame.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.p2">
+<p class="ltx_p" id="S3.SS3.p2.7"><span class="translated-text">用于切片观察</span><span class="original-text">For a slice observation</span><math alttext="x_{t}" class="ltx_Math" display="inline" id="S3.SS3.p2.1.m1" intent=":literal"><semantics><msub><mi>x</mi><mi>t</mi></msub><annotation encoding="application/x-tex">x_{t}</annotation></semantics></math><span class="translated-text">, 让</span><span class="original-text">, let</span><math alttext="P(x_{t})\in\mathbb{R}^{N_{p}\times d_{p}}" class="ltx_Math" display="inline" id="S3.SS3.p2.2.m2" intent=":literal"><semantics><mrow><mrow><mi>P</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>N</mi><mi>p</mi></msub><mo lspace="0.222em" rspace="0.222em">×</mo><msub><mi>d</mi><mi>p</mi></msub></mrow></msup></mrow><annotation encoding="application/x-tex">P(x_{t})\in\mathbb{R}^{N_{p}\times d_{p}}</annotation></semantics></math><span class="translated-text">表示其补丁表示并让</span><span class="original-text">denote its patchified representation and let</span><math alttext="m_{t}\in\{0,1\}^{N_{p}}" class="ltx_Math" display="inline" id="S3.SS3.p2.3.m3" intent=":literal"><semantics><mrow><msub><mi>m</mi><mi>t</mi></msub><mo>∈</mo><msup><mrow><mo stretchy="false">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false">}</mo></mrow><msub><mi>N</mi><mi>p</mi></msub></msup></mrow><annotation encoding="application/x-tex">m_{t}\in\{0,1\}^{N_{p}}</annotation></semantics></math><span class="translated-text">是补丁上的二进制掩码。分词器</span><span class="original-text">be a binary mask over patches. The tokenizer</span><math alttext="E_{\psi}" class="ltx_Math" display="inline" id="S3.SS3.p2.4.m4" intent=":literal"><semantics><msub><mi>E</mi><mi>ψ</mi></msub><annotation encoding="application/x-tex">E_{\psi}</annotation></semantics></math><span class="translated-text">输出潜在标记</span><span class="original-text">outputs the latent token</span><math alttext="z_{t}\in\mathbb{R}^{L\times d}" class="ltx_Math" display="inline" id="S3.SS3.p2.5.m5" intent=":literal"><semantics><mrow><msub><mi>z</mi><mi>t</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>L</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>d</mi></mrow></msup></mrow><annotation encoding="application/x-tex">z_{t}\in\mathbb{R}^{L\times d}</annotation></semantics></math><span class="translated-text">和解码器</span><span class="original-text">and the decoder</span><math alttext="G_{\psi}" class="ltx_Math" display="inline" id="S3.SS3.p2.6.m6" intent=":literal"><semantics><msub><mi>G</mi><mi>ψ</mi></msub><annotation encoding="application/x-tex">G_{\psi}</annotation></semantics></math><span class="translated-text">预测估计的补丁</span><span class="original-text">predicts the estimated patches</span><math alttext="\hat{P}_{t}" class="ltx_Math" display="inline" id="S3.SS3.p2.7.m7" intent=":literal"><semantics><msub><mover accent="true"><mi>P</mi><mo>^</mo></mover><mi>t</mi></msub><annotation encoding="application/x-tex">\hat{P}_{t}</annotation></semantics></math><span class="translated-text">如下：</span><span class="original-text">as follows:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E6">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="z_{t}=E_{\psi}(P(x_{t}),m_{t}),\qquad\hat{P}_{t}=G_{\psi}(z_{t},m_{t})." class="ltx_Math" display="block" id="S3.E6.m1" intent=":literal"><semantics><mrow><mrow><mrow><msub><mi>z</mi><mi>t</mi></msub><mo>=</mo><mrow><msub><mi>E</mi><mi>ψ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><mi>P</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>,</mo><msub><mi>m</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><mo rspace="2.167em">,</mo><mrow><msub><mover accent="true"><mi>P</mi><mo>^</mo></mover><mi>t</mi></msub><mo>=</mo><mrow><msub><mi>G</mi><mi>ψ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>z</mi><mi>t</mi></msub><mo>,</mo><msub><mi>m</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">z_{t}=E_{\psi}(P(x_{t}),m_{t}),\qquad\hat{P}_{t}=G_{\psi}(z_{t},m_{t}).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(6)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS3.p2.11"><span class="translated-text">分词器通过掩模补丁重建进行训练：</span><span class="original-text">The tokenizer is trained with masked patch reconstruction:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E7">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{L}_{\mathrm{mae}}=\mathbb{E}_{x_{t},m_{t}}\left[\frac{1}{\sum_{j=1}^{N_{p}}m_{t,j}}\sum_{j=1}^{N_{p}}m_{t,j}\left\|\hat{P}_{t,j}-P(x_{t})_{j}\right\|_{2}^{2}\right]." class="ltx_Math" display="block" id="S3.E7.m1" intent=":literal"><semantics><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mi>mae</mi></msub><mo>=</mo><mrow><msub><mi>𝔼</mi><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><msub><mi>m</mi><mi>t</mi></msub></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo>[</mo><mrow><mfrac><mn>1</mn><mrow><msubsup><mo>∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>N</mi><mi>p</mi></msub></msubsup><msub><mi>m</mi><mrow><mi>t</mi><mo>,</mo><mi>j</mi></mrow></msub></mrow></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><munderover><mo movablelimits="false">∑</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>N</mi><mi>p</mi></msub></munderover><mrow><msub><mi>m</mi><mrow><mi>t</mi><mo>,</mo><mi>j</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><msubsup><mrow><mo>‖</mo><mrow><msub><mover accent="true"><mi>P</mi><mo>^</mo></mover><mrow><mi>t</mi><mo>,</mo><mi>j</mi></mrow></msub><mo>−</mo><mrow><mi>P</mi><mo lspace="0em" rspace="0em">​</mo><msub><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow><mi>j</mi></msub></mrow></mrow><mo>‖</mo></mrow><mn>2</mn><mn>2</mn></msubsup></mrow></mrow></mrow><mo>]</mo></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\mathcal{L}_{\mathrm{mae}}=\mathbb{E}_{x_{t},m_{t}}\left[\frac{1}{\sum_{j=1}^{N_{p}}m_{t,j}}\sum_{j=1}^{N_{p}}m_{t,j}\left\|\hat{P}_{t,j}-P(x_{t})_{j}\right\|_{2}^{2}\right].</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(7)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS3.p2.12"><span class="translated-text">当启用感知重建时，我们在重建切片和目标切片之间添加一个感知项：</span><span class="original-text">When perceptual reconstruction is enabled, we add a perceptual term between the reconstructed and target slice:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E8">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{L}_{\mathrm{token}}=\mathcal{L}_{\mathrm{mae}}+\lambda_{\mathrm{perc}}\mathcal{L}_{\mathrm{perc}}\bigl(\operatorname{Unpatchify}(\hat{P}_{t}),x_{t}\bigr)." class="ltx_Math" display="block" id="S3.E8.m1" intent=":literal"><semantics><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mi>token</mi></msub><mo>=</mo><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mi>mae</mi></msub><mo>+</mo><mrow><msub><mi>λ</mi><mi>perc</mi></msub><mo lspace="0em" rspace="0em">​</mo><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mi>perc</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="1.200em" minsize="1.200em">(</mo><mrow><mi>Unpatchify</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><msub><mover accent="true"><mi>P</mi><mo>^</mo></mover><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>,</mo><msub><mi>x</mi><mi>t</mi></msub><mo maxsize="1.200em" minsize="1.200em">)</mo></mrow></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\mathcal{L}_{\mathrm{token}}=\mathcal{L}_{\mathrm{mae}}+\lambda_{\mathrm{perc}}\mathcal{L}_{\mathrm{perc}}\bigl(\operatorname{Unpatchify}(\hat{P}_{t}),x_{t}\bigr).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(8)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS3.p2.10"><span class="translated-text">的</span><span class="original-text">The</span><math alttext="\operatorname{Unpatchify}" class="ltx_Math" display="inline" id="S3.SS3.p2.8.m1" intent=":literal"><semantics><mi>Unpatchify</mi><annotation encoding="application/x-tex">\operatorname{Unpatchify}</annotation></semantics></math><span class="translated-text">算子是重建估计的图像</span><span class="original-text">operator is to reconstruct the estimated image</span><math alttext="\hat{x_{t}}" class="ltx_Math" display="inline" id="S3.SS3.p2.9.m2" intent=":literal"><semantics><mover accent="true"><msub><mi>x</mi><mi>t</mi></msub><mo>^</mo></mover><annotation encoding="application/x-tex">\hat{x_{t}}</annotation></semantics></math><span class="translated-text">从估计的补丁</span><span class="original-text">from the estimated patches</span><math alttext="\hat{P_{t}}" class="ltx_Math" display="inline" id="S3.SS3.p2.10.m3" intent=":literal"><semantics><mover accent="true"><msub><mi>P</mi><mi>t</mi></msub><mo>^</mo></mover><annotation encoding="application/x-tex">\hat{P_{t}}</annotation></semantics></math><span class="translated-text">具有正确的位置。</span><span class="original-text">with the correct positions.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.p3">
+<p class="ltx_p" id="S3.SS3.p3.2"><span class="translated-text">在分词器预训练之后，我们冻结分词器编码器</span><span class="original-text">After tokenizer pretraining, we freeze the tokenizer encoder</span><math alttext="E_{\psi}" class="ltx_Math" display="inline" id="S3.SS3.p3.1.m1" intent=":literal"><semantics><msub><mi>E</mi><mi>ψ</mi></msub><annotation encoding="application/x-tex">E_{\psi}</annotation></semantics></math><span class="translated-text">并仅在标记器潜在空间中训练动态模型。对于切片动作轨迹</span><span class="original-text">and train the dynamics model only in the tokenizer latent space. For a slice-action trajectory</span><math alttext="\tau_{i}=\{(x_{t},a_{t})\}_{t=1}^{T}" class="ltx_Math" display="inline" id="S3.SS3.p3.2.m2" intent=":literal"><semantics><mrow><msub><mi>τ</mi><mi>i</mi></msub><mo>=</mo><msubsup><mrow><mo stretchy="false">{</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow><mo stretchy="false">}</mo></mrow><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></msubsup></mrow><annotation encoding="application/x-tex">\tau_{i}=\{(x_{t},a_{t})\}_{t=1}^{T}</annotation></semantics></math><span class="translated-text">，每一帧被编码为</span><span class="original-text">, each frame is encoded as</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E9">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="z_{t}=\operatorname{Pack}(E_{\psi}(x_{t})),\qquad z_{t}\in\mathbb{R}^{S\times d_{z}}," class="ltx_Math" display="block" id="S3.E9.m1" intent=":literal"><semantics><mrow><mrow><mrow><msub><mi>z</mi><mi>t</mi></msub><mo>=</mo><mrow><mi>Pack</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mrow><msub><mi>E</mi><mi>ψ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">)</mo></mrow></mrow></mrow><mo rspace="2.167em">,</mo><mrow><msub><mi>z</mi><mi>t</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>S</mi><mo lspace="0.222em" rspace="0.222em">×</mo><msub><mi>d</mi><mi>z</mi></msub></mrow></msup></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">z_{t}=\operatorname{Pack}(E_{\psi}(x_{t})),\qquad z_{t}\in\mathbb{R}^{S\times d_{z}},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(9)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS3.p3.5"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\operatorname{Pack}(\cdot)" class="ltx_Math" display="inline" id="S3.SS3.p3.3.m1" intent=":literal"><semantics><mrow><mi>Pack</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mo lspace="0em" rspace="0em">⋅</mo><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\operatorname{Pack}(\cdot)</annotation></semantics></math><span class="translated-text">表示动力学模型使用的空间打包操作。干净的目标</span><span class="original-text">denotes the spatial packing operation used by the dynamics model. The clean target</span><math alttext="z_{t}" class="ltx_Math" display="inline" id="S3.SS3.p3.4.m2" intent=":literal"><semantics><msub><mi>z</mi><mi>t</mi></msub><annotation encoding="application/x-tex">z_{t}</annotation></semantics></math><span class="translated-text">因此是渲染切片的冻结分词器表示</span><span class="original-text">is therefore the frozen-tokenizer representation of the rendered slice</span><math alttext="x_{t}" class="ltx_Math" display="inline" id="S3.SS3.p3.5.m3" intent=":literal"><semantics><msub><mi>x</mi><mi>t</mi></msub><annotation encoding="application/x-tex">x_{t}</annotation></semantics></math><span class="translated-text">;此阶段不使用手动标签或图像空间重建目标。</span><span class="original-text">; no manual label or image-space reconstruction target is used in this stage.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.p4">
+<p class="ltx_p" id="S3.SS3.p4.1"><span class="translated-text">我们使用强制捷径去噪目标来训练动力学模型。对于每个时间步，一个快捷信号</span><span class="original-text">We train the dynamics model with a shortcut-forcing denoising objective. For each time step, a shortcut signal</span><math alttext="\sigma_{t}\in[0,1]" class="ltx_Math" display="inline" id="S3.SS3.p4.1.m1" intent=":literal"><semantics><mrow><msub><mi>σ</mi><mi>t</mi></msub><mo>∈</mo><mrow><mo stretchy="false">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false">]</mo></mrow></mrow><annotation encoding="application/x-tex">\sigma_{t}\in[0,1]</annotation></semantics></math><span class="translated-text">进行采样，并将干净的潜伏与高斯噪声混合：</span><span class="original-text">is sampled and the clean latent is mixed with Gaussian noise:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E10">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\tilde{z}_{t}^{\sigma}=(1-\sigma_{t})\epsilon_{t}+\sigma_{t}z_{t},\qquad\epsilon_{t}\sim\mathcal{N}(0,I)." class="ltx_Math" display="block" id="S3.E10.m1" intent=":literal"><semantics><mrow><mrow><mrow><msubsup><mover accent="true"><mi>z</mi><mo>~</mo></mover><mi>t</mi><mi>σ</mi></msubsup><mo>=</mo><mrow><mrow><mrow><mo stretchy="false">(</mo><mrow><mn>1</mn><mo>−</mo><msub><mi>σ</mi><mi>t</mi></msub></mrow><mo stretchy="false">)</mo></mrow><mo lspace="0em" rspace="0em">​</mo><msub><mi>ϵ</mi><mi>t</mi></msub></mrow><mo>+</mo><mrow><msub><mi>σ</mi><mi>t</mi></msub><mo lspace="0em" rspace="0em">​</mo><msub><mi>z</mi><mi>t</mi></msub></mrow></mrow></mrow><mo rspace="2.167em">,</mo><mrow><msub><mi>ϵ</mi><mi>t</mi></msub><mo>∼</mo><mrow><mi class="ltx_font_mathcaligraphic">𝒩</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mi>I</mi><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\tilde{z}_{t}^{\sigma}=(1-\sigma_{t})\epsilon_{t}+\sigma_{t}z_{t},\qquad\epsilon_{t}\sim\mathcal{N}(0,I).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(10)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS3.p4.5"><span class="translated-text">这里</span><span class="original-text">Here</span><math alttext="\sigma_{t}" class="ltx_Math" display="inline" id="S3.SS3.p4.2.m1" intent=":literal"><semantics><msub><mi>σ</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\sigma_{t}</annotation></semantics></math><span class="translated-text">控制去噪级别：</span><span class="original-text">controls the denoising level:</span><math alttext="\sigma_{t}=0" class="ltx_Math" display="inline" id="S3.SS3.p4.3.m2" intent=":literal"><semantics><mrow><msub><mi>σ</mi><mi>t</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\sigma_{t}=0</annotation></semantics></math><span class="translated-text">对应于纯噪声和</span><span class="original-text">corresponds to pure noise and</span><math alttext="\sigma_{t}=1" class="ltx_Math" display="inline" id="S3.SS3.p4.4.m3" intent=":literal"><semantics><mrow><msub><mi>σ</mi><mi>t</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\sigma_{t}=1</annotation></semantics></math><span class="translated-text">对应于干净的潜在标记器。快捷步骤嵌入</span><span class="original-text">corresponds to the clean tokenizer latent. The shortcut step embedding</span><math alttext="\Delta_{t}" class="ltx_Math" display="inline" id="S3.SS3.p4.5.m4" intent=":literal"><semantics><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\Delta_{t}</annotation></semantics></math><span class="translated-text">遵循 Dreamer4 风格的快捷目标并指定去噪步长，而不是 MRI 轨迹中的时间偏移。</span><span class="original-text">follows the Dreamer4-style shortcut objective and specifies the denoising step size, rather than a temporal offset in the MRI trajectory.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.p5">
+<p class="ltx_p" id="S3.SS3.p5.4"><span class="translated-text">动力学模型</span><span class="original-text">The dynamics model</span><math alttext="F_{\phi}" class="ltx_Math" display="inline" id="S3.SS3.p5.1.m1" intent=":literal"><semantics><msub><mi>F</mi><mi>ϕ</mi></msub><annotation encoding="application/x-tex">F_{\phi}</annotation></semantics></math><span class="translated-text">与切片序列有因果关系。时</span><span class="original-text">is causal over the slice sequence. At time</span><math alttext="t" class="ltx_Math" display="inline" id="S3.SS3.p5.2.m2" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math><span class="translated-text">，它接收损坏的潜在上下文，记录的切片状态高达</span><span class="original-text">, it receives the corrupted latent context, the recorded slice states up to</span><math alttext="t" class="ltx_Math" display="inline" id="S3.SS3.p5.3.m3" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math><span class="translated-text">，快捷条件变量，并预测干净潜伏</span><span class="original-text">, the shortcut conditioning variables, and predicts the clean latent</span><math alttext="\hat{z}_{t}" class="ltx_Math" display="inline" id="S3.SS3.p5.4.m4" intent=":literal"><semantics><msub><mover accent="true"><mi>z</mi><mo>^</mo></mover><mi>t</mi></msub><annotation encoding="application/x-tex">\hat{z}_{t}</annotation></semantics></math><span class="translated-text">当前渲染视图的</span><span class="original-text">of the current rendered view</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E11">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\hat{z}_{t}=F_{\phi}\left(\tilde{z}_{\leq t}^{\sigma},a_{\leq t},\sigma_{\leq t},\Delta_{\leq t}\right)." class="ltx_Math" display="block" id="S3.E11.m1" intent=":literal"><semantics><mrow><mrow><msub><mover accent="true"><mi>z</mi><mo>^</mo></mover><mi>t</mi></msub><mo>=</mo><mrow><msub><mi>F</mi><mi>ϕ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo>(</mo><msubsup><mover accent="true"><mi>z</mi><mo>~</mo></mover><mrow><mi></mi><mo>≤</mo><mi>t</mi></mrow><mi>σ</mi></msubsup><mo>,</mo><msub><mi>a</mi><mrow><mi></mi><mo>≤</mo><mi>t</mi></mrow></msub><mo>,</mo><msub><mi>σ</mi><mrow><mi></mi><mo>≤</mo><mi>t</mi></mrow></msub><mo>,</mo><msub><mi mathvariant="normal">Δ</mi><mrow><mi></mi><mo>≤</mo><mi>t</mi></mrow></msub><mo>)</mo></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\hat{z}_{t}=F_{\phi}\left(\tilde{z}_{\leq t}^{\sigma},a_{\leq t},\sigma_{\leq t},\Delta_{\leq t}\right).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(11)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div class="ltx_para" id="S3.SS3.p6">
+<p class="ltx_p" id="S3.SS3.p6.4"><span class="translated-text">经验动态损失是</span><span class="original-text">The empirical dynamics loss is</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E12">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{L}_{\mathrm{emp}}=\mathbb{E}_{\tau,t,\sigma}\left[w(\sigma_{t})\left\|\hat{z}_{t}-z_{t}\right\|_{2}^{2}\right]," class="ltx_Math" display="block" id="S3.E12.m1" intent=":literal"><semantics><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mi>emp</mi></msub><mo>=</mo><mrow><msub><mi>𝔼</mi><mrow><mi>τ</mi><mo>,</mo><mi>t</mi><mo>,</mo><mi>σ</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo>[</mo><mrow><mi>w</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>σ</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow><mo lspace="0em" rspace="0em">​</mo><msubsup><mrow><mo>‖</mo><mrow><msub><mover accent="true"><mi>z</mi><mo>^</mo></mover><mi>t</mi></msub><mo>−</mo><msub><mi>z</mi><mi>t</mi></msub></mrow><mo>‖</mo></mrow><mn>2</mn><mn>2</mn></msubsup></mrow><mo>]</mo></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathcal{L}_{\mathrm{emp}}=\mathbb{E}_{\tau,t,\sigma}\left[w(\sigma_{t})\left\|\hat{z}_{t}-z_{t}\right\|_{2}^{2}\right],</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(12)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS3.p6.3"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="w(\sigma_{t})" class="ltx_Math" display="inline" id="S3.SS3.p6.1.m1" intent=":literal"><semantics><mrow><mi>w</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>σ</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">w(\sigma_{t})</annotation></semantics></math><span class="translated-text">是快捷权重。当启用快捷引导时，我们使用动态损失</span><span class="original-text">is the shortcut weighting. When shortcut bootstrapping is enabled, we used the dynamic loss</span><math alttext="\mathcal{L}_{\mathrm{dyn}}" class="ltx_Math" display="inline" id="S3.SS3.p6.2.m2" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mi>dyn</mi></msub><annotation encoding="application/x-tex">\mathcal{L}_{\mathrm{dyn}}</annotation></semantics></math><span class="translated-text">通过添加标准快捷自洽项</span><span class="original-text">by adding the standard shortcut self-consistency term</span><math alttext="\mathcal{L}_{\mathrm{sc}}" class="ltx_Math" display="inline" id="S3.SS3.p6.3.m3" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mi>sc</mi></msub><annotation encoding="application/x-tex">\mathcal{L}_{\mathrm{sc}}</annotation></semantics></math><span class="translated-text">来自梦想家4</span><span class="original-text">from the Dreamer4</span><cite class="ltx_cite ltx_citemacro_citep">(Acuaviva<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib1" title="From generation to generalization: emergent few-shot learning in video diffusion models">2025</a>)</cite><span class="translated-text">目标：</span><span class="original-text">objective:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E13">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{L}_{\mathrm{dyn}}=\mathcal{L}_{\mathrm{emp}}+\lambda_{\mathrm{sc}}\mathcal{L}_{\mathrm{sc}}." class="ltx_Math" display="block" id="S3.E13.m1" intent=":literal"><semantics><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mi>dyn</mi></msub><mo>=</mo><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mi>emp</mi></msub><mo>+</mo><mrow><msub><mi>λ</mi><mi>sc</mi></msub><mo lspace="0em" rspace="0em">​</mo><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mi>sc</mi></msub></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\mathcal{L}_{\mathrm{dyn}}=\mathcal{L}_{\mathrm{emp}}+\lambda_{\mathrm{sc}}\mathcal{L}_{\mathrm{sc}}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(13)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS3.p6.5"><span class="translated-text">这个自洽术语仅使用模型预测，并且由所有动力学变体共享。动态阶段消耗的唯一外部信号是记录的切片动作序列。</span><span class="original-text">This self-consistency term uses model predictions only and is shared by all dynamics variants. The only external signal consumed by the dynamics stage is the recorded slice-action sequence.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.4 </span><span class="translated-text">转移到下游任务</span><span class="original-text">Transfer to downstream tasks</span></h3>
+<div class="ltx_para" id="S3.SS4.p1">
+<p class="ltx_p" id="S3.SS4.p1.3"><span class="translated-text">我们评估预训练的表示是否转移到密集的解剖和空间预测。给定一个</span><span class="original-text">We evaluate whether the pretrained representation transfers to dense anatomical and spatial prediction. Given a</span><math alttext="K" class="ltx_Math" display="inline" id="S3.SS4.p1.1.m1" intent=":literal"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math><span class="translated-text">-帧切片剪辑</span><span class="original-text">-frame slice clip</span><math alttext="c_{t}" class="ltx_Math" display="inline" id="S3.SS4.p1.2.m2" intent=":literal"><semantics><msub><mi>c</mi><mi>t</mi></msub><annotation encoding="application/x-tex">c_{t}</annotation></semantics></math><span class="translated-text">结束于时间</span><span class="original-text">ending at time</span><math alttext="t" class="ltx_Math" display="inline" id="S3.SS4.p1.3.m3" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>,</p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E14">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="c_{t}=\{(x_{t-K+1},a_{t-K+1}),\ldots,(x_{t},a_{t})\}," class="ltx_Math" display="block" id="S3.E14.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>c</mi><mi>t</mi></msub><mo>=</mo><mrow><mo stretchy="false">{</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mrow><mi>t</mi><mo>−</mo><mi>K</mi></mrow><mo>+</mo><mn>1</mn></mrow></msub><mo>,</mo><msub><mi>a</mi><mrow><mrow><mi>t</mi><mo>−</mo><mi>K</mi></mrow><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false">)</mo></mrow><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow><mo stretchy="false">}</mo></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">c_{t}=\{(x_{t-K+1},a_{t-K+1}),\ldots,(x_{t},a_{t})\},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(14)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS4.p1.4"><span class="translated-text">冻结的预训练主干产生表示</span><span class="original-text">the frozen pretrained backbone produces a representation</span><math alttext="h_{t}=\rho(c_{t})" class="ltx_Math" display="inline" id="S3.SS4.p1.4.m1" intent=":literal"><semantics><mrow><msub><mi>h</mi><mi>t</mi></msub><mo>=</mo><mrow><mi>ρ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>c</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">h_{t}=\rho(c_{t})</annotation></semantics></math><span class="translated-text">，并且轻量级特定于任务的头预测最终切片的目标：</span><span class="original-text">, and a lightweight task-specific head predicts the target for the final slice:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E15">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\hat{y}_{t}=g_{\omega}(h_{t})." class="ltx_Math" display="block" id="S3.E15.m1" intent=":literal"><semantics><mrow><mrow><msub><mover accent="true"><mi>y</mi><mo>^</mo></mover><mi>t</mi></msub><mo>=</mo><mrow><msub><mi>g</mi><mi>ω</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>h</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\hat{y}_{t}=g_{\omega}(h_{t}).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(15)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS4.p1.5"><span class="translated-text">这里</span><span class="original-text">Here</span><math alttext="\rho" class="ltx_Math" display="inline" id="S3.SS4.p1.5.m1" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">表示分词器加动态特征。预训练的分词器和动态模型被冻结，因此下游性能反映了学习表示的可转移性。</span><span class="original-text">denotes tokenizer-plus-dynamics features. The pretrained tokenizer and dynamics model are frozen, so downstream performance reflects the transferability of the learned representation.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">实验</span><span class="original-text">Experiments</span></h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">我们的实验评估可控 MRI 切片导航是否为解剖和空间表示学习提供有用的预训练信号。实验围绕四个问题进行。首先，与基线和其他方法相比，预训练表示是否改善了解剖密集预测？其次，需要多少切片视频上下文，以及上下文长度在准确性、推理时间和内存成本之间产生什么权衡？第三，动力学模型实际上在预训练期间使用了记录的切片动作吗？第四，学习到的表示是否保留了局部切片外观之外的 3D 空间结构？</span><span class="original-text">Our experiments evaluate whether controllable MRI slice navigation provides a useful pretraining signal for anatomical and spatial representation learning. The experiments are organized around four questions. First, does the pretrained representation improve anatomical dense prediction compared with baselines and other methods? Second, how much slice-video context is needed, and what trade-off does context length create between accuracy, inference time, and memory cost? Third, does the dynamics model actually use the recorded slice actions during pretraining? Fourth, does the learned representation preserve 3D spatial structure beyond local slice appearance?</span></p>
+</div>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span><span class="translated-text">实验装置</span><span class="original-text">Experimental setup</span></h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.1"><span class="translated-text">我们使用 HCP2 数据集中的 184 个 T1 加权 MRI 体积</span><span class="original-text">We use 184 T1-weighted MRI volumes from the HCP2 dataset</span><cite class="ltx_cite ltx_citemacro_citep">(Van Essen<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib30" title="The human connectome project: a data acquisition perspective">2012</a>)</cite><span class="translated-text">。所有实验均使用具有固定随机种子的受试者级别分割：148 个受试者用于训练，18 个受试者用于验证，18 个受试者用于测试。测试对象接受自我监督的预训练和下游训练。使用基于 SimpleITK 的 NIfTI 管道加载卷</span><span class="original-text">. All experiments use subject-level splits with a fixed random seed: 148 subjects for training, 18 for validation, and 18 for testing. The test subjects are held out from both self-supervised pretraining and downstream training. Volumes are loaded with a SimpleITK-based NIfTI pipeline</span><cite class="ltx_cite ltx_citemacro_citep">(Lowekamp<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib7" title="The design of simpleitk">2013</a>)</cite><span class="translated-text">; Unity 渲染和目标重放管道如图所示</span><span class="original-text">; the Unity rendering and target replay pipeline is summarized in Figure</span><a class="ltx_ref" href="#S3.F2" title="Figure 2 ‣ 3.1 Overall ‣ 3 Methods ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">2</span></a>.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p2">
+<p class="ltx_p" id="S4.SS1.p2.2"><span class="translated-text">除非另有说明，否则渲染的切片帧的大小将调整为</span><span class="original-text">Unless otherwise specified, rendered slice frames are resized to</span><math alttext="256\times 256" class="ltx_Math" display="inline" id="S4.SS1.p2.1.m1" intent=":literal"><semantics><mrow><mn>256</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>256</mn></mrow><annotation encoding="application/x-tex">256\times 256</annotation></semantics></math><span class="translated-text">并与编码位置、方向和面内尺度的 8 维切片状态配对。分词器在补丁大小为 16 的灰度切片视频上进行预训练。动态模型在帧步长为 4 的跨步切片动作序列上进行训练。对于下游传输，我们在冻结的预训练特征上训练轻量级预测头，扫描剪辑长度</span><span class="original-text">and paired with 8-dimensional slice states encoding position, orientation, and in-plane scale. The tokenizer is pretrained on grayscale slice videos with patch size 16. The dynamics model is trained on strided slice-action sequences with frame stride 4. For downstream transfer, we train lightweight prediction heads on frozen pretrained features, sweep clip lengths</span><math alttext="K\in\{2,4,8,16\}" class="ltx_Math" display="inline" id="S4.SS1.p2.2.m2" intent=":literal"><semantics><mrow><mi>K</mi><mo>∈</mo><mrow><mo stretchy="false">{</mo><mn>2</mn><mo>,</mo><mn>4</mn><mo>,</mo><mn>8</mn><mo>,</mo><mn>16</mn><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">K\in\{2,4,8,16\}</annotation></semantics></math><span class="translated-text">，并通过验证性能选择模型。</span><span class="original-text">, and select models by validation performance.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p3">
+<p class="ltx_p" id="S4.SS1.p3.1"><span class="translated-text">我们评估三个密集探针。大脑区域分割使用 FreeSurfer 派生的分区标签，以相同的切片状态重放，并评估表示是否捕获解剖区域结构</span><span class="original-text">We evaluate three dense probes. Brain-region segmentation uses FreeSurfer-derived parcellation labels replayed with the same slice states, and evaluates whether the representation captures anatomical region structure</span><cite class="ltx_cite ltx_citemacro_citep">(Fischl, <a class="ltx_ref" href="#bib.bib31" title="FreeSurfer">2012</a>)</cite><span class="translated-text">。 GM/WM/CSF 分割使用 SPM 衍生的组织标签并评估组织级解剖信息</span><span class="original-text">. GM/WM/CSF segmentation uses SPM-derived tissue labels and evaluates tissue-level anatomical information</span><cite class="ltx_cite ltx_citemacro_citep">(Ashburner, <a class="ltx_ref" href="#bib.bib32" title="Computational anatomy with the spm software">2009</a>)</cite><span class="translated-text">。密集 3D 坐标场预测使用 Unity 记录的有效切片像素坐标，并评估表示是否保留底层 3D 体积中的空间组织。分割性能通过 Dice 和 mIoU 报告，而坐标预测通过有效掩模 MAE 和每轴 MAE 报告。补充材料中提供了特定于任务的损失、有效像素处理和度量定义。</span><span class="original-text">. Dense 3D coordinate-field prediction uses Unity-recorded coordinates for valid slice pixels and evaluates whether the representation preserves spatial organization in the underlying 3D volume. Segmentation performance is reported with Dice and mIoU, while coordinate prediction is reported with valid-mask MAE and per-axis MAE. Task-specific losses, valid-pixel handling, and metric definitions are provided in the supplementary material.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p4">
+<p class="ltx_p" id="S4.SS1.p4.1"><span class="translated-text">我们比较了仅标记器预训练、无动作动态和动作条件动态。对于分割，我们还包括静态体积基线：受监督的 UNETR</span><span class="original-text">We compare tokenizer-only pretraining, no-action dynamics, and action-conditioned dynamics. For segmentation, we additionally include static-volume baselines: supervised UNETR</span><cite class="ltx_cite ltx_citemacro_citep">(Hatamizadeh<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib14" title="UNETR: transformers for 3d medical image segmentation">2022</a>)</cite><span class="translated-text">和S3D式3D自监督预训练</span><span class="original-text">and S3D-style 3D self-supervised pretraining</span><cite class="ltx_cite ltx_citemacro_citep">(Wald<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib19" title="Revisiting mae pre-training for 3d medical image segmentation">2025</a>)</cite><span class="translated-text">。这些基线测试可控切片轨迹预训练是否提供超越传统 3D 体积学习和固定轴 2D 切片分割的价值。</span><span class="original-text">. These baselines test whether controllable slice-trajectory pretraining provides value beyond conventional 3D volume learning and fixed-axis 2D slice segmentation.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span><span class="translated-text">主要下游业绩</span><span class="original-text">Main downstream results</span></h3>
+<figure class="ltx_table" id="S4.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Few-epoch downstream adaptation. We report validation Dice for segmentation and validation MAE for coordinate prediction after 1, 3, and 5 fine-tuning epochs. </figcaption>
+<table class="ltx_tabular ltx_centering ltx_align_middle" id="S4.T1.3">
+<tr class="ltx_tr" id="S4.T1.3.3">
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S4.T1.3.3.4" style="padding-top:0.4pt;padding-bottom:0.4pt;">Epoch</td>
+<td class="ltx_td ltx_align_left ltx_border_tt" id="S4.T1.3.3.5" style="padding-top:0.4pt;padding-bottom:0.4pt;">Method</td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S4.T1.1.1.1" style="padding-top:0.4pt;padding-bottom:0.4pt;">Region Dice <math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T1.1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S4.T1.2.2.2" style="padding-top:0.4pt;padding-bottom:0.4pt;">Tissue Dice <math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T1.2.2.2.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_tt" id="S4.T1.3.3.3" style="padding-top:0.4pt;padding-bottom:0.4pt;">Coord. MAE <math alttext="\downarrow" class="ltx_Math" display="inline" id="S4.T1.3.3.3.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.4">
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.3.4.1" rowspan="3" style="padding-top:0.4pt;padding-bottom:0.4pt;"><span class="ltx_text" id="S4.T1.3.4.1.1">1</span></td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T1.3.4.2" style="padding-top:0.4pt;padding-bottom:0.4pt;">Tokenizer-only</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.3.4.3" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.5058</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.3.4.4" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.8359</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T1.3.4.5" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.0215</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.5">
+<td class="ltx_td ltx_align_left" id="S4.T1.3.5.1" style="padding-top:0.4pt;padding-bottom:0.4pt;">Tokenizer + no-action dyn.</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.5.2" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.5131</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.5.3" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.8384</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T1.3.5.4" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.0181</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.6">
+<td class="ltx_td ltx_align_left" id="S4.T1.3.6.1" style="padding-top:0.4pt;padding-bottom:0.4pt;">Tokenizer + action-cond. dyn.</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.6.2" style="padding-top:0.4pt;padding-bottom:0.4pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.3.6.2.1">0.5157</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.6.3" style="padding-top:0.4pt;padding-bottom:0.4pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.3.6.3.1">0.8385</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T1.3.6.4" style="padding-top:0.4pt;padding-bottom:0.4pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.3.6.4.1">0.0177</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.7">
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.3.7.1" rowspan="3" style="padding-top:0.4pt;padding-bottom:0.4pt;"><span class="ltx_text" id="S4.T1.3.7.1.1">3</span></td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T1.3.7.2" style="padding-top:0.4pt;padding-bottom:0.4pt;">Tokenizer-only</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.3.7.3" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.5133</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.3.7.4" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.8461</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T1.3.7.5" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.0149</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.8">
+<td class="ltx_td ltx_align_left" id="S4.T1.3.8.1" style="padding-top:0.4pt;padding-bottom:0.4pt;">Tokenizer + no-action dyn.</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.8.2" style="padding-top:0.4pt;padding-bottom:0.4pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.3.8.2.1">0.5475</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.8.3" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.8483</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T1.3.8.4" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.0137</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.9">
+<td class="ltx_td ltx_align_left" id="S4.T1.3.9.1" style="padding-top:0.4pt;padding-bottom:0.4pt;">Tokenizer + action-cond. dyn.</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.9.2" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.5471</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.9.3" style="padding-top:0.4pt;padding-bottom:0.4pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.3.9.3.1">0.8491</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T1.3.9.4" style="padding-top:0.4pt;padding-bottom:0.4pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.3.9.4.1">0.0134</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.10">
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T1.3.10.1" rowspan="3" style="padding-top:0.4pt;padding-bottom:0.4pt;"><span class="ltx_text" id="S4.T1.3.10.1.1">5</span></td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T1.3.10.2" style="padding-top:0.4pt;padding-bottom:0.4pt;">Tokenizer-only</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.3.10.3" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.5449</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.3.10.4" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.8538</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T1.3.10.5" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.0117</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.11">
+<td class="ltx_td ltx_align_left" id="S4.T1.3.11.1" style="padding-top:0.4pt;padding-bottom:0.4pt;">Tokenizer + no-action dyn.</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.11.2" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.5721</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.11.3" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.8544</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T1.3.11.4" style="padding-top:0.4pt;padding-bottom:0.4pt;">0.0090</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.12">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S4.T1.3.12.1" style="padding-top:0.4pt;padding-bottom:0.4pt;">Tokenizer + action-cond. dyn.</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T1.3.12.2" style="padding-top:0.4pt;padding-bottom:0.4pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.3.12.2.1">0.5736</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T1.3.12.3" style="padding-top:0.4pt;padding-bottom:0.4pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.3.12.3.1">0.8552</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb" id="S4.T1.3.12.4" style="padding-top:0.4pt;padding-bottom:0.4pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.3.12.4.1">0.0090</span></td>
+</tr>
+</table>
+</figure>
+<figure class="ltx_table" id="S4.T2">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Segmentation results for static-volume baselines and controllable 2D slice navigation pretraining task.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_align_middle" id="S4.T2.4">
+<tr class="ltx_tr" id="S4.T2.4.4">
+<td class="ltx_td ltx_align_left ltx_border_tt" id="S4.T2.4.4.5">Method</td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S4.T2.1.1.1">Region Dice <math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T2.1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S4.T2.2.2.2">Region mIoU <math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T2.2.2.2.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S4.T2.3.3.3">Tissue Dice <math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T2.3.3.3.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_tt" id="S4.T2.4.4.4">Tissue mIoU <math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T2.4.4.4.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.4.5">
+<td class="ltx_td ltx_align_left ltx_border_t" colspan="5" id="S4.T2.4.5.1"><span class="ltx_text ltx_font_italic" id="S4.T2.4.5.1.1">Static 3D volume baselines</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.4.6">
+<td class="ltx_td ltx_align_left" id="S4.T2.4.6.1">3D UNETR <cite class="ltx_cite ltx_citemacro_citep">(Hatamizadeh<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib14" title="UNETR: transformers for 3d medical image segmentation">2022</a>)</cite>
+</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.4.6.2">0.6772</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.4.6.3">0.5271</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.4.6.4">0.8802</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T2.4.6.5">0.7932</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.4.7">
+<td class="ltx_td ltx_align_left" id="S4.T2.4.7.1">S3D <cite class="ltx_cite ltx_citemacro_citep">(Wald<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib19" title="Revisiting mae pre-training for 3d medical image segmentation">2025</a>)</cite>
+</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.4.7.2">0.7674</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.4.7.3">0.6343</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.4.7.4">0.8951</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T2.4.7.5">0.8166</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.4.8">
+<td class="ltx_td ltx_align_left ltx_border_t" colspan="5" id="S4.T2.4.8.1"><span class="ltx_text ltx_font_italic" id="S4.T2.4.8.1.1">Our 2D Slice Navigation pretraining task</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.4.9">
+<td class="ltx_td ltx_align_left" id="S4.T2.4.9.1">Tokenizer-only</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.4.9.2">0.5450</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.4.9.3">0.4239</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.4.9.4">0.8538</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T2.4.9.5">0.7536</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.4.10">
+<td class="ltx_td ltx_align_left" id="S4.T2.4.10.1">Tokenizer + no-action dyn.</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.4.10.2">0.5721</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.4.10.3">0.4474</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.4.10.4">0.8544</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T2.4.10.5">0.7540</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.4.11">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S4.T2.4.11.1">Tokenizer + action-cond. dyn.</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T2.4.11.2">0.5736</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T2.4.11.3">0.4491</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T2.4.11.4">0.8552</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb" id="S4.T2.4.11.5">0.7552</td>
+</tr>
+</table>
+</figure>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.1"><span class="translated-text">如表所示</span><span class="original-text">As illustrated in Table</span><a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ 4.2 Main downstream results ‣ 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">，与仅分词器预训练和分词器加无动作动态模型预训练相比，动作条件动力学模型在 1/3/5 纪元设置下持续改进了几纪元适应。这些结果支持了主要假设，即正确的操作提供了超出静态分词器预训练的有用的转换监督。</span><span class="original-text">, the action-conditioned dynamics model consistently improves the few-epoch adaptation at the 1/3/5 epoch setting over the tokenizer-only pretraining and the tokenizer plus no-action dynamics model pretraining. These results support the main hypothesis that correct actions provide useful transition supervision beyond static tokenizer pretraining.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p2">
+<p class="ltx_p" id="S4.SS2.p2.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S4.T2" title="Table 2 ‣ 4.2 Main downstream results ‣ 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">进一步将分割结果与有监督静态体积分割方法 3D UNETR 进行比较</span><span class="original-text">further compares the segmentation results with the supervised static-volume segmentation method 3D UNETR</span><cite class="ltx_cite ltx_citemacro_citep">(Hatamizadeh<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib14" title="UNETR: transformers for 3d medical image segmentation">2022</a>)</cite><span class="translated-text">以及自监督和微调静态体积分割方法 S3D</span><span class="original-text">and the self-supervised and fine-tuned static-volume segmentation method S3D</span><cite class="ltx_cite ltx_citemacro_citep">(Wald<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib19" title="Revisiting mae pre-training for 3d medical image segmentation">2025</a>)</cite><span class="translated-text">。所提出的切片导航预训练在分割精度方面尚未与完全优化的 3D 基线（例如 UNETR 和 S3D）相匹配。如图</span><span class="original-text">. The proposed slice-navigation pretraining does not yet match fully optimized 3D baselines such as UNETR and S3D on segmentation accuracy. As shown in Figure</span><a class="ltx_ref" href="#S4.F3" title="Figure 3 ‣ 4.2 Main downstream results ‣ 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">，在当前的评估协议下，这种差距可能是可以预料到的：我们的下游适应仅使用冻结的预训练模块训练轻量级头 5 个时期，而静态 3D 基线针对更长的时间表进行了优化，大脑区域 UNETR 训练了 2000 个时期，S3D 微调了 480 个时期。关键的观察结果是，可控切片动态已经在短期适应预算下产生了可测量的收益，这表明动作条件预训练为有效的下游适应提供了有用的信号。可视化结果如图</span><span class="original-text">, this gap may be expected under the current evaluation protocol: our downstream adaptation trains lightweight heads for only 5 epochs with frozen pretrained modules, whereas the static 3D baselines are optimized for substantially longer schedules, with brain-region UNETR trained for 2000 epochs and S3D fine-tuned for 480 epochs. The key observation is that controllable slice dynamics already yields measurable gains under a short adaptation budget, suggesting that action-conditioned pretraining provides a useful signal for efficient downstream adaptation. The visualized results are shown in Figure</span><a class="ltx_ref" href="#S4.F5" title="Figure 5 ‣ 4.4 Action-use diagnostics ‣ 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">5</span></a></p>
+</div>
+<figure class="ltx_figure" id="S4.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="187" id="S4.F3.g1" src="https://arxiv.org/html/2605.06487v1/figs/Fig_time_comparation.png" width="476"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Fine-tuning efficiency on tissue and brain-region segmentation.
+Our action-conditioned world-model representation reaches strong downstream performance within 5 epochs, whereas static 3D baselines require hundreds to thousands of fine-tuning epochs.
+For S3D, only supervised fine-tuning epochs are counted; its masked 3D pretraining epochs are not included.
+Curves are parsed from the downloaded training logs.</figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span><span class="translated-text">切片视频上下文长度的影响</span><span class="original-text">Effect of slice-video context length</span></h3>
+<figure class="ltx_table" id="S4.T3">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 3: </span>Effect of slice-video context length for action-conditioned dynamics. Accuracy is reported on the test set. Latency and memory are measured on a single NVIDIA A800 with batch size 1 and averaged across the three downstream probes.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_align_middle" id="S4.T3.4">
+<tr class="ltx_tr" id="S4.T3.1.1">
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S4.T3.1.1.1" rowspan="2"><span class="ltx_text" id="S4.T3.1.1.1.1"><math alttext="L" class="ltx_Math" display="inline" id="S4.T3.1.1.1.1.m1" intent=":literal"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math></span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" colspan="3" id="S4.T3.1.1.2">Accuracy</td>
+<td class="ltx_td ltx_align_center ltx_border_tt" colspan="2" id="S4.T3.1.1.3">Cost</td>
+</tr>
+<tr class="ltx_tr" id="S4.T3.4.4">
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.2.2.1">Region Dice <math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T3.2.2.1.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.3.3.2">Tissue Dice <math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T3.3.3.2.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.4.4.3">Coord. MAE <math alttext="\downarrow" class="ltx_Math" display="inline" id="S4.T3.4.4.3.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.4.4.4">Lat. (ms)</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T3.4.4.5">Mem. (GB)</td>
+</tr>
+<tr class="ltx_tr" id="S4.T3.4.5">
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.4.5.1">2</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.4.5.2">0.5927</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.4.5.3">0.8484</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.4.5.4">0.0100</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.4.5.5">16.87</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S4.T3.4.5.6">0.380</td>
+</tr>
+<tr class="ltx_tr" id="S4.T3.4.6">
+<td class="ltx_td ltx_align_center" id="S4.T3.4.6.1">4</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.4.6.2">0.5919</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.4.6.3">0.8493</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.4.6.4">0.0099</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.4.6.5">16.77</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T3.4.6.6">0.381</td>
+</tr>
+<tr class="ltx_tr" id="S4.T3.4.7">
+<td class="ltx_td ltx_align_center" id="S4.T3.4.7.1">8</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.4.7.2">0.5899</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.4.7.3">0.8482</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.4.7.4">0.0093</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.4.7.5">16.65</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S4.T3.4.7.6">0.382</td>
+</tr>
+<tr class="ltx_tr" id="S4.T3.4.8">
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T3.4.8.1">16</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T3.4.8.2"><span class="ltx_text ltx_font_bold" id="S4.T3.4.8.2.1">0.6749</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T3.4.8.3"><span class="ltx_text ltx_font_bold" id="S4.T3.4.8.3.1">0.8542</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T3.4.8.4"><span class="ltx_text ltx_font_bold" id="S4.T3.4.8.4.1">0.0085</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T3.4.8.5">16.92</td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb" id="S4.T3.4.8.6">0.433</td>
+</tr>
+</table>
+</figure>
+<div class="ltx_para" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.5"><span class="translated-text">如表所示</span><span class="original-text">As shown in Table</span><a class="ltx_ref" href="#S4.T3" title="Table 3 ‣ 4.3 Effect of slice-video context length ‣ 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">，我们改变</span><span class="original-text">, we change</span><math alttext="L" class="ltx_Math" display="inline" id="S4.SS3.p1.1.m1" intent=":literal"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math><span class="translated-text">，上下文帧的数量，观察下游任务的表现。短上下文帧已经产生了有竞争力的组织分割和坐标预测性能，但最强的整体结果是在</span><span class="original-text">, the number of context frames, to observe the performance of downstream tasks. The short context frames already yield competitive tissue segmentation and coordinate prediction performance, but the strongest overall results are obtained at</span><math alttext="L=16" class="ltx_Math" display="inline" id="S4.SS3.p1.2.m2" intent=":literal"><semantics><mrow><mi>L</mi><mo>=</mo><mn>16</mn></mrow><annotation encoding="application/x-tex">L=16</annotation></semantics></math><span class="translated-text">。增加</span><span class="original-text">. Increasing</span><math alttext="L" class="ltx_Math" display="inline" id="S4.SS3.p1.3.m3" intent=":literal"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math><span class="translated-text">从 2 到 16，区域 Dice 从 0.5927 提高到 0.6749，组织 Dice 从 0.8484 提高到 0.8542，坐标 MAE 从 0.0100 提高到 0.0085。这种改进尤其明显，表明较长的切片轨迹为下游任务提供了额外的解剖和结构信息。此外，在这种情况下，计算开销是适中的。跨上下文长度的延迟几乎保持不变，在单个 A800 上从 16.65 毫秒到 16.92 毫秒，而内存从 0.380 GB 增加到</span><span class="original-text">from 2 to 16 improves region Dice from 0.5927 to 0.6749, tissue Dice from 0.8484 to 0.8542, and coordinate MAE from 0.0100 to 0.0085. The improvement is especially pronounced, suggesting that longer slice trajectories provide additional anatomical and structural information for downstream tasks. Besides, the computational overhead is modest in this setting. Latency remains nearly unchanged across context lengths, ranging from 16.65 ms to 16.92 ms on a single A800, while memory increases from 0.380 GB at</span><math alttext="L=2" class="ltx_Math" display="inline" id="S4.SS3.p1.4.m4" intent=":literal"><semantics><mrow><mi>L</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">L=2</annotation></semantics></math><span class="translated-text">至 0.433 GB</span><span class="original-text">to 0.433 GB at</span><math alttext="L=16" class="ltx_Math" display="inline" id="S4.SS3.p1.5.m5" intent=":literal"><semantics><mrow><mi>L</mi><mo>=</mo><mn>16</mn></mrow><annotation encoding="application/x-tex">L=16</annotation></semantics></math>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.4 </span><span class="translated-text">行动使用诊断</span><span class="original-text">Action-use diagnostics</span></h3>
+<figure class="ltx_figure" id="S4.F4"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="149" id="S4.F4.g1" src="https://arxiv.org/html/2605.06487v1/figs/fig_action_ratio.png" width="476"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Action-use diagnostics during dynamics pretraining. In the Real-Action Dynamics model, we report diagnostic loss ratios under Zero and Shuffle actions relative to Real actions, denoted as Zero/Real and Shuffle/Real. In the Zero-Action Dynamics model, we use Zero actions as the denominator and report Shuffle/Zero and Zero/Zero. Curves show a centered moving average with translucent raw traces.</figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS4.p1">
+<p class="ltx_p" id="S4.SS4.p1.1"><span class="translated-text">我们进一步询问动力学模型在预训练期间是否实际使用了切片动作。为了测试这一点，我们在每个训练步骤中仅替换动态模型使用的动作，但仅使用正确的动作计算梯度。对于真实动作模型，我们比较三个输入：记录的动作、零动作和打乱的动作。如果模型依赖于正确的动作-观察对齐，则替换记录的动作应该会增加潜在的预测损失。作为对照，我们将相同的测试应用于零动作模型，该模型是在没有信息动作的情况下进行训练的。</span><span class="original-text">We further ask whether the dynamics model actually uses the slice actions during the pretraining. To test this, we replace only the action used by the dynamics model every single training step, but calculate gradients only with the correct action. For the real-action model, we compare three inputs: the recorded actions, zero actions, and shuffled actions. If the model relies on correct action-observation alignment, replacing the recorded actions should increase the latent prediction loss. As a control, we apply the same test to a zero-action model, which is trained without informative actions.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS4.p2">
+<p class="ltx_p" id="S4.SS4.p2.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S4.F4" title="Figure 4 ‣ 4.4 Action-use diagnostics ‣ 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">报告训练期间的损失率。在真实动作模型中，零或打乱的动作比记录的动作产生更高的预测损失，表明模型学习使用切片动作。在零动作模型中，比率仍然更接近于 1，表明对动作输入的依赖性较弱。这些结果支持我们的动态预训练的好处来自正确的动态。</span><span class="original-text">reports the loss ratios during training. In the real-action model, zero or shuffled actions produce higher prediction loss than the recorded actions, showing that the model learns to use the slice actions. In the zero-action model, the ratios remain much closer to one, indicating weaker dependence on the action input. These results support that the benefit of our dynamics pretraining comes from correct dynamics.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F5"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="345" id="S4.F5.g1" src="https://arxiv.org/html/2605.06487v1/figs/fig4_visual_results.png" width="476"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>The visualized results of the brain region segmentation, the tissue segmentation, and the dense 3D coordinates understanding tasks.</figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span><span class="translated-text">结论和局限性</span><span class="original-text">Conclusion and Limitations</span></h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">我们研究了可控 MRI 切片导航是否可以作为自我监督的预训练。通过将 3D MRI 体积视为可以通过可控切片状态观察的环境，每次未标记的扫描都可以生成密集的动作切片轨迹。我们用世界模型预训练目标实例化了这个想法，其中分词器学习紧凑的切片表示，动作条件动力学模型学习解剖视图之间的潜在转换。通过下游解剖和空间探针以及动作消融，我们的结果提供了初步证据，表明可控切片动力学是 MRI 表示学习的有用信号。</span><span class="original-text">We studied whether controllable MRI slice navigation can serve as a self-supervised pretraining. By viewing a 3D MRI volume as an environment that can be observed through controllable slice states, each unlabeled scan can generate dense action-slice trajectories. We instantiated this idea with a world-model pretraining objective, where a tokenizer learns compact slice representations and an action-conditioned dynamics model learns latent transitions between anatomical views. Through downstream anatomical and spatial probes, together with action ablations, our results provide initial evidence that controllable slice dynamics is a useful signal for MRI representation learning.</span></p>
+</div>
+<div class="ltx_para" id="S5.p2">
+<p class="ltx_p" id="S5.p2.1"><span class="translated-text">这项工作有几个局限性。首先，我们的评估有意集中：我们使用一组有限的密集下游探针，而不是跨 MRI 模式、器官和临床任务的广泛基准。其次，当前的实验以 HCP2 T1 MRI 为中心，因此该公式对其他对比、扫描仪、病理和身体区域的通用性仍然开放。第三，我们当前的环境使用切片观察控制，而不是更丰富的交互或物理动作。</span><span class="original-text">This work has several limitations. First, our evaluation is intentionally focused: we use a limited set of dense downstream probes rather than a broad benchmark across MRI modalities, organs, and clinical tasks. Second, the current experiments are centered on HCP2 T1 MRI, so the generality of the formulation to other contrasts, scanners, pathologies, and body regions remains open. Third, our current environment uses slice observation controls rather than richer interactive or physical actions.</span></p>
+</div>
+<div class="ltx_para" id="S5.p3">
+<p class="ltx_p" id="S5.p3.1"><span class="translated-text">未来的工作可以通过多种方式扩展这个方向。第一步是将预训练扩展到更大、更多样化的 MRI 集合，包括多对比和多站点数据。第二个方向是研究除几何切片运动之外更丰富的可控动作空间。最后，下游评估应扩展到更广泛的解剖和临床任务，包括低标签和跨领域转移设置。我们希望这篇论文是使用可控 2D 切片动作作为 3D MRI 图像预训练的强大信号的第一步。</span><span class="original-text">Future work can extend this direction in several ways. A first step is to scale pretraining to larger and more diverse MRI collections, including multi-contrast and multi-site data. A second direction is to study richer controllable action spaces beyond geometric slice motion alone. Finally, downstream evaluation should be expanded to broader anatomical and clinical tasks, including low-label and cross-domain transfer settings. We hope this paper is an initial step toward using controllable 2D slice actions as powerful signals for 3D MRI image pretraining.</span></p>
+</div>
+<div class="ltx_pagination ltx_role_newpage"></div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib1">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">P. Acuaviva, A. Davtyan, M. Hassan, S. Stapf, A. Rahimi, A. Alahi, and P. Favaro</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">From generation to generalization: emergent few-shot learning in video diffusion models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2506.07280</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S1.p4.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S3.SS3.p6.3" title="3.3 World-model pretraining objective ‣ 3 Methods ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§3.3</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib32">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Ashburner</span><span class="ltx_text ltx_bib_year"> (2009)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Computational anatomy with the spm software</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Magnetic resonance imaging</span> <span class="ltx_text ltx_bib_volume">27</span> (<span class="ltx_text ltx_bib_number">8</span>), <span class="ltx_text ltx_bib_pages"> pp. 1163–1174</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.SS1.p3.1" title="4.1 Experimental setup ‣ 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§4.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib3">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Assran, A. Bardes, D. Fan, Q. Garrido, R. Howes, M. Komeili, M. Muckley, A. Rizvi, C. Roberts, K. Sinha, A. Zholus, S. Arnaud, A. Gejji, A. Martin, F. Robert Hogan, D. Dugas, P. Bojanowski, V. Khalidov, P. Labatut, F. Massa, M. Szafraniec, K. Krishnakumar, Y. Li, X. Ma, S. Chandar, F. Meier, Y. LeCun, M. Rabbat, and N. Ballas</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">V-jepa 2: self-supervised video models enable understanding, prediction and planning</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2506.09985</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib22">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">W. Bai, C. Chen, G. Tarroni, J. Duan, F. Guitton, S. E. Petersen, Y. Guo, P. M. Matthews, and D. Rueckert</span><span class="ltx_text ltx_bib_year"> (2019)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Self-supervised learning for cardiac mr image segmentation by anatomical position prediction</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">International conference on medical image computing and computer-assisted intervention</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 541–549</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS0.SSS0.Px1.p1.1" title="Self-supervised and spatially aware medical representation learning. ‣ 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib13">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">W. Bai, C. Chen, G. Tarroni, J. Duan, F. Guitton, S. E. Petersen, Y. Guo, P. M. Matthews, and D. Rueckert</span><span class="ltx_text ltx_bib_year"> (2019)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Self-supervised learning for cardiac mr image segmentation by anatomical position prediction</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Medical Image Computing and Computer Assisted Intervention – MICCAI 2019</span>,  <span class="ltx_text ltx_bib_editor">D. Shen, T. Liu, T. M. Peters, L. H. Staib, C. Essert, S. Zhou, P. Yap, and A. Khan (Eds.)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_place">Cham</span>, <span class="ltx_text ltx_bib_pages"> pp. 541–549</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text isbn ltx_bib_external">ISBN 978-3-030-32245-8</span></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS0.SSS0.Px1.p1.1" title="Self-supervised and spatially aware medical representation learning. ‣ 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib21">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">P. W. Battaglia, J. B. Hamrick, and J. B. Tenenbaum</span><span class="ltx_text ltx_bib_year"> (2013)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Simulation as an engine of physical scene understanding</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Proceedings of the national academy of sciences</span> <span class="ltx_text ltx_bib_volume">110</span> (<span class="ltx_text ltx_bib_number">45</span>), <span class="ltx_text ltx_bib_pages"> pp. 18327–18332</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS0.SSS0.Px2.p1.1" title="World models and medical world modeling. ‣ 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib17">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">E. M. Crowe, I. D. Gilchrist, and C. Kent</span><span class="ltx_text ltx_bib_year"> (2018)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">New approaches to the analysis of eye movement behaviour across expertise while viewing brain mris</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Cognitive research: principles and implications</span> <span class="ltx_text ltx_bib_volume">3</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 12</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib31">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">B. Fischl</span><span class="ltx_text ltx_bib_year"> (2012)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">FreeSurfer</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Neuroimage</span> <span class="ltx_text ltx_bib_volume">62</span> (<span class="ltx_text ltx_bib_number">2</span>), <span class="ltx_text ltx_bib_pages"> pp. 774–781</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.SS1.p3.1" title="4.1 Experimental setup ‣ 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§4.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib5">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D. Hafner, J. Pasukonis, J. Ba, and T. Lillicrap</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Mastering diverse control tasks through world models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Nature</span>, <span class="ltx_text ltx_bib_pages"> pp. 1–7</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS0.SSS0.Px2.p1.1" title="World models and medical world modeling. ‣ 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib9">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D. Hafner, W. Yan, and T. Lillicrap</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Training agents inside of scalable world models</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2509.24527</span>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2509.24527" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib14">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Hatamizadeh, Y. Tang, V. Nath, D. Yang, A. Myronenko, B. Landman, H. R. Roth, and D. Xu</span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">UNETR: transformers for 3d medical image segmentation</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2022 IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)</span>,
+</span>
+<span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume"></span>, <span class="ltx_text ltx_bib_pages"> pp. 1748–1758</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1109/WACV51458.2022.00181" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S1.p5.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS0.SSS0.Px1.p1.1" title="Self-supervised and spatially aware medical representation learning. ‣ 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§2</span></a>,
+<a class="ltx_ref" href="#S4.SS1.p4.1" title="4.1 Experimental setup ‣ 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§4.1</span></a>,
+<a class="ltx_ref" href="#S4.SS2.p2.1" title="4.2 Main downstream results ‣ 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§4.2</span></a>,
+<a class="ltx_ref" href="#S4.T2.4.6.1" title="In 4.2 Main downstream results ‣ 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">Table 2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib29">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">H. Jiang, Z. Sun, N. Jia, M. Li, Y. Sun, S. Luo, S. Song, and G. Huang</span><span class="ltx_text ltx_bib_year"> (2024-10)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title"> Cardiac Copilot: Automatic Probe Guidance for Echocardiography with World Model </span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">proceedings of Medical Image Computing and Computer Assisted Intervention – MICCAI 2024</span>,
+</span>
+<span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume">LNCS 15001</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS0.SSS0.Px2.p1.1" title="World models and medical world modeling. ‣ 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib26">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D. M. Lang, E. Schwartz, C. I. Bercea, R. Giryes, and J. A. Schnabel</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Multispectral 3d masked autoencoders for anomaly detection in non-contrast enhanced breast mri</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">MICCAI Workshop on Cancer Prevention through Early Detection</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 55–67</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS0.SSS0.Px1.p1.1" title="Self-supervised and spatially aware medical representation learning. ‣ 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib34">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Lavik</span><span class="ltx_text ltx_bib_year"> (2019)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">UnityVolumeRendering: a volume renderer for unity3d</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/mlavik1/UnityVolumeRendering" title="">https://github.com/mlavik1/UnityVolumeRendering</a>Open-source software, MIT License, version 1.8.0</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS1.p1.1" title="3.1 Overall ‣ 3 Methods ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§3.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib7">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">B. C. Lowekamp, D. T. Chen, L. Ibanez, and D. Blezek</span><span class="ltx_text ltx_bib_year"> (2013)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">The design of simpleitk</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Frontiers in Neuroinformatics</span> <span class="ltx_text ltx_bib_volume">Volume 7 - 2013</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2013.00045" title="">Link</a>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.3389/fninf.2013.00045" title="">Document</a>,
+<span class="ltx_text issn ltx_bib_external">ISSN 1662-5196</span></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS1.p1.1" title="3.1 Overall ‣ 3 Methods ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§3.1</span></a>,
+<a class="ltx_ref" href="#S4.SS1.p1.1" title="4.1 Experimental setup ‣ 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§4.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib25">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D. M. H. Nguyen, H. Nguyen, N. Diep, T. N. Pham, T. Cao, B. Nguyen, P. Swoboda, N. Ho, S. Albarqouni, P. Xie, D. Sonntag, and M. Niepert</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">LVM-med: learning large-scale self-supervised vision models for medical imaging via second-order graph matching</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Advances in Neural Information Processing Systems</span>,  <span class="ltx_text ltx_bib_editor">A. Oh, T. Naumann, A. Globerson, K. Saenko, M. Hardt, and S. Levine (Eds.)</span>,
+</span>
+<span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume">36</span>, <span class="ltx_text ltx_bib_pages"> pp. 27922–27950</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://proceedings.neurips.cc/paper_files/paper/2023/file/58cc11cda2a2679e8af5c6317aed0af8-Paper-Conference.pdf" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS0.SSS0.Px1.p1.1" title="Self-supervised and spatially aware medical representation learning. ‣ 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib33">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Ma, Y. He, F. Li, L. Han, C. You, and B. Wang</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Segment anything in medical images</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Nature Communications</span> <span class="ltx_text ltx_bib_volume">15</span>, <span class="ltx_text ltx_bib_pages"> pp. 654</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p5.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib6">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">L. Maes, Q. Le Lidec, D. Scieur, Y. LeCun, and R. Balestriero</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">LeWorldModel: stable end-to-end joint-embedding predictive architecture from pixels</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib4">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">L. Mur-Labadia, M. Muckley, A. Bar, M. Assran, K. Sinha, M. Rabbat, Y. LeCun, N. Ballas, and A. Bardes</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">V-jepa 2.1: unlocking dense features in video self-supervised learning</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2603.14482</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib18">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">R. Nakashima, Y. Komori, E. Maeda, T. Yoshikawa, and K. Yokosawa</span><span class="ltx_text ltx_bib_year"> (2016)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Temporal characteristics of radiologists’ and novices’ lesion detection in viewing medical images presented rapidly and sequentially</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Frontiers in Psychology</span> <span class="ltx_text ltx_bib_volume">7</span>, <span class="ltx_text ltx_bib_pages"> pp. 1553</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib30">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D.C. Van Essen, K. Ugurbil, E. Auerbach, D. Barch, T.E.J. Behrens, R. Bucholz, A. Chang, L. Chen, M. Corbetta, S.W. Curtiss, S. Della Penna, D. Feinberg, M.F. Glasser, N. Harel, A.C. Heath, L. Larson-Prior, D. Marcus, G. Michalareas, S. Moeller, R. Oostenveld, S.E. Petersen, F. Prior, B.L. Schlaggar, S.M. Smith, A.Z. Snyder, J. Xu, and E. Yacoub</span><span class="ltx_text ltx_bib_year"> (2012)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">The human connectome project: a data acquisition perspective</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">NeuroImage</span> <span class="ltx_text ltx_bib_volume">62</span> (<span class="ltx_text ltx_bib_number">4</span>), <span class="ltx_text ltx_bib_pages"> pp. 2222–2231</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">Connectivity</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text issn ltx_bib_external">ISSN 1053-8119</span>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/https%3A//doi.org/10.1016/j.neuroimage.2012.02.018" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://www.sciencedirect.com/science/article/pii/S1053811912001954" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.SS1.p1.1" title="4.1 Experimental setup ‣ 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§4.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib19">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">T. Wald, C. Ulrich, S. Lukyanenko, A. Goncharov, A. Paderno, M. Miller, L. Maerkisch, P. Jaeger, and K. Maier-Hein</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Revisiting mae pre-training for 3d medical image segmentation</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the Computer Vision and Pattern Recognition Conference</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 5186–5196</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S1.p5.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS0.SSS0.Px1.p1.1" title="Self-supervised and spatially aware medical representation learning. ‣ 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§2</span></a>,
+<a class="ltx_ref" href="#S4.SS1.p4.1" title="4.1 Experimental setup ‣ 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§4.1</span></a>,
+<a class="ltx_ref" href="#S4.SS2.p2.1" title="4.2 Main downstream results ‣ 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§4.2</span></a>,
+<a class="ltx_ref" href="#S4.T2.4.7.1" title="In 4.2 Main downstream results ‣ 4 Experiments ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">Table 2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib24">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">T. Xu, S. Hosseini, C. Anderson, A. Rinaldi, R. G. Krishnan, A. L. Martel, and M. Goubran</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A generalizable 3d framework and model for self-supervised learning in medical imaging</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">npj Digital Medicine</span> <span class="ltx_text ltx_bib_volume">8</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 639</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS0.SSS0.Px1.p1.1" title="Self-supervised and spatially aware medical representation learning. ‣ 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib2">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Yang, Z. Wang, Q. Liu, S. Sun, K. Wang, R. Chellappa, Z. Zhou, A. Yuille, L. Zhu, Y. Zhang, and J. Chen</span><span class="ltx_text ltx_bib_year"> (2025-10)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Medical world model</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 8319–8329</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS0.SSS0.Px2.p1.1" title="World models and medical world modeling. ‣ 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib28">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Yue, Y. Wang, C. Tao, P. Liu, S. Song, and G. Huang</span><span class="ltx_text ltx_bib_year"> (2025-06)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">CheXWorld: exploring image world modeling for radiograph representation learning</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 20778–20788</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS0.SSS0.Px2.p1.1" title="World models and medical world modeling. ‣ 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib20">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">X. Zeng, N. Abdullah, and P. Sumari</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Self-supervised learning framework application for medical image analysis: a review and summary</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">BioMedical Engineering OnLine</span> <span class="ltx_text ltx_bib_volume">23</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 107</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS0.SSS0.Px1.p1.1" title="Self-supervised and spatially aware medical representation learning. ‣ 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib23">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Zhang and D. Metaxas</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">On the challenges and perspectives of foundation models for medical image analysis</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Medical Image Analysis</span> <span class="ltx_text ltx_bib_volume">91</span>, <span class="ltx_text ltx_bib_pages"> pp. 102996</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text issn ltx_bib_external">ISSN 1361-8415</span>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/https%3A//doi.org/10.1016/j.media.2023.102996" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://www.sciencedirect.com/science/article/pii/S1361841523002566" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS0.SSS0.Px1.p1.1" title="Self-supervised and spatially aware medical representation learning. ‣ 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib16">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">T. Zhang, D. Wei, M. Zhu, S. Gu, and Y. Zheng</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Self-supervised learning for medical image data with anatomy-oriented imaging planes</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Medical Image Analysis</span> <span class="ltx_text ltx_bib_volume">94</span>, <span class="ltx_text ltx_bib_pages"> pp. 103151</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text issn ltx_bib_external">ISSN 1361-8415</span>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/https%3A//doi.org/10.1016/j.media.2024.103151" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://www.sciencedirect.com/science/article/pii/S1361841524000768" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS0.SSS0.Px1.p1.1" title="Self-supervised and spatially aware medical representation learning. ‣ 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib27">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. K. Zhou, H. N. Le, K. Luu, H. V. Nguyen, and N. Ayache</span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Deep reinforcement learning in medical imaging: a literature review</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Medical image analysis</span> <span class="ltx_text ltx_bib_volume">73</span>, <span class="ltx_text ltx_bib_pages"> pp. 102193</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS0.SSS0.Px2.p1.1" title="World models and medical world modeling. ‣ 2 Related Work ‣ 3D MRI Image Pretraining via Controllable 2D Slice Navigation Task"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2605.06487v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div aria-hidden="true" id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
