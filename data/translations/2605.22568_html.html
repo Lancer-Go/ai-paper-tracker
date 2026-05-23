@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">衡量安全性而不自欺欺人：为什么基准测试代理很难</span><span class="original-text">Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 5 月 21 日星期四 14:43:35 生成 http://dlmf.nist.gov/LaTeXML/。</span><span class="original-text">Generated on Thu May 21 14:43:35 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2605.22568" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2605.22568" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2605.22568v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2605.22568v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Benchmark Vulnerabilities</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS1" title="In 2 Benchmark Vulnerabilities ‣ Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.1 </span>Inner and Outer Protections</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS2" title="In 2 Benchmark Vulnerabilities ‣ Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.2 </span>Canaries</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS3" title="In 2 Benchmark Vulnerabilities ‣ Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.3 </span>Deliberate Cheating</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Temporal Staleness</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In 3 Temporal Staleness ‣ Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Dynamic Benchmarks</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS2" title="In 3 Temporal Staleness ‣ Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Live Evaluation</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS3" title="In 3 Temporal Staleness ‣ Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.3 </span>Generative Benchmarks</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Runtime Uncertainty</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In 4 Runtime Uncertainty ‣ Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>Stochastic Behavior</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS2" title="In 4 Runtime Uncertainty ‣ Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2 </span>Code Generation</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS3" title="In 4 Runtime Uncertainty ‣ Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3 </span>External Dependencies</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS4" title="In 4 Runtime Uncertainty ‣ Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.4 </span>Benchmark Introspection</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S5" title="In Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Discussion</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S5.SS0.SSS0.Px1" title="In 5 Discussion ‣ Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title">(a) Adversarial reasoning is the capability being measured.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S5.SS0.SSS0.Px2" title="In 5 Discussion ‣ Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title">(b) Computer security is non-stationary by nature.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S5.SS0.SSS0.Px3" title="In 5 Discussion ‣ Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title">(c) The agent is both the subject and the tool.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S6" title="In Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6 </span>Conclusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S7" title="In Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">7 </span>Acknowledgments</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Measuring Security Without Fooling Ourselves: Why Benchmarking Agents Is Hard"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2605.22568v1 [cs.CR] 2026 年 5 月 21 日</span><span class="original-text">arXiv:2605.22568v1 [cs.CR] 21 May 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line" lang="en-US">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">衡量安全性而不自欺欺人：</span><span class="original-text">Measuring Security Without Fooling Ourselves:</span><br class="ltx_break"/><span class="translated-text">为什么对标代理很难</span><span class="original-text">Why Benchmarking Agents Is Hard</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Sahar Abdelnabi<sup class="ltx_sup" id="id9.9.id1">1</sup>, Chris Hicks<sup class="ltx_sup" id="id10.10.id2">2</sup>, Konrad Rieck<sup class="ltx_sup" id="id11.11.id3">3</sup>, and Ahmad-Reza Sadeghi<sup class="ltx_sup" id="id12.12.id4">4</sup>
+<br class="ltx_break"/>
+<sup class="ltx_sup" id="id13.13.id5">1</sup> ELLIS Institute Tübingen &amp; MPI-IS &amp; Tübingen AI Center, Germany
+<br class="ltx_break"/><sup class="ltx_sup" id="id14.14.id6">2</sup> The Alan Turing Institute, London, UK
+<br class="ltx_break"/><sup class="ltx_sup" id="id15.15.id7">3</sup> BIFOLD &amp; Technische Universität Berlin, Germany
+<br class="ltx_break"/><sup class="ltx_sup" id="id16.16.id8">4</sup> Technische Universität Darmstadt, Germany
+</span></span>
+</div>
+<section class="ltx_section" id="Sx1">
+<h2 class="ltx_title ltx_title_section"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h2>
+<div class="ltx_para" id="Sx1.p1">
+<p class="ltx_p" id="Sx1.p1.1"><span class="translated-text">用于评估安全关键角色的人工智能代理的基准存在严重缺陷。根据最近的经验证据，我们描述了破坏安全评估的三个核心挑战：</span><span class="original-text">The benchmarks used to evaluate AI agents in security-critical roles suffer from crucial weaknesses. Building on recent empirical evidence, we characterize three core challenges that undermine security evaluations:</span><em class="ltx_emph ltx_font_italic" id="Sx1.p1.1.1"><span class="translated-text">基准漏洞</span><span class="original-text">benchmark vulnerabilities</span></em>, <em class="ltx_emph ltx_font_italic" id="Sx1.p1.1.2"><span class="translated-text">暂时陈旧</span><span class="original-text">temporal staleness</span></em><span class="translated-text">, 和</span><span class="original-text">, and</span><em class="ltx_emph ltx_font_italic" id="Sx1.p1.1.3"><span class="translated-text">运行时的不确定性</span><span class="original-text">runtime uncertainty</span></em><span class="translated-text">。然后，我们概述了构建更强大、更值得信赖的评估框架的实用方向。</span><span class="original-text">. We then outline practical directions toward building more robust and trustworthy evaluation frameworks.</span></p>
+</div>
+<div class="ltx_pagination ltx_role_start_2_columns"></div>
+</section>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">在安全环境中评估人工智能代理是一项根本性的挑战。我们寻求衡量的能力，即对抗性推理，可能会破坏评估本身。负责发现漏洞的代理也可能会利用基准环境中的弱点，而不是解决预期的任务，从而在测量的性能和模型功能之间造成不匹配。</span><span class="original-text">Evaluating AI agents in security settings presents a fundamental challenge. The very capability we seek to measure, adversarial reasoning, can undermine the evaluation itself. An agent tasked with discovering vulnerabilities may also exploit weaknesses in the benchmark environment instead of solving the intended task, creating a mismatch between measured performance and model capability.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">应对这一挑战需要转变视角：对人工智能代理进行基准测试不仅是为了衡量效率或任务性能，而且本身也是一个系统安全问题。与传统的基准测试不同，传统的基准测试可能足以假设一个可信的静态评估设置，而使用安全代理进行实验的研究人员必须将基准测试视为可以攻击和操纵的敌对暴露系统。</span><span class="original-text">Addressing this challenge requires a shift in perspective: benchmarking AI agents is not only about measuring efficiency or task performance, but is also itself a systems security problem. Unlike traditional benchmarking, where it might be adequate to assume a trusted and static evaluation setup, researchers running experiments with security agents must treat the benchmark as an adversarially exposed system that can be attacked and manipulated.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">最近的工作已经产生了一个不断增长的安全基准生态系统。 Cybench 评估代理的专业级夺旗挑战</span><span class="original-text">Recent work has produced a growing ecosystem of security benchmarks. Cybench evaluates agents on professional-level capture-the-flag challenges</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="">1</a>]</cite><span class="translated-text">, CyberGym 测试现实世界 CVE 中的漏洞重现</span><span class="original-text">, CyberGym tests vulnerability reproduction across real-world CVEs</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="">2</a>]</cite><span class="translated-text">，和PentestGPT建立了第一个LLM驱动的渗透测试的系统评估</span><span class="original-text">, and PentestGPT established the first systematic evaluation of LLM-driven penetration testing</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="">3</a>]</cite><span class="translated-text">。
+尽管取得了这些进展，但这些基准测试都不是为了承受它们旨在衡量的对抗能力而设计的。因此，经验证据已经表明，智能体可以利用基准的弱点来获得近乎完美的分数，而无需解决预期的任务</span><span class="original-text">.
+Despite this progress, none of these benchmarks are designed to withstand the adversarial capabilities they aim to measure. Consequently, empirical evidence already shows that agents can exploit benchmark weaknesses to achieve near-perfect scores without solving the intended tasks</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib10" title="">10</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">为了使这一挑战具体化，我们引入一个简化的运行示例。根据虚构的漏洞发现基准评估代理</span><span class="original-text">To make this challenge concrete, we introduce a simplified running example. An agent is evaluated on the fictional vulnerability discovery benchmark</span><em class="ltx_emph ltx_font_italic" id="S1.p4.1.1"><span class="translated-text">破碎的长凳</span><span class="original-text">BrokenBench</span></em><span class="translated-text">，它可以访问在隔离容器内运行的程序。代理可以检查源代码、执行二进制文件并使用分析工具来识别漏洞。 BrokenBench的评估环境不仅包括这些程序，还包括周围的基础设施，例如容器运行时、配置文件、编排逻辑和评分机制。</span><span class="original-text">, where it is given access to programs running inside isolated containers. The agent can inspect source code, execute binaries, and use analysis tools to identify vulnerabilities. The evaluation environment of BrokenBench includes not only these programs, but also the surrounding infrastructure, such as the container runtime, configuration files, orchestration logic, and scoring mechanisms for grading.</span></p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">至关重要的是，此环境是代理攻击面的一部分。因此，代理可以利用 BrokenBench 的基础设施，而不是分析预期的目标程序，例如，通过访问隐藏的解决方案数据、操纵评分过程或逃离隔离边界。在这种情况下，智能体在没有解决预期任务的情况下获得高分。这说明了以下核心张力：在对抗性环境中，利用基准比解决基准更容易。</span><span class="original-text">Crucially, this environment is part of the attack surface for the agent. Rather than analyzing the intended target programs, the agent may thus exploit the infrastructure of BrokenBench, for example, by accessing hidden solution data, manipulating the scoring process, or escaping isolation boundaries. In such cases, the agent achieves high scores without solving the intended task. This illustrates the following core tension: in adversarial settings, it can be easier to exploit the benchmark than to solve it.</span></p>
+</div>
+<div class="ltx_para" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1"><span class="translated-text">在此背景下，本文强调了当前安全基准的三个关键局限性。首先，</span><span class="original-text">Against this backdrop, this article highlights three critical limitations of current security benchmarks. First,</span><em class="ltx_emph ltx_font_italic" id="S1.p6.1.1"><span class="translated-text">基准漏洞</span><span class="original-text">benchmark vulnerabilities</span></em><span class="translated-text">允许代理操纵或逃离评估环境，从而威胁结果的完整性。第二，</span><span class="original-text">allow agents to manipulate or escape evaluation environments, threatening result integrity. Second,</span><em class="ltx_emph ltx_font_italic" id="S1.p6.1.2"><span class="translated-text">暂时陈旧</span><span class="original-text">temporal staleness</span></em><span class="translated-text">意味着静态基准在不断变化的威胁环境中很快就会过时。三、</span><span class="original-text">means that static benchmarks quickly become outdated in an evolving threat landscape. Third,</span><em class="ltx_emph ltx_font_italic" id="S1.p6.1.3"><span class="translated-text">运行时的不确定性</span><span class="original-text">runtime uncertainty</span></em><span class="translated-text">由随机行为、代码生成和外部依赖性引起的风险会带来现有基准测试中很少捕获的风险。</span><span class="original-text">, arising from stochastic behavior, code generation, and external dependencies, introduces risks that are rarely captured in existing benchmarks.</span></p>
+</div>
+<div class="ltx_para" id="S1.p7">
+<p class="ltx_p" id="S1.p7.1"><span class="translated-text">这些挑战表明，人工智能代理的安全基准测试不仅是一个评估问题，而且本身就是一个系统安全问题。稳健的评估需要重新考虑基准，将其视为动态的、具有对抗性的稳健且持续验证的环境，以反映现代网络安全的现实。</span><span class="original-text">These challenges reveal that security benchmarking for AI agents is not only an evaluation problem but a systems security problem in itself. Robust assessment requires rethinking benchmarks as dynamic, adversarially robust, and continuously validated environments that reflect the realities of modern cybersecurity.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p8">
+<span class="ltx_inline-block"><svg class="ltx_picture" height="132.05" id="S1.p8.pic1" overflow="visible" version="1.1" viewbox="0 0 600 132.05" width="600"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,132.05) matrix(1 0 0 -1 0 0)"><g fill="#808080" fill-opacity="1.0" style="--ltx-fill-color:#808080;"><path d="M 0 0.83 L 0 131.22 C 0 131.68 0.37 132.05 0.83 132.05 L 599.17 132.05 C 599.63 132.05 600 131.68 600 131.22 L 600 0.83 C 600 0.37 599.63 0 599.17 0 L 0.83 0 C 0.37 0 0 0.37 0 0.83 Z" style="stroke:none"></path></g><g fill="#F7F7F7" fill-opacity="1.0" style="--ltx-fill-color:#F7F7F7;"><path d="M 0.83 0.83 L 0.83 111.44 L 599.17 111.44 L 599.17 0.83 Z" style="stroke:none"></path></g><g fill="#E0E0E0" fill-opacity="1.0" style="--ltx-fill-color:#E0E0E0;"><path d="M 0.83 112.27 L 0.83 131.22 L 599.17 131.22 L 599.17 112.27 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 10.3 118.63)"><foreignobject color="#000000" height="11.07" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:41.87em;--ltx-fo-height:0.62em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 8.65)" width="579.4"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S1.p8.pic1.1.1.1.1.1" style="width:42.3em;">
+<span class="ltx_p" id="S1.p8.pic1.1.1.1.1.1.1"><span class="ltx_text ltx_font_sansserif ltx_font_bold" id="S1.p8.pic1.1.1.1.1.1.1.1" style="font-size:90%;">Example: BrokenBench</span></span>
+</span></span></span></foreignobject></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 10.3 10.3)"><foreignobject color="#000000" height="91.67" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:41.87em;--ltx-fo-height:6.62em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 91.67)" width="579.4"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S1.p8.pic1.2.2.2.1.1" style="width:45.27em;">
+<span class="ltx_p" id="S1.p8.pic1.2.2.2.1.1.1"><em class="ltx_emph ltx_font_sansserif ltx_font_italic" id="S1.p8.pic1.2.2.2.1.1.1.1" style="font-size:90%;">BrokenBench</em><span class="ltx_text ltx_font_sansserif" id="S1.p8.pic1.2.2.2.1.1.1.2" style="font-size:90%;"> is a <em class="ltx_emph ltx_font_italic" id="S1.p8.pic1.2.2.2.1.1.1.2.1">fictional</em> benchmark that presents an agent with different C programs running inside Docker containers, each containing a known vulnerability. The agent has shell access to each container, can read source code, compile and execute programs, and run analysis tools. For each program, it must identify the vulnerability type, locate the affected function, and produce a proof-of-concept exploit. Ground-truth labels, including the vulnerability type, location, and an exploit, are stored on the host outside the container.</span></span>
+</span></span></span></foreignobject></g></g></svg></span>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">基准漏洞</span><span class="original-text">Benchmark Vulnerabilities</span></h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="translated-text">如果代理旨在解决任务，例如查找软件中的复杂漏洞，它也可以在基准环境本身中找到捷径，从而产生中心悖论。也就是说，它可能是</span><span class="original-text">If an agent is designed to solve a task, such as finding complex vulnerabilities in software, it can also find shortcuts in the benchmark environment itself, creating a central paradox. That is, it may be</span><em class="ltx_emph ltx_font_italic" id="S2.p1.1.1"><span class="translated-text">更容易</span><span class="original-text">easier</span></em><span class="translated-text">打破环境胜过解决预定任务。</span><span class="original-text">to break the environment than to solve the intended task.</span></p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="translated-text">例如，在 BrowseComp 基准测试中，代理需要在线查找难以找到的信息，处理了大约 3000 万个令牌的代理开始意识到他们正在接受测试并在线搜索基准规范本身</span><span class="original-text">For example, in the BrowseComp benchmark which tasks agents with locating hard-to-find information online, agents that had processed approximately 30 million tokens began to recognize they were being tested and searched online for the benchmark specification itself</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib11" title="">11</a>]</cite><span class="translated-text">。系统审计发现，代理可以通过配置文件注入代码来重写测试结果，检查 Git 日志以逆向工程基准构建，并在包括 SWE-bench 和 Terminal-Bench 在内的基准上实现 100% 的利用率</span><span class="original-text">. A systematic audit found that agents could inject code via configuration files to rewrite test outcomes, inspect Git logs to reverse-engineer benchmark construction, and achieve 100% exploitation rates on benchmarks including SWE-bench and Terminal-Bench</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib10" title="">10</a>]</cite>.</p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p3">
+<span class="ltx_inline-block"><svg class="ltx_picture" height="101.26" id="S2.p3.pic1" overflow="visible" version="1.1" viewbox="0 0 600 101.26" width="600"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,101.26) matrix(1 0 0 -1 0 0)"><g fill="#808080" fill-opacity="1.0" style="--ltx-fill-color:#808080;"><path d="M 0 0.83 L 0 100.43 C 0 100.89 0.37 101.26 0.83 101.26 L 599.17 101.26 C 599.63 101.26 600 100.89 600 100.43 L 600 0.83 C 600 0.37 599.63 0 599.17 0 L 0.83 0 C 0.37 0 0 0.37 0 0.83 Z" style="stroke:none"></path></g><g fill="#F7F7F7" fill-opacity="1.0" style="--ltx-fill-color:#F7F7F7;"><path d="M 0.83 0.83 L 0.83 80.66 L 599.17 80.66 L 599.17 0.83 Z" style="stroke:none"></path></g><g fill="#E0E0E0" fill-opacity="1.0" style="--ltx-fill-color:#E0E0E0;"><path d="M 0.83 81.49 L 0.83 100.43 L 599.17 100.43 L 599.17 81.49 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 10.3 87.85)"><foreignobject color="#000000" height="11.07" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:41.87em;--ltx-fo-height:0.62em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 8.65)" width="579.4"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S2.p3.pic1.1.1.1.1.1" style="width:42.3em;">
+<span class="ltx_p" id="S2.p3.pic1.1.1.1.1.1.1"><span class="ltx_text ltx_font_sansserif ltx_font_bold" id="S2.p3.pic1.1.1.1.1.1.1.1" style="font-size:90%;">Example: Escaping the sandbox</span></span>
+</span></span></span></foreignobject></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 10.3 12.72)"><foreignobject color="#000000" height="60.88" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:41.87em;--ltx-fo-height:4.22em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 58.46)" width="579.4"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S2.p3.pic1.2.2.2.1.1" style="width:45.27em;">
+<span class="ltx_p" id="S2.p3.pic1.2.2.2.1.1.1"><span class="ltx_text ltx_font_sansserif" id="S2.p3.pic1.2.2.2.1.1.1.1" style="font-size:90%;">The agent is tasked with finding a vulnerability.
+Instead of analyzing the source code, it probes the BrokenBench environment and discovers that the container allows access to the hosts container management interface. Using this, the agent spawns a privileged container, reads the ground-truth data from the host filesystem, and returns the correct vulnerability for all challenges without ever analyzing them.</span></span>
+</span></span></span></foreignobject></g></g></svg></span>
+</div>
+<div class="ltx_para" id="S2.p4">
+<p class="ltx_p" id="S2.p4.1"><span class="translated-text">这一意想不到的结果表明了安全基准测试尚未认识到的一个要求：评估环境必须比正在测试的目标更安全。
+例如，如果目标是经过严格审查的加密库，并且基准测试在普通 Linux 系统上运行，则代理可能会发现溜过容器比挖掘库中的细微缺陷更容易。</span><span class="original-text">This unexpected outcome points to a requirement that security benchmarking has yet to recognize: the evaluation environment must be more secure than the target being tested.
+For example, if the target is a well-vetted cryptographic library and the benchmark runs on an average Linux system, the agent may find it easier to slip past the container than to dig out a subtle flaw in the library.</span></p>
+</div>
+<section class="ltx_subsection" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span><span class="translated-text">内部和外部保护</span><span class="original-text">Inner and Outer Protections</span></h3>
+<div class="ltx_para" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.1"><span class="translated-text">在这个悖论的背景下，我们发现区分</span><span class="original-text">In the context of this paradox we find it useful to distinguish between</span><em class="ltx_emph ltx_font_italic" id="S2.SS1.p1.1.1"><span class="translated-text">内在的保护</span><span class="original-text">inner protections</span></em><span class="translated-text">（对代理行为的基于对齐的约束）和</span><span class="original-text">(alignment-based constraints on the agent’s behavior) and</span><em class="ltx_emph ltx_font_italic" id="S2.SS1.p1.1.2"><span class="translated-text">外部保护</span><span class="original-text">outer protections</span></em><span class="translated-text">（评估环境的架构限制）。当前的基准测试几乎完全依赖于内部保护；相信智能体将尝试解决预期任务而不是利用其周围环境。对于安全基准来说，这是错误的假设，在安全基准中，对抗性思维是被衡量的能力。</span><span class="original-text">(architectural constraints on the evaluation environment). Current benchmarks rely almost entirely on inner protections; trusting that the agent will attempt to solve the intended task rather than exploit its surroundings. This is the wrong assumption for security benchmarks where adversarial thinking is the capability being measured.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS1.p2">
+<p class="ltx_p" id="S2.SS1.p2.1"><span class="translated-text">稳健的评估需要外部保护：硬件强制隔离、代理和答案的单独特权域以及任务完成的验证。然而，即使设计良好的沙箱也并非无懈可击。容器逃逸是一种已知的漏洞类别，并且代理生成的漏洞利用的复杂性正在增加。这意味着外部保护必须针对其所包含的介质进行持续监控、强化和测试。</span><span class="original-text">Robust evaluation requires outer protections: hardware-enforced isolation, separate privilege domains for the agent and the answers, and verification of task completion. However, even well-designed sandboxes are not invulnerable. Container escapes are a known vulnerability class, and the sophistication of agent-generated exploits is increasing. The implication is that outer protections must be continuously monitored, hardened and tested against the agents they are meant to contain.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span><span class="translated-text">金丝雀</span><span class="original-text">Canaries</span></h3>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.1"><span class="translated-text">由于基准测试本身无法得到完全保护，我们借用了系统安全中一个熟悉的想法：</span><span class="original-text">Since the benchmark itself cannot be fully protected, we borrow a familiar idea from systems security:</span><em class="ltx_emph ltx_font_italic" id="S2.SS2.p1.1.1"><span class="translated-text">金丝雀代币</span><span class="original-text">canary tokens</span></em><span class="translated-text">，隐藏在环境中的随机值，诚实的求解器没有理由观察。如果代理在评估过程中复制了这些金丝雀之一，则它已经到达了基础设施中原本不应该访问的部分，并且其分数不得可信。
+这与蜜罐的经典概念相结合：检测某些内容何时未按计划运行。
+金丝雀已经用于检测模型是否在特定数据集上进行了训练：预先将独特的金丝雀注入数据中，然后检查模型是否重现它们</span><span class="original-text">, hidden and randomized values embedded in the environment that an honest solver has no reason to observe. If an agent reproduces one of these canaries during evaluation, it has reached parts of the infrastructure that were never meant to be accessible and its score must not be trusted.
+This bridges to the classical concept of honeypots: detecting when something is not running as planned.
+Canaries are already used for detecting whether a model was trained on a particular dataset: unique canaries are injected into the data beforehand and the model is later checked for whether it reproduces them</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="">13</a>]</cite><span class="translated-text">。我们认为这应该被采纳为常见做法，不仅适用于训练数据，也适用于智能体在推理时可能读取的所有可能导致基准作弊的来源。</span><span class="original-text">. We believe this should be adopted as common practice, not just for training data, but for all sources that the agent may read at inference time that may enable benchmark cheating.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span><span class="translated-text">故意作弊</span><span class="original-text">Deliberate Cheating</span></h3>
+<div class="ltx_para" id="S2.SS3.p1">
+<p class="ltx_p" id="S2.SS3.p1.1"><span class="translated-text">最近的审计</span><span class="original-text">A recent audit</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib10" title="">10</a>]</cite><span class="translated-text">据透露，基准测试的利用并不限于意外的捷径。代理可以被设计为</span><span class="original-text">revealed that benchmark exploitation is not limited to accidental shortcutting. Agents can be designed to</span><em class="ltx_emph ltx_font_italic" id="S2.SS3.p1.1.1"><span class="translated-text">故意</span><span class="original-text">deliberately</span></em><span class="translated-text">作弊。当给出鼓励利用评估环境的指令时，代理系统地识别并利用测试工具、配置文件和评分机制中的漏洞。这就提出了一个实际问题：我们是否可以使用负责故意作弊的代理来揭示环境中可利用的限制和捷径？</span><span class="original-text">cheat. When given instructions encouraging exploitation of the evaluation environment, agents systematically identified and leveraged vulnerabilities in test harnesses, configuration files, and scoring mechanisms. This raises a practical question: can we use agents tasked with deliberate cheating to reveal limitations and shortcuts in the environment that can be exploited?</span></p>
+</div>
+<div class="ltx_para" id="S2.SS3.p2">
+<p class="ltx_p" id="S2.SS3.p2.1"><span class="translated-text">特别是，计算成本可以被视为安全性的粗略代理。
+通过设定预算，例如，“如果在 10,000 美元之后，代理没有损害环境，我们认为它有效地安全
+”，技术强化可以与经济激励相辅相成。这不是保证，但它提高了标准：如果任务的完成时间低于预算，并且代理不能在预算内作弊，那么基准测试结果更有可能与能力相对应。</span><span class="original-text">In particular, computational cost can be treated as a coarse proxy for security.
+By setting a budget, e.g., “if after $10,000 the agent has not compromised the environment we consider it effectively secure
+”, technical hardening can be complemented with economic incentives. This is not a guarantee, but it raises the bar: if tasks are completed for less than the budget, and agents cannot cheat within the budget, then benchmark results are more likely to correspond to capability.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">时间陈旧性</span><span class="original-text">Temporal Staleness</span></h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="translated-text">昨天安全的东西今天并不安全，威胁模型会随着时间的推移而变化。漏洞不断被发现和修补，新的攻击面不断出现，防御措施不断发展。然而，不断增长的安全基准和评估框架生态系统使用固定数据集</span><span class="original-text">What was secure yesterday is not secure today and threat models change over time. Vulnerabilities are discovered and patched continuously, new attack surfaces emerge, and defensive measures evolve. Yet a growing ecosystem of security benchmarks and evaluation frameworks use fixed datasets</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="">1</a>, <a class="ltx_ref" href="#bib.bib2" title="">2</a>, <a class="ltx_ref" href="#bib.bib3" title="">3</a>, <a class="ltx_ref" href="#bib.bib4" title="">4</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S3.p2">
+<p class="ltx_p" id="S3.p2.1"><span class="translated-text">固定基准的后果在安全领域是众所周知的。 20 世纪 90 年代初的入侵检测数据集尽管在发布后两年内就过时了，但仍然广泛使用了十多年</span><span class="original-text">The consequences of stationary benchmarks are well understood in security. Intrusion detection datasets from the early 1990s remained in widespread use for over a decade despite becoming obsolete within two years of release</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib5" title="">5</a>]</cite><span class="translated-text">。我们冒着重复这种模式的风险：CyberGym 的 1,507 个漏洞和 Cybench 的 40 个 CTF 挑战
+随着底层软件和代理的修补、新的漏洞类别的出现以及模型在基准数据上的训练，所有这些都会老化。</span><span class="original-text">. We risk repeating this pattern: CyberGym’s 1,507 vulnerabilities and Cybench’s 40 CTF challenges
+will all age as the underlying software and agents are patched, new vulnerability classes emerge, and models are trained on the benchmark data.</span></p>
+</div>
+<div class="ltx_para" id="S3.p3">
+<p class="ltx_p" id="S3.p3.1"><span class="translated-text">陈旧性导致的另一个问题是</span><span class="original-text">Another problem resulting from staleness is</span><em class="ltx_emph ltx_font_italic" id="S3.p3.1.1"><span class="translated-text">长凳最大兴</span><span class="original-text">benchmaxxing</span></em><span class="translated-text">：在基准格式和评估环境上微调模型</span><span class="original-text">: fine-tuning models on benchmark formats and evaluation environments</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="">14</a>]</cite><span class="translated-text">。我们还假设，在有关基准测试工作原理的元知识（例如多项选择安全问题的格式或 CTF 挑战的结构）上训练的模型，即使不接触特定的基准测试实例，也可能会表现出更高的性能，无论其真实功能如何。这可能会挑战避免直接进行基准训练就足够的假设。基准最大化的风险随着基准的使用年限和围绕基准的公共材料的数量而增加。</span><span class="original-text">. We also hypothesize that models trained on meta-knowledge about how benchmarks work, such as the format of multiple-choice security questions or the structure of CTF challenges, may show improved performance even without exposure to specific benchmark instances, regardless of their true capabilities. This could challenge the assumption that avoiding direct training on benchmarks is sufficient. The risk of benchmaxxing grows with the age of a benchmark and the volume of public material surrounding it.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.p4">
+<span class="ltx_inline-block"><svg class="ltx_picture" height="117.87" id="S3.p4.pic1" overflow="visible" version="1.1" viewbox="0 0 600 117.87" width="600"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,117.87) matrix(1 0 0 -1 0 0)"><g fill="#808080" fill-opacity="1.0" style="--ltx-fill-color:#808080;"><path d="M 0 0.83 L 0 117.03 C 0 117.49 0.37 117.87 0.83 117.87 L 599.17 117.87 C 599.63 117.87 600 117.49 600 117.03 L 600 0.83 C 600 0.37 599.63 0 599.17 0 L 0.83 0 C 0.37 0 0 0.37 0 0.83 Z" style="stroke:none"></path></g><g fill="#F7F7F7" fill-opacity="1.0" style="--ltx-fill-color:#F7F7F7;"><path d="M 0.83 0.83 L 0.83 97.26 L 599.17 97.26 L 599.17 0.83 Z" style="stroke:none"></path></g><g fill="#E0E0E0" fill-opacity="1.0" style="--ltx-fill-color:#E0E0E0;"><path d="M 0.83 98.09 L 0.83 117.03 L 599.17 117.03 L 599.17 98.09 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 10.3 104.45)"><foreignobject color="#000000" height="11.07" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:41.87em;--ltx-fo-height:0.62em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 8.65)" width="579.4"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S3.p4.pic1.1.1.1.1.1" style="width:42.3em;">
+<span class="ltx_p" id="S3.p4.pic1.1.1.1.1.1.1"><span class="ltx_text ltx_font_sansserif ltx_font_bold" id="S3.p4.pic1.1.1.1.1.1.1.1" style="font-size:90%;">Example: Stale ground truth</span></span>
+</span></span></span></foreignobject></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 10.3 12.72)"><foreignobject color="#000000" height="77.49" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:41.87em;--ltx-fo-height:5.42em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 75.07)" width="579.4"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S3.p4.pic1.2.2.2.1.1" style="width:45.27em;">
+<span class="ltx_p" id="S3.p4.pic1.2.2.2.1.1.1"><span class="ltx_text ltx_font_sansserif" id="S3.p4.pic1.2.2.2.1.1.1.1" style="font-size:90%;">BrokenBench was released in 2024 with programs drawn from open-source projects. By 2026, most of the vulnerabilities have been patched upstream, and detailed write-ups appear in public CVE databases and blog posts. An agent trained in 2026 and evaluated on BrokenBench would score considerably higher. The improvement reflects memorization of published fixes in the training data. Meanwhile, new vulnerability classes prevalent by 2026 are entirely absent from the benchmark.
+<br class="ltx_break"/></span></span>
+</span></span></span></foreignobject></g></g></svg></span>
+</div>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">动态基准</span><span class="original-text">Dynamic Benchmarks</span></h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">我们认为，安全基准应该像消费者价格指数一样发挥作用：随着底层安全形势的变化而更新的代表性任务篮子。正如价格指数反映了人们购买的实际商品组合如何随时间变化一样，安全基准也应反映企业主机、关键服务器和代理本身如何随时间进行修补和升级。</span><span class="original-text">We argue that security benchmarks should function like a consumer price index: a representative basket of tasks that updates as the underlying security landscape changes. Just as a price index reflects how the actual mix of goods people buy evolves over time, a security benchmark should reflect how enterprise hosts, critical servers, and agents themselves are patched and upgraded over time.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p2">
+<p class="ltx_p" id="S3.SS1.p2.1"><span class="translated-text">这需要从静态数据集转变为</span><span class="original-text">This requires a shift from static datasets to</span><em class="ltx_emph ltx_font_italic" id="S3.SS1.p2.1.1"><span class="translated-text">动态</span><span class="original-text">dynamic</span></em><span class="translated-text">基准环境。一种方法借鉴了模糊测试模型，该模型每隔几个月就会进行新一轮的挑战，从而使排名随着目标和竞争对手的发展而变化</span><span class="original-text">benchmark environments. One approach draws on the model of fuzzing competitions, which run new rounds every few months with fresh challenges, allowing rankings to change as both the targets and the competitors evolve</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="">6</a>]</cite><span class="translated-text">。另一种方法是构建基准系统，定期从漏洞数据库（例如 CVE 目录）生成新任务，从而生成经过校准难度的新任务，而无需每个实例的人工创作。</span><span class="original-text">. Another is to build benchmark systems that generate novel tasks from vulnerability databases (such as the CVE catalog) at regular intervals, producing fresh tasks of calibrated difficulty without human authorship of each instance.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span><span class="translated-text">现场评估</span><span class="original-text">Live Evaluation</span></h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">更激进的方法是</span><span class="original-text">A more radical approach is</span><em class="ltx_emph ltx_font_italic" id="S3.SS2.p1.1.1"><span class="translated-text">现场评估</span><span class="original-text">live evaluation</span></em><span class="translated-text">：针对当前部署的真实系统而不是冻结快照对代理进行基准测试。事实上，错误赏金平台已经以这种方式运行，针对漏洞情况每天都在变化的生产环境进行测试。调整此模型以进行代理评估意味着不断刷新目标环境，包括当前补丁级别、真实配置和新披露的漏洞。</span><span class="original-text">: benchmarking agents against real, currently-deployed systems rather than frozen snapshots. In fact, bug bounty platforms already operate this way, testing against production environments where the vulnerability landscape shifts daily. Adapting this model for agent evaluation would mean continuously refreshing target environments with current patch levels, real configurations, and newly disclosed vulnerabilities.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.p2">
+<p class="ltx_p" id="S3.SS2.p2.1"><span class="translated-text">挑战在于安全性和可重复性。实时评估牺牲了使基准测试相对安全（即避免对生产系统造成损害）并且跨时间和代理具有可比性的受控条件。混合方法可能更实用：维护一组稳定的安全任务用于纵向比较，同时补充一组从最近的 CVE 披露、当前的 CTF 竞赛和 LLM 漏洞中提取的实时任务。这反映了 NIST 国家漏洞数据库如何提供持续更新的流，原则上可以提供实时基准。</span><span class="original-text">The challenge is safety and reproducibility. Live evaluation sacrifices the controlled conditions that make benchmarks both relatively safe (i.e., to avoid doing harm to production systems) and comparable across time and agents. A hybrid approach may be more practical: maintaining a set of stable security tasks for longitudinal comparison while supplementing with a live set of tasks drawn from recent CVE disclosures, current CTF competitions, and LLM vulnerabilities. This mirrors how the NIST National Vulnerability Database provides a continuously updated stream that could, in principle, feed live benchmarks.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span><span class="translated-text">生成基准</span><span class="original-text">Generative Benchmarks</span></h3>
+<div class="ltx_para" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.1"><span class="translated-text">代理还可以用于生成实时基准测试环境，而不是依赖人类专家来管理基准（这是一个昂贵、缓慢且不可扩展的过程）；不断地向代理分配发现和修补最新代码库中的漏洞的任务，然后更新其他代理的基准任务。这将创造一种共同进化的动态，随着代理在发现漏洞方面的改进，它们生成的基准变得更加困难，反之亦然。</span><span class="original-text">Agents could also be used to generate a live benchmarking environment that, rather than relying on human experts to curate benchmarks (a process that is expensive, slow, and does not scale); continuously tasks agents with discovering and patching vulnerabilities in the latest codebases, and then updating the benchmark tasks for other agents. This would create a co-evolutionary dynamic where as agents improve at finding vulnerabilities, the benchmarks they generate become harder, and vice versa.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.p2">
+<p class="ltx_p" id="S3.SS3.p2.1"><span class="translated-text">这个方向的早期工作很有希望。自动漏洞注入真实代码库已用于为静态分析工具创建训练数据</span><span class="original-text">Early work in this direction is promising. Automated vulnerability injection into real codebases has been used to create training data for static analysis tools</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="">7</a>]</cite><span class="translated-text">，并且类似的技术可以产生校准难度的评估任务。风险在于循环：如果生成基准的代理与正在测试的代理存在偏见，则最终的任务可能会越来越偏向于特定训练数据引发的狭窄漏洞集。尽管在完全生成基准中不能完全排除偏差，但模型、训练数据、工具配置和采样温度之间的多样性对于限制这种影响至关重要。</span><span class="original-text">, and similar techniques could produce evaluation tasks of calibrated difficulty. The risk is circularity: if the agent generating the benchmark shares biases with the agent being tested, the resulting tasks may become increasingly biased towards the narrow set of vulnerabilities that particular training data induces. Although biases cannot be completely ruled out in a fully generative benchmark, diversity across models, training data, tool configurations, and sampling temperatures is essential to limit this effect.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">运行时的不确定性</span><span class="original-text">Runtime Uncertainty</span></h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">最后，人工智能代理的行为受到运行时不确定性的多种来源的影响，每种来源都带来当前基准测试在其设计中通常无法捕获的安全隐患。</span><span class="original-text">Finally, the actions of AI agents are shaped by multiple sources of runtime uncertainty, each carrying security implications that current benchmarks often fail to capture in their design.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.p2">
+<span class="ltx_inline-block"><svg class="ltx_picture" height="117.87" id="S4.p2.pic1" overflow="visible" version="1.1" viewbox="0 0 600 117.87" width="600"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,117.87) matrix(1 0 0 -1 0 0)"><g fill="#808080" fill-opacity="1.0" style="--ltx-fill-color:#808080;"><path d="M 0 0.83 L 0 117.03 C 0 117.49 0.37 117.87 0.83 117.87 L 599.17 117.87 C 599.63 117.87 600 117.49 600 117.03 L 600 0.83 C 600 0.37 599.63 0 599.17 0 L 0.83 0 C 0.37 0 0 0.37 0 0.83 Z" style="stroke:none"></path></g><g fill="#F7F7F7" fill-opacity="1.0" style="--ltx-fill-color:#F7F7F7;"><path d="M 0.83 0.83 L 0.83 97.26 L 599.17 97.26 L 599.17 0.83 Z" style="stroke:none"></path></g><g fill="#E0E0E0" fill-opacity="1.0" style="--ltx-fill-color:#E0E0E0;"><path d="M 0.83 98.09 L 0.83 117.03 L 599.17 117.03 L 599.17 98.09 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 10.3 104.45)"><foreignobject color="#000000" height="11.07" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:41.87em;--ltx-fo-height:0.62em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 8.65)" width="579.4"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S4.p2.pic1.1.1.1.1.1" style="width:42.3em;">
+<span class="ltx_p" id="S4.p2.pic1.1.1.1.1.1.1"><span class="ltx_text ltx_font_sansserif ltx_font_bold" id="S4.p2.pic1.1.1.1.1.1.1.1" style="font-size:90%;">Example: Self-interference via code</span></span>
+</span></span></span></foreignobject></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 10.3 12.72)"><foreignobject color="#000000" height="77.49" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:41.87em;--ltx-fo-height:5.42em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 75.07)" width="579.4"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S4.p2.pic1.2.2.2.1.1" style="width:45.27em;">
+<span class="ltx_p" id="S4.p2.pic1.2.2.2.1.1.1"><span class="ltx_text ltx_font_sansserif" id="S4.p2.pic1.2.2.2.1.1.1.1" style="font-size:90%;">To analyze a vulnerability in BrokenBench, the agent writes a custom fuzzing harness, which itself contains a buffer overflow. When the harness crashes, the agent attributes the crash to the target program and reports a defect. BrokenBench’s grading checks only whether the agent triggers a crash in the test environment and marks this as a successful detection. The agent receives credit for finding a vulnerability that exists only in its own code.</span></span>
+</span></span></span></foreignobject></g></g></svg></span>
+</div>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span><span class="translated-text">随机行为</span><span class="original-text">Stochastic Behavior</span></h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.1"><span class="translated-text">基于 LLM 构建的代理本质上是随机的。在每次迭代中，代理可能会利用各种各样的操作、工具和信息源，从而产生级联效应，其中早期的分歧会复合成下游截然不同的结果。因此，相同的智能体在执行相同的任务时可能会得出截然不同的结论。这种非确定性具有直接的安全影响：在一次运行中产生安全解决方案的代理可能在下一次运行中产生易受攻击的解决方案。当前的基准测试通常报告单次运行或平均性能，从而掩盖了对安全评估最重要的差异。
+评估随机行为需要在同一任务上多次运行代理并报告分布统计数据：不仅是平均准确性，还有最坏情况的性能、方差和安全关键故障的频率</span><span class="original-text">Agents built on LLMs are inherently stochastic. At each iteration, an agent may draw on a large variety of actions, tools, and information sources, creating a cascade effect in which early divergence compounds into substantially different outcomes downstream. Consequently, the same agent given the same task can arrive at markedly different conclusions. This non-determinism has direct security implications: an agent that produces a secure solution in one run may produce a vulnerable one in the next. Current benchmarks typically report single-run or mean performance, obscuring the variance that matters most for security evaluation.
+Evaluating stochastic behavior requires running agents multiple times on the same task and reporting distributional statistics: not just mean accuracy but worst-case performance, variance, and the frequency of security-critical failures</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib12" title="">12</a>]</cite>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span><span class="translated-text">代码生成</span><span class="original-text">Code Generation</span></h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.1"><span class="translated-text">运行时不确定性的另一个来源是代码生成。在安全实验期间，代理可能会生成大量代码来探测环境、创建测试工具、监视执行和利用漏洞。这种代码生成支持代理安全分析，但也引入了新的故障点。由于 LLM 生成的代码通常包含很大一部分安全缺陷，因此代理生成的代码成为评估中最需要考虑的关键变量。</span><span class="original-text">Another source of runtime uncertainty is code generation. During a security experiment, an agent may produce a considerable amount of code to probe the environment, create test harnesses, monitor execution, and craft exploits. This code generation underpins agentic security analysis, but it also introduces new points of failure. Since LLM-generated code contains a significant share of security flaws in general, the code an agent produces becomes a crucial variable in the evaluation that most be considered.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p2">
+<p class="ltx_p" id="S4.SS2.p2.1"><span class="translated-text">对基准有效性最直接的威胁是自我干扰。代理可能会发现它自己引入的漏洞，或者错过它通过自己的操作意外修补的缺陷，从而无法将结果归因于目标系统而不是代理自己的代码。除此之外，基准环境的安全相关属性（例如编译器功能和内存保护机制）与代理生成的代码进行交互，从而进一步混淆结果。当前的基准测试将代理生成的代码视为透明工具，但更好地将其理解为需要控制以获得可靠结果的噪声源。</span><span class="original-text">The most direct threat to benchmark validity here is self-interference. An agent may uncover vulnerabilities it introduced itself, or miss flaws it accidentally patched through its own actions, making it impossible to attribute results to the target system rather than the agent’s own code. Beyond this, security-relevant properties of the benchmark environment, such as compiler features and memory protection mechanisms, interact with agent-generated code in ways that further confound results. Current benchmarks treat agent-generated code as a transparent instrument, but it is better understood as a source of noise that needs to be controlled for to obtain reliable results.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span><span class="translated-text">外部依赖</span><span class="original-text">External Dependencies</span></h3>
+<div class="ltx_para" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.1"><span class="translated-text">有效的代理在运行时依赖外部工具、API 和数据源。渗透测试代理可以查询漏洞数据库、调用网络扫描器或从存储库检索漏洞利用代码。每个外部依赖项都会引入一个潜在的不确定点：外部信息可能会干扰分析过程或提供解决基准任务的捷径，从而导致对代理能力的高估。
+这里最严重的威胁是通过外部来源泄露信息。基准测试解决方案的某些部分可以通过公共漏洞数据库、存储库或在线文章直接访问，无论是作为明确的泄漏还是作为微妙的提示，引导代理找到正确的答案，而不直接透露它。在这两种情况下，当智能体主要是检索而不是推理时，它就显得有能力。</span><span class="original-text">Effective agents rely on external tools, APIs, and data sources at runtime. A penetration testing agent may query a vulnerability database, invoke a network scanner, or retrieve exploit code from a repository. Each external dependency introduces a potential point of uncertainty: external information may interfere with the analysis process or provide shortcuts to solving the benchmark task, leading to an overestimation of agent capabilities.
+The most critical threat here is information leakage through external sources. Parts of a benchmark solution may be directly accessible via public vulnerability databases, repositories, or online write-ups, either as an explicit leak or as subtle hints that steer the agent toward the correct answer without revealing it outright. In both cases, the agent appears capable when it is largely retrieving rather than reasoning.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS3.p2">
+<p class="ltx_p" id="S4.SS3.p2.1"><span class="translated-text">除了泄漏之外，外部来源还可能返回不正确或敌对的数据，使代理面临很少经过测试的操纵。当前的安全基准不控制外部信息访问，因此无法完全区分代理能力和意外信息获取。</span><span class="original-text">Beyond leakage, external sources may return incorrect or adversarially crafted data, exposing agents to manipulation they are rarely tested against. Current security benchmarks do not control for external information access, making it impossible to completely distinguish agent capability from unintended information gain.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.4 </span><span class="translated-text">基准自省</span><span class="original-text">Benchmark Introspection</span></h3>
+<div class="ltx_para" id="S4.SS4.p1">
+<p class="ltx_p" id="S4.SS4.p1.1"><span class="translated-text">这些运行时不确定性的来源激发了实用的验证技术：</span><span class="original-text">These sources of runtime uncertainty motivate a practical validation technique:</span><em class="ltx_emph ltx_font_italic" id="S4.SS4.p1.1.1"><span class="translated-text">基准自省</span><span class="original-text">benchmark introspection</span></em><span class="translated-text">。基准测试需要通过内省来监督和验证评估环境，而不是仅仅关注任务的结果。在最简单的情况下，这相当于分析代理在任务期间的推理轨迹。在更高级的形式中，内省可以通过在代理环境之外运行的适当技术从外部监视和记录代码生成、工具交互和文件系统访问。同样，外部信息可以通过代理的处理进行污染和跟踪，从而清楚地了解信息是如何收集和处理的。</span><span class="original-text">. Instead of focusing only on the outcome of a task, the benchmark needs to supervise and validate the evaluation environment through introspection. In the simplest case, this amounts to analyzing the reasoning traces of an agent during the task. In a more advanced form, introspection can externally monitor and document code generation, tool interactions, and filesystem access through appropriate techniques running outside the agent’s environment. Similarly, external information can be tainted and tracked through the processing of the agent, providing a clear picture of how information was collected and processed.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS4.p2">
+<p class="ltx_p" id="S4.SS4.p2.1"><span class="translated-text">对任务解决过程的详细审核虽然要求很高，但可以帮助发现和减轻不确定性来源。虽然内省不能完全消除问题，但它提供了一种检测和控制破坏基准有效性的运行时因素的方法。</span><span class="original-text">This detailed auditing of the task-solving process, though demanding, can help uncover and mitigate sources of uncertainty. While introspection cannot eliminate the problem entirely, it provides a means for detecting and controlling for the runtime factors that undermine benchmark validity.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span><span class="translated-text">讨论</span><span class="original-text">Discussion</span></h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">从更广泛的角度来看，基准测试漏洞、时间过时性和运行时不确定性并不是安全基准测试所独有的，但它们在那里尤为严重。由此，我们可以得出几个结论：</span><span class="original-text">From a broader perspective, benchmark vulnerabilities, temporal staleness, and runtime uncertainty are not unique to security benchmarks, but they are uniquely acute there. From this, we can draw several conclusions:</span></p>
+</div>
+<section class="ltx_paragraph" id="S5.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">(a) 对抗性推理是衡量的能力。</span><span class="original-text">(a) Adversarial reasoning is the capability being measured.</span></h4>
+<div class="ltx_para" id="S5.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S5.SS0.SSS0.Px1.p1.1"><span class="translated-text">在非安全基准测试中，玩弄评估的代理会表现出不良行为。在安全基准测试中，具有相同的能力；发现并利用其环境中的漏洞正是我们想要衡量的。在这个领域中，作弊和能力是同一潜在能力的表达。必须相应地设计安全基准。</span><span class="original-text">In non-security benchmarks, an agent that games the evaluation is exhibiting undesirable behavior. In security benchmarks, the same capability; finding and exploiting vulnerabilities in its environment, is precisely what we are trying to measure. Cheating and competence are, in this domain, expressions of the same underlying capability. Security benchmarks must be designed accordingly.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S5.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">(b) 计算机安全本质上是不稳定的。</span><span class="original-text">(b) Computer security is non-stationary by nature.</span></h4>
+<div class="ltx_para" id="S5.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="S5.SS0.SSS0.Px2.p1.1"><span class="translated-text">大多数基准衰减缓慢；安全基准的衰减速度与漏洞的披露和修补速度一样快。基于去年 CVE 的基准衡量对去年问题的熟悉程度。如果非安全评估可能依赖于既定实践和静态数据，则需要重新考虑安全基准，而不仅仅是刷新。</span><span class="original-text">Most benchmarks decay slowly; security benchmarks decay as fast as vulnerabilities are disclosed and patched. A benchmark built on last year’s CVEs measures familiarity with last year’s problems. Where non-security evaluations may rely on established practices and static data, security benchmarks need to be rethought, not merely refreshed.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S5.SS0.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">(c) 代理人既是主体又是工具。</span><span class="original-text">(c) The agent is both the subject and the tool.</span></h4>
+<div class="ltx_para" id="S5.SS0.SSS0.Px3.p1">
+<p class="ltx_p" id="S5.SS0.SSS0.Px3.p1.1"><span class="translated-text">代理生成代码、与环境交互并做出决策——所有这些都具有复合而不是取消的安全隐患。检查代理是否发现正确漏洞的仅输出评估会错过它是否在此过程中引入了新漏洞。</span><span class="original-text">The agent generates code, interacts with environments, and makes decisions—all of which have security implications that compound rather than cancel. An output-only evaluation that checks whether the agent found the right vulnerability misses whether it introduced new ones along the way.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS0.SSS0.Px3.p2">
+<p class="ltx_p" id="S5.SS0.SSS0.Px3.p2.1"><span class="translated-text">对于从业者来说，这些要点转化为具体的评估挑战，而现有的基准还没有完全解决这些挑战：</span><span class="original-text">For the practitioner, these points translate into concrete evaluation challenges that no existing benchmark fully addresses:</span></p>
+</div>
+<div class="ltx_para" id="S5.SS0.SSS0.Px3.p3">
+<ul class="ltx_itemize" id="S5.I1">
+<li class="ltx_item" id="S5.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S5.I1.i1.p1">
+<p class="ltx_p" id="S5.I1.i1.p1.1"><em class="ltx_emph ltx_font_italic" id="S5.I1.i1.p1.1.1"><span class="translated-text">代理可以攻击基准吗？</span><span class="original-text">Can the agent attack the benchmark?</span></em><span class="translated-text">代理可以利用基础设施中的弱点吗？</span><span class="original-text">Can the agent exploit weaknesses in the infrastructure?</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S5.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S5.I1.i2.p1">
+<p class="ltx_p" id="S5.I1.i2.p1.1"><em class="ltx_emph ltx_font_italic" id="S5.I1.i2.p1.1.1"><span class="translated-text">代理能解决今天的问题吗？</span><span class="original-text">Is the agent solving today’s problems?</span></em><span class="translated-text">基准测试的挑战是否源于仍然相关的漏洞和技术？</span><span class="original-text">Are the benchmark’s challenges grounded in vulnerabilities and techniques that remain relevant?</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S5.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S5.I1.i3.p1">
+<p class="ltx_p" id="S5.I1.i3.p1.1"><em class="ltx_emph ltx_font_italic" id="S5.I1.i3.p1.1.1"><span class="translated-text">代理的架构安全吗？</span><span class="original-text">Is the agent’s architecture secure?</span></em><span class="translated-text">代理本身在其提示处理、工具集成、内存管理或权限边界中是否包含可利用的漏洞？</span><span class="original-text">Does the agent itself contain exploitable vulnerabilities, in its prompt handling, tool integration, memory management, or privilege boundaries?</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S5.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S5.I1.i4.p1">
+<p class="ltx_p" id="S5.I1.i4.p1.1"><em class="ltx_emph ltx_font_italic" id="S5.I1.i4.p1.1.1"><span class="translated-text">代理生成的代码安全吗？</span><span class="original-text">Is the code the agent generates secure?</span></em><span class="translated-text">当代理在运行时生成代码时，它是否没有影响基准测试的漏洞？</span><span class="original-text">When agents produce code at runtime is it free of vulnerabilities effecting the benchmark?</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="S5.SS0.SSS0.Px3.p4">
+<p class="ltx_p" id="S5.SS0.SSS0.Px3.p4.1"><span class="translated-text">我们还注意到进攻和防守评估之间的差距。当前的基准测试几乎完全专注于攻击能力（发现和利用漏洞）或代理安全（抵抗即时注入和操纵）。没有现有的基准可以同时评估代理是否同时</span><span class="original-text">We also note a gap between offensive and defensive evaluation. Current benchmarks focus almost exclusively on offensive capabilities (finding and exploiting vulnerabilities) or on agent safety (resistance to prompt injection and manipulation). No existing benchmark simultaneously evaluates whether an agent is both</span><em class="ltx_emph ltx_font_italic" id="S5.SS0.SSS0.Px3.p4.1.1"><span class="translated-text">有效的</span><span class="original-text">effective</span></em><span class="translated-text">在安全任务和</span><span class="original-text">at security tasks and</span><em class="ltx_emph ltx_font_italic" id="S5.SS0.SSS0.Px3.p4.1.2"><span class="translated-text">安全</span><span class="original-text">safe</span></em><span class="translated-text">部署，但这正是从业者需要了解的。</span><span class="original-text">to deploy, yet this is precisely what practitioners need to know.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h2>
+<div class="ltx_para" id="S6.p1">
+<p class="ltx_p" id="S6.p1.1"><span class="translated-text">用于安全任务的人工智能代理的快速发展已经超过了足以应对挑战的评估方法的发展。我们已经确定了当前基准测试方法中的三类基本漏洞，并提出了不同的对策，其中基准内省是迈向更值得信赖的评估的整体第一步。</span><span class="original-text">The rapid development of AI agents for security tasks has outpaced the development of evaluation methodologies adequate to the challenge. We have identified three fundamental classes of vulnerability in current benchmarking approaches and proposed different countermeasures, with benchmark introspection as a holistic first step toward more trustworthy evaluation.</span></p>
+</div>
+<div class="ltx_para" id="S6.p2">
+<p class="ltx_p" id="S6.p2.1"><span class="translated-text">许多事情仍然开放。随着威胁形势的发展而发展的生成基准、针对代理生成的工件的运行时代码安全评估以及统一的攻防评估框架都代表了未来工作的重要方向。我们希望确定的是，安全社区应该以与任何其他提出安全声明的系统相同的对抗性怀疑态度来对待代理基准，因为基准本身尚不安全。</span><span class="original-text">Much remains open. Generative benchmarks that evolve with the threat landscape, runtime code security evaluation for agent-generated artifacts, and unified offensive-defensive evaluation frameworks all represent important directions for future work. What we hope to have established is that the security community should approach agent benchmarks with the same adversarial skepticism it brings to any other system making security claims—because the benchmarks themselves are not yet secure.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S7">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">7 </span><span class="translated-text">致谢</span><span class="original-text">Acknowledgments</span></h2>
+<div class="ltx_para" id="S7.p1">
+<p class="ltx_p" id="S7.p1.1"><span class="translated-text">本文源自 Dagstuhl 透视研讨会“计算机安全中的自主代理”(26162)，2026 年 4 月的讨论。我们感谢所有研讨会参与者的贡献。根据 IEEE 政策，我们披露使用 Claude Opus 4.6（Anthropic，2025）来协助文献检索、LaTeX 格式化和草稿的副本编辑。所有技术内容、分析和结论都是作者自己的。</span><span class="original-text">This article arose from discussions at the Dagstuhl Perspective Workshop “Autonomous Agents in Computer Security” (26162), April 2026. We thank all workshop participants for their contributions. In accordance with IEEE policy, we disclose that Claude Opus 4.6 (Anthropic, 2025) was used to assist with literature search, LaTeX formatting, and copy-editing of drafts. All technical content, analysis, and conclusions are the authors’ own.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist">
+<li class="ltx_bibitem ltx_align_left" id="bib.bib1">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span class="ltx_text" id="bib.bib1.1.1" style="font-size:90%;">
+A. K. Zhang et al., “Cybench: A framework for evaluating cybersecurity capabilities and risks of language models,” in </span><em class="ltx_emph ltx_font_italic" id="bib.bib1.2.2" style="font-size:90%;">Proc. Int. Conf. Learn. Representations (ICLR)</em><span class="ltx_text" id="bib.bib1.3.3" style="font-size:90%;">, 2025.
+</span>
+</span>
+</li>
+<li class="ltx_bibitem ltx_align_left" id="bib.bib2">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span class="ltx_text" id="bib.bib2.1.1" style="font-size:90%;">
+Z. Wang et al., “CyberGym: Evaluating AI agents’ real-world cybersecurity capabilities at scale,” in </span><em class="ltx_emph ltx_font_italic" id="bib.bib2.2.2" style="font-size:90%;">Proc. Int. Conf. Learn. Representations (ICLR)</em><span class="ltx_text" id="bib.bib2.3.3" style="font-size:90%;">, 2026.
+</span>
+</span>
+</li>
+<li class="ltx_bibitem ltx_align_left" id="bib.bib3">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span class="ltx_text" id="bib.bib3.1.1" style="font-size:90%;">
+G. Deng et al., “PentestGPT: Evaluating and harnessing large language models for automated penetration testing,” in </span><em class="ltx_emph ltx_font_italic" id="bib.bib3.2.2" style="font-size:90%;">Proc. 33rd USENIX Security Symp.</em><span class="ltx_text" id="bib.bib3.3.3" style="font-size:90%;">, 2024.
+</span>
+</span>
+</li>
+<li class="ltx_bibitem ltx_align_left" id="bib.bib4">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span class="ltx_text" id="bib.bib4.1.1" style="font-size:90%;">
+H. Luo et al., “AgentAuditor: Human-level safety and security evaluation for LLM agents,” in </span><em class="ltx_emph ltx_font_italic" id="bib.bib4.2.2" style="font-size:90%;">Proc. Advances Neural Inf. Process. Syst. (NeurIPS)</em><span class="ltx_text" id="bib.bib4.3.3" style="font-size:90%;">, 2025.
+</span>
+</span>
+</li>
+<li class="ltx_bibitem ltx_align_left" id="bib.bib5">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span class="ltx_text" id="bib.bib5.1.1" style="font-size:90%;">
+M. Tavallaee et al., “A detailed analysis of the KDD CUP 99 data set,” in Proc. 2nd IEEE Symp. Comput. Intell. Security Defence Appl. (CISDA), 2009.
+</span>
+</span>
+</li>
+<li class="ltx_bibitem ltx_align_left" id="bib.bib6">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span class="ltx_text" id="bib.bib6.1.1" style="font-size:90%;">
+J. Metzman, L. Szekeres, L. M. R. Simon, R. T. Sprabery, and A. Arya, “FuzzBench: An open fuzzer benchmarking platform and service,” in Proc. 29th ACM Joint Meeting Eur. Softw. Eng. Conf. Symp. Found. Softw. Eng. (ESEC/FSE), 2021, pp. 1393–1403.
+</span>
+</span>
+</li>
+<li class="ltx_bibitem ltx_align_left" id="bib.bib7">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span class="ltx_text" id="bib.bib7.1.1" style="font-size:90%;">
+B. Dolan-Gavitt et al., “LAVA: Large-scale automated vulnerability addition,” in Proc. IEEE Symp. Security Privacy (S&amp;P), 2016, pp. 110–121.
+</span>
+</span>
+</li>
+<li class="ltx_bibitem ltx_align_left" id="bib.bib8">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span class="ltx_text" id="bib.bib8.1.1" style="font-size:90%;">
+Y. Zhu et al., “Establishing best practices for building rigorous agentic benchmarks,” arXiv:2507.02825, 2025.
+</span>
+</span>
+</li>
+<li class="ltx_bibitem ltx_align_left" id="bib.bib9">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span class="ltx_text" id="bib.bib9.1.1" style="font-size:90%;">
+J. Chen et al., “SecureAgentBench: Benchmarking secure code generation under realistic vulnerability scenarios,” arXiv:2509.22097, 2025.
+</span>
+</span>
+</li>
+<li class="ltx_bibitem ltx_align_left" id="bib.bib10">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span class="ltx_text" id="bib.bib10.1.1" style="font-size:90%;">
+Hao Wang et al., “How We Broke Top AI Agent Benchmarks: And What Comes Next”, 2026. </span><a class="ltx_ref ltx_href ltx_font_italic" href="https://rdi.berkeley.edu/blog/trustworthy-benchmarks-cont/" style="font-size:80%;" title="">https://rdi.berkeley.edu/blog/trustworthy-benchmarks-cont/</a><span class="ltx_text" id="bib.bib10.2.2" style="font-size:90%;">
+</span>
+</span>
+</li>
+<li class="ltx_bibitem ltx_align_left" id="bib.bib11">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span class="ltx_text" id="bib.bib11.1.1" style="font-size:90%;">
+Anthropic, “Eval awareness in Claude Opus 4.6’s BrowseComp performance”, 2026. </span><a class="ltx_ref ltx_href ltx_font_italic" href="https://www.anthropic.com/engineering/eval-awareness-browsecomp" style="font-size:80%;" title="">https://www.anthropic.com/engineering/eval-awareness-browsecomp</a><span class="ltx_text" id="bib.bib11.2.2" style="font-size:90%;">
+</span>
+</span>
+</li>
+<li class="ltx_bibitem ltx_align_left" id="bib.bib12">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span class="ltx_text" id="bib.bib12.1.1" style="font-size:90%;">
+Bates et al., “Beyond Rewards in Reinforcement Learning for Cyber Defence”, ICML, 2026
+</span>
+</span>
+</li>
+<li class="ltx_bibitem ltx_align_left" id="bib.bib13">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span class="ltx_text" id="bib.bib13.1.1" style="font-size:90%;">
+Zhang et al., “Membership Inference Attacks Cannot Prove that a Model Was Trained On Your Data,” in Proc. IEEE SaTML, 2025.
+</span>
+</span>
+</li>
+<li class="ltx_bibitem ltx_align_left" id="bib.bib14">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span class="ltx_text" id="bib.bib14.1.1" style="font-size:90%;">
+Moritz Hardt, “The Emerging Science of Machine Learning Benchmarks”, Princeton University Press, 2026.
+</span>
+</span>
+</li>
+</ul>
+</section>
+<div class="ltx_pagination ltx_role_end_2_columns"></div>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2605.22568v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div aria-hidden="true" id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
