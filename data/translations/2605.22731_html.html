@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">训练后是关于状态，而不是代币：SFT、RL 和按策略蒸馏的状态分布视图</span><span class="original-text">Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 5 月 21 日星期四 15:02:30 生成 http://dlmf.nist.gov/LaTeXML/。</span><span class="original-text">Generated on Thu May 21 15:02:30 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2605.22731" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2605.22731" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">描述：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2605.22731v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2605.22731v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>State Distribution View</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS1" title="In 2 State Distribution View ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.1 </span>Autoregressive States</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS2" title="In 2 State Distribution View ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.2 </span>Two Axes: State Source and Signal Source</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS3" title="In 2 State Distribution View ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.3 </span>SFT: Off-Policy State Fitting</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS4" title="In 2 State Distribution View ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.4 </span>RL: On-Policy Local Improvement</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS5" title="In 2 State Distribution View ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.5 </span>OPD: Teacher-Guided On-Policy Learning</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>A Unified Framework: Post-Training as State-Conditioned Supervision</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S3.SS1" title="In 3 A Unified Framework: Post-Training as State-Conditioned Supervision ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Predictions</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS1.SSS0.Px1" title="In 3.1 Predictions ‣ 3 A Unified Framework: Post-Training as State-Conditioned Supervision ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">P1: Off-policy pressure can create forgetting under stress.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS1.SSS0.Px2" title="In 3.1 Predictions ‣ 3 A Unified Framework: Post-Training as State-Conditioned Supervision ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">P2: On-policy methods should preserve locality.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS1.SSS0.Px3" title="In 3.1 Predictions ‣ 3 A Unified Framework: Post-Training as State-Conditioned Supervision ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">P3: Students can surpass teachers.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS1.SSS0.Px4" title="In 3.1 Predictions ‣ 3 A Unified Framework: Post-Training as State-Conditioned Supervision ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">P4: Scalar drift is insufficient.</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Experimental Setup</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS0.SSS0.Px1" title="In 4 Experimental Setup ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">Model and hardware.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS0.SSS0.Px2" title="In 4 Experimental Setup ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">Target and retention tasks.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS0.SSS0.Px3" title="In 4 Experimental Setup ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">Methods.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS0.SSS0.Px4" title="In 4 Experimental Setup ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">Metrics.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS0.SSS0.Px5" title="In 4 Experimental Setup ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">State drift.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S5" title="In Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Results</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS1" title="In 5 Results ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5.1 </span>SFT Can Be Gentle or Destructive</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS2" title="In 5 Results ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5.2 </span>OPD Can Surpass a Degraded Teacher</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS3" title="In 5 Results ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5.3 </span>RL Provides the On-Policy Reward Point</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS4" title="In 5 Results ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5.4 </span>Drift Magnitude Is Not the Whole Story</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S6" title="In Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6 </span>Discussion</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S6.SS0.SSS0.Px1" title="In 6 Discussion ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">Objective-level analysis is incomplete.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S6.SS0.SSS0.Px2" title="In 6 Discussion ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">On-policy dense shaping.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S6.SS0.SSS0.Px3" title="In 6 Discussion ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">Limitations.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S7" title="In Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">7 </span>Related Work</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S7.SS0.SSS0.Px1" title="In 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">Post-training objectives.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S7.SS0.SSS0.Px2" title="In 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">Exposure bias and imitation learning.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S7.SS0.SSS0.Px3" title="In 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">Knowledge distillation.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S7.SS0.SSS0.Px4" title="In 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">Catastrophic forgetting and retention.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S7.SS0.SSS0.Px5" title="In 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">State drift measurement.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S8" title="In Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">8 </span>Conclusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2605.22731v1 [cs.LG] 2026 年 5 月 21 日</span><span class="original-text">arXiv:2605.22731v1 [cs.LG] 21 May 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">训练后是关于状态，而不是令牌：</span><span class="original-text">Post-Training is About States, Not Tokens:</span><br class="ltx_break"/><span class="translated-text">SFT、RL 和同策略蒸馏的状态分布视图</span><span class="original-text">A State Distribution View of SFT, RL, and On-Policy Distillation</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Dong Nie
+<br class="ltx_break"/>Independent Researcher
+<br class="ltx_break"/><span class="ltx_text ltx_font_typewriter" id="id1.1.id1">dongnie@cs.unc.edu</span>
+<br class="ltx_break"/>
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">大语言模型后训练方法如监督微调（SFT）、
+强化学习（RL）和蒸馏通常通过它们来分析
+损失函数：最大似然、策略梯度、正向 KL、反向 KL 或
+相关的目标级别变体。我们研究一个互补因素：</span><span class="original-text">Large language model post-training methods such as supervised fine-tuning (SFT),
+reinforcement learning (RL), and distillation are often analyzed through their
+loss functions: maximum likelihood, policy gradients, forward KL, reverse KL, or
+related objective-level variants. We study a complementary factor: the</span><em class="ltx_emph ltx_font_italic"><span class="translated-text">状态分布</span><span class="original-text">state distribution</span></em><span class="translated-text">对其实施监督。对于自回归
+策略，状态是提示加上生成的前缀。 SFT 在固定数据集上进行训练
+状态，而 RL 和同策略蒸馏 (OPD) 则在由
+当前的学习者。</span><span class="original-text">on which supervision is applied. For an autoregressive
+policy, a state is a prompt plus generated prefix. SFT trains on fixed dataset
+states, while RL and on-policy distillation (OPD) train on states induced by the
+current learner.</span></p>
+<p class="ltx_p"><span class="translated-text">我们将训练后形式化为状态分布塑造并运行受控的
+使用 Qwen3-0.6B-Base 在 GSM8K 上进行的小规模研究，以 TruthfulQA 和 MMLU 作为
+保留评估。我们的结果显示了三种现象。首先，温和的 SFT 运行
+改进 GSM8K，几乎不会忘记，而压力 SFT 运行会导致大量
+保留损失。其次，一位降级的 SFT 老师的 OPD 超过了那位老师
+GSM8K、TruthfulQA 和 MMLU，尽管只使用老师
+监督来源。第三，轻量级同策略 RL 运行改进了 GSM8K，同时
+保留保留。这些结果支持了以国家为中心的观点
+训练后：训练状态的来源和地点可能与
+监督信号的形式。代码可在 https://github.com/ginobilinie/unifyPostTraining 获取。</span><span class="original-text">We formalize post-training as state-distribution shaping and run a controlled
+small-scale study using Qwen3-0.6B-Base on GSM8K, with TruthfulQA and MMLU as
+retention evaluations. Our results show three phenomena. First, a mild SFT run
+improves GSM8K with little forgetting, while a stress SFT run causes substantial
+retention loss. Second, OPD from a degraded SFT teacher surpasses that teacher
+on GSM8K, TruthfulQA, and MMLU, despite using the teacher as its only
+supervision source. Third, a lightweight on-policy RL run improves GSM8K while
+preserving retention. These results support a state-centric view of
+post-training: the source and locality of training states can be as important as
+the form of the supervision signal. Code can be available at https://github.com/ginobilinie/unifyPostTraining.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">训练后是预训练语言模型变得有用的阶段
+针对一组特定的面向人类的行为。有监督微调（SFT）
+教模型模仿演示，强化学习（RL）
+根据奖励和蒸馏转移优化采样模型输出
+从教师的行为模式到学生的行为模式。这些方法可不小
+实现细节：它们确定模型是否遵循指令，
+解决推理问题，拒绝不安全的请求，保留事实知识，
+并且在训练数据的狭窄分布之外仍然保持稳健。</span><span class="original-text">Post-training is the stage at which a pretrained language model becomes useful
+for a particular set of human-facing behaviors. Supervised fine-tuning (SFT)
+teaches the model to imitate demonstrations, reinforcement learning (RL)
+optimizes sampled model outputs against rewards, and distillation transfers
+behavior from a teacher model to a student. These methods are not minor
+implementation details: they determine whether a model follows instructions,
+solves reasoning problems, refuses unsafe requests, preserves factual knowledge,
+and remains robust outside the narrow distribution of its training data.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">尽管具有实际重要性，但一些基本的培训后现象仍然存在
+用通常的词汇来解释很尴尬。 SFT 简单且数据高效，
+然而，在攻击性的情况下，它可能会导致灾难性的遗忘或脆弱的行为
+专业化。强化学习通常通过稀疏或嘈杂的奖励进行优化，但它可以
+产生令人惊讶的稳定改进。蒸馏通常被理解为
+模仿老师，但学生有时会匹配或超越老师。这些
+观察结果提出了一个共同的问题：训练过程的属性是什么
+确定训练后的模型是局部改进还是破坏性漂移？</span><span class="original-text">Despite this practical importance, several basic post-training phenomena remain
+awkward to explain with the usual vocabulary. SFT is simple and data-efficient,
+yet it can cause catastrophic forgetting or brittle behavior under aggressive
+specialization. RL is often optimized with sparse or noisy rewards, yet it can
+produce surprisingly stable improvements. Distillation is usually understood as
+copying a teacher, yet students sometimes match or outperform teachers. These
+observations raise a shared question: what property of the training process
+determines whether a post-trained model improves locally or drifts destructively?</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">标准答案侧重于目标。 SFT 是最大似然
+示威； RL 是通过策略梯度式更新实现奖励最大化；
+蒸馏是教师和学生令牌分布之间的分歧。
+客观层面的分析是必不可少的，但它隐藏了另一个轴
+变化：</span><span class="original-text">The standard answer focuses on objectives. SFT is maximum likelihood on
+demonstrations; RL is reward maximization with policy-gradient-style updates;
+distillation is a divergence between teacher and student token distributions.
+Objective-level analysis is indispensable, but it hides another axis of
+variation:</span><em class="ltx_emph ltx_font_italic" id="S1.p3.1.1"><span class="translated-text">哪里</span><span class="original-text">where</span></em><span class="translated-text">目标被应用。在自回归模型中，
+令牌预测始终以状态为条件，即提示一起
+与生成的前缀。因此，具有相似令牌级信号的两种方法可以
+如果他们在不同的状态分布上进行训练，就会产生不同的结果。</span><span class="original-text">the objective is applied. In an autoregressive model, a
+token prediction is always conditioned on a state, namely the prompt together
+with the generated prefix. Thus two methods with similar token-level signals can
+produce different outcomes if they train on different state distributions.</span></p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">这种区别对于 SFT、RL 和同策略蒸馏尤其明显
+（OPD）。 SFT 对固定数据集前缀应用密集监督。那些前缀
+可能不是当前模型将访问的状态，尤其是在模型之后
+开始犯自己的错误。相比之下，强化学习从以下位置采样轨迹：
+当前的政策并应用奖励衍生的更新来说明模型的实际情况
+访问。 OPD 将状态源与信号源分开：学生
+采样各州，而老师则提供当地指导。从这里
+从角度来看，OPD 比离线蒸馏更接近 RL，即使它的损失
+被写成有监督的师生目标。</span><span class="original-text">This distinction is especially sharp for SFT, RL, and on-policy distillation
+(OPD). SFT applies dense supervision on fixed dataset prefixes. Those prefixes
+may not be states that the current model would visit, especially after the model
+starts making its own errors. RL, by contrast, samples trajectories from the
+current policy and applies reward-derived updates on states the model actually
+visits. OPD separates the state source from the signal source: the student
+samples the states, while the teacher supplies local guidance. From this
+perspective, OPD is closer to RL than to offline distillation, even when its loss
+is written as a supervised teacher-student objective.</span></p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">我们认为，这种国家与来源的区别有助于解释稳定性和
+师生逆转。如果一名教师的整体行为不佳是因为
+访问不良轨迹，学生不需要继承所有这些
+当对学生自己的状态进行质疑时，就会出现失败。同样，RL
+能够稳定不仅是因为 KL 惩罚或保守的目标，而且
+因为它的更新自然地局限于学习者当前的情况
+轨迹。核心问题不仅仅是信号是否是标签、
+奖励，或 logit 分布；这是该信号和
+应用它的状态分布。</span><span class="original-text">We argue that this state-source distinction helps explain both stability and
+teacher-student reversal. If a teacher has poor global behavior because it
+visits undesirable trajectories, a student need not inherit all of those
+failures when supervision is queried on the student’s own states. Similarly, RL
+can be stable not only because of KL penalties or conservative objectives, but
+because its updates are naturally localized to the learner’s current
+trajectories. The core issue is not merely whether the signal is a label, a
+reward, or a logit distribution; it is the interaction between that signal and
+the state distribution on which it is applied.</span></p>
+</div>
+<div class="ltx_para" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1"><span class="translated-text">我们研究以下论文：</span><span class="original-text">We investigate the following thesis:</span></p>
+<blockquote class="ltx_quote" id="S1.p6.2">
+<p class="ltx_p" id="S1.p6.2.1"><span class="translated-text">训练后行为由监督信号之间的相互作用控制
+和训练状态分布；政策性国家监管可以保护
+地方性，让学生超越退化的教师。</span><span class="original-text">Post-training behavior is governed by the interaction between supervision signal
+and training state distribution; on-policy state supervision can preserve
+locality and allow students to improve beyond degraded teachers.</span></p>
+</blockquote>
+</div>
+<div class="ltx_para" id="S1.p7">
+<p class="ltx_p" id="S1.p7.1"><span class="translated-text">我们使用 Qwen3-0.6B-Base 在受控单 GPU 设置中测试本论文。
+GSM8K 用作目标任务，而 TruthfulQA 和 MMLU 则衡量保留率。
+这些实验故意做得很小，但它们揭示了相关的对比。
+温和的 SFT 运行几乎不会忘记地改进 GSM8K，这表明 SFT 并没有
+本质上具有破坏性。然而，压力 SFT 运行会产生降级的教师：
+它会降低目标准确性和保留率。这位被贬低的老师的OPD
+然后在 GSM8K、TruthfulQA 和 MMLU 上超越老师。最后来个轻量级的
+策略上的 RL 运行改进了 GSM8K，同时保留了保留率。这些结果不
+支持一个简单的主张，一个标量漂移度量可以完全解释
+忘记。相反，他们支持更精确的以国家为中心的主张：来源，
+培训状态的局部性和学习者依赖性是培训后的核心
+行为。</span><span class="original-text">We test this thesis in a controlled single-GPU setting using Qwen3-0.6B-Base.
+GSM8K is used as the target task, while TruthfulQA and MMLU measure retention.
+The experiments are intentionally small, but they expose the relevant contrasts.
+A mild SFT run improves GSM8K with almost no forgetting, showing that SFT is not
+inherently destructive. A stress SFT run, however, produces a degraded teacher:
+it lowers both target accuracy and retention. OPD from this degraded teacher
+then surpasses the teacher on GSM8K, TruthfulQA, and MMLU. Finally, a lightweight
+on-policy RL run improves GSM8K while preserving retention. These results do not
+support a simplistic claim that one scalar drift metric fully explains
+forgetting. Instead, they support a more precise state-centric claim: the source,
+locality, and learner-dependence of training states are central to post-training
+behavior.</span></p>
+</div>
+<div class="ltx_para" id="S1.p8">
+<p class="ltx_p" id="S1.p8.1"><span class="translated-text">我们做出三项贡献：</span><span class="original-text">We make three contributions:</span></p>
+<ol class="ltx_enumerate" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="translated-text">我们在共同的状态分布视图下制定了 SFT、RL 和 OPD
+自回归训练后。</span><span class="original-text">We formulate SFT, RL, and OPD under a common state-distribution view of
+autoregressive post-training.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="translated-text">我们实现了受控单 GPU 实验管道测量
+目标准确性、保留率、遗忘率和推出状态漂移。</span><span class="original-text">We implement a controlled single-GPU experimental pipeline measuring
+target accuracy, retention, forgetting, and rollout-state drift.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1"><span class="translated-text">我们提供的证据表明 OPD 可以胜过降级的 SFT 教师，并且
+同策略 RL 提高了目标性能，且几乎没有保留损失。</span><span class="original-text">We provide evidence that OPD can outperform a degraded SFT teacher and
+that on-policy RL improves target performance with little retention loss.</span></p>
+</div>
+</li>
+</ol>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">状态分布视图</span><span class="original-text">State Distribution View</span></h2>
+<section class="ltx_subsection" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span><span class="translated-text">自回归状态</span><span class="original-text">Autoregressive States</span></h3>
+<div class="ltx_para" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.4"><span class="translated-text">自回归语言模型定义策略</span><span class="original-text">An autoregressive language model defines a policy</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\pi_{\theta}(y_{t}\mid x,y_{&lt;t})." class="ltx_Math" display="block" id="S2.E1.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>π</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><msub><mi>y</mi><mi>t</mi></msub><mo>∣</mo><mrow><mi>x</mi><mo>,</mo><msub><mi>y</mi><mrow><mi></mi><mo>&lt;</mo><mi>t</mi></mrow></msub></mrow></mrow><mo stretchy="false">)</mo></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\pi_{\theta}(y_{t}\mid x,y_{&lt;t}).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS1.p1.5"><span class="translated-text">我们打电话</span><span class="original-text">We call</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="s_{t}=(x,y_{&lt;t})" class="ltx_Math" display="block" id="S2.E2.m1" intent=":literal"><semantics><mrow><msub><mi>s</mi><mi>t</mi></msub><mo>=</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mrow><mi></mi><mo>&lt;</mo><mi>t</mi></mrow></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">s_{t}=(x,y_{&lt;t})</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS1.p1.3"><span class="translated-text">的</span><span class="original-text">the</span><em class="ltx_emph ltx_font_italic" id="S2.SS1.p1.3.1"><span class="translated-text">状态</span><span class="original-text">state</span></em><span class="translated-text">。下一个令牌</span><span class="original-text">. The next token</span><math alttext="y_{t}" class="ltx_Math" display="inline" id="S2.SS1.p1.1.m1" intent=":literal"><semantics><msub><mi>y</mi><mi>t</mi></msub><annotation encoding="application/x-tex">y_{t}</annotation></semantics></math><span class="translated-text">是动作，生成的答案是
+通过状态的轨迹。让</span><span class="original-text">is the action, and a generated answer is a
+trajectory through states. Let</span><math alttext="d^{\pi}(s)" class="ltx_Math" display="inline" id="S2.SS1.p1.2.m2" intent=":literal"><semantics><mrow><msup><mi>d</mi><mi>π</mi></msup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">d^{\pi}(s)</annotation></semantics></math><span class="translated-text">表示国事访问
+政策诱导分配</span><span class="original-text">denote the state visitation
+distribution induced by policy</span><math alttext="\pi" class="ltx_Math" display="inline" id="S2.SS1.p1.3.m3" intent=":literal"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math><span class="translated-text">即时分配。</span><span class="original-text">on a prompt distribution.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS1.p2">
+<p class="ltx_p" id="S2.SS1.p2.1"><span class="translated-text">这个定义故意简单。状态不是隐藏的激活，
+训练示例，或孤立的单个令牌位置。这是完整的
+调节下一个令牌策略起作用的上下文。在LLM中，同样的
+目标标记可以具有非常不同的含义，具体取决于中的前缀状态
+看起来。例如，在正确的链之后预测一个数字
+在不一致的链之后推理并预测相同的数字
+推理是不同的策略更新，因为它们涉及不同的条件
+上下文。</span><span class="original-text">This definition is deliberately simple. A state is not a hidden activation, a
+training example, or a single token position in isolation. It is the full
+conditioning context on which the next-token policy acts. In an LLM, the same
+target token can have very different meaning depending on the prefix state in
+which it appears. For example, predicting a number after a correct chain of
+reasoning and predicting the same number after an inconsistent chain of
+reasoning are different policy updates because they touch different conditional
+contexts.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS1.p3">
+<p class="ltx_p" id="S2.SS1.p3.1"><span class="translated-text">给予及时分配</span><span class="original-text">Given a prompt distribution</span><math alttext="\rho(x)" class="ltx_Math" display="inline" id="S2.SS1.p3.1.m1" intent=":literal"><semantics><mrow><mi>ρ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\rho(x)</annotation></semantics></math><span class="translated-text">，政策诱导轨迹</span><span class="original-text">, a policy induces a trajectory</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E3">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\tau=(s_{1},y_{1},s_{2},y_{2},\ldots,s_{T},y_{T})," class="ltx_Math" display="block" id="S2.E3.m1" intent=":literal"><semantics><mrow><mrow><mi>τ</mi><mo>=</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mn>1</mn></msub><mo>,</mo><msub><mi>y</mi><mn>1</mn></msub><mo>,</mo><msub><mi>s</mi><mn>2</mn></msub><mo>,</mo><msub><mi>y</mi><mn>2</mn></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>s</mi><mi>T</mi></msub><mo>,</mo><msub><mi>y</mi><mi>T</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\tau=(s_{1},y_{1},s_{2},y_{2},\ldots,s_{T},y_{T}),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS1.p3.2"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="s_{t+1}=(x,y_{\leq t})" class="ltx_Math" display="inline" id="S2.SS1.p3.2.m1" intent=":literal"><semantics><mrow><msub><mi>s</mi><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>=</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mrow><mi></mi><mo>≤</mo><mi>t</mi></mrow></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">s_{t+1}=(x,y_{\leq t})</annotation></semantics></math><span class="translated-text">。诱导状态分布可以写成
+非正式地为</span><span class="original-text">. The induced state distribution can be written
+informally as</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E4">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="d^{\pi}(s)=\mathbb{E}_{x\sim\rho,\,y_{&lt;t}\sim\pi}\left[\frac{1}{T}\sum_{t=1}^{T}\mathbf{1}\{s_{t}=s\}\right]." class="ltx_Math" display="block" id="S2.E4.m1" intent=":literal"><semantics><mrow><mrow><mrow><msup><mi>d</mi><mi>π</mi></msup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><msub><mi>𝔼</mi><mrow><mrow><mi>x</mi><mo>∼</mo><mi>ρ</mi></mrow><mo rspace="0.337em">,</mo><mrow><msub><mi>y</mi><mrow><mi></mi><mo>&lt;</mo><mi>t</mi></mrow></msub><mo>∼</mo><mi>π</mi></mrow></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo>[</mo><mrow><mfrac><mn>1</mn><mi>T</mi></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><munderover><mo movablelimits="false">∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></munderover><mrow><mn>𝟏</mn><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">{</mo><mrow><msub><mi>s</mi><mi>t</mi></msub><mo>=</mo><mi>s</mi></mrow><mo stretchy="false">}</mo></mrow></mrow></mrow></mrow><mo>]</mo></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">d^{\pi}(s)=\mathbb{E}_{x\sim\rho,\,y_{&lt;t}\sim\pi}\left[\frac{1}{T}\sum_{t=1}^{T}\mathbf{1}\{s_{t}=s\}\right].</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS1.p3.3"><span class="translated-text">实际上，这种分布从未被精确观察到。我们将其近似为
+推出和采样前缀。重要的一点是</span><span class="original-text">In practice this distribution is never observed exactly; we approximate it with
+rollouts and sampled prefixes. The important point is that</span><math alttext="d^{\pi}" class="ltx_Math" display="inline" id="S2.SS1.p3.3.m1" intent=":literal"><semantics><msup><mi>d</mi><mi>π</mi></msup><annotation encoding="application/x-tex">d^{\pi}</annotation></semantics></math><span class="translated-text">改变时
+政策变化。因此训练后不仅改变token
+固定环境下的概率；它改变了模型将改变的未来环境
+访问。</span><span class="original-text">changes when
+the policy changes. Therefore post-training does not only change token
+probabilities at fixed contexts; it changes the future contexts the model will
+visit.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span><span class="translated-text">两个轴：状态源和信号源</span><span class="original-text">Two Axes: State Source and Signal Source</span></h3>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.1"><span class="translated-text">后训练方法可以分解为两种选择。第一个是</span><span class="original-text">A post-training method can be decomposed into two choices. The first is the</span><em class="ltx_emph ltx_font_italic" id="S2.SS2.p1.1.1"><span class="translated-text">国家来源</span><span class="original-text">state source</span></em><span class="translated-text">: 上下文在哪里</span><span class="original-text">: where the contexts</span><math alttext="s" class="ltx_Math" display="inline" id="S2.SS2.p1.1.m1" intent=":literal"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math><span class="translated-text">来自。第二个是</span><span class="original-text">come from. The second is the</span><em class="ltx_emph ltx_font_italic" id="S2.SS2.p1.1.2"><span class="translated-text">信号源</span><span class="original-text">signal source</span></em><span class="translated-text">：使用什么目标、奖励或分配来更新
+这些背景下的政策。许多讨论将这些轴折叠成
+算法。例如，SFT 表示数据集状态加上人工或合成
+答案； RL表示政策状态加奖励；蒸馏意味着老师
+信号，但状态源可能是教师展示、数据集提示或
+学生推出。</span><span class="original-text">: what target, reward, or distribution is used to update the
+policy at those contexts. Many discussions collapse these axes into the name of
+the algorithm. For example, SFT means dataset states plus human or synthetic
+answers; RL means policy states plus rewards; distillation means teacher
+signals, but the state source may be teacher rollouts, dataset prompts, or
+student rollouts.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS2.p2">
+<p class="ltx_p" id="S2.SS2.p2.1"><span class="translated-text">将这些轴分开可以阐明为什么具有相似目标的方法可以
+表现不同。教师生成的前缀上的师生 KL 是
+离线模仿问题。同一个老师对学生生成的问题进行了查询
+前缀是一个在策略修正问题。同样，令牌交叉熵
+黄金前缀不等于学习者诱导的令牌交叉熵
+前缀，即使两个损失都受到监督。状态源决定
+应用信号的政策空间区域。</span><span class="original-text">Separating these axes clarifies why methods with similar-looking objectives can
+behave differently. A teacher-student KL on teacher-generated prefixes is an
+offline imitation problem. The same teacher queried on student-generated
+prefixes is an on-policy correction problem. Likewise, token cross entropy on
+gold prefixes is not equivalent to token cross entropy on learner-induced
+prefixes, even if both losses are supervised. The state source determines the
+region of policy space in which the signal is applied.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span><span class="translated-text">SFT：离策略状态拟合</span><span class="original-text">SFT: Off-Policy State Fitting</span></h3>
+<div class="ltx_para" id="S2.SS3.p1">
+<p class="ltx_p" id="S2.SS3.p1.1"><span class="translated-text">SFT 最大限度地减少了数据集状态上的令牌丢失：</span><span class="original-text">SFT minimizes token loss on dataset states:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E5">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{L}_{\mathrm{SFT}}(\theta)=-\mathbb{E}_{s\sim d_{\mathrm{data}}}\log\pi_{\theta}(y^{\star}\mid s)." class="ltx_Math" display="block" id="S2.E5.m1" intent=":literal"><semantics><mrow><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mi>SFT</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>θ</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mo>−</mo><mrow><msub><mi>𝔼</mi><mrow><mi>s</mi><mo>∼</mo><msub><mi>d</mi><mi>data</mi></msub></mrow></msub><mo lspace="0.167em" rspace="0em">​</mo><mrow><mi>log</mi><mo lspace="0.167em">⁡</mo><msub><mi>π</mi><mi>θ</mi></msub></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><msup><mi>y</mi><mo>⋆</mo></msup><mo>∣</mo><mi>s</mi></mrow><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\mathcal{L}_{\mathrm{SFT}}(\theta)=-\mathbb{E}_{s\sim d_{\mathrm{data}}}\log\pi_{\theta}(y^{\star}\mid s).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(5)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS3.p1.2"><span class="translated-text">监管很密集，但各州却脱离了政策。如果数据集轨迹
+距离模型自己的推出还很远，更新可能会影响区域的行为
+模型无法可靠地到达或从中恢复。这就是熟悉的
+暴露偏差问题被重新定义为状态分布不匹配。</span><span class="original-text">The supervision is dense, but the states are off-policy. If dataset trajectories
+are far from the model’s own rollouts, updates may affect behavior in regions
+that the model cannot reliably reach or recover from. This is the familiar
+exposure-bias problem recast as a state-distribution mismatch.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS3.p2">
+<p class="ltx_p" id="S2.SS3.p2.1"><span class="translated-text">SFT 的离策略性质有两个后果。首先，它可以非常
+当数据集状态接近有用的模型状态时有效：每个标记
+提供密集的学习信号，模型无需学习即可获得能力
+昂贵的采样。这是我们在温和的 SFT 运行中观察到的情况。其次，SFT可以
+当数据集轨迹分布较窄或训练时会很脆弱
+压力太高。该模型被反复推向以下行为：
+对演示前缀有效，但没有经过明确的恢复训练
+来自它自己的前缀。在积极的专业化下，这可以修改
+政策的方式会损害不相关的能力，甚至损害目标任务。</span><span class="original-text">The off-policy nature of SFT has two consequences. First, it can be very
+efficient when the dataset states are close to useful model states: every token
+provides a dense learning signal, and the model can acquire a capability without
+expensive sampling. This is what we observe in our mild SFT run. Second, SFT can
+be brittle when the dataset trajectory distribution is narrow or when training
+pressure is too high. The model is repeatedly pushed toward behavior that is
+valid on demonstration prefixes, but it is not explicitly trained to recover
+from its own prefixes. Under aggressive specialization, this can modify the
+policy in ways that harm unrelated capabilities and even harm the target task.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS3.p3">
+<p class="ltx_p" id="S2.SS3.p3.1"><span class="translated-text">按照这种观点，灾难性遗忘不仅仅由最大似然引起。
+当密集的政策外更新在相互作用的区域中移动政策时，就会出现这种情况
+模型本身的未来状态分布很差。因此相关的
+问题不仅仅是 SFT 使用前向 KL 还是令牌交叉熵，而是
+数据集状态是否与学习者的诱导状态兼容。</span><span class="original-text">In this view, catastrophic forgetting is not caused by maximum likelihood alone.
+It arises when dense off-policy updates move the policy in regions that interact
+poorly with the model’s own future state distribution. Thus the relevant
+question is not simply whether SFT uses forward KL or token cross entropy, but
+whether the dataset states are compatible with the learner’s induced states.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.4 </span><span class="translated-text">RL：按策略局部改进</span><span class="original-text">RL: On-Policy Local Improvement</span></h3>
+<div class="ltx_para" id="S2.SS4.p1">
+<p class="ltx_p" id="S2.SS4.p1.1"><span class="translated-text">RL 从当前策略中采样轨迹并使用以下方法更新模型
+奖励：</span><span class="original-text">RL samples trajectories from the current policy and updates the model using
+rewards:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E6">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\max_{\theta}\mathbb{E}_{s\sim d^{\pi_{\theta}},y\sim\pi_{\theta}(\cdot|s)}[r(s,y)]." class="ltx_math_unparsed" display="block" id="S2.E6.m1" intent=":literal"><semantics><mrow><mrow><mrow><munder><mi>max</mi><mi>θ</mi></munder><mo lspace="0.167em">⁡</mo><msub><mi>𝔼</mi><mrow><mi>s</mi><mo>∼</mo><msup><mi>d</mi><msub><mi>π</mi><mi>θ</mi></msub></msup><mo>,</mo><mi>y</mi><mo>∼</mo><msub><mi>π</mi><mi>θ</mi></msub><mrow><mo stretchy="false">(</mo><mo lspace="0em" rspace="0em">⋅</mo><mo fence="false" rspace="0.167em" stretchy="false">|</mo><mi>s</mi><mo stretchy="false">)</mo></mrow></mrow></msub></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">[</mo><mrow><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><mi>y</mi><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">]</mo></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\max_{\theta}\mathbb{E}_{s\sim d^{\pi_{\theta}},y\sim\pi_{\theta}(\cdot|s)}[r(s,y)].</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(6)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS4.p1.2"><span class="translated-text">奖励可能很少，但各州都遵守政策。这使得 RL 成为本地
+改进程序：它修改当前模型实际的行为
+访问。</span><span class="original-text">The reward may be sparse, but the states are on-policy. This makes RL a local
+improvement procedure: it modifies behavior where the current model actually
+visits.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS4.p2">
+<p class="ltx_p" id="S2.SS4.p2.1"><span class="translated-text">在策略属性赋予 RL 与 SFT 不同的故障模式。 RL 可以是
+样本效率低下，因为奖励可能稀疏且高方差，但它
+更新基于学习者自己的部署。如果模特经常进入
+某种推理模式，奖励反馈就在那里应用。如果从来没有
+访问数据集样式的前缀，强化学习不会直接将该前缀强制放入
+政策。 KL 惩罚、裁剪和参考模型可以进一步限制
+更新，但更基本的局部性来自状态源本身。</span><span class="original-text">The on-policy property gives RL a different failure mode from SFT. RL can be
+sample-inefficient because rewards may be sparse and high-variance, but its
+updates are grounded in the learner’s own rollouts. If a model frequently enters
+a certain reasoning pattern, reward feedback is applied there. If it never
+visits a dataset-style prefix, RL does not directly force that prefix into the
+policy. KL penalties, clipping, and reference models can further constrain the
+update, but the more basic locality comes from the state source itself.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS4.p3">
+<p class="ltx_p" id="S2.SS4.p3.1"><span class="translated-text">这有助于解释为什么 RL 可以保留能力，即使奖励是
+弱于完全监督的答案。奖励信号可能只说明是否
+轨迹成功，但轨迹是从当前模型中采样的。的
+因此，更新作用于已经可达的状态，使更改成为
+地方政策的改进而不是全球性的外部政策的模仿
+轨迹分布。</span><span class="original-text">This helps explain why RL can preserve capabilities even when the reward is
+weaker than a full supervised answer. The reward signal may only say whether a
+trajectory succeeded, but the trajectory was sampled from the current model. The
+update therefore acts on states that are already reachable, making the change a
+local policy improvement rather than a global imitation of an external
+trajectory distribution.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS5">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.5 </span><span class="translated-text">OPD：教师指导的政策学习</span><span class="original-text">OPD: Teacher-Guided On-Policy Learning</span></h3>
+<div class="ltx_para" id="S2.SS5.p1">
+<p class="ltx_p" id="S2.SS5.p1.1"><span class="translated-text">在 OPD 中，学生样本陈述并由教师提供监督：</span><span class="original-text">In OPD, the student samples states and the teacher provides supervision:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E7">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{L}_{\mathrm{OPD}}(\theta)=\mathbb{E}_{s\sim d^{\pi_{S}}}\left[D(\pi_{T}(\cdot|s)\,\|\,\pi_{S}(\cdot|s))\right]." class="ltx_math_unparsed" display="block" id="S2.E7.m1" intent=":literal"><semantics><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mi>OPD</mi></msub><mrow><mo stretchy="false">(</mo><mi>θ</mi><mo stretchy="false">)</mo></mrow><mo>=</mo><msub><mi>𝔼</mi><mrow><mi>s</mi><mo>∼</mo><msup><mi>d</mi><msub><mi>π</mi><mi>S</mi></msub></msup></mrow></msub><mrow><mo>[</mo><mi>D</mi><mrow><mo stretchy="false">(</mo><msub><mi>π</mi><mi>T</mi></msub><mrow><mo stretchy="false">(</mo><mo lspace="0em" rspace="0em">⋅</mo><mo fence="false" rspace="0.167em" stretchy="false">|</mo><mi>s</mi><mo stretchy="false">)</mo></mrow><mo lspace="0.170em" rspace="0.337em">∥</mo><msub><mi>π</mi><mi>S</mi></msub><mrow><mo stretchy="false">(</mo><mo lspace="0em" rspace="0em">⋅</mo><mo fence="false" rspace="0.167em" stretchy="false">|</mo><mi>s</mi><mo stretchy="false">)</mo></mrow><mo stretchy="false">)</mo></mrow><mo>]</mo></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\mathcal{L}_{\mathrm{OPD}}(\theta)=\mathbb{E}_{s\sim d^{\pi_{S}}}\left[D(\pi_{T}(\cdot|s)\,\|\,\pi_{S}(\cdot|s))\right].</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(7)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS5.p1.2"><span class="translated-text">在我们最强的 OPD 变体中，老师从
+学生状态并且学生通过交叉熵学习这些延续。
+这类似于 DAgger 式学习：学习者控制状态
+分布，而专家般的来源提供本地修复信号</span><span class="original-text">In our strongest OPD variant, the teacher generates short continuations from
+student states and the student learns those continuations with cross entropy.
+This is analogous to DAgger-style learning: the learner controls the state
+distribution, while an expert-like source provides local repair signals</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib1" title="A reduction of imitation learning and structured prediction to no-regret online learning">21</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.SS5.p2">
+<p class="ltx_p" id="S2.SS5.p2.1"><span class="translated-text">OPD 很有用，因为它可以解耦两个经常捆绑在一起的属性
+在一起。它保留了对蒸馏的严格监督，但改变了国家
+从教师或数据集到学生的来源。这使得 OPD 成为一项政策
+方法是指学生决定哪些前缀需要指导。的
+Teacher 没有被复制为完整的轨迹生成器；它被查询为
+针对学生州的当地有条件政策。</span><span class="original-text">OPD is useful because it decouples two properties that are often bundled
+together. It keeps the dense supervision of distillation, but moves the state
+source from the teacher or dataset to the student. This makes OPD an on-policy
+method in the sense that the student decides which prefixes need guidance. The
+teacher is not copied as a complete trajectory generator; it is queried as a
+local conditional policy on student states.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS5.p3">
+<p class="ltx_p" id="S2.SS5.p3.1"><span class="translated-text">这种区别解释了学生如何超越老师。一位老师的
+测量的性能取决于其局部条件分布和
+表示它倾向于访问。如果老师学到了有用的局部修理但是
+还访问了较差的轨迹，OPD 学生可以从修复中受益
+没有完全继承老师的轨迹分布。学生可以
+实际上是在问：“鉴于我现在所处的位置，老师接下来会做什么？”相反
+而不是“老师会代替我访问哪些州？”</span><span class="original-text">This distinction explains how a student can surpass a teacher. A teacher’s
+measured performance depends on both its local conditional distributions and the
+states it tends to visit. If the teacher has learned useful local repairs but
+also visits poor trajectories, an OPD student can benefit from the repairs
+without fully inheriting the teacher’s trajectory distribution. The student can
+ask, in effect: “given where I am, what would the teacher do next?” rather
+than “which states would the teacher have visited instead of me?”</span></p>
+</div>
+<div class="ltx_para" id="S2.SS5.p4">
+<p class="ltx_p" id="S2.SS5.p4.1"><span class="translated-text">还有实践课。一步下一个代币 KL 可能太弱
+推理任务，因为它只提供每个前缀的局部分布
+不教授如何完成轨迹。在我们的实验中，一步 OPD
+崩溃了。基于延续的 OPD，教师提供短期展示
+来自学生州，提供更密集的轨迹级监督，同时保留
+政策状态来源。</span><span class="original-text">There is also a practical lesson. One-step next-token KL may be too weak for
+reasoning tasks because it supplies only a local distribution at each prefix and
+does not teach how to complete a trajectory. In our experiments, one-step OPD
+collapsed. Continuation-based OPD, where the teacher provides short rollouts
+from student states, gives denser trajectory-level supervision while preserving
+the on-policy state source.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">统一框架：培训后作为国家条件监督</span><span class="original-text">A Unified Framework: Post-Training as State-Conditioned Supervision</span></h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="translated-text">我们将训练后视为反复改变模型的状态分布：</span><span class="original-text">We view post-training as repeatedly transforming a model’s state distribution:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E8">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="d_{k+1}(s)=\mathcal{T}\big(d_{k}(s),\mathrm{signal}\big)." class="ltx_Math" display="block" id="S3.E8.m1" intent=":literal"><semantics><mrow><mrow><mrow><msub><mi>d</mi><mrow><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mi class="ltx_font_mathcaligraphic">𝒯</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="1.200em" minsize="1.200em">(</mo><mrow><msub><mi>d</mi><mi>k</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo></mrow></mrow><mo>,</mo><mi>signal</mi><mo maxsize="1.200em" minsize="1.200em">)</mo></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">d_{k+1}(s)=\mathcal{T}\big(d_{k}(s),\mathrm{signal}\big).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(8)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.p1.2"><span class="translated-text">不同的算法在状态源和信号源方面都有所不同。</span><span class="original-text">Different algorithms vary both in the source of states and the source of signal.</span></p>
+</div>
+<div class="ltx_para" id="S3.p2">
+<p class="ltx_p" id="S3.p2.11"><span class="translated-text">更明确地说，训练后步骤可以写成三个操作：</span><span class="original-text">More explicitly, a post-training step can be written as three operations:</span></p>
+<table class="ltx_equationgroup ltx_eqn_align ltx_eqn_table" id="S8.EGx1">
+<tbody id="S3.E9"><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_td ltx_align_right ltx_eqn_cell"><math alttext="\displaystyle s" class="ltx_Math" display="inline" id="S3.E9.m1" intent=":literal"><semantics><mi>s</mi><annotation encoding="application/x-tex">\displaystyle s</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_left ltx_eqn_cell"><math alttext="\displaystyle\sim q_{k}(s)," class="ltx_Math" display="inline" id="S3.E9.m2" intent=":literal"><semantics><mrow><mrow><mi></mi><mo>∼</mo><mrow><msub><mi>q</mi><mi>k</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\displaystyle\sim q_{k}(s),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(9)</span></td>
+</tr></tbody>
+<tbody id="S3.E10"><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_td ltx_align_right ltx_eqn_cell"><math alttext="\displaystyle z" class="ltx_Math" display="inline" id="S3.E10.m1" intent=":literal"><semantics><mi>z</mi><annotation encoding="application/x-tex">\displaystyle z</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_left ltx_eqn_cell"><math alttext="\displaystyle\sim\mathcal{S}(s)," class="ltx_Math" display="inline" id="S3.E10.m2" intent=":literal"><semantics><mrow><mrow><mi></mi><mo>∼</mo><mrow><mi class="ltx_font_mathcaligraphic">𝒮</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\displaystyle\sim\mathcal{S}(s),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(10)</span></td>
+</tr></tbody>
+<tbody id="S3.E11"><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_td ltx_align_right ltx_eqn_cell"><math alttext="\displaystyle\theta_{k+1}" class="ltx_Math" display="inline" id="S3.E11.m1" intent=":literal"><semantics><msub><mi>θ</mi><mrow><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msub><annotation encoding="application/x-tex">\displaystyle\theta_{k+1}</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_left ltx_eqn_cell"><math alttext="\displaystyle=\theta_{k}-\eta\nabla_{\theta}\ell\big(\pi_{\theta}(\cdot|s),z\big)," class="ltx_math_unparsed" display="inline" id="S3.E11.m2" intent=":literal"><semantics><mrow><mo>=</mo><msub><mi>θ</mi><mi>k</mi></msub><mo>−</mo><mi>η</mi><msub><mo lspace="0.167em" rspace="0.167em">∇</mo><mi>θ</mi></msub><mi mathvariant="normal">ℓ</mi><mrow><mo maxsize="1.200em" minsize="1.200em">(</mo><msub><mi>π</mi><mi>θ</mi></msub><mrow><mo stretchy="false">(</mo><mo lspace="0em" rspace="0em">⋅</mo><mo fence="false" rspace="0.167em" stretchy="false">|</mo><mi>s</mi><mo stretchy="false">)</mo></mrow><mo>,</mo><mi>z</mi><mo maxsize="1.200em" minsize="1.200em">)</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\displaystyle=\theta_{k}-\eta\nabla_{\theta}\ell\big(\pi_{\theta}(\cdot|s),z\big),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(11)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.p2.10"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="q_{k}" class="ltx_Math" display="inline" id="S3.p2.1.m1" intent=":literal"><semantics><msub><mi>q</mi><mi>k</mi></msub><annotation encoding="application/x-tex">q_{k}</annotation></semantics></math><span class="translated-text">是训练状态分布，</span><span class="original-text">is the training state distribution,</span><math alttext="\mathcal{S}" class="ltx_Math" display="inline" id="S3.p2.2.m2" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒮</mi><annotation encoding="application/x-tex">\mathcal{S}</annotation></semantics></math><span class="translated-text">是信号
+提供商，以及</span><span class="original-text">is the signal
+provider, and</span><math alttext="z" class="ltx_Math" display="inline" id="S3.p2.3.m3" intent=":literal"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math><span class="translated-text">是监督对象：代币、延续、奖励，
+偏好或分配。由此产生的政策</span><span class="original-text">is the supervision object: a token, continuation, reward,
+preference, or distribution. The resulting policy</span><math alttext="\pi_{\theta_{k+1}}" class="ltx_Math" display="inline" id="S3.p2.4.m4" intent=":literal"><semantics><msub><mi>π</mi><msub><mi>θ</mi><mrow><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msub></msub><annotation encoding="application/x-tex">\pi_{\theta_{k+1}}</annotation></semantics></math><span class="translated-text">那么
+引发新的推出分布</span><span class="original-text">then
+induces a new rollout distribution</span><math alttext="d^{\pi_{\theta_{k+1}}}" class="ltx_Math" display="inline" id="S3.p2.5.m5" intent=":literal"><semantics><msup><mi>d</mi><msub><mi>π</mi><msub><mi>θ</mi><mrow><mi>k</mi><mo>+</mo><mn>1</mn></mrow></msub></msub></msup><annotation encoding="application/x-tex">d^{\pi_{\theta_{k+1}}}</annotation></semantics></math><span class="translated-text">。算法
+选择</span><span class="original-text">. The algorithmic
+choice of</span><math alttext="q_{k}" class="ltx_Math" display="inline" id="S3.p2.6.m6" intent=":literal"><semantics><msub><mi>q</mi><mi>k</mi></msub><annotation encoding="application/x-tex">q_{k}</annotation></semantics></math><span class="translated-text">因此是中心。在SFT中，</span><span class="original-text">is therefore central. In SFT,</span><math alttext="q_{k}=d_{\mathrm{data}}" class="ltx_Math" display="inline" id="S3.p2.7.m7" intent=":literal"><semantics><mrow><msub><mi>q</mi><mi>k</mi></msub><mo>=</mo><msub><mi>d</mi><mi>data</mi></msub></mrow><annotation encoding="application/x-tex">q_{k}=d_{\mathrm{data}}</annotation></semantics></math><span class="translated-text">并且确实
+不依赖于当前的学习者。在强化学习中，</span><span class="original-text">and does
+not depend on the current learner. In RL,</span><math alttext="q_{k}=d^{\pi_{\theta_{k}}}" class="ltx_Math" display="inline" id="S3.p2.8.m8" intent=":literal"><semantics><mrow><msub><mi>q</mi><mi>k</mi></msub><mo>=</mo><msup><mi>d</mi><msub><mi>π</mi><msub><mi>θ</mi><mi>k</mi></msub></msub></msup></mrow><annotation encoding="application/x-tex">q_{k}=d^{\pi_{\theta_{k}}}</annotation></semantics></math><span class="translated-text">。在OPD中，</span><span class="original-text">. In OPD,</span><math alttext="q_{k}=d^{\pi_{S,k}}" class="ltx_Math" display="inline" id="S3.p2.9.m9" intent=":literal"><semantics><mrow><msub><mi>q</mi><mi>k</mi></msub><mo>=</mo><msup><mi>d</mi><msub><mi>π</mi><mrow><mi>S</mi><mo>,</mo><mi>k</mi></mrow></msub></msup></mrow><annotation encoding="application/x-tex">q_{k}=d^{\pi_{S,k}}</annotation></semantics></math><span class="translated-text">即使信号来自</span><span class="original-text">even though the signal comes from</span><math alttext="\pi_{T}" class="ltx_Math" display="inline" id="S3.p2.10.m10" intent=":literal"><semantics><msub><mi>π</mi><mi>T</mi></msub><annotation encoding="application/x-tex">\pi_{T}</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="S3.p3">
+<p class="ltx_p" id="S3.p3.1"><span class="translated-text">这个表述区分了四个经常被混淆的问题：</span><span class="original-text">This formulation separates four questions that are often conflated:</span></p>
+<ol class="ltx_enumerate" id="S3.I1">
+<li class="ltx_item" id="S3.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span>
+<div class="ltx_para" id="S3.I1.i1.p1">
+<p class="ltx_p" id="S3.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i1.p1.1.1"><span class="translated-text">更新应用在哪里？</span><span class="original-text">Where are updates applied?</span></span><span class="translated-text">这是国家决定的
+来源</span><span class="original-text">This is determined by the state
+source</span><math alttext="q_{k}" class="ltx_Math" display="inline" id="S3.I1.i1.p1.1.m1" intent=":literal"><semantics><msub><mi>q</mi><mi>k</mi></msub><annotation encoding="application/x-tex">q_{k}</annotation></semantics></math>.</p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span>
+<div class="ltx_para" id="S3.I1.i2.p1">
+<p class="ltx_p" id="S3.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i2.p1.1.1"><span class="translated-text">提供什么信息？</span><span class="original-text">What information is provided?</span></span><span class="translated-text">这是由
+信号源</span><span class="original-text">This is determined by the
+signal source</span><math alttext="\mathcal{S}" class="ltx_Math" display="inline" id="S3.I1.i2.p1.1.m1" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒮</mi><annotation encoding="application/x-tex">\mathcal{S}</annotation></semantics></math>.</p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span>
+<div class="ltx_para" id="S3.I1.i3.p1">
+<p class="ltx_p" id="S3.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i3.p1.1.1"><span class="translated-text">信号有多密集？</span><span class="original-text">How dense is the signal?</span></span><span class="translated-text">令牌标签和延续是
+稠密；准确答案的奖励很少。</span><span class="original-text">Token labels and continuations are
+dense; exact-answer rewards are sparse.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">4.</span>
+<div class="ltx_para" id="S3.I1.i4.p1">
+<p class="ltx_p" id="S3.I1.i4.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i4.p1.1.1"><span class="translated-text">政策能走多远？</span><span class="original-text">How far can the policy move?</span></span><span class="translated-text">这是通过学习来控制的
+速率、适配器等级、KL 惩罚、裁剪和优化详细信息。</span><span class="original-text">This is controlled by learning
+rate, adapter rank, KL penalties, clipping, and optimization details.</span></p>
+</div>
+</li>
+</ol>
+<p class="ltx_p" id="S3.p3.2"><span class="translated-text">我们的主张主要涉及第一个问题。客观的设计很重要，但是
+如果没有指定状态分布，它是不完整的
+目标被评估。</span><span class="original-text">Our claim concerns primarily the first question. Objective design matters, but
+it is incomplete without specifying the state distribution on which the
+objective is evaluated.</span></p>
+</div>
+<figure class="ltx_table" id="S3.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>State-source view of common post-training methods.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T1.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="S3.T1.1.1.1.1">Method</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="S3.T1.1.1.1.2">Training state source</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="S3.T1.1.1.1.3">Supervision signal</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T1.1.2.1">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S3.T1.1.2.1.1">SFT</td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S3.T1.1.2.1.2">Dataset trajectories</td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S3.T1.1.2.1.3">Gold tokens</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.1.3.2">
+<td class="ltx_td ltx_align_left" id="S3.T1.1.3.2.1">Offline KD</td>
+<td class="ltx_td ltx_align_left" id="S3.T1.1.3.2.2">Teacher trajectories</td>
+<td class="ltx_td ltx_align_left" id="S3.T1.1.3.2.3">Teacher logits/tokens</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.1.4.3">
+<td class="ltx_td ltx_align_left" id="S3.T1.1.4.3.1">OPD</td>
+<td class="ltx_td ltx_align_left" id="S3.T1.1.4.3.2">Student trajectories</td>
+<td class="ltx_td ltx_align_left" id="S3.T1.1.4.3.3">Teacher logits/continuations</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.1.5.4">
+<td class="ltx_td ltx_align_left" id="S3.T1.1.5.4.1">RL</td>
+<td class="ltx_td ltx_align_left" id="S3.T1.1.5.4.2">Current policy trajectories</td>
+<td class="ltx_td ltx_align_left" id="S3.T1.1.5.4.3">Reward</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.1.6.5">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S3.T1.1.6.5.1">DAgger</td>
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S3.T1.1.6.5.2">Learner trajectories</td>
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S3.T1.1.6.5.3">Expert actions</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S3.p4">
+<p class="ltx_p" id="S3.p4.1"><span class="translated-text">这种观点预测使用学习者诱发状态的方法可以表现出
+即使监督源相似，也与off-policy模仿不同
+或更弱。特别是，如果老师的
+错误与教师自己的状态分布相关，而不是完全相关
+编码在有关学生状态的本地响应中。</span><span class="original-text">This view predicts that methods using learner-induced states can behave
+differently from off-policy imitation even when the supervision source is similar
+or weaker. In particular, a student can outperform its teacher if the teacher’s
+errors are coupled to the teacher’s own state distribution rather than fully
+encoded in its local responses on the student’s states.</span></p>
+</div>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">预测</span><span class="original-text">Predictions</span></h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">该框架产生了一些定性预测。</span><span class="original-text">The framework yields several qualitative predictions.</span></p>
+</div>
+<section class="ltx_paragraph" id="S3.SS1.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">P1：政策外压力会在压力下产生遗忘。</span><span class="original-text">P1: Off-policy pressure can create forgetting under stress.</span></h4>
+<div class="ltx_para" id="S3.SS1.SSS0.Px1.p1">
+<p class="ltx_p" id="S3.SS1.SSS0.Px1.p1.1"><span class="translated-text">当在狭窄的外部状态上重复应用密集监督更新时
+分布，模型可能会偏离通用行为。这确实
+并不意味着SFT总是忘记；轻度 SFT 可以在数据集稳定时保持稳定
+各州与基本政策兼容。预测是有条件的：
+当离政策压力变得足够大或
+够错位的。</span><span class="original-text">When dense supervised updates are applied repeatedly on a narrow external state
+distribution, the model may move away from general-purpose behavior. This does
+not imply that SFT always forgets; mild SFT can be stable when the dataset
+states are compatible with the base policy. The prediction is conditional:
+forgetting should appear when off-policy pressure becomes strong enough or
+misaligned enough.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS1.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">P2：同策略方法应该保留局部性。</span><span class="original-text">P2: On-policy methods should preserve locality.</span></h4>
+<div class="ltx_para" id="S3.SS1.SSS0.Px2.p1">
+<p class="ltx_p" id="S3.SS1.SSS0.Px2.p1.1"><span class="translated-text">RL 和 OPD 通常应该比受压力的离策略更好地保留能力
+训练，因为它们应用了学习者引起的状态的更新。这不
+保证每个指标下的标量漂移较低，但它预测更新是
+更有可能与模型实际可以达到和修复的状态相关。</span><span class="original-text">RL and OPD should often retain capabilities better than stressed off-policy
+training because they apply updates on learner-induced states. This does not
+guarantee low scalar drift under every metric, but it predicts that updates are
+more likely to be relevant to states the model can actually reach and repair.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS1.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">P3：学生可以超越老师。</span><span class="original-text">P3: Students can surpass teachers.</span></h4>
+<div class="ltx_para" id="S3.SS1.SSS0.Px3.p1">
+<p class="ltx_p" id="S3.SS1.SSS0.Px3.p1.1"><span class="translated-text">如果老师的失败部分是轨迹分布失败，那么
+在自己的状态下训练的学生可以超越老师。 OPD应该是最多的
+当教师仍然提供有用的本地指导但已经退化时有效
+全局推出行为。</span><span class="original-text">If the teacher’s failures are partly trajectory-distribution failures, then a
+student trained on its own states can outperform the teacher. OPD should be most
+effective when the teacher still provides useful local guidance but has degraded
+global rollout behavior.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS1.SSS0.Px4">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">P4：标量漂移不足。</span><span class="original-text">P4: Scalar drift is insufficient.</span></h4>
+<div class="ltx_para" id="S3.SS1.SSS0.Px4.p1">
+<p class="ltx_p" id="S3.SS1.SSS0.Px4.p1.1"><span class="translated-text">基础部署和训练后部署之间的分布距离应该是有用的，
+但它不能完全表征训练动态。两种方法可以产生
+类似的测量漂移，但接受监督的州不同
+这些状态在当地的可恢复程度如何。因此漂移应该被解释为
+以及状态源和信号密度。</span><span class="original-text">Distribution distance between base and post-trained rollouts should be useful,
+but it cannot fully characterize training dynamics. Two methods can produce
+similar measured drift while differing in which states received supervision and
+how locally recoverable those states were. Thus drift should be interpreted
+together with state source and signal density.</span></p>
+</div>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">实验装置</span><span class="original-text">Experimental Setup</span></h2>
+<section class="ltx_paragraph" id="S4.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">型号和硬件。</span><span class="original-text">Model and hardware.</span></h4>
+<div class="ltx_para" id="S4.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S4.SS0.SSS0.Px1.p1.1"><span class="translated-text">所有实验均使用 Qwen3-0.6B-Base 和 LoRA 适配器</span><span class="original-text">All experiments use Qwen3-0.6B-Base with LoRA adapters</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib20" title="Lora: low-rank adaptation of large language models.">11</a>]</cite><span class="translated-text">在一个
+单个 RTX 3090 24GB GPU。我们使用简单的 GSM8K 风格的提示而不是聊天
+模板，因为该模型是基础模型。</span><span class="original-text">on a
+single RTX 3090 24GB GPU. We use plain GSM8K-style prompts rather than chat
+templates because the model is a base model.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">目标和保留任务。</span><span class="original-text">Target and retention tasks.</span></h4>
+<div class="ltx_para" id="S4.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="S4.SS0.SSS0.Px2.p1.1"><span class="translated-text">目标任务是GSM8K</span><span class="original-text">The target task is GSM8K</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib18" title="Training verifiers to solve math word problems, 2021">5</a>]</cite><span class="translated-text">。保留率的衡量标准是
+真实QA多项选择</span><span class="original-text">. Retention is measured with
+TruthfulQA multiple-choice</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib21" title="Truthfulqa: measuring how models mimic human falsehoods">14</a>]</cite><span class="translated-text">和选定的 MMLU 子集</span><span class="original-text">and a selected MMLU subset</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib19" title="Measuring massive multitask language understanding">9</a>]</cite><span class="translated-text">。基本模型得分为 GSM8K 0.448、TruthfulQA 0.300、
+和MMLU 0.436。</span><span class="original-text">. Base model scores are GSM8K 0.448, TruthfulQA 0.300,
+and MMLU 0.436.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS0.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">方法。</span><span class="original-text">Methods.</span></h4>
+<div class="ltx_para" id="S4.SS0.SSS0.Px3.p1">
+<p class="ltx_p" id="S4.SS0.SSS0.Px3.p1.1"><span class="translated-text">我们评估轻度 SFT、应力 SFT、OPD 变体和轻量级同策略 RL。的
+温和的 SFT 运行使用 GSM8K SFT 数据并生成未降级的教师。压力
+SFT运行使用5个epoch，学习率</span><span class="original-text">We evaluate mild SFT, stress SFT, OPD variants, and lightweight on-policy RL. The
+mild SFT run uses GSM8K SFT data and produces a non-degraded teacher. The stress
+SFT run uses five epochs, learning rate</span><math alttext="5\times 10^{-4}" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px3.p1.1.m1" intent=":literal"><semantics><mrow><mn>5</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">5\times 10^{-4}</annotation></semantics></math><span class="translated-text">，LoRA 排名 64，LoRA
+alpha 128，有意探索遗忘。 OPD 对学生状态进行抽样并
+来自教师延续的火车。 RL 使用与组相关的精确答案奖励
+GSM8K 推出。</span><span class="original-text">, LoRA rank 64, and LoRA
+alpha 128, intentionally probing forgetting. OPD samples student states and
+trains from teacher continuations. RL uses group-relative exact-answer reward on
+GSM8K rollouts.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS0.SSS0.Px4">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">指标。</span><span class="original-text">Metrics.</span></h4>
+<div class="ltx_para" id="S4.SS0.SSS0.Px4.p1">
+<p class="ltx_p" id="S4.SS0.SSS0.Px4.p1.2"><span class="translated-text">对于保留任务来说，遗忘是</span><span class="original-text">For a retention task, forgetting is</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E12">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="F=\mathrm{Score}_{\mathrm{base}}-\mathrm{Score}_{\mathrm{post}}." class="ltx_Math" display="block" id="S4.E12.m1" intent=":literal"><semantics><mrow><mrow><mi>F</mi><mo>=</mo><mrow><msub><mi>Score</mi><mi>base</mi></msub><mo>−</mo><msub><mi>Score</mi><mi>post</mi></msub></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">F=\mathrm{Score}_{\mathrm{base}}-\mathrm{Score}_{\mathrm{post}}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(12)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S4.SS0.SSS0.Px4.p1.1"><span class="translated-text">保留率为</span><span class="original-text">Retention ratio is</span><math alttext="\mathrm{Score}_{\mathrm{post}}/\mathrm{Score}_{\mathrm{base}}" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px4.p1.1.m1" intent=":literal"><semantics><mrow><msub><mi>Score</mi><mi>post</mi></msub><mo>/</mo><msub><mi>Score</mi><mi>base</mi></msub></mrow><annotation encoding="application/x-tex">\mathrm{Score}_{\mathrm{post}}/\mathrm{Score}_{\mathrm{base}}</annotation></semantics></math><span class="translated-text">。我们报告平均遗忘和平均保留
+超过 TruthfulQA 和 MMLU。</span><span class="original-text">. We report mean forgetting and mean retention
+over TruthfulQA and MMLU.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS0.SSS0.Px5">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">状态漂移。</span><span class="original-text">State drift.</span></h4>
+<div class="ltx_para" id="S4.SS0.SSS0.Px5.p1">
+<p class="ltx_p" id="S4.SS0.SSS0.Px5.p1.1"><span class="translated-text">对于每个经过训练的模型，我们在固定提示集上进行采样并收集
+前缀状态</span><span class="original-text">For each trained model, we sample rollouts on a fixed prompt set and collect
+prefix states</span><math alttext="s_{t}=(x,y_{&lt;t})" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px5.p1.1.m1" intent=":literal"><semantics><mrow><msub><mi>s</mi><mi>t</mi></msub><mo>=</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><msub><mi>y</mi><mrow><mi></mi><mo>&lt;</mo><mi>t</mi></mrow></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">s_{t}=(x,y_{&lt;t})</annotation></semantics></math><span class="translated-text">。我们用轻量级词汇嵌入状态
+特征表示并用 RBF 报告最大平均差异 (MMD)
+内核</span><span class="original-text">. We embed states with a lightweight lexical
+feature representation and report maximum mean discrepancy (MMD) with an RBF
+kernel</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib25" title="A kernel two-sample test">8</a>]</cite><span class="translated-text">。我们还计算质心距离，切片
+瓦瑟斯坦距离</span><span class="original-text">. We also compute centroid distance, sliced
+Wasserstein distance</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib26" title="Wasserstein barycenter and its application to texture mixing">18</a>]</cite><span class="translated-text">，和词汇杰卡德距离，
+但使用 MMD 作为主要标量漂移测量。</span><span class="original-text">, and lexical Jaccard distance,
+but use MMD as the primary scalar drift measure.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span><span class="translated-text">结果</span><span class="original-text">Results</span></h2>
+<section class="ltx_subsection" id="S5.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.1 </span><span class="translated-text">SFT 可能是温和的，也可能是破坏性的</span><span class="original-text">SFT Can Be Gentle or Destructive</span></h3>
+<figure class="ltx_table" id="S5.T2">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Main results. GSM8K is the target task; TruthfulQA and MMLU are
+retention tasks. Forgetting and retention are averaged over TruthfulQA and
+MMLU.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S5.T2.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S5.T2.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S5.T2.1.1.1.1">Run</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T2.1.1.1.2">GSM8K</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T2.1.1.1.3">TruthfulQA</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T2.1.1.1.4">MMLU</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T2.1.1.1.5">MMD</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T2.1.1.1.6">Forgetting</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T2.1.1.1.7">Retention</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S5.T2.1.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S5.T2.1.2.1.1">Base</th>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T2.1.2.1.2">0.448</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T2.1.2.1.3">0.300</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T2.1.2.1.4">0.436</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T2.1.2.1.5">–</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T2.1.2.1.6">–</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T2.1.2.1.7">–</td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.1.3.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T2.1.3.2.1">Mild SFT</th>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.3.2.2">0.512</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.3.2.3">0.295</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.3.2.4">0.444</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.3.2.5">0.00956</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.3.2.6">-0.0015</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.3.2.7">1.0008</td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.1.4.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T2.1.4.3.1">Stress SFT</th>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.4.3.2">0.420</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.4.3.3">0.245</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.4.3.4">0.364</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.4.3.5">0.01093</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.4.3.6">0.0635</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.4.3.7">0.8258</td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.1.5.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T2.1.5.4.1">OPD from mild SFT</th>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.5.4.2">0.512</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.5.4.3">0.290</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.5.4.4">0.434</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.5.4.5">0.01470</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.5.4.6">0.0060</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.5.4.7">0.9810</td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.1.6.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T2.1.6.5.1">OPD from stress SFT</th>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.6.5.2">0.466</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.6.5.3">0.275</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.6.5.4">0.430</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.6.5.5">0.01092</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.6.5.6">0.0155</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.1.6.5.7">0.9515</td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.1.7.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S5.T2.1.7.6.1">On-policy RL</th>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T2.1.7.6.2">0.472</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T2.1.7.6.3">0.290</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T2.1.7.6.4">0.442</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T2.1.7.6.5">0.01098</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T2.1.7.6.6">0.0020</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T2.1.7.6.7">0.9902</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S5.SS1.p1">
+<p class="ltx_p" id="S5.SS1.p1.1"><span class="translated-text">轻度 SFT 将 GSM8K 从 0.448 提高到 0.512，并且基本上没有保留损失。
+这是一个重要的阴性对照：SFT 不一定会忘记我们的
+设置。然而，应力 SFT 会导致显着的保留降低：
+TruthfulQA 从 0.300 下降到 0.245，MMLU 从 0.436 下降到 0.364。其
+平均保留率为 0.8258。有趣的是，压力 SFT 也会将 GSM8K 降低到
+0.420，表明过于激进的离策略训练会降低两者的性能
+一般和目标行为。</span><span class="original-text">Mild SFT improves GSM8K from 0.448 to 0.512 with essentially no retention loss.
+This is an important negative control: SFT does not necessarily forget in our
+setup. However, stress SFT produces substantial retention degradation:
+TruthfulQA falls from 0.300 to 0.245 and MMLU falls from 0.436 to 0.364. Its
+mean retention ratio is 0.8258. Interestingly, stress SFT also reduces GSM8K to
+0.420, indicating that overly aggressive off-policy training can degrade both
+general and target behavior.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S5.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.2 </span><span class="translated-text">OPD 可以超越堕落的教师</span><span class="original-text">OPD Can Surpass a Degraded Teacher</span></h3>
+<div class="ltx_para" id="S5.SS2.p1">
+<p class="ltx_p" id="S5.SS2.p1.1"><span class="translated-text">最清晰的OPD结果以应力SFT模型为师。老师是
+降级：GSM8K 0.420、TruthfulQA 0.245、MMLU 0.364。这位老师的 OPD
+达到 GSM8K 0.466、TruthfulQA 0.275 和 MMLU 0.430。因此该学生
+尽管使用老师作为自己的老师，但在所有测量任务上都超过了老师
+监督来源。</span><span class="original-text">The clearest OPD result uses the stress SFT model as the teacher. The teacher is
+degraded: GSM8K 0.420, TruthfulQA 0.245, MMLU 0.364. OPD from this teacher
+achieves GSM8K 0.466, TruthfulQA 0.275, and MMLU 0.430. Thus the student
+surpasses its teacher on all measured tasks despite using that teacher as its
+supervision source.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS2.p2">
+<p class="ltx_p" id="S5.SS2.p2.1"><span class="translated-text">这支持了教师行为不会作为单一行为转移的观点。
+全局对象。学生接受从以下州抽样的当地指导
+学生自己的政策。当这些状态与老师的问题不同时
+轨迹分布，学生可以避免继承一些老师的失败。</span><span class="original-text">This supports the claim that teacher behavior is not transferred as a single
+global object. The student receives local guidance on states sampled from the
+student’s own policy. When those states differ from the teacher’s problematic
+trajectory distribution, the student can avoid inheriting some teacher failures.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S5.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.3 </span><span class="translated-text">RL 提供保单奖励积分</span><span class="original-text">RL Provides the On-Policy Reward Point</span></h3>
+<div class="ltx_para" id="S5.SS3.p1">
+<p class="ltx_p" id="S5.SS3.p1.1"><span class="translated-text">轻量级 RL 运行将 GSM8K 从 0.448 提高到 0.472，同时保留
+TruthfulQA 0.290 和 MMLU 0.442。其平均遗忘仅为0.0020。这是
+与 RL 表现为同策略局部改进的观点一致
+方法：它改变策略样本规定但不要求的行为
+大规模的离政策变动。</span><span class="original-text">The lightweight RL run improves GSM8K from 0.448 to 0.472 while retaining
+TruthfulQA 0.290 and MMLU 0.442. Its mean forgetting is only 0.0020. This is
+consistent with the view that RL behaves as an on-policy local improvement
+method: it changes behavior where the policy samples states and does not require
+large off-policy movement.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S5.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.4 </span><span class="translated-text">漂移幅度并不是全部</span><span class="original-text">Drift Magnitude Is Not the Whole Story</span></h3>
+<div class="ltx_para" id="S5.SS4.p1">
+<p class="ltx_p" id="S5.SS4.p1.1"><span class="translated-text">我们最初的假设是标量状态漂移可以有力地解释
+忘记。数据表明了一个更微妙的结论。应力 SFT 和 OPD
+压力老师有几乎相同的 MMD 漂移，0.01093 和 0.01092，但非常
+不同的保留率，0.8258 和 0.9515。同样，RL 具有可比的 MMD
+漂移，0.01098，遗忘要小得多。</span><span class="original-text">Our initial hypothesis was that scalar state drift would strongly explain
+forgetting. The data suggest a more nuanced conclusion. Stress SFT and OPD from
+the stress teacher have nearly identical MMD drift, 0.01093 and 0.01092, but very
+different retention ratios, 0.8258 and 0.9515. Similarly, RL has comparable MMD
+drift, 0.01098, with much smaller forgetting.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS4.p2">
+<p class="ltx_p" id="S5.SS4.p2.1"><span class="translated-text">因此，证据不支持以下形式的简单标量定律
+在这个小设置中，“更大的 MMD 意味着更多的遗忘”。相反，它支持
+国家来源的主张：</span><span class="original-text">Therefore, the evidence does not support a simple scalar law of the form
+“larger MMD implies more forgetting” in this small setup. Instead, it supports
+a state-source claim: the</span><em class="ltx_emph ltx_font_italic" id="S5.SS4.p2.1.1"><span class="translated-text">质量、本地性和学习者依赖性</span><span class="original-text">quality, locality, and learner-dependence</span></em><span class="translated-text">的
+训练状态很重要。仅测量展开之间的距离
+发行版可能会错过更新是否应用于本地状态
+学习者可以恢复。</span><span class="original-text">of
+training states matter. Measuring only the distance between rollout
+distributions can miss whether updates were applied on states that are locally
+recoverable for the learner.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span><span class="translated-text">讨论</span><span class="original-text">Discussion</span></h2>
+<section class="ltx_paragraph" id="S6.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">客观层面的分析是不完整的。</span><span class="original-text">Objective-level analysis is incomplete.</span></h4>
+<div class="ltx_para" id="S6.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S6.SS0.SSS0.Px1.p1.1"><span class="translated-text">压力老师的压力SFT和OPD的对比很难区分
+仅使用监督来源进行解释。两者最终都是由
+同样退化的教师/数据行为，但 OPD 对各州实施监督
+从学生身上取样。这改变了学习问题。</span><span class="original-text">The contrast between stress SFT and OPD from the stress teacher is difficult to
+explain using only the source of supervision. Both are ultimately shaped by the
+same degraded teacher/data behavior, but OPD applies supervision on states
+sampled from the student. This changes the learning problem.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S6.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">按策略密集整形。</span><span class="original-text">On-policy dense shaping.</span></h4>
+<div class="ltx_para" id="S6.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="S6.SS0.SSS0.Px2.p1.1"><span class="translated-text">成功的 OPD 变体使用教师延续而不是一步
+逻辑匹配。一步 OPD 在我们的运行中严重崩溃，达到 GSM8K 0.040。
+基于连续性的 OPD 恢复了目标性能。这提出了一个实用的
+秘诀：将策略采样与密集的轨迹级局部相结合
+监督。</span><span class="original-text">The successful OPD variant used teacher continuations rather than one-step
+logit matching. One-step OPD collapsed badly in our runs, reaching GSM8K 0.040.
+Continuation-based OPD recovered target performance. This suggests a practical
+recipe: combine on-policy sampling with dense, trajectory-level local
+supervision.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S6.SS0.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">局限性。</span><span class="original-text">Limitations.</span></h4>
+<div class="ltx_para" id="S6.SS0.SSS0.Px3.p1">
+<p class="ltx_p" id="S6.SS0.SSS0.Px3.p1.1"><span class="translated-text">这项研究是小规模的：一个基础模型、一个目标数据集、LoRA 适配器、
+有限的保留任务和轻量级漂移估计器。 RL 训练器是
+最小的政策 GRPO 式实施，而不是全面的 verl PPO 或
+GRPO 设置。我们的漂移度量使用词汇特征而不是隐藏状态或
+编码器嵌入。因此，结果应被视为证据
+机制假设，不作为基准主张。</span><span class="original-text">This study is small-scale: one base model, one target dataset, LoRA adapters,
+limited retention tasks, and lightweight drift estimators. The RL trainer is a
+minimal on-policy GRPO-style implementation rather than a full-scale verl PPO or
+GRPO setup. Our drift metric uses lexical features rather than hidden-state or
+encoder embeddings. The results should therefore be read as evidence for a
+mechanistic hypothesis, not as a benchmark claim.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S7">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">7 </span><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></h2>
+<section class="ltx_paragraph" id="S7.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">培训后目标。</span><span class="original-text">Post-training objectives.</span></h4>
+<div class="ltx_para" id="S7.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S7.SS0.SSS0.Px1.p1.1"><span class="translated-text">语言模型训练后通常通过优化来描述
+正在使用的目标。 SFT 通常被定义为最大似然学习
+指导示范。 RLHF 及相关方法优化模型样本
+针对习得或可验证的奖励</span><span class="original-text">Language model post-training is commonly described through the optimization
+objective being used. SFT is typically framed as maximum-likelihood learning on
+instruction demonstrations. RLHF and related approaches optimize model samples
+against learned or verifiable rewards</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib11" title="Deep reinforcement learning from human preferences">4</a>, <a class="ltx_ref" href="#bib.bib13" title="Fine-tuning language models from human preferences">26</a>, <a class="ltx_ref" href="#bib.bib15" title="Learning to summarize with human feedback">25</a>, <a class="ltx_ref" href="#bib.bib17" title="Training language models to follow instructions with human feedback">17</a>]</cite><span class="translated-text">。
+政策梯度后培训通常建立在 PPO 式保守政策的基础上
+优化</span><span class="original-text">.
+Policy-gradient post-training commonly builds on PPO-style conservative policy
+optimization</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib12" title="Proximal policy optimization algorithms">23</a>]</cite><span class="translated-text">，而最近的推理系统也
+使用可验证的奖励和与群体相关的更新</span><span class="original-text">, while recent reasoning systems also
+use verifiable rewards and group-relative updates</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib24" title="Deepseekmath: pushing the limits of mathematical reasoning in open language models">24</a>]</cite><span class="translated-text">。
+DPO 等偏好优化方法消除了显式的在线 RL 循环
+并将偏好学习表达为监督目标</span><span class="original-text">.
+Preference-optimization methods such as DPO remove the explicit online RL loop
+and express preference learning as a supervised objective</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib22" title="Direct preference optimization: your language model is secretly a reward model">19</a>]</cite><span class="translated-text">;相关工作研究更广泛的家庭
+偏好优化损失</span><span class="original-text">; related work studies broader families of
+preference-optimization losses</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib23" title="A general theoretical paradigm to understand learning from human preferences">2</a>]</cite><span class="translated-text">。这种以目标为中心的
+视图澄清了许多算法权衡，但它可能掩盖了
+应用目标的状态分布。我们的工作保持
+目标可见，但将训练状态源视为单独的轴。</span><span class="original-text">. This objective-centric
+view has clarified many algorithmic trade-offs, but it can obscure the role of
+the state distribution on which the objective is applied. Our work keeps the
+objective visible, but treats the training state source as a separate axis.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S7.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">暴露偏差和模仿学习。</span><span class="original-text">Exposure bias and imitation learning.</span></h4>
+<div class="ltx_para" id="S7.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="S7.SS0.SSS0.Px2.p1.1"><span class="translated-text">数据集状态和学习者诱发状态之间的区别由来已久
+模仿学习的历史。根据专家轨迹进行行为克隆训练
+当学习者访问缺席的状态时，可能会遭受复合错误
+从示威活动中。 DAgger 通过收集学习者引发的问题来解决这个问题
+状态并询问这些状态的专家</span><span class="original-text">The distinction between dataset states and learner-induced states has a long
+history in imitation learning. Behavioral cloning trains on expert trajectories
+and can suffer from compounding errors when the learner visits states absent
+from the demonstrations. DAgger addresses this by collecting learner-induced
+states and querying an expert on those states</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib1" title="A reduction of imitation learning and structured prediction to no-regret online learning">21</a>]</cite><span class="translated-text">。曝光
+序列预测中的偏差捕获了训练之间的相关不匹配
+黄金前缀和模型生成的前缀测试</span><span class="original-text">. Exposure
+bias in sequence prediction captures a related mismatch between training on
+gold prefixes and testing on model-generated prefixes</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib4" title="Scheduled sampling for sequence prediction with recurrent neural networks">3</a>, <a class="ltx_ref" href="#bib.bib5" title="Sequence level training with recurrent neural networks">20</a>]</cite><span class="translated-text">。我们调整这个观点
+LLM 后期培训：SFT 类似于固定轨迹上的行为克隆，
+而 RL 和 OPD 将信号应用于当前学习者诱发的状态。</span><span class="original-text">. We adapt this perspective to
+LLM post-training: SFT resembles behavioral cloning on fixed trajectories,
+whereas RL and OPD apply signals on states induced by the current learner.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S7.SS0.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">知识蒸馏。</span><span class="original-text">Knowledge distillation.</span></h4>
+<div class="ltx_para" id="S7.SS0.SSS0.Px3.p1">
+<p class="ltx_p" id="S7.SS0.SSS0.Px3.p1.1"><span class="translated-text">知识蒸馏通过以下方式将行为从教师转移到学生：
+软目标、logits 或生成的数据</span><span class="original-text">Knowledge distillation transfers behavior from a teacher to a student through
+soft targets, logits, or generated data</span><cite class="ltx_cite ltx_citemacro_citep">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">buciluǎ2006model</span>, <a class="ltx_ref" href="#bib.bib3" title="Distilling the knowledge in a neural network">10</a>]</cite><span class="translated-text">。序列级蒸馏和
+压缩语言模型蒸馏表明，生成的教师输出可以
+是有效的训练数据</span><span class="original-text">. Sequence-level distillation and
+compressed language-model distillation show that generated teacher outputs can
+be effective training data</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib6" title="Sequence-level knowledge distillation">12</a>, <a class="ltx_ref" href="#bib.bib14" title="DistilBERT, a distilled version of bert: smaller, faster, cheaper and lighter">22</a>]</cite><span class="translated-text">, 和
+调查通过知识表示和分歧组织许多变体
+正在优化</span><span class="original-text">, and
+surveys organize many variants by the knowledge representation and divergence
+being optimized</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib16" title="Knowledge distillation: a survey">7</a>]</cite><span class="translated-text">。我们的 OPD 实验分离出
+不同的因素：老师可以提供信号，但学生可以
+控制国家分配。这解释了为什么学生不需要继承所有
+被贬低的教师的失败，特别是当教师的监督受到质疑时
+根据学生的状态而不是从教师的轨迹中复制。</span><span class="original-text">. Our OPD experiments isolate a
+different factor: the teacher may provide the signal, but the student can
+control the state distribution. This explains why a student need not inherit all
+failures of a degraded teacher, especially when teacher supervision is queried
+on student states rather than copied from teacher trajectories.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S7.SS0.SSS0.Px4">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">灾难性的遗忘和保留。</span><span class="original-text">Catastrophic forgetting and retention.</span></h4>
+<div class="ltx_para" id="S7.SS0.SSS0.Px4.p1">
+<p class="ltx_p" id="S7.SS0.SSS0.Px4.p1.1"><span class="translated-text">灾难性遗忘在持续学习中被研究为损失
+新任务训练时以前的能力</span><span class="original-text">Catastrophic forgetting has been studied in continual learning as the loss of
+previous capabilities when training on new tasks</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib7" title="Catastrophic interference in connectionist networks: the sequential learning problem">16</a>, <a class="ltx_ref" href="#bib.bib8" title="Catastrophic forgetting in connectionist networks">6</a>, <a class="ltx_ref" href="#bib.bib9" title="Overcoming catastrophic forgetting in neural networks">13</a>, <a class="ltx_ref" href="#bib.bib10" title="Gradient episodic memory for continual learning">15</a>]</cite><span class="translated-text">。
+在法学硕士培训后，遗忘通常被衡量为广泛的退化
+专业化后的保留任务。我们的实验遵循这个经验
+传统方法是在 GSM8K 训练后测量 TruthfulQA 和 MMLU。的
+结果表明，遗忘不仅仅是更新幅度或
+数据集大小：激进的离策略 SFT 可能会损害保留，而同策略 RL
+OPD 可以在相当的目标任务压力下保留更多能力。</span><span class="original-text">.
+In LLM post-training, forgetting is often measured as degradation on broad
+retention tasks after specialization. Our experiments follow this empirical
+tradition by measuring TruthfulQA and MMLU after GSM8K post-training. The
+results suggest that forgetting is not only a matter of update magnitude or
+dataset size: aggressive off-policy SFT can damage retention, while on-policy RL
+and OPD can preserve more capability under comparable target-task pressure.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S7.SS0.SSS0.Px5">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">状态漂移测量。</span><span class="original-text">State drift measurement.</span></h4>
+<div class="ltx_para" id="S7.SS0.SSS0.Px5.p1">
+<p class="ltx_p" id="S7.SS0.SSS0.Px5.p1.1"><span class="translated-text">分布偏移通常使用嵌入距离、分类器来量化
+两样本检验，MMD</span><span class="original-text">Distribution shift is often quantified using embedding distances, classifier
+two-sample tests, MMD</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib25" title="A kernel two-sample test">8</a>]</cite><span class="translated-text">，或 Wasserstein 风格的指标</span><span class="original-text">, or Wasserstein-style metrics</span><cite class="ltx_cite ltx_citemacro_citep">[<a class="ltx_ref" href="#bib.bib26" title="Wasserstein barycenter and its application to texture mixing">18</a>, <a class="ltx_ref" href="#bib.bib27" title="Wasserstein generative adversarial networks">1</a>]</cite><span class="translated-text">。我们使用 rollout-state MMD
+作为状态漂移的紧凑代理，同时还跟踪其他词汇
+分布统计。我们的结果显示了这种方法的价值和局限性
+标量测量：来自压力老师的压力 SFT 和 OPD 几乎
+相同的 MMD 漂移，但保留能力却截然不同。这会激励更多的富人
+状态分布分析不仅考虑模型推出的进展情况，
+但哪些培训国家接受监督以及它们是否是当地的
+学习者可达。</span><span class="original-text">. We use rollout-state MMD
+as a compact proxy for state drift, while also tracking other lexical
+distribution statistics. Our results show both the value and limits of such
+scalar measures: stress SFT and OPD from the stress teacher have nearly
+identical MMD drift, but very different retention. This motivates richer
+state-distribution analyses that consider not only how far model rollouts move,
+but which training states receive supervision and whether they are locally
+reachable by the learner.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S8">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">8 </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h2>
+<div class="ltx_para" id="S8.p1">
+<p class="ltx_p" id="S8.p1.1"><span class="translated-text">我们提出了训练后的状态分布观点。从这个角度来看，SFT 是
+Off-policy状态拟合，RL是on-policy奖励引导改进，OPD是
+教师指导的政策学习。我们的实验表明 OPD 可以超越
+退化的 SFT 教师，并且策略 RL 几乎没有改善目标任务
+保留损失。证据完善了最初的论点：培训后并不
+仅关于代币目标或标量分布漂移；这是关于在哪里
+监督应用于模型的状态空间。</span><span class="original-text">We proposed a state-distribution view of post-training. In this view, SFT is
+off-policy state fitting, RL is on-policy reward-guided improvement, and OPD is
+teacher-guided on-policy learning. Our experiments show that OPD can surpass a
+degraded SFT teacher and that on-policy RL improves a target task with little
+retention loss. The evidence refines the original thesis: post-training is not
+only about token objectives or scalar distribution drift; it is about where
+supervision is applied in the model’s state space.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib27">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Arjovsky, S. Chintala, and L. Bottou</span><span class="ltx_text ltx_bib_year"> (2017)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Wasserstein generative adversarial networks</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">International conference on machine learning</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 214–223</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px5.p1.1" title="State drift measurement. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib23">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. G. Azar, Z. D. Guo, B. Piot, R. Munos, M. Rowland, M. Valko, and D. Calandriello</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A general theoretical paradigm to understand learning from human preferences</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">International Conference on Artificial Intelligence and Statistics</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 4447–4455</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px1.p1.1" title="Post-training objectives. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib4">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Bengio, O. Vinyals, N. Jaitly, and N. Shazeer</span><span class="ltx_text ltx_bib_year"> (2015)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Scheduled sampling for sequence prediction with recurrent neural networks</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Advances in neural information processing systems</span> <span class="ltx_text ltx_bib_volume">28</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px2.p1.1" title="Exposure bias and imitation learning. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib11">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">P. F. Christiano, J. Leike, T. Brown, M. Martic, S. Legg, and D. Amodei</span><span class="ltx_text ltx_bib_year"> (2017)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Deep reinforcement learning from human preferences</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Advances in neural information processing systems</span> <span class="ltx_text ltx_bib_volume">30</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px1.p1.1" title="Post-training objectives. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib18">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">K. Cobbe, V. Kosaraju, M. Bavarian, M. Chen, H. Jun, L. Kaiser, M. Plappert, J. Tworek, J. Hilton, R. Nakano, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Training verifiers to solve math word problems, 2021</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">URL https://arxiv. org/abs/2110.14168</span> <span class="ltx_text ltx_bib_volume">9</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.SS0.SSS0.Px2.p1.1" title="Target and retention tasks. ‣ 4 Experimental Setup ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§4</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib8">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">R. M. French</span><span class="ltx_text ltx_bib_year"> (1999)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Catastrophic forgetting in connectionist networks</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Trends in cognitive sciences</span> <span class="ltx_text ltx_bib_volume">3</span> (<span class="ltx_text ltx_bib_number">4</span>), <span class="ltx_text ltx_bib_pages"> pp. 128–135</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px4.p1.1" title="Catastrophic forgetting and retention. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib16">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Gou, B. Yu, S. J. Maybank, and D. Tao</span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Knowledge distillation: a survey</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">International journal of computer vision</span> <span class="ltx_text ltx_bib_volume">129</span> (<span class="ltx_text ltx_bib_number">6</span>), <span class="ltx_text ltx_bib_pages"> pp. 1789–1819</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px3.p1.1" title="Knowledge distillation. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib25">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Gretton, K. M. Borgwardt, M. J. Rasch, B. Schölkopf, and A. Smola</span><span class="ltx_text ltx_bib_year"> (2012)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A kernel two-sample test</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">The journal of machine learning research</span> <span class="ltx_text ltx_bib_volume">13</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 723–773</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.SS0.SSS0.Px5.p1.1" title="State drift. ‣ 4 Experimental Setup ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§4</span></a>,
+<a class="ltx_ref" href="#S7.SS0.SSS0.Px5.p1.1" title="State drift measurement. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib19">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D. Hendrycks, C. Burns, S. Basart, A. Zou, M. Mazeika, D. Song, and J. Steinhardt</span><span class="ltx_text ltx_bib_year"> (2020)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Measuring massive multitask language understanding</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2009.03300</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.SS0.SSS0.Px2.p1.1" title="Target and retention tasks. ‣ 4 Experimental Setup ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§4</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib3">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">G. Hinton, O. Vinyals, and J. Dean</span><span class="ltx_text ltx_bib_year"> (2015)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Distilling the knowledge in a neural network</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:1503.02531</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px3.p1.1" title="Knowledge distillation. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib20">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, W. Chen, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Lora: low-rank adaptation of large language models.</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Iclr</span> <span class="ltx_text ltx_bib_volume">1</span> (<span class="ltx_text ltx_bib_number">2</span>), <span class="ltx_text ltx_bib_pages"> pp. 3</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.SS0.SSS0.Px1.p1.1" title="Model and hardware. ‣ 4 Experimental Setup ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§4</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib6">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Kim and A. M. Rush</span><span class="ltx_text ltx_bib_year"> (2016)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Sequence-level knowledge distillation</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 2016 conference on empirical methods in natural language processing</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 1317–1327</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px3.p1.1" title="Knowledge distillation. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib9">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Kirkpatrick, R. Pascanu, N. Rabinowitz, J. Veness, G. Desjardins, A. A. Rusu, K. Milan, J. Quan, T. Ramalho, A. Grabska-Barwinska, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2017)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Overcoming catastrophic forgetting in neural networks</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Proceedings of the national academy of sciences</span> <span class="ltx_text ltx_bib_volume">114</span> (<span class="ltx_text ltx_bib_number">13</span>), <span class="ltx_text ltx_bib_pages"> pp. 3521–3526</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px4.p1.1" title="Catastrophic forgetting and retention. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib21">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Lin, J. Hilton, and O. Evans</span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Truthfulqa: measuring how models mimic human falsehoods</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 60th annual meeting of the association for computational linguistics (volume 1: long papers)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 3214–3252</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.SS0.SSS0.Px2.p1.1" title="Target and retention tasks. ‣ 4 Experimental Setup ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§4</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib10">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D. Lopez-Paz and M. Ranzato</span><span class="ltx_text ltx_bib_year"> (2017)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Gradient episodic memory for continual learning</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Advances in neural information processing systems</span> <span class="ltx_text ltx_bib_volume">30</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px4.p1.1" title="Catastrophic forgetting and retention. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_incollection" id="bib.bib7">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. McCloskey and N. J. Cohen</span><span class="ltx_text ltx_bib_year"> (1989)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Catastrophic interference in connectionist networks: the sequential learning problem</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Psychology of learning and motivation</span>,
+</span>
+<span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume">24</span>, <span class="ltx_text ltx_bib_pages"> pp. 109–165</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px4.p1.1" title="Catastrophic forgetting and retention. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib17">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">L. Ouyang, J. Wu, X. Jiang, D. Almeida, C. Wainwright, P. Mishkin, C. Zhang, S. Agarwal, K. Slama, A. Ray, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Training language models to follow instructions with human feedback</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Advances in neural information processing systems</span> <span class="ltx_text ltx_bib_volume">35</span>, <span class="ltx_text ltx_bib_pages"> pp. 27730–27744</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px1.p1.1" title="Post-training objectives. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib26">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Rabin, G. Peyré, J. Delon, and M. Bernot</span><span class="ltx_text ltx_bib_year"> (2011)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Wasserstein barycenter and its application to texture mixing</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">International conference on scale space and variational methods in computer vision</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 435–446</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.SS0.SSS0.Px5.p1.1" title="State drift. ‣ 4 Experimental Setup ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§4</span></a>,
+<a class="ltx_ref" href="#S7.SS0.SSS0.Px5.p1.1" title="State drift measurement. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib22">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">R. Rafailov, A. Sharma, E. Mitchell, C. D. Manning, S. Ermon, and C. Finn</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Direct preference optimization: your language model is secretly a reward model</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Advances in neural information processing systems</span> <span class="ltx_text ltx_bib_volume">36</span>, <span class="ltx_text ltx_bib_pages"> pp. 53728–53741</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px1.p1.1" title="Post-training objectives. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib5">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Ranzato, S. Chopra, M. Auli, and W. Zaremba</span><span class="ltx_text ltx_bib_year"> (2015)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Sequence level training with recurrent neural networks</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:1511.06732</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px2.p1.1" title="Exposure bias and imitation learning. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib1">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Ross, G. Gordon, and D. Bagnell</span><span class="ltx_text ltx_bib_year"> (2011)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A reduction of imitation learning and structured prediction to no-regret online learning</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the fourteenth international conference on artificial intelligence and statistics</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 627–635</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS5.p1.2" title="2.5 OPD: Teacher-Guided On-Policy Learning ‣ 2 State Distribution View ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§2.5</span></a>,
+<a class="ltx_ref" href="#S7.SS0.SSS0.Px2.p1.1" title="Exposure bias and imitation learning. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib14">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">V. Sanh, L. Debut, J. Chaumond, and T. Wolf</span><span class="ltx_text ltx_bib_year"> (2019)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">DistilBERT, a distilled version of bert: smaller, faster, cheaper and lighter</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:1910.01108</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px3.p1.1" title="Knowledge distillation. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib12">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Schulman, F. Wolski, P. Dhariwal, A. Radford, and O. Klimov</span><span class="ltx_text ltx_bib_year"> (2017)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Proximal policy optimization algorithms</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:1707.06347</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px1.p1.1" title="Post-training objectives. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib24">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Z. Shao, P. Wang, Q. Zhu, R. Xu, J. Song, X. Bi, H. Zhang, M. Zhang, Y. Li, Y. Wu, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Deepseekmath: pushing the limits of mathematical reasoning in open language models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2402.03300</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px1.p1.1" title="Post-training objectives. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib15">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">N. Stiennon, L. Ouyang, J. Wu, D. Ziegler, R. Lowe, C. Voss, A. Radford, D. Amodei, and P. F. Christiano</span><span class="ltx_text ltx_bib_year"> (2020)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Learning to summarize with human feedback</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Advances in neural information processing systems</span> <span class="ltx_text ltx_bib_volume">33</span>, <span class="ltx_text ltx_bib_pages"> pp. 3008–3021</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px1.p1.1" title="Post-training objectives. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib13">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D. M. Ziegler, N. Stiennon, J. Wu, T. B. Brown, A. Radford, D. Amodei, P. Christiano, and G. Irving</span><span class="ltx_text ltx_bib_year"> (2019)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Fine-tuning language models from human preferences</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:1909.08593</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S7.SS0.SSS0.Px1.p1.1" title="Post-training objectives. ‣ 7 Related Work ‣ Post-Training is About States, Not Tokens: A State Distribution View of SFT, RL, and On-Policy Distillation"><span class="ltx_text ltx_ref_tag">§7</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2605.22731v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div aria-hidden="true" id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
