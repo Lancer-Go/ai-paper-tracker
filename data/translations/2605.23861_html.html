@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">利用基础模型进行因果生成建模</span><span class="original-text">Leveraging Foundation Models for Causal Generative Modeling</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 5 月 22 日星期五 17:17:20 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Fri May 22 17:17:20 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<meta content="causality,  generative models,  large vision-language models,  diffusion models,  counterfactual generation" lang="en" name="keywords"/>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2605.23861" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2605.23861" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2605.23861v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2605.23861v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title">Abstract.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Related Work</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S2.SS0.SSS0.Px1" title="In 2. Related Work ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_text ltx_font_bold">Diffusion Models for Controllable Generation</span>.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S2.SS0.SSS0.Px2" title="In 2. Related Work ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_text ltx_font_bold">Causality-based Diffusion Models</span>.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S2.SS0.SSS0.Px3" title="In 2. Related Work ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_text ltx_font_bold">Large Vision-Language Models</span>.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Preliminaries</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS0.SSS0.Px1" title="In 3. Preliminaries ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_text ltx_font_bold">Structural Causal Model</span>. <cite class="ltx_cite ltx_citemacro_citep">(Pearl, <span class="ltx_ref">2009</span>)</cite></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS0.SSS0.Px2" title="In 3. Preliminaries ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_text ltx_font_bold">Diffusion Probabilistic Models</span>.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Foundation Model Powered Causal Generative Model</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS0.SSS0.Px1" title="In 4. Foundation Model Powered Causal Generative Model ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_text ltx_font_bold">Concept Extractor</span>.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS0.SSS0.Px2" title="In 4. Foundation Model Powered Causal Generative Model ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_text ltx_font_bold">Concept Manipulator</span>.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS0.SSS0.Px3" title="In 4. Foundation Model Powered Causal Generative Model ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_text ltx_font_bold">Counterfactual Generator</span>.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS0.SSS0.Px4" title="In 4. Foundation Model Powered Causal Generative Model ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_text ltx_font_bold">Foundation Model Powered Causal Generative Model</span>.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S5" title="In Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Methodology</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS1" title="In 5. Methodology ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5.1 </span>VLM-based Concept Extractor</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS2" title="In 5. Methodology ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5.2 </span>VLM-based Concept Manipulator</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S5.SS3" title="In 5. Methodology ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5.3 </span>Diffusion-based Counterfactual Generator</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S5.SS3.SSS0.Px1" title="In 5.3. Diffusion-based Counterfactual Generator ‣ 5. Methodology ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_text ltx_font_bold ltx_framed ltx_framed_underline">Abduction</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S5.SS3.SSS0.Px2" title="In 5.3. Diffusion-based Counterfactual Generator ‣ 5. Methodology ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_text ltx_font_bold ltx_framed ltx_framed_underline">Action</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S5.SS3.SSS0.Px3" title="In 5.3. Diffusion-based Counterfactual Generator ‣ 5. Methodology ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_text ltx_font_bold ltx_framed ltx_framed_underline">Prediction</span></span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S6" title="In Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6 </span>Experiments</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S6.SS0.SSS0.Px1" title="In 6. Experiments ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_text ltx_font_bold">Datasets</span>.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S6.SS0.SSS0.Px2" title="In 6. Experiments ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_text ltx_font_bold">Implementation</span>.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S6.SS0.SSS0.Px3" title="In 6. Experiments ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_text ltx_font_bold">Qualitative Evaluation</span>.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S6.SS0.SSS0.Px4" title="In 6. Experiments ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_text ltx_font_bold">Quantitative Evaluation</span>.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S7" title="In Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">7 </span>Conclusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2605.23861v1 [cs.LG] 2026 年 5 月 22 日</span><span class="original-text">arXiv:2605.23861v1 [cs.LG] 22 May 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line ltx_leqno">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">利用基础模型进行因果生成建模</span><span class="original-text">Leveraging Foundation Models for Causal Generative Modeling</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Aneesh Komanduri
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_text ltx_affiliation_institution" id="id1.1.id1">University of Arkansas</span><span class="ltx_text ltx_affiliation_city" id="id2.2.id2">Fayetteville</span><span class="ltx_text ltx_affiliation_state" id="id3.3.id3">Arkansas</span><span class="ltx_text ltx_affiliation_country" id="id4.4.id4">USA</span>
+</span>
+<span class="ltx_contact ltx_role_email"><a href="https://arxiv.org/html/2605.23861v1/mailto:akomandu@uark.edu">akomandu@uark.edu</a>
+</span></span></span>
+<span class="ltx_author_before"> and </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Xintao Wu
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_text ltx_affiliation_institution" id="id5.1.id1">University of Arkansas</span><span class="ltx_text ltx_affiliation_city" id="id6.2.id2">Fayetteville</span><span class="ltx_text ltx_affiliation_state" id="id7.3.id3">Arkansas</span><span class="ltx_text ltx_affiliation_country" id="id8.4.id4">USA</span>
+</span>
+<span class="ltx_contact ltx_role_email"><a href="https://arxiv.org/html/2605.23861v1/mailto:xintaowu@uark.edu">xintaowu@uark.edu</a>
+</span></span></span>
+</div>
+<div class="ltx_dates"><span class="translated-text">（2009 年 6 月 5 日）</span><span class="original-text">(5 June 2009)</span></div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要。</span><span class="original-text">Abstract.</span></h6>
+<p class="ltx_p"><span class="translated-text">因果生成模型对于开发能够进行反事实推理的可靠且透明的人工智能系统至关重要。虽然现有方法侧重于在生成模型的训练过程中整合因果约束，但它们通常缺乏统一的框架来利用预训练基础模型的零样本推理能力。我们引入了 FM-CGM，这是一种使用预训练基础模型进行端到端视觉因果推理的模块化框架。 FM-CGM 通过三个核心组件形式化因果管道：概念提取器、概念操纵器和反事实生成器。通过利用大型推理模型进行因果推理和文本到图像扩散模型进行生成，我们的方法可以实现零样本因果发现、干预和反事实生成。然后，我们开发了因果语义指导（CSG），这是一种基于交叉注意的机制，可确保语义干预传播到后代概念，同时保留不变区域。我们凭经验表明，我们的方法可以识别合理的因果结构，并且适合忠实的反事实图像生成。</span><span class="original-text">Causal generative modeling is essential for developing reliable and transparent AI systems capable of counterfactual reasoning. While existing approaches focus on integrating causal constraints during the training of generative models, they often lack a unified framework to leverage the zero-shot reasoning capabilities of pretrained foundation models. We introduce FM-CGM, a modular framework for end-to-end visual causal reasoning using pretrained foundation models. FM-CGM formalizes the causal pipeline through three core components: a concept extractor, a concept manipulator, and a counterfactual generator. By leveraging a large reasoning model for causal inference and a text-to-image diffusion model for generation, our approach enables zero-shot causal discovery, intervention, and counterfactual generation. We then develop Causal Semantic Guidance (CSG), a cross-attention-based mechanism that ensures semantic interventions propagate to descendant concepts while preserving invariant regions. We empirically show that our approach can identify plausible causal structures and is suitable for faithful counterfactual image generation.</span></p>
+</div>
+<div class="ltx_keywords"><span class="translated-text">因果关系、生成模型、大型视觉语言模型、扩散模型、反事实生成</span><span class="original-text">causality, generative models, large vision-language models, diffusion models, counterfactual generation</span></div>
+<span class="ltx_note ltx_note_frontmatter ltx_role_copyright" id="id1"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type"><span class="translated-text">版权：</span><span class="original-text">copyright:</span></span><span class="translated-text">已获得许可</span><span class="original-text">acmlicensed</span></span></span></span><span class="ltx_note ltx_note_frontmatter ltx_role_journalyear" id="id2"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type"><span class="translated-text">期刊年份：</span><span class="original-text">journalyear:</span></span>2018</span></span></span><span class="ltx_note ltx_note_frontmatter ltx_role_doi" id="id3"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type"><span class="translated-text">土井：</span><span class="original-text">doi:</span></span>XXXXXXX.XXXXXXX</span></span></span><span class="ltx_note ltx_note_frontmatter ltx_role_isbn" id="id4"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type"><span class="translated-text">书号：</span><span class="original-text">isbn:</span></span>978-1-4503-XXXX-X/2018/06</span></span></span><span class="ltx_note ltx_note_frontmatter ltx_role_ccs" id="id5"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type"><span class="translated-text">抄送：</span><span class="original-text">ccs:</span></span><span class="translated-text">计算方法因果推理和诊断</span><span class="original-text">Computing methodologies Causal reasoning and diagnostics</span></span></span></span>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1. </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">因果生成模型</span><span class="original-text">Causal generative modeling</span><cite class="ltx_cite ltx_citemacro_citep">(Komanduri et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib8" title="">2024b</a>)</cite><span class="translated-text">在从高维数据中发现因果概念及其关系的背景下进行了研究</span><span class="original-text">has been studied both in the context of discovering causal concepts and their relationships from high-dimensional data</span><cite class="ltx_cite ltx_citemacro_citep">(Scholkopf et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib23" title="">2021</a>)</cite><span class="translated-text">以及对反事实场景的推理</span><span class="original-text">and reasoning about counterfactual scenarios</span><cite class="ltx_cite ltx_citemacro_citep">(Ribeiro et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib20" title="">2025</a>)</cite><span class="translated-text">。这个方向有助于提高人工智能系统的可靠性和透明度。因果生成模型的现有工作主要侧重于将因果关系直接整合到生成模型（例如 GAN）的训练过程中</span><span class="original-text">. This direction has contributed to improving the reliability and transparency of AI systems. Existing work in causal generative modeling primarily focuses on integrating causality directly into the training process of generative models such as GANs</span><cite class="ltx_cite ltx_citemacro_citep">(Kocaoglu et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib6" title="">2018</a>)</cite><span class="translated-text">, VAE</span><span class="original-text">, VAEs</span><cite class="ltx_cite ltx_citemacro_citep">(Pawlowski et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib15" title="">2020</a>; Komanduri et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib9" title="">2024a</a>)</cite><span class="translated-text">和扩散模型</span><span class="original-text">, and Diffusion models</span><cite class="ltx_cite ltx_citemacro_citep">(Komanduri et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib10" title="">2024c</a>)</cite><span class="translated-text">通过对生成因果因素之间的关系进行建模。一些作品还研究了使用最先进的扩散模型的反事实图像生成</span><span class="original-text">by modeling relationships among generative causal factors. Several works have also studied counterfactual image generation using state-of-the-art diffusion models</span><cite class="ltx_cite ltx_citemacro_citep">(Sanchez and Tsaftaris, <a class="ltx_ref" href="#bib.bib22" title="">2022</a>; Spyrou et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib25" title="">2025</a>)</cite><span class="translated-text">。最近，由于大型生成模型（例如大型语言模型（LLM）和大型推理模型）的推理能力，人们正在进行利用基础模型作为领域专家的力量来改进因果发现和推理的研究</span><span class="original-text">. Recently, due to the inference capabilities of large-scale generative models such as large language model (LLMs) and large reasoning models, there has been ongoing research utilizing the power of foundation models as domain experts to improve causal discovery and inference</span><cite class="ltx_cite ltx_citemacro_citep">(Vashishtha et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib26" title="">2023</a>)</cite><span class="translated-text">，以及因果代理框架来自动化科学发现中的任务</span><span class="original-text">, and causal agent frameworks to automate tasks in scientific discovery</span><cite class="ltx_cite ltx_citemacro_citep">(Verma et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib27" title="">2025</a>)</cite><span class="translated-text">。然而，没有一个统一的框架可以利用预训练基础模型的功能来发现生成因素、推理干预措施并生成反事实场景，即因果生成模型的完整流程。</span><span class="original-text">. However, there is no unified framework that leverages the capabilities of pretrained foundation models to discover generative factors, reason about interventions, and generate counterfactual scenarios, the complete pipeline of causal generative modeling.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">在这项工作中，我们从预训练基础模型的角度提出了一种视觉因果推理的形式主义。我们开发</span><span class="original-text">In this work, we propose a formalism for visual causal reasoning from the perspective of pretrained foundation models. We develop</span><span class="ltx_text ltx_font_italic" id="S1.p2.1.1"><span class="translated-text">基础模型驱动的因果生成模型 (FM-CGM)</span><span class="original-text">Foundation Model Powered Causal Generative Model (FM-CGM)</span></span><span class="translated-text">，使用预训练的基础模型组件进行因果生成建模的高级抽象。我们将这种情况下视觉因果生成模型的关键组成部分形式化为（1）</span><span class="original-text">, a high-level abstraction for causal generative modeling using pretrained foundation model components. We formalize the key components of a visual causal generative model in this setting as (1)</span><span class="ltx_text ltx_font_italic" id="S1.p2.1.2"><span class="translated-text">概念提取器</span><span class="original-text">concept extractor</span></span><span class="translated-text">，从给定图像推断出一组概念及其因果关系，(2)</span><span class="original-text">, which infers a set of concepts and their causal relationships from a given image, (2)</span><span class="ltx_text ltx_font_italic" id="S1.p2.1.3"><span class="translated-text">概念操纵器</span><span class="original-text">concept manipulator</span></span><span class="translated-text">，一种对概念变量进行干预并传播因果效应的机制，以及（3）</span><span class="original-text">, a mechanism to perform interventions on concept variables and propagate causal effects, and (3) a</span><span class="ltx_text ltx_font_italic" id="S1.p2.1.4"><span class="translated-text">反事实生成器</span><span class="original-text">counterfactual generator</span></span><span class="translated-text">，一种将干预下的概念映射到反事实图像的生成机制。</span><span class="original-text">, a generation mechanism to map the concepts under intervention to a counterfactual image.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">我们使用强大的大型基础模型来表示每个组件。具体来说，我们实现了一种实用方法，其中包括作为概念提取器和操纵器的推理 VLM（Qwen3-VL）以及作为反事实生成器的文本到图像生成模型（Stable Diffusion XL）。为了将概念操纵器推断的语义干预转化为像素空间反事实编辑，我们提出</span><span class="original-text">We represent each component using a powerful large-scale foundation model. Specifically, we implement a practical method consisting of a reasoning VLM (Qwen3-VL) as the concept extractor and manipulator and text-to-image generative model (Stable Diffusion XL) as the counterfactual generator. To translate semantic interventions inferred by the concept manipulator into pixel-space counterfactual edits, we propose</span><span class="ltx_text ltx_font_italic" id="S1.p3.1.1"><span class="translated-text">因果语义指导（CSG）</span><span class="original-text">causal semantic guidance (CSG)</span></span><span class="translated-text">通过文本到图像扩散模型的文本调节机制运行的过程。具体来说，我们利用交叉注意力归因图来定位与每个概念及其后代相关的区域，并构建一个推理时间指导机制，该机制（a）放大对干预概念的编辑，（b）鼓励后代概念的一致变化，以及（c）抑制对非后代（不变）概念的意外变化。这会产生反事实图像，这些图像既在视觉上合理，又与预期的因果语义一致。</span><span class="original-text">a procedure that operates through the text-to-image diffusion model’s text-conditioning mechanism. Concretely, we leverage cross-attention attribution maps to localize the regions associated with each concept and its descendants and construct an inference-time guidance mechanism that (a) amplifies edits for intervened concepts, (b) encourages consistent changes in descendant concepts, and (c) suppresses unintended changes to non-descendant (invariant) concepts. This yields counterfactual images that are both visually plausible and aligned with the intended causal semantics.</span></p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="ltx_text ltx_font_bold" id="S1.p4.1.1"><span class="translated-text">贡献。</span><span class="original-text">Contributions.</span></span><span class="translated-text">我们将我们的贡献总结如下（1）我们提出了一个用于端到端因果生成建模的通用模块化框架，其中包含预训练的基础模型组件，包括</span><span class="original-text">We summarize our contributions as follows (1) We propose a general and modular framework for end-to-end causal generative modeling with pretrained foundation model components including a</span><span class="ltx_text ltx_font_italic" id="S1.p4.1.2"><span class="translated-text">概念提取器</span><span class="original-text">concept extractor</span></span>, <span class="ltx_text ltx_font_italic" id="S1.p4.1.3"><span class="translated-text">概念操纵器</span><span class="original-text">concept manipulator</span></span><span class="translated-text">, 和</span><span class="original-text">, and</span><span class="ltx_text ltx_font_italic" id="S1.p4.1.4"><span class="translated-text">反事实生成器</span><span class="original-text">counterfactual generator</span></span><span class="translated-text">，每个都表示为基础模型。 (2) 我们开发</span><span class="original-text">, each represented as a foundation model. (2) We develop</span><em class="ltx_emph ltx_font_italic" id="S1.p4.1.5"><span class="translated-text">因果语义指导（CSG）</span><span class="original-text">causal semantic guidance (CSG)</span></em><span class="translated-text">，一种基于交叉注意力的指导方法，通过大型推理模型推断出干预下的概念及其后代，同时保留非后代概念，从而实现忠实的反事实生成。 (3) 我们凭经验证明我们的方法可以执行最少且忠实的反事实编辑。</span><span class="original-text">, a cross-attention-based guidance method that compositionally enforces the concept under intervention and its descendants, inferred by a large reasoning model, while preserving non-descendant concepts, enabling faithful counterfactual generation. (3) We demonstrate empirically that our method can perform minimal and faithful counterfactual edits.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2. </span><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></h2>
+<section class="ltx_paragraph" id="S2.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph">
+<span class="ltx_text ltx_font_bold" id="S2.SS0.SSS0.Px1.1.1"><span class="translated-text">可控发电的扩散模型</span><span class="original-text">Diffusion Models for Controllable Generation</span></span>.</h4>
+<div class="ltx_para" id="S2.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S2.SS0.SSS0.Px1.p1.1"><span class="translated-text">扩散模型</span><span class="original-text">Diffusion models</span><cite class="ltx_cite ltx_citemacro_citep">(Ho et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib4" title="">2020</a>; Nichol and Dhariwal, <a class="ltx_ref" href="#bib.bib14" title="">2021</a>; Song et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib24" title="">2021</a>)</cite><span class="translated-text">已迅速成为使用 DALL-E 等模型进行可控图像生成的最有效工具之一</span><span class="original-text">have quickly become one of the most effective tools for controllable image generation with models such as DALL-E</span><cite class="ltx_cite ltx_citemacro_citep">(Ramesh et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib19" title="">2021</a>)</cite><span class="translated-text">, 稳定扩散</span><span class="original-text">, StableDiffusion</span><cite class="ltx_cite ltx_citemacro_citep">(Rombach et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib21" title="">2022</a>)</cite><span class="translated-text">, T2I 适配器</span><span class="original-text">, T2I-Adapter</span><cite class="ltx_cite ltx_citemacro_citep">(Mou et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib13" title="">2024</a>)</cite><span class="translated-text">、控制网</span><span class="original-text">, ControlNet</span><cite class="ltx_cite ltx_citemacro_citep">(Zhang et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib32" title="">2023</a>)</cite><span class="translated-text">等。已经提出了几种不同的技术来实现可控生成，例如微调、自适应和事后优化。扩散概率模型的最新工作主要集中在可解释的属性上，以实现生成控制。</span><span class="original-text">, etc. Several different techniques have been proposed to achieve controllable generation, such as fine-tuning, adaptation, and post-hoc optimization. Recent work in diffusion probabilistic models has focused on interpretable properties to enable generative control.</span><cite class="ltx_cite ltx_citemacro_citep">(Wu et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib29" title="">2023</a>)</cite><span class="translated-text">研究表明，预训练的文本到图像扩散模型（例如稳定扩散）已经具有一定程度的内容风格解缠能力，并提出了一种轻量级优化来学习内容和风格注入提示的软混合，以实现更好的解缠。</span><span class="original-text">show that pretrained text-to-image diffusion models, such as Stable Diffusion, already have somewhat of a content-style disentanglement capability, and propose a lightweight optimization to learn a soft mixing of content and style-infused prompts for better disentanglement.</span><cite class="ltx_cite ltx_citemacro_citep">(Yang et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib30" title="">2023</a>)</cite><span class="translated-text">通过学习单独的梯度场来研究扩散概率模型的解缠结特性。</span><span class="original-text">study disentanglement properties of diffusion probabilistic models by learning separate gradient fields.</span><cite class="ltx_cite ltx_citemacro_citep">(Brack et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib3" title="">2024</a>)</cite><span class="translated-text">提出 LEDITS++，这是一种使用交叉注意力归因图的图像编辑技术，能够组成多个概念编辑。</span><span class="original-text">propose LEDITS++, an image editing technique using cross-attention attribution maps capable of composing multiple concept edits.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S2.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph">
+<span class="ltx_text ltx_font_bold" id="S2.SS0.SSS0.Px2.1.1"><span class="translated-text">基于因果关系的扩散模型</span><span class="original-text">Causality-based Diffusion Models</span></span>.</h4>
+<div class="ltx_para" id="S2.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="S2.SS0.SSS0.Px2.p1.1"><cite class="ltx_cite ltx_citemacro_citep">(Sanchez and Tsaftaris, <a class="ltx_ref" href="#bib.bib22" title="">2022</a>)</cite><span class="translated-text">提供扩散模型中分类器指导的因果解释，并提出一种使用标记数据干预来指导图像反事实生成的方法。</span><span class="original-text">provide a causal interpretation of classifier guidance in diffusion models and propose a method to guide the generation of image counterfactuals using interventions on labeled data.</span><cite class="ltx_cite ltx_citemacro_citep">(Komanduri et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib10" title="">2024c</a>)</cite><span class="translated-text">通过解开的因果表征的指导，探索扩散模型中的反事实生成。</span><span class="original-text">explore counterfactual generation in diffusion models through guidance from disentangled causal representations.</span><cite class="ltx_cite ltx_citemacro_citep">(Ribeiro et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib20" title="">2025</a>)</cite><span class="translated-text">利用流匹配研究高维度的反事实可识别性。</span><span class="original-text">study counterfactual identifiability in high-dimensions leveraging flow-matching.</span><cite class="ltx_cite ltx_citemacro_citep">(Spyrou et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib25" title="">2025</a>)</cite><span class="translated-text">通过利用 VLM 在给定固定因果图的情况下细化反事实提示，在预训练的文本到视频生成模型中开发反事实视频编辑框架。</span><span class="original-text">develop a framework for counterfactual video editing in pretrained text-to-video generative models by utilizing VLMs to refine counterfactual prompts given a fixed causal graph.</span><cite class="ltx_cite ltx_citemacro_citep">(Wang et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib28" title="">2023</a>)</cite><span class="translated-text">通过反事实的镜头形式化文本到图像生成模型中因果可分离性的概念，并表明可独立操纵的概念位于正交子空间中。基于这种直觉，他们提出了一种简单的投影机制来操纵生成图像的样式组件，同时保留内容。</span><span class="original-text">formalize the notion of causal separability in text-to-image generative models through a counterfactual lens and show that concepts that are independently manipulable lie in orthogonal subspaces. Based on this intuition, they propose a simple projection mechanism to manipulate style components of generated images while preserving content.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S2.SS0.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph">
+<span class="ltx_text ltx_font_bold" id="S2.SS0.SSS0.Px3.1.1"><span class="translated-text">大视觉语言模型</span><span class="original-text">Large Vision-Language Models</span></span>.</h4>
+<div class="ltx_para" id="S2.SS0.SSS0.Px3.p1">
+<p class="ltx_p" id="S2.SS0.SSS0.Px3.p1.1"><span class="translated-text">通过扩展法学硕士以纳入视觉输入，大型视觉语言模型 (LVLM) 在识别和视觉问答 (VQA) 等任务中表现出了令人印象深刻的性能。之前的工作表明，LVLM 有时很难执行正式的因果推理</span><span class="original-text">Extending LLMs to incorporate visual inputs, large vision-language models (LVLMs) have shown impressive performance in tasks such as recognition and visual question answering (VQA). Previous work has shown that LVLMs can sometimes struggle to perform formal causal reasoning</span><cite class="ltx_cite ltx_citemacro_citep">(Komanduri et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib7" title="">2025</a>)</cite><span class="translated-text">。最近，通过具有可验​​证奖励的强化学习技术，在提高 LLM 和 LVLM 的推理能力方面取得了广泛的发展。最近视觉语言模型的视觉推理能力有了很大的提升，包括QwenVL</span><span class="original-text">. Recently, there has been extensive development in improving the reasoning abilities of LLMs and LVLMs through reinforcement learning techniques with verifiable rewards. Recently, there has been a large improvement in visual reasoning capabilities in vision language models, including QwenVL</span><cite class="ltx_cite ltx_citemacro_citep">(Bai et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib2" title="">2025</a>)</cite><span class="translated-text">、OpenAI o1 和 Gemini-Thinking。这些模型在数学、编码和视觉推理任务上表现出了卓越的性能。</span><span class="original-text">, OpenAI o1, and Gemini-Thinking. These models have shown remarkable performance on math, coding, and visual reasoning tasks.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3. </span><span class="translated-text">预赛</span><span class="original-text">Preliminaries</span></h2>
+<section class="ltx_paragraph" id="S3.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph">
+<span class="ltx_text ltx_font_bold" id="S3.SS0.SSS0.Px1.1.1"><span class="translated-text">结构因果模型</span><span class="original-text">Structural Causal Model</span></span>. <cite class="ltx_cite ltx_citemacro_citep">(Pearl, <a class="ltx_ref" href="#bib.bib16" title="">2009</a>)</cite>
+</h4>
+<div class="ltx_para" id="S3.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S3.SS0.SSS0.Px1.p1.4">A <span class="ltx_text ltx_font_bold" id="S3.SS0.SSS0.Px1.p1.4.1"><span class="translated-text">结构因果模型（SCM）</span><span class="original-text">structural causal model (SCM)</span></span><span class="translated-text">定义为</span><span class="original-text">is defined as</span><math alttext="\mathcal{C}=\langle C,U,F\rangle" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px1.p1.1.m1" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">𝒞</mi><mo>=</mo><mrow><mo stretchy="false">⟨</mo><mi>C</mi><mo>,</mo><mi>U</mi><mo>,</mo><mi>F</mi><mo stretchy="false">⟩</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{C}=\langle C,U,F\rangle</annotation></semantics></math><span class="translated-text">, 其中</span><span class="original-text">, where</span><math alttext="C" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px1.p1.2.m2" intent=":literal"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math><span class="translated-text">是语义概念的集合，</span><span class="original-text">is the set of semantic concepts,</span><math alttext="U" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px1.p1.3.m3" intent=":literal"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math><span class="translated-text">是外源噪声因子的集合，并且</span><span class="original-text">is the set of exogenous noise factors, and</span><math alttext="F" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px1.p1.4.m4" intent=":literal"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math><span class="translated-text">是一组独立的因果机制，其形式为</span><span class="original-text">is a set of independent causal mechanisms of the form</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_left" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_left">(1)</span></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="C_{i}=f_{i}(U_{i},C_{\textbf{pa}_{i}})" class="ltx_Math" display="block" id="S3.E1.m1" intent=":literal"><semantics><mrow><msub><mi>C</mi><mi>i</mi></msub><mo>=</mo><mrow><msub><mi>f</mi><mi>i</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>U</mi><mi>i</mi></msub><mo>,</mo><msub><mi>C</mi><msub><mtext class="ltx_mathvariant_bold">pa</mtext><mi>i</mi></msub></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">C_{i}=f_{i}(U_{i},C_{\textbf{pa}_{i}})</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS0.SSS0.Px1.p1.8"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\forall i" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px1.p1.5.m1" intent=":literal"><semantics><mrow><mo rspace="0.167em">∀</mo><mi>i</mi></mrow><annotation encoding="application/x-tex">\forall i</annotation></semantics></math>, <math alttext="f_{i}:U_{i}\times\prod_{j\in\textbf{pa}_{i}}C_{j}\to C_{i}" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px1.p1.6.m2" intent=":literal"><semantics><mrow><msub><mi>f</mi><mi>i</mi></msub><mo lspace="0.278em" rspace="0.278em">:</mo><mrow><mrow><msub><mi>U</mi><mi>i</mi></msub><mo lspace="0.222em" rspace="0.055em">×</mo><mrow><msub><mo>∏</mo><mrow><mi>j</mi><mo>∈</mo><msub><mtext class="ltx_mathvariant_bold">pa</mtext><mi>i</mi></msub></mrow></msub><msub><mi>C</mi><mi>j</mi></msub></mrow></mrow><mo stretchy="false">→</mo><msub><mi>C</mi><mi>i</mi></msub></mrow></mrow><annotation encoding="application/x-tex">f_{i}:U_{i}\times\prod_{j\in\textbf{pa}_{i}}C_{j}\to C_{i}</annotation></semantics></math><span class="translated-text">是</span><span class="original-text">are</span><span class="ltx_text ltx_font_bold" id="S3.SS0.SSS0.Px1.p1.8.1"><span class="translated-text">因果机制</span><span class="original-text">causal mechanisms</span></span><span class="translated-text">将每个因果变量确定为父母和噪音的函数，</span><span class="original-text">that determine each causal variable as a function of the parents and noise,</span><math alttext="C_{\textbf{pa}_{i}}" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px1.p1.7.m3" intent=":literal"><semantics><msub><mi>C</mi><msub><mtext class="ltx_mathvariant_bold">pa</mtext><mi>i</mi></msub></msub><annotation encoding="application/x-tex">C_{\textbf{pa}_{i}}</annotation></semantics></math><span class="translated-text">是因果变量的父母</span><span class="original-text">are the parents of causal variable</span><math alttext="C_{i}" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px1.p1.8.m4" intent=":literal"><semantics><msub><mi>C</mi><mi>i</mi></msub><annotation encoding="application/x-tex">C_{i}</annotation></semantics></math>.</p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph">
+<span class="ltx_text ltx_font_bold" id="S3.SS0.SSS0.Px2.1.1"><span class="translated-text">扩散概率模型</span><span class="original-text">Diffusion Probabilistic Models</span></span>.</h4>
+<div class="ltx_para" id="S3.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="S3.SS0.SSS0.Px2.p1.1"><span class="translated-text">扩散模型是一类基于可能性的生成模型，由两个主要步骤组成：前向扩散和反向扩散。给定输入图像</span><span class="original-text">Diffusion models are a class of likelihood-based generative models that consist of two main steps: forward and reverse diffusion. Given an input image</span><math alttext="X_{0}" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px2.p1.1.m1" intent=":literal"><semantics><msub><mi>X</mi><mn>0</mn></msub><annotation encoding="application/x-tex">X_{0}</annotation></semantics></math><span class="translated-text">从一些数据分布中采样，</span><span class="original-text">sampled from some data distribution, the</span><span class="ltx_text ltx_font_italic" id="S3.SS0.SSS0.Px2.p1.1.1"><span class="translated-text">前向扩散</span><span class="original-text">forward diffusion</span></span><span class="translated-text">过程定义了马尔可夫链扩散步骤，通过一系列定义如下的高斯噪声扰动缓慢破坏数据结构：</span><span class="original-text">process defines a Markov chain of diffusion steps to slowly destroy the structure of data through a series of Gaussian noise perturbations defined as follows:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_left" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_left">(2)</span></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="X_{t}=\sqrt{\bar{\alpha_{t}}}X_{0}+(\sqrt{1-\bar{\alpha}_{t}})\epsilon" class="ltx_Math" display="block" id="S3.E2.m1" intent=":literal"><semantics><mrow><msub><mi>X</mi><mi>t</mi></msub><mo>=</mo><mrow><mrow><msqrt><mover accent="true"><msub><mi>α</mi><mi>t</mi></msub><mo>¯</mo></mover></msqrt><mo lspace="0em" rspace="0em">​</mo><msub><mi>X</mi><mn>0</mn></msub></mrow><mo>+</mo><mrow><mrow><mo stretchy="false">(</mo><msqrt><mrow><mn>1</mn><mo>−</mo><msub><mover accent="true"><mi>α</mi><mo>¯</mo></mover><mi>t</mi></msub></mrow></msqrt><mo stretchy="false">)</mo></mrow><mo lspace="0em" rspace="0em">​</mo><mi>ϵ</mi></mrow></mrow></mrow><annotation encoding="application/x-tex">X_{t}=\sqrt{\bar{\alpha_{t}}}X_{0}+(\sqrt{1-\bar{\alpha}_{t}})\epsilon</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS0.SSS0.Px2.p1.12"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\epsilon\sim\mathcal{N}(\mathbf{0},\mathbf{I})" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px2.p1.2.m1" intent=":literal"><semantics><mrow><mi>ϵ</mi><mo>∼</mo><mrow><mi class="ltx_font_mathcaligraphic">𝒩</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mn>𝟎</mn><mo>,</mo><mi>𝐈</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">\epsilon\sim\mathcal{N}(\mathbf{0},\mathbf{I})</annotation></semantics></math>, <math alttext="t\sim\text{Unif}(0,T)" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px2.p1.3.m2" intent=":literal"><semantics><mrow><mi>t</mi><mo>∼</mo><mrow><mtext>Unif</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mi>T</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">t\sim\text{Unif}(0,T)</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="\bar{\alpha_{t}}=\prod_{i=1}^{t}\alpha_{i}" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px2.p1.4.m3" intent=":literal"><semantics><mrow><mover accent="true"><msub><mi>α</mi><mi>t</mi></msub><mo>¯</mo></mover><mo rspace="0.111em">=</mo><mrow><msubsup><mo>∏</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>t</mi></msubsup><msub><mi>α</mi><mi>i</mi></msub></mrow></mrow><annotation encoding="application/x-tex">\bar{\alpha_{t}}=\prod_{i=1}^{t}\alpha_{i}</annotation></semantics></math><span class="translated-text">。的</span><span class="original-text">. The</span><span class="ltx_text ltx_font_italic" id="S3.SS0.SSS0.Px2.p1.12.1"><span class="translated-text">反向扩散</span><span class="original-text">reverse diffusion</span></span><span class="translated-text">通过参数化 UNet 模型来恢复数据结构</span><span class="original-text">restores the structure of data by parameterizing a UNet model</span><math alttext="\epsilon_{\theta}" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px2.p1.5.m4" intent=":literal"><semantics><msub><mi>ϵ</mi><mi>θ</mi></msub><annotation encoding="application/x-tex">\epsilon_{\theta}</annotation></semantics></math><span class="translated-text">预测每个时间步长的噪声扰动</span><span class="original-text">to predict the noise perturbation at each time step</span><math alttext="t" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px2.p1.6.m5" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math><span class="translated-text">给定输入图像</span><span class="original-text">given input image</span><math alttext="X_{t}" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px2.p1.7.m6" intent=":literal"><semantics><msub><mi>X</mi><mi>t</mi></msub><annotation encoding="application/x-tex">X_{t}</annotation></semantics></math><span class="translated-text">并最小化每个时间步的预测噪声和实际噪声之间的均方误差</span><span class="original-text">and minimizing the mean squared error between the predicted and actual noise at each time step</span><math alttext="t" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px2.p1.8.m7" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math><span class="translated-text">。在推理过程中，随机噪声</span><span class="original-text">. During inference, random noise</span><math alttext="X_{T}" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px2.p1.9.m8" intent=":literal"><semantics><msub><mi>X</mi><mi>T</mi></msub><annotation encoding="application/x-tex">X_{T}</annotation></semantics></math><span class="translated-text">从标准高斯分布中采样，并且</span><span class="original-text">is sampled from a standard Gaussian distribution and</span><math alttext="\epsilon_{\theta}" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px2.p1.10.m9" intent=":literal"><semantics><msub><mi>ϵ</mi><mi>θ</mi></msub><annotation encoding="application/x-tex">\epsilon_{\theta}</annotation></semantics></math><span class="translated-text">迭代地应用去噪</span><span class="original-text">is applied iteratively to denoise</span><math alttext="X_{T}" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px2.p1.11.m10" intent=":literal"><semantics><msub><mi>X</mi><mi>T</mi></msub><annotation encoding="application/x-tex">X_{T}</annotation></semantics></math><span class="translated-text">到一个干净的图像</span><span class="original-text">to a clean image</span><math alttext="X_{0}" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px2.p1.12.m11" intent=":literal"><semantics><msub><mi>X</mi><mn>0</mn></msub><annotation encoding="application/x-tex">X_{0}</annotation></semantics></math><span class="translated-text">。扩散模型的总体目标如下</span><span class="original-text">. The overall objective of the diffusion model is as follows</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E3">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_left" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_left">(3)</span></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{L}_{\text{simple}}=\mathbb{E}_{X_{t},t,\epsilon}(\|\epsilon-\epsilon_{\theta}(X_{t},t)\|^{2}_{2})" class="ltx_Math" display="block" id="S3.E3.m1" intent=":literal"><semantics><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mtext>simple</mtext></msub><mo>=</mo><mrow><msub><mi>𝔼</mi><mrow><msub><mi>X</mi><mi>t</mi></msub><mo>,</mo><mi>t</mi><mo>,</mo><mi>ϵ</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msubsup><mrow><mo stretchy="false">‖</mo><mrow><mi>ϵ</mi><mo>−</mo><mrow><msub><mi>ϵ</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo>,</mo><mi>t</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mo stretchy="false">‖</mo></mrow><mn>2</mn><mn>2</mn></msubsup><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">\mathcal{L}_{\text{simple}}=\mathbb{E}_{X_{t},t,\epsilon}(\|\epsilon-\epsilon_{\theta}(X_{t},t)\|^{2}_{2})</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS0.SSS0.Px2.p1.16"><span class="translated-text">潜在扩散模型 (LDM) 在压缩图像数据的训练有素的变分自动编码器的潜在空间中应用相同的过程</span><span class="original-text">Latent diffusion models (LDMs) apply the same procedure in the latent space of a well-trained variational autoencoder that compresses the image data</span><math alttext="X_{0}" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px2.p1.13.m1" intent=":literal"><semantics><msub><mi>X</mi><mn>0</mn></msub><annotation encoding="application/x-tex">X_{0}</annotation></semantics></math><span class="translated-text">到感知上等效的低维表示</span><span class="original-text">to a perceptually equivalent low-dimensional representation</span><math alttext="z_{0}" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px2.p1.14.m2" intent=":literal"><semantics><msub><mi>z</mi><mn>0</mn></msub><annotation encoding="application/x-tex">z_{0}</annotation></semantics></math><span class="translated-text">。在潜在空间中操作具有显着的优势，例如更快的训练和采样。噪声参数化UNet</span><span class="original-text">. Operating in the latent space has significant advantages such as faster training and sampling. The noise parameterization UNet</span><math alttext="\epsilon_{\theta}" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px2.p1.15.m3" intent=":literal"><semantics><msub><mi>ϵ</mi><mi>θ</mi></msub><annotation encoding="application/x-tex">\epsilon_{\theta}</annotation></semantics></math><span class="translated-text">被修改以执行潜在变量的去噪。稳定扩散（SD）是潜在扩散模型的具体实现，是一种</span><span class="original-text">is modified to perform denoising of the latent variables. Stable Diffusion (SD), a specific implementation of the latent diffusion model, is a</span><span class="ltx_text ltx_font_italic" id="S3.SS0.SSS0.Px2.p1.16.1"><span class="translated-text">文本到图像</span><span class="original-text">text-to-image</span></span><span class="translated-text">在文本提示上调节反向扩散过程的生成模型</span><span class="original-text">generative model that conditions the reverse diffusion process on a text prompt</span><math alttext="Y" class="ltx_Math" display="inline" id="S3.SS0.SSS0.Px2.p1.16.m4" intent=":literal"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math><span class="translated-text">从剪辑</span><span class="original-text">from a CLIP</span><cite class="ltx_cite ltx_citemacro_citep">(Radford et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib18" title="">2021</a>)</cite><span class="translated-text">文本编码器。提示嵌入通过交叉注意力机制影响 UNet 的特征图。稳定扩散的目标如下</span><span class="original-text">text encoder. The prompt embedding influences the feature maps of the UNet through cross-attention mechanisms. The objective of Stable Diffusion is as follows</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E4">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_left" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_left">(4)</span></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{L}_{\text{StableDiffusion}}=\mathbb{E}_{z_{t},t,\epsilon}(\|\epsilon-\epsilon_{\theta}(z_{t},t,Y)\|^{2}_{2})" class="ltx_Math" display="block" id="S3.E4.m1" intent=":literal"><semantics><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mtext>StableDiffusion</mtext></msub><mo>=</mo><mrow><msub><mi>𝔼</mi><mrow><msub><mi>z</mi><mi>t</mi></msub><mo>,</mo><mi>t</mi><mo>,</mo><mi>ϵ</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msubsup><mrow><mo stretchy="false">‖</mo><mrow><mi>ϵ</mi><mo>−</mo><mrow><msub><mi>ϵ</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>z</mi><mi>t</mi></msub><mo>,</mo><mi>t</mi><mo>,</mo><mi>Y</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mo stretchy="false">‖</mo></mrow><mn>2</mn><mn>2</mn></msubsup><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">\mathcal{L}_{\text{StableDiffusion}}=\mathbb{E}_{z_{t},t,\epsilon}(\|\epsilon-\epsilon_{\theta}(z_{t},t,Y)\|^{2}_{2})</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4. </span><span class="translated-text">基础模型驱动的因果生成模型</span><span class="original-text">Foundation Model Powered Causal Generative Model</span></h2>
+<figure class="ltx_figure" id="S4.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="356" id="S4.F1.g1" src="https://arxiv.org/html/2605.23861v1/x1.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F1.3.1.1" style="font-size:90%;">Figure 1</span>. </span><span class="ltx_text" id="S4.F1.4.2" style="font-size:90%;">An overview of <span class="ltx_text ltx_font_italic" id="S4.F1.4.2.1">Foundation Model Powered Causal Generative Model (FM-CGM)</span> consisting of a concept extractor, concept manipulator, and counterfactual generator enabled by foundation models</span></figcaption>
+</figure>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">为了定义因果生成模型，我们需要三个组件：（1）一种从图像中推断语义概念及其因果关系的机制（</span><span class="original-text">In order to define a causal generative model, we require three components: (1) a mechanism to infer the semantic concepts and their causal relationships from an image (</span><span class="ltx_text ltx_font_italic" id="S4.p1.1.1"><span class="translated-text">概念提取器</span><span class="original-text">concept extractor</span></span><span class="translated-text">），（2）操纵概念及其后代的干预机制（</span><span class="original-text">), (2) an intervention mechanism to manipulate concepts and their descendants (</span><span class="ltx_text ltx_font_italic" id="S4.p1.1.2"><span class="translated-text">概念操纵器</span><span class="original-text">concept manipulator</span></span><span class="translated-text">），以及（3）一种将干预概念映射到反事实图像的生成机制（</span><span class="original-text">), and (3) a generation mechanism to map intervened concepts to a counterfactual image (</span><span class="ltx_text ltx_font_italic" id="S4.p1.1.3"><span class="translated-text">反事实生成器</span><span class="original-text">counterfactual generator</span></span><span class="translated-text">）。我们更详细地描述每个组件以及预训练基础模型的需求，以在视觉语言设置中模拟每个组件，如下所示：</span><span class="original-text">). We describe each component in more detail and the desiderata for pretrained foundation models to simulate each component in the vision-language setting as follows:</span></p>
+</div>
+<section class="ltx_paragraph" id="S4.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph">
+<span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px1.1.1"><span class="translated-text">概念提取器</span><span class="original-text">Concept Extractor</span></span>.</h4>
+<div class="ltx_para" id="S4.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S4.SS0.SSS0.Px1.p1.5">A <span class="ltx_text ltx_font_italic" id="S4.SS0.SSS0.Px1.p1.1.1"><span class="translated-text">概念提取器基础模型</span><span class="original-text">concept extractor foundation model</span><math alttext="\mathbf{E}" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px1.p1.1.1.m1" intent=":literal"><semantics><mi>𝐄</mi><annotation encoding="application/x-tex">\mathbf{E}</annotation></semantics></math></span><span class="translated-text">映射图像</span><span class="original-text">maps an image</span><math alttext="X" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px1.p1.2.m1" intent=":literal"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math><span class="translated-text">以及文字说明</span><span class="original-text">and a text description</span><math alttext="Y" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px1.p1.3.m2" intent=":literal"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math><span class="translated-text">一组离散的文本概念</span><span class="original-text">to a discrete set of textual concepts</span><math alttext="C" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px1.p1.4.m3" intent=":literal"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math><span class="translated-text">和有向无环图</span><span class="original-text">and a directed acyclic graph</span><math alttext="\mathcal{G}" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px1.p1.5.m4" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒢</mi><annotation encoding="application/x-tex">\mathcal{G}</annotation></semantics></math><span class="translated-text">描述概念之间的关系如下：</span><span class="original-text">describing the relationships among concepts as follows:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E5">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_left" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_left">(5)</span></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="(C,\mathcal{G})=\mathbf{E}(X,Y)" class="ltx_Math" display="block" id="S4.E5.m1" intent=":literal"><semantics><mrow><mrow><mo stretchy="false">(</mo><mi>C</mi><mo>,</mo><mi class="ltx_font_mathcaligraphic">𝒢</mi><mo stretchy="false">)</mo></mrow><mo>=</mo><mrow><mi>𝐄</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>X</mi><mo>,</mo><mi>Y</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">(C,\mathcal{G})=\mathbf{E}(X,Y)</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S4.SS0.SSS0.Px1.p1.6"><span class="translated-text">假设这些概念由语义结构因果模型 (SCM) 描述</span><span class="original-text">The concepts are assumed to be described by a semantic Structural Causal Model (SCM)</span><math alttext="\mathcal{C}" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px1.p1.6.m1" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒞</mi><annotation encoding="application/x-tex">\mathcal{C}</annotation></semantics></math><span class="translated-text">，其中（概念上）因果概念的联合分布遵循马尔可夫分解：</span><span class="original-text">, where (conceptually) the joint distribution for the causal concepts follows a Markov factorization:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E6">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_left" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_left">(6)</span></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="p(C_{1},...,C_{n})=\prod_{i=1}^{n}p(C_{i}|C_{\textbf{pa}_{i}})" class="ltx_Math" display="block" id="S4.E6.m1" intent=":literal"><semantics><mrow><mrow><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>C</mi><mn>1</mn></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>C</mi><mi>n</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo rspace="0.111em">=</mo><mrow><munderover><mo movablelimits="false">∏</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mrow><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><msub><mi>C</mi><mi>i</mi></msub><mo fence="false">|</mo><msub><mi>C</mi><msub><mtext class="ltx_mathvariant_bold">pa</mtext><mi>i</mi></msub></msub></mrow><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><annotation encoding="application/x-tex">p(C_{1},...,C_{n})=\prod_{i=1}^{n}p(C_{i}|C_{\textbf{pa}_{i}})</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph">
+<span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px2.1.1"><span class="translated-text">概念机械手</span><span class="original-text">Concept Manipulator</span></span>.</h4>
+<div class="ltx_para" id="S4.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="S4.SS0.SSS0.Px2.p1.2"><span class="translated-text">给定一组推断的概念及其因果关系，</span><span class="original-text">Given an inferred set of concepts and their causal relationships, a</span><span class="ltx_text ltx_font_italic" id="S4.SS0.SSS0.Px2.p1.1.1"><span class="translated-text">概念机械手基础模型</span><span class="original-text">concept manipulator foundation model</span><math alttext="\mathbf{M}" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p1.1.1.m1" intent=":literal"><semantics><mi>𝐌</mi><annotation encoding="application/x-tex">\mathbf{M}</annotation></semantics></math></span><span class="translated-text">对概念进行干预并将影响传播到与因果图一致的后代概念</span><span class="original-text">performs an intervention on a concept and propagates effects to descendant concepts consistent with the causal graph</span><math alttext="\mathcal{G}" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p1.2.m1" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒢</mi><annotation encoding="application/x-tex">\mathcal{G}</annotation></semantics></math></p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E7">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_left" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_left">(7)</span></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="C^{\prime}=\mathbf{M}(X,Y,(C,\mathcal{G}),\textbf{do}(C_{i}=c_{i}^{\prime}))" class="ltx_Math" display="block" id="S4.E7.m1" intent=":literal"><semantics><mrow><msup><mi>C</mi><mo>′</mo></msup><mo>=</mo><mrow><mi>𝐌</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>X</mi><mo>,</mo><mi>Y</mi><mo>,</mo><mrow><mo stretchy="false">(</mo><mi>C</mi><mo>,</mo><mi class="ltx_font_mathcaligraphic">𝒢</mi><mo stretchy="false">)</mo></mrow><mo>,</mo><mrow><mtext class="ltx_mathvariant_bold">do</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><msub><mi>C</mi><mi>i</mi></msub><mo>=</mo><msubsup><mi>c</mi><mi>i</mi><mo>′</mo></msubsup></mrow><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">C^{\prime}=\mathbf{M}(X,Y,(C,\mathcal{G}),\textbf{do}(C_{i}=c_{i}^{\prime}))</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S4.SS0.SSS0.Px2.p1.7"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="C^{\prime}" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p1.3.m1" intent=":literal"><semantics><msup><mi>C</mi><mo>′</mo></msup><annotation encoding="application/x-tex">C^{\prime}</annotation></semantics></math><span class="translated-text">是概念干预后的概念集合</span><span class="original-text">is the set of concepts after intervention on concept</span><math alttext="C_{i}" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p1.4.m2" intent=":literal"><semantics><msub><mi>C</mi><mi>i</mi></msub><annotation encoding="application/x-tex">C_{i}</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="c_{i}^{\prime}" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p1.5.m3" intent=":literal"><semantics><msubsup><mi>c</mi><mi>i</mi><mo>′</mo></msubsup><annotation encoding="application/x-tex">c_{i}^{\prime}</annotation></semantics></math><span class="translated-text">是干预的具体价值。具体来说，该组件执行</span><span class="original-text">is the specific value of the intervention. Specifically, this component performs a</span><span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px2.p1.7.1">do</span><span class="translated-text">对概念变量的干预（例如，</span><span class="original-text">intervention on a concept variable (e.g.,</span><span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px2.p1.7.2">do</span>(<math alttext="C_{i}=\text{male}" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p1.6.m4" intent=":literal"><semantics><mrow><msub><mi>C</mi><mi>i</mi></msub><mo>=</mo><mtext>male</mtext></mrow><annotation encoding="application/x-tex">C_{i}=\text{male}</annotation></semantics></math><span class="translated-text">）如果</span><span class="original-text">) if</span><math alttext="C_{i}" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px2.p1.7.m5" intent=":literal"><semantics><msub><mi>C</mi><mi>i</mi></msub><annotation encoding="application/x-tex">C_{i}</annotation></semantics></math><span class="translated-text">描述了性别概念）。</span><span class="original-text">describes the gender concept).</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS0.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph">
+<span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px3.1.1"><span class="translated-text">反事实生成器</span><span class="original-text">Counterfactual Generator</span></span>.</h4>
+<div class="ltx_para" id="S4.SS0.SSS0.Px3.p1">
+<p class="ltx_p" id="S4.SS0.SSS0.Px3.p1.3">A <span class="ltx_text ltx_font_italic" id="S4.SS0.SSS0.Px3.p1.1.1"><span class="translated-text">反事实生成器基础模型</span><span class="original-text">counterfactual generator foundation model</span><math alttext="\mathbf{G}" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px3.p1.1.1.m1" intent=":literal"><semantics><mi>𝐆</mi><annotation encoding="application/x-tex">\mathbf{G}</annotation></semantics></math></span><span class="translated-text">将一组概念作为输入</span><span class="original-text">takes as input a set of concepts</span><math alttext="C^{\prime}" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px3.p1.2.m1" intent=":literal"><semantics><msup><mi>C</mi><mo>′</mo></msup><annotation encoding="application/x-tex">C^{\prime}</annotation></semantics></math><span class="translated-text">干预后，以及事实图像的表示</span><span class="original-text">after an intervention, and a representation of the factual image</span><math alttext="X" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px3.p1.3.m2" intent=":literal"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math><span class="translated-text">（用于结构保存），并生成与干预一致的反事实图像</span><span class="original-text">(for structural preservation), and generates a counterfactual image consistent with the intervention</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E8">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_left" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_left">(8)</span></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="X_{CF}=\mathbf{G}(C^{\prime},X)" class="ltx_Math" display="block" id="S4.E8.m1" intent=":literal"><semantics><mrow><msub><mi>X</mi><mrow><mi>C</mi><mo lspace="0em" rspace="0em">​</mo><mi>F</mi></mrow></msub><mo>=</mo><mrow><mi>𝐆</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msup><mi>C</mi><mo>′</mo></msup><mo>,</mo><mi>X</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">X_{CF}=\mathbf{G}(C^{\prime},X)</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S4.SS0.SSS0.Px3.p1.7"><span class="translated-text">生成机制将概念映射到高维图像中的可测量变量（例如，代表概念的像素组）。也就是说，</span><span class="original-text">The generation mechanism maps concepts to measurable variables in the high-dimensional image (e.g., pixel groups representing a concept). That is,</span><math alttext="X=g(X_{C_{1}},\dots,X_{C_{n}},\xi)" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px3.p1.4.m1" intent=":literal"><semantics><mrow><mi>X</mi><mo>=</mo><mrow><mi>g</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>X</mi><msub><mi>C</mi><mn>1</mn></msub></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>X</mi><msub><mi>C</mi><mi>n</mi></msub></msub><mo>,</mo><mi>ξ</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">X=g(X_{C_{1}},\dots,X_{C_{n}},\xi)</annotation></semantics></math><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="g" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px3.p1.5.m2" intent=":literal"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math><span class="translated-text">是描述一组的一对一映射</span><span class="original-text">is one-to-one mapping describing a set of</span><math alttext="X" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px3.p1.6.m3" intent=":literal"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math><span class="translated-text">-构成生成图像的可测量概念。直观上看，图像</span><span class="original-text">-measurable concepts composing the generated image. Intuitively, the image</span><math alttext="X" class="ltx_Math" display="inline" id="S4.SS0.SSS0.Px3.p1.7.m4" intent=":literal"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math><span class="translated-text">由抽象因果概念变量生成，其因果机制相对于图像是独立且模块化的。例如，在文本到图像生成模型中，我们可以将图像中的概念视为与语义概念相对应的图像注意图区域中的高值。</span><span class="original-text">is generated by abstract causal concept variables with causal mechanisms that are independent and modular with respect to the image. For example, in a text-to-image generative model, we can consider concepts to manifest in the image as high values in a region of the image’s attention maps corresponding to the semantic concept.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F2"><span class="ltx_inline-block"><svg class="ltx_picture ltx_centering" height="1652.87" id="S4.F2.pic1" overflow="visible" version="1.1" viewbox="0 0 477.38 1652.87" width="477.38"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,1652.87) matrix(1 0 0 -1 0 0)"><g fill="#808080" fill-opacity="1.0" style="--ltx-fill-color:#808080;"><path d="M 0 5.91 L 0 1646.96 C 0 1650.23 2.64 1652.87 5.91 1652.87 L 471.47 1652.87 C 474.73 1652.87 477.38 1650.23 477.38 1646.96 L 477.38 5.91 C 477.38 2.64 474.73 0 471.47 0 L 5.91 0 C 2.64 0 0 2.64 0 5.91 Z" style="stroke:none"></path></g><g fill="#FFFFFF" fill-opacity="1.0" style="--ltx-fill-color:#FFFFFF;"><path d="M 1.97 5.91 L 1.97 1186.45 L 475.41 1186.45 L 475.41 5.91 C 475.41 3.73 473.65 1.97 471.47 1.97 L 5.91 1.97 C 3.73 1.97 1.97 3.73 1.97 5.91 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 10.27 1636.74)"><foreignobject color="#FFFFFF" height="456.94" overflow="visible" style="--ltx-fg-color:#FFFFFF;--ltx-fo-width:33.02em;--ltx-fo-height:0.82em;--ltx-fo-depth:32.2em;" transform="matrix(1 0 0 -1 0 11.39)" width="456.84"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S4.F2.pic1.2.2.2.1.1" style="width:33.02em;">
+<span class="ltx_p ltx_align_center" id="S4.F2.pic1.2.2.2.1.1.1"><span class="ltx_text ltx_font_bold" id="S4.F2.pic1.2.2.2.1.1.1.1" style="font-size:120%;">Concept Extractor Prompt</span></span>
+</span></span></span></foreignobject></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 10.27 9.92)"><foreignobject color="#000000" height="1173.42" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:33.02em;--ltx-fo-height:84.63em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 1170.99)" width="456.84"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1" style="width:44.92em;">
+<span class="ltx_p ltx_align_left" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2"><span class="ltx_text ltx_font_typewriter" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.1" style="font-size:70%;">You are an expert in causal reasoning, computer vision, and semantic scene analysis. Your task is to analyse images and identify the underlying causal structure of the scene.
+You always respond with valid, well-formed JSON and nothing else — no prose, no markdown, no explanation outside the JSON object.</span></span>
+<span class="ltx_p ltx_align_left" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.3"><span class="ltx_text ltx_font_typewriter" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.3.1" style="font-size:70%;">Carefully examine the provided image together with the following context description: &lt;context&gt;
+{prompt}
+&lt;/context&gt; 
+<br class="ltx_break"/></span></span>
+<span class="ltx_p ltx_align_left" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.4"><span class="ltx_text ltx_font_typewriter" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.4.1" style="font-size:70%;">Your task has two parts: 
+<br class="ltx_break"/></span></span>
+<span class="ltx_p ltx_align_left" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.5"><span class="ltx_text ltx_font_typewriter ltx_font_bold" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.5.1" style="font-size:70%;">PART 1 — CONCEPT EXTRACTION<span class="ltx_text ltx_font_medium" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.5.1.1">
+<br class="ltx_break"/>First, identify 5 high-level semantic concepts visible in or strongly implied by the image. A concept should be a high-level attribute about the subject (e.g., age, gender, etc.). Then, for each, ask: what would change if I were to change this concept to a different value? Generate 2-3 additional concepts that would directly change as a result. Concepts should NOT be related to lighting or posture. For each concept record: 
+<br class="ltx_break"/>• id — short unique identifier (c1, c2, …) 
+<br class="ltx_break"/>• name — concise label (2-5 words) 
+<br class="ltx_break"/>• current_value — specific observable state (1–3 words) 
+<br class="ltx_break"/>• description — one sentence explanation 
+<br class="ltx_break"/></span></span></span>
+<span class="ltx_p ltx_align_left" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1"><span class="ltx_text ltx_font_typewriter ltx_font_bold" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1" style="font-size:70%;">PART 2 — CAUSAL RELATIONSHIP DISCOVERY<span class="ltx_text ltx_font_medium" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1">
+<br class="ltx_break"/>Reason about which concepts causally influence others (A <math alttext="\rightarrow" class="ltx_Math" display="inline" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> B). Only include relationships that are causally plausible. Produce a directed acyclic graph (DAG). For each edge record: 
+<br class="ltx_break"/>• id — unique identifier (r1, r2, …) 
+<br class="ltx_break"/>• cause_id — id of the causing concept 
+<br class="ltx_break"/>• effect_id — id of the effected concept 
+<br class="ltx_break"/>• description — one sentence: how/why the cause produces the effect 
+<br class="ltx_break"/></span></span></span>
+<span class="ltx_p ltx_align_left" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.6"><span class="ltx_text ltx_font_typewriter" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.6.1" style="font-size:70%;">Also provide a one-sentence scene_summary. Keep your answer short. Do NOT explain. Return ONLY the following JSON object: 
+<br class="ltx_break"/></span></span><code class="ltx_verbatim ltx_align_left ltx_font_typewriter" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.7" style="font-size:70%;"><pre class="ltx_verbatim" id="S4.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.7.1">
+{
+  "concepts": [...],
+  "relationships": [...],
+  "scene_summary": "..."
+}
+</pre></code>
+</span></span></span></foreignobject></g></g></svg></span>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F2.2.1.1" style="font-size:90%;">Figure 2</span>. </span><span class="ltx_text" id="S4.F2.3.2" style="font-size:90%;">Concept extractor prompt</span></figcaption>
+</figure>
+</section>
+<section class="ltx_paragraph" id="S4.SS0.SSS0.Px4">
+<h4 class="ltx_title ltx_title_paragraph">
+<span class="ltx_text ltx_font_bold" id="S4.SS0.SSS0.Px4.1.1"><span class="translated-text">基础模型驱动的因果生成模型</span><span class="original-text">Foundation Model Powered Causal Generative Model</span></span>.</h4>
+<div class="ltx_para" id="S4.SS0.SSS0.Px4.p1">
+<p class="ltx_p" id="S4.SS0.SSS0.Px4.p1.1"><span class="translated-text">正式地，我们定义了一类具有预训练基础模型组件的视觉因果生成模型，如下所示：</span><span class="original-text">Formally, we define a class of visual causal generative models with pretrained foundation model components as follows:</span></p>
+</div>
+<div class="ltx_theorem ltx_theorem_definition" id="S4.Thmtheorem1">
+<h6 class="ltx_title ltx_runin ltx_font_italic ltx_title_theorem"><span class="translated-text">定义 4.1。</span><span class="original-text">Definition 4.1.</span></h6>
+<div class="ltx_para" id="S4.Thmtheorem1.p1">
+<p class="ltx_p" id="S4.Thmtheorem1.p1.1">An <span class="ltx_text ltx_font_bold" id="S4.Thmtheorem1.p1.1.1"><span class="translated-text">基础模型驱动的因果生成模型 (FM-CGM)</span><span class="original-text">Foundation Model Powered Causal Generative Model (FM-CGM)</span></span><span class="translated-text">是四胞胎</span><span class="original-text">is a quadruplet</span><math alttext="\mathbf{F}=\langle\mathcal{C},\mathbf{E},\mathbf{M},\mathbf{G}\rangle" class="ltx_Math" display="inline" id="S4.Thmtheorem1.p1.1.m1" intent=":literal"><semantics><mrow><mi>𝐅</mi><mo>=</mo><mrow><mo stretchy="false">⟨</mo><mi class="ltx_font_mathcaligraphic">𝒞</mi><mo>,</mo><mi>𝐄</mi><mo>,</mo><mi>𝐌</mi><mo>,</mo><mi>𝐆</mi><mo stretchy="false">⟩</mo></mrow></mrow><annotation encoding="application/x-tex">\mathbf{F}=\langle\mathcal{C},\mathbf{E},\mathbf{M},\mathbf{G}\rangle</annotation></semantics></math><span class="translated-text">其中：</span><span class="original-text">where:</span></p>
+<ul class="ltx_itemize" id="S4.I1">
+<li class="ltx_item" id="S4.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i1.p1">
+<p class="ltx_p" id="S4.I1.i1.p1.3"><math alttext="\mathcal{C}=(C,\mathcal{G})" class="ltx_Math" display="inline" id="S4.I1.i1.p1.1.m1" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">𝒞</mi><mo>=</mo><mrow><mo stretchy="false">(</mo><mi>C</mi><mo>,</mo><mi class="ltx_font_mathcaligraphic">𝒢</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{C}=(C,\mathcal{G})</annotation></semantics></math><span class="translated-text">是描述一组高级概念的语义结构因果模型</span><span class="original-text">is a semantic structural causal model describing a set of high-level concepts</span><math alttext="C" class="ltx_Math" display="inline" id="S4.I1.i1.p1.2.m2" intent=":literal"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math><span class="translated-text">以及他们的因果关系</span><span class="original-text">and their causal relationships</span><math alttext="\mathcal{G}" class="ltx_Math" display="inline" id="S4.I1.i1.p1.3.m3" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒢</mi><annotation encoding="application/x-tex">\mathcal{G}</annotation></semantics></math><span class="translated-text">对应图像</span><span class="original-text">corresponding to the image</span><span class="ltx_note ltx_role_footnote" id="footnote1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span><span class="translated-text">语义结构因果模型是一种仅包含高级概念及其关系的模型，不包含任何符合我们设置的因果机制</span><span class="original-text">A semantic structural causal model is one that only includes high-level concepts and their relationships and not any causal mechanisms to comply with our setting</span></span></span></span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i2.p1">
+<p class="ltx_p" id="S4.I1.i2.p1.3"><math alttext="\mathbf{E}" class="ltx_Math" display="inline" id="S4.I1.i2.p1.1.m1" intent=":literal"><semantics><mi>𝐄</mi><annotation encoding="application/x-tex">\mathbf{E}</annotation></semantics></math><span class="translated-text">是一个以大型推理基础模型为代表的概念提取器，用于推断一组概念</span><span class="original-text">is a concept extractor represented by a large reasoning foundation model to infer a set of concepts</span><math alttext="C" class="ltx_Math" display="inline" id="S4.I1.i2.p1.2.m2" intent=":literal"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math><span class="translated-text">以及他们的因果关系</span><span class="original-text">and their causal relationships</span><math alttext="\mathcal{G}" class="ltx_Math" display="inline" id="S4.I1.i2.p1.3.m3" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒢</mi><annotation encoding="application/x-tex">\mathcal{G}</annotation></semantics></math><span class="translated-text">，如方程式中所述。</span><span class="original-text">, as described in Eq.</span><a class="ltx_ref" href="#S4.E5" title="In Concept Extractor. ‣ 4. Foundation Model Powered Causal Generative Model ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_tag">5</span></a></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i3.p1">
+<p class="ltx_p" id="S4.I1.i3.p1.2"><math alttext="\mathbf{M}" class="ltx_Math" display="inline" id="S4.I1.i3.p1.1.m1" intent=":literal"><semantics><mi>𝐌</mi><annotation encoding="application/x-tex">\mathbf{M}</annotation></semantics></math><span class="translated-text">是一个概念操纵器，以大型推理基础模型为代表，用于推理对因果概念的干预（例如，</span><span class="original-text">is a concept manipulator represented by a large reasoning foundation model to reason about interventions on causal concepts (e.g.,</span><math alttext="\textbf{do}(C_{i}=\text{male})" class="ltx_Math" display="inline" id="S4.I1.i3.p1.2.m2" intent=":literal"><semantics><mrow><mtext class="ltx_mathvariant_bold">do</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><msub><mi>C</mi><mi>i</mi></msub><mo>=</mo><mtext>male</mtext></mrow><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\textbf{do}(C_{i}=\text{male})</annotation></semantics></math><span class="translated-text">），如方程式中所述。</span><span class="original-text">), as described in Eq.</span><a class="ltx_ref" href="#S4.E7" title="In Concept Manipulator. ‣ 4. Foundation Model Powered Causal Generative Model ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_tag">7</span></a></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i4.p1">
+<p class="ltx_p" id="S4.I1.i4.p1.1"><math alttext="\mathbf{G}" class="ltx_Math" display="inline" id="S4.I1.i4.p1.1.m1" intent=":literal"><semantics><mi>𝐆</mi><annotation encoding="application/x-tex">\mathbf{G}</annotation></semantics></math><span class="translated-text">是一个反事实生成器，由大型文本到图像生成基础模型表示，用于将对高级概念的干预映射到反事实图像，如等式1中所述。</span><span class="original-text">is a counterfactual generator represented by a large text-to-image generative foundation model to map interventions on high-level concepts to a counterfactual image, as described in Eq.</span><a class="ltx_ref" href="#S4.E8" title="In Counterfactual Generator. ‣ 4. Foundation Model Powered Causal Generative Model ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_tag">8</span></a></p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5. </span><span class="translated-text">方法论</span><span class="original-text">Methodology</span></h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">在本节中，我们提出了一种实用的基础模型驱动架构来实现 FM-CGM，其中包括表示概念提取器和概念操纵器的视觉语言模型（VLM）和表示反事实生成器的文本到图像扩散模型（即稳定扩散）。 FM-CGM整体框架如图</span><span class="original-text">In this section, we propose a practical foundation model-powered architecture to implement the FM-CGM, consisting of a Vision Language Model (VLM) to represent the concept extractor and concept manipulator and a text-to-image diffusion model (i.e., Stable Diffusion) to represent the counterfactual generator. The overall FM-CGM framework is shown in Figure</span><a class="ltx_ref" href="#S4.F1" title="Figure 1 ‣ 4. Foundation Model Powered Causal Generative Model ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+</div>
+<section class="ltx_subsection" id="S5.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.1. </span><span class="translated-text">基于VLM的概念提取器</span><span class="original-text">VLM-based Concept Extractor</span></h3>
+<div class="ltx_para" id="S5.SS1.p1">
+<p class="ltx_p" id="S5.SS1.p1.1"><span class="translated-text">在本节中，我们提供了详细信息</span><span class="original-text">In this section, we provide the details of the</span><span class="ltx_text ltx_font_italic" id="S5.SS1.p1.1.1"><span class="translated-text">概念提取器</span><span class="original-text">Concept Extractor</span></span><span class="translated-text">。我们将概念提取器表示为预训练的推理视觉语言模型（VLM），它将图像映射到概念的文本描述。概念变量是一种分类变量，一次只取一个值并描述视觉场景。生成的（文本）概念充当下游反事实生成的语义状态。</span><span class="original-text">. We represent the concept extractor as a pretrained reasoning vision-language model (VLM) that maps an image to a textual description of a concept. A concept variable is a categorical variable that takes exactly one value at a time and describes the visual scene. The resulting (text) concept serves as the semantic state for downstream counterfactual generation.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS1.p2">
+<p class="ltx_p" id="S5.SS1.p2.1"><span class="translated-text">我们首先确定使用 VLM 提取因果相关概念的动机。</span><span class="original-text">We first set up our motivation behind using an VLM to extract causally related concepts.</span><cite class="ltx_cite ltx_citemacro_citep">(Zečević et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib31" title="">2023</a>)</cite><span class="translated-text">大规模基础模型学习的猜想</span><span class="original-text">conjecture that large-scale foundation models learn</span><span class="ltx_text ltx_font_italic" id="S5.SS1.p2.1.1"><span class="translated-text">因果事实</span><span class="original-text">causal facts</span></span><span class="translated-text">，但不是物理机制。我们依靠这个假设来获得已识别概念的合理因果结构（a</span><span class="original-text">, but not physical mechanisms. We rely on this assumption to obtain a plausible causal structure over identified concepts (a</span><span class="ltx_text ltx_font_italic" id="S5.SS1.p2.1.2"><span class="translated-text">元SCM</span><span class="original-text">meta-SCM</span></span><span class="translated-text">）来自推理模型，这足以约束下游反事实编辑。然后，扩散解码器（通过指导）提供实现这些语义变化的图像级机制。</span><span class="original-text">) from a reasoning model, which is sufficient for constraining downstream counterfactual edits. The diffusion decoder (via guidance) then provides the image-level mechanism that realizes these semantic changes.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS1.p3">
+<p class="ltx_p" id="S5.SS1.p3.3"><span class="translated-text">我们首先详细介绍了一种多阶段方法，通过利用大型推理视觉语言模型的推理能力来识别有用的因果相关概念。我们构建了一个强大的提示来识别视觉场景中最重要的元素及其关系，如下所示</span><span class="original-text">We first detail a multi-stage approach to identifying useful causally related concepts by leveraging the reasoning abilities of large reasoning vision language models. We construct a robust prompt to identify the most important elements in a visual scene and their relationships as follows</span></p>
+<ol class="ltx_enumerate" id="S5.I1">
+<li class="ltx_item" id="S5.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">(1)</span>
+<div class="ltx_para" id="S5.I1.i1.p1">
+<p class="ltx_p" id="S5.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S5.I1.i1.p1.1.1"><span class="translated-text">视觉描述：</span><span class="original-text">Visual Description:</span></span><span class="translated-text">我们提示 VLM 描述上下文的视觉场景以获得基本提示</span><span class="original-text">We prompt the VLM to describe the visual scene for context to obtain a base prompt</span><math alttext="Y" class="ltx_Math" display="inline" id="S5.I1.i1.p1.1.m1" intent=":literal"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math>.</p>
+</div>
+</li>
+<li class="ltx_item" id="S5.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">(2)</span>
+<div class="ltx_para" id="S5.I1.i2.p1">
+<p class="ltx_p" id="S5.I1.i2.p1.3"><span class="ltx_text ltx_font_bold" id="S5.I1.i2.p1.3.1"><span class="translated-text">概念识别：</span><span class="original-text">Concept Identification:</span></span><span class="translated-text">我们提示 VLM 返回描述视觉场景的最重要且可解释的概念（节点）的列表。我们将此输出定义为概念集</span><span class="original-text">We prompt the VLM to return a list of the most important and interpretable concepts (nodes) that describe the visual scene. We define this output as a concept set</span><math alttext="C=\{C_{1},\ldots,C_{n}\}" class="ltx_Math" display="inline" id="S5.I1.i2.p1.1.m1" intent=":literal"><semantics><mrow><mi>C</mi><mo>=</mo><mrow><mo stretchy="false">{</mo><msub><mi>C</mi><mn>1</mn></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>C</mi><mi>n</mi></msub><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">C=\{C_{1},\ldots,C_{n}\}</annotation></semantics></math><span class="translated-text">对于给定的图像，其中概念变量</span><span class="original-text">for the given image where a concept variable</span><math alttext="C_{i}" class="ltx_Math" display="inline" id="S5.I1.i2.p1.2.m2" intent=":literal"><semantics><msub><mi>C</mi><mi>i</mi></msub><annotation encoding="application/x-tex">C_{i}</annotation></semantics></math><span class="translated-text">采取指定的具体估值</span><span class="original-text">takes a specific valuation specified by</span><math alttext="c_{i}" class="ltx_Math" display="inline" id="S5.I1.i2.p1.3.m3" intent=":literal"><semantics><msub><mi>c</mi><mi>i</mi></msub><annotation encoding="application/x-tex">c_{i}</annotation></semantics></math>.</p>
+</div>
+</li>
+<li class="ltx_item" id="S5.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">(3)</span>
+<div class="ltx_para" id="S5.I1.i3.p1">
+<p class="ltx_p" id="S5.I1.i3.p1.6"><span class="ltx_text ltx_font_bold" id="S5.I1.i3.p1.6.1"><span class="translated-text">因果图：</span><span class="original-text">Causal Graph:</span></span><span class="translated-text">给定一组已确定的概念</span><span class="original-text">Given the identified set of concepts</span><math alttext="C" class="ltx_Math" display="inline" id="S5.I1.i3.p1.1.m1" intent=":literal"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math><span class="translated-text">，我们提示 VLM 识别概念对之间的边缘（</span><span class="original-text">, we prompt the VLM to identify edges between pairs of concepts (</span><math alttext="C_{i}" class="ltx_Math" display="inline" id="S5.I1.i3.p1.2.m2" intent=":literal"><semantics><msub><mi>C</mi><mi>i</mi></msub><annotation encoding="application/x-tex">C_{i}</annotation></semantics></math>, <math alttext="C_{j}" class="ltx_Math" display="inline" id="S5.I1.i3.p1.3.m3" intent=":literal"><semantics><msub><mi>C</mi><mi>j</mi></msub><annotation encoding="application/x-tex">C_{j}</annotation></semantics></math><span class="translated-text">）如果</span><span class="original-text">) if</span><math alttext="C_{i}" class="ltx_Math" display="inline" id="S5.I1.i3.p1.4.m4" intent=":literal"><semantics><msub><mi>C</mi><mi>i</mi></msub><annotation encoding="application/x-tex">C_{i}</annotation></semantics></math><span class="translated-text">是一个直接原因</span><span class="original-text">is a direct cause of</span><math alttext="C_{j}" class="ltx_Math" display="inline" id="S5.I1.i3.p1.5.m5" intent=":literal"><semantics><msub><mi>C</mi><mi>j</mi></msub><annotation encoding="application/x-tex">C_{j}</annotation></semantics></math><span class="translated-text">生成因果图</span><span class="original-text">to generate a causal graph</span><math alttext="\mathcal{G}" class="ltx_Math" display="inline" id="S5.I1.i3.p1.6.m6" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒢</mi><annotation encoding="application/x-tex">\mathcal{G}</annotation></semantics></math>.</p>
+</div>
+</li>
+</ol>
+<p class="ltx_p" id="S5.SS1.p3.2"><span class="translated-text">我们获得了一组完全指定的概念</span><span class="original-text">We obtain a set of fully specified concepts</span><math alttext="C" class="ltx_Math" display="inline" id="S5.SS1.p3.1.m1" intent=":literal"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math><span class="translated-text">以及因果图</span><span class="original-text">along with a causal graph</span><math alttext="\mathcal{G}" class="ltx_Math" display="inline" id="S5.SS1.p3.2.m2" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒢</mi><annotation encoding="application/x-tex">\mathcal{G}</annotation></semantics></math><span class="translated-text">我们可以用它来推理因果查询。 VLM概念和图形识别的完整提示模板如图所示</span><span class="original-text">with which we can reason about causal queries. The complete prompt template for VLM concept and graph identification is specified in Figure</span><a class="ltx_ref" href="#S4.F2" title="Figure 2 ‣ Counterfactual Generator. ‣ 4. Foundation Model Powered Causal Generative Model ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">。对于视觉场景，我们发现利用强大的推理能力 VLM 来输出一致的概念集和合理的因果图是合理的。</span><span class="original-text">. For visual scenes, we find it reasonable to leverage strong reasoning-capable VLMs to output consistent concept sets and plausible causal graphs.</span></p>
+</div>
+<figure class="ltx_figure" id="S5.F3"><span class="ltx_inline-block"><svg class="ltx_picture ltx_centering" height="2766.42" id="S5.F3.pic1" overflow="visible" version="1.1" viewbox="0 0 477.38 2766.42" width="477.38"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,2766.42) matrix(1 0 0 -1 0 0)"><g fill="#808080" fill-opacity="1.0" style="--ltx-fill-color:#808080;"><path d="M 0 5.91 L 0 2760.51 C 0 2763.78 2.64 2766.42 5.91 2766.42 L 471.47 2766.42 C 474.73 2766.42 477.38 2763.78 477.38 2760.51 L 477.38 5.91 C 477.38 2.64 474.73 0 471.47 0 L 5.91 0 C 2.64 0 0 2.64 0 5.91 Z" style="stroke:none"></path></g><g fill="#FFFFFF" fill-opacity="1.0" style="--ltx-fill-color:#FFFFFF;"><path d="M 1.97 5.91 L 1.97 2258.92 L 475.41 2258.92 L 475.41 5.91 C 475.41 3.73 473.65 1.97 471.47 1.97 L 5.91 1.97 C 3.73 1.97 1.97 3.73 1.97 5.91 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 21.65 2749.12)"><foreignobject color="#FFFFFF" height="495.69" overflow="visible" style="--ltx-fg-color:#FFFFFF;--ltx-fo-width:31.37em;--ltx-fo-height:0.82em;--ltx-fo-depth:35em;" transform="matrix(1 0 0 -1 0 11.39)" width="434.07"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S5.F3.pic1.1.1.1.1.1" style="width:31.37em;">
+<span class="ltx_p ltx_align_center" id="S5.F3.pic1.1.1.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S5.F3.pic1.1.1.1.1.1.1.1" style="font-size:120%;">Concept Manipulator Prompt</span></span>
+</span></span></span></foreignobject></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 21.65 16.2)"><foreignobject color="#000000" height="2233.33" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:31.37em;--ltx-fo-height:161.23em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 2230.91)" width="434.07"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S5.F3.pic1.2.2.2.1.1" style="width:42.68em;">
+<span class="ltx_p ltx_align_left" id="S5.F3.pic1.2.2.2.1.1.1"><span class="ltx_text ltx_font_typewriter" id="S5.F3.pic1.2.2.2.1.1.1.1" style="font-size:70%;">You are an expert at understanding visual scenes and reasoning about how changing one thing in a scene affects other things. You always respond with valid, well-formed JSON and nothing else — no prose, no markdown, no explanation outside the JSON object. You are given an image, a description of the scene it shows, a list of concepts present in it, and a list of relationships that describe how those concepts influence one another. 
+<br class="ltx_break"/></span></span>
+<span class="ltx_p ltx_align_left" id="S5.F3.pic1.2.2.2.1.1.2"><span class="ltx_text ltx_font_typewriter" id="S5.F3.pic1.2.2.2.1.1.2.1" style="font-size:70%;">&lt;scene_summary&gt;
+{scene_summary}
+&lt;/scene_summary&gt;</span></span>
+<span class="ltx_p ltx_align_left" id="S5.F3.pic1.2.2.2.1.1.3"><span class="ltx_text ltx_font_typewriter" id="S5.F3.pic1.2.2.2.1.1.3.1" style="font-size:70%;">&lt;concepts&gt;
+{concepts_json}
+&lt;/concepts&gt;</span></span>
+<span class="ltx_p ltx_align_left" id="S5.F3.pic1.2.2.2.1.1.4"><span class="ltx_text ltx_font_typewriter" id="S5.F3.pic1.2.2.2.1.1.4.1" style="font-size:70%;">&lt;relationships&gt;
+{relationships_json}
+&lt;/relationships&gt; 
+<br class="ltx_break"/></span></span>
+<span class="ltx_p ltx_align_left" id="S5.F3.pic1.2.2.2.1.1.5"><span class="ltx_text ltx_font_typewriter" id="S5.F3.pic1.2.2.2.1.1.5.1" style="font-size:70%;">Your task: 
+<br class="ltx_break"/></span></span>
+<span class="ltx_p ltx_align_left" id="S5.F3.pic1.2.2.2.1.1.6"><span class="ltx_text ltx_font_typewriter ltx_font_bold" id="S5.F3.pic1.2.2.2.1.1.6.1" style="font-size:70%;">1. PROPOSE 3 DIVERSE MANIPULATIONS<span class="ltx_text ltx_font_medium" id="S5.F3.pic1.2.2.2.1.1.6.1.1">
+<br class="ltx_break"/>• Each manipulation changes a DIFFERENT concept to a new value. 
+<br class="ltx_break"/>• Manipulations should produce visually distinct scenes. 
+<br class="ltx_break"/>• Pick one concept that affects many others, one that affects only a few, and one that affects none. 
+<br class="ltx_break"/>• Keep each manipulation realistic and physically plausible. 
+<br class="ltx_break"/></span></span></span>
+<span class="ltx_p ltx_align_left" id="S5.F3.pic1.2.2.2.1.1.7"><span class="ltx_text ltx_font_typewriter ltx_font_bold" id="S5.F3.pic1.2.2.2.1.1.7.1" style="font-size:70%;">2. WORK OUT WHAT ELSE CHANGES<span class="ltx_text ltx_font_medium" id="S5.F3.pic1.2.2.2.1.1.7.1.1">
+<br class="ltx_break"/>For each manipulation, think through every concept that would be different as a result of the changed concept. For each concept that changes, write its new value in 1–3 descriptive, unambiguous words that combine the concept variable and value (e.g. "wet road"). DO NOT INCLUDE CONCEPTS THAT STAY THE SAME. 
+<br class="ltx_break"/></span></span></span>
+<span class="ltx_p ltx_align_left" id="S5.F3.pic1.2.2.2.1.1.8"><span class="ltx_text ltx_font_typewriter ltx_font_bold" id="S5.F3.pic1.2.2.2.1.1.8.1" style="font-size:70%;">3. LIST FINAL STATE OF ALL CONCEPTS THAT CHANGED<span class="ltx_text ltx_font_medium" id="S5.F3.pic1.2.2.2.1.1.8.1.1">
+<br class="ltx_break"/>Record the final value of every concept that changed. Each value must combine the concept variable and its new value into 1–3 words (e.g., "black hair"). 
+<br class="ltx_break"/></span></span></span>
+<span class="ltx_p ltx_align_left" id="S5.F3.pic1.2.2.2.1.1.9"><span class="ltx_text ltx_font_typewriter ltx_font_bold" id="S5.F3.pic1.2.2.2.1.1.9.1" style="font-size:70%;">4. WRITE AN IMAGE GENERATION PROMPT<span class="ltx_text ltx_font_medium" id="S5.F3.pic1.2.2.2.1.1.9.1.1">
+<br class="ltx_break"/>Write a generation_prompt that adds to or modifies the following reference prompt:
+&lt;reference_prompt&gt; {base_prompt} &lt;/reference_prompt&gt; 
+<br class="ltx_break"/></span></span></span>
+<span class="ltx_p ltx_align_left" id="S5.F3.pic1.2.2.2.1.1.10"><span class="ltx_text ltx_font_typewriter" id="S5.F3.pic1.2.2.2.1.1.10.1" style="font-size:70%;">Return ONLY the following JSON:</span></span><pre class="ltx_verbatim ltx_align_left ltx_font_typewriter" id="S5.F3.pic1.2.2.2.1.1.11" style="font-size:70%;">
+{
+  "interventions": [{"id": "intervention_1", "target_concept_id": "...", "target_concept_name": "...", "intervention_description": "...", "original_value": "...",
+  "new_value": "...",
+      "propagated_changes": [{"concept_id": "...", "concept_name": "...", "original_value": "...", "new_value": "...", "reason": "..."}],
+      "final_concept_states": { "c1": "value", "c2": "value" },
+      "generation_prompt": "..."
+    }
+  ]
+}
+</pre>
+</span></span></span></foreignobject></g></g></svg></span>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S5.F3.2.1.1" style="font-size:90%;">Figure 3</span>. </span><span class="ltx_text" id="S5.F3.3.2" style="font-size:90%;">Concept manipulator prompt</span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S5.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.2. </span><span class="translated-text">基于VLM的概念操纵器</span><span class="original-text">VLM-based Concept Manipulator</span></h3>
+<div class="ltx_para" id="S5.SS2.p1">
+<p class="ltx_p" id="S5.SS2.p1.8"><span class="translated-text">定义</span><span class="original-text">Define</span><math alttext="I=\{1,\dots,n\}" class="ltx_Math" display="inline" id="S5.SS2.p1.1.m1" intent=":literal"><semantics><mrow><mi>I</mi><mo>=</mo><mrow><mo stretchy="false">{</mo><mn>1</mn><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><mi>n</mi><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">I=\{1,\dots,n\}</annotation></semantics></math><span class="translated-text">作为概念的索引。对于干预目标</span><span class="original-text">as the indices for concepts. For an intervention target</span><math alttext="i\in I" class="ltx_Math" display="inline" id="S5.SS2.p1.2.m2" intent=":literal"><semantics><mrow><mi>i</mi><mo>∈</mo><mi>I</mi></mrow><annotation encoding="application/x-tex">i\in I</annotation></semantics></math><span class="translated-text">有干预</span><span class="original-text">with intervention</span><math alttext="\textbf{do}(C_{i}=c_{i}^{\prime})" class="ltx_Math" display="inline" id="S5.SS2.p1.3.m3" intent=":literal"><semantics><mrow><mtext class="ltx_mathvariant_bold">do</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><msub><mi>C</mi><mi>i</mi></msub><mo>=</mo><msubsup><mi>c</mi><mi>i</mi><mo>′</mo></msubsup></mrow><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\textbf{do}(C_{i}=c_{i}^{\prime})</annotation></semantics></math><span class="translated-text">对于因果概念，我们提示 VLM 获取反事实概念集</span><span class="original-text">on a causal concept, we prompt the VLM to obtain a counterfactual concept set</span><math alttext="C^{\prime}" class="ltx_Math" display="inline" id="S5.SS2.p1.4.m4" intent=":literal"><semantics><msup><mi>C</mi><mo>′</mo></msup><annotation encoding="application/x-tex">C^{\prime}</annotation></semantics></math><span class="translated-text">使得（1）干预</span><span class="original-text">such that (1) the intervention</span><math alttext="\textbf{do}(C_{i}=c_{i}^{\prime})" class="ltx_Math" display="inline" id="S5.SS2.p1.5.m5" intent=":literal"><semantics><mrow><mtext class="ltx_mathvariant_bold">do</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><msub><mi>C</mi><mi>i</mi></msub><mo>=</mo><msubsup><mi>c</mi><mi>i</mi><mo>′</mo></msubsup></mrow><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\textbf{do}(C_{i}=c_{i}^{\prime})</annotation></semantics></math><span class="translated-text">执行，(2)</span><span class="original-text">is performed, (2)</span><math alttext="\textbf{De}(C_{i})" class="ltx_Math" display="inline" id="S5.SS2.p1.6.m6" intent=":literal"><semantics><mrow><mtext class="ltx_mathvariant_bold">De</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>C</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\textbf{De}(C_{i})</annotation></semantics></math><span class="translated-text">（后代）更新为与干预和因果图一致的值，并且（3）</span><span class="original-text">(descendants) are updated to values consistent with the intervention and the causal graph, and (3)</span><math alttext="\textbf{ND}(C_{i})" class="ltx_Math" display="inline" id="S5.SS2.p1.7.m7" intent=":literal"><semantics><mrow><mtext class="ltx_mathvariant_bold">ND</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>C</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\textbf{ND}(C_{i})</annotation></semantics></math><span class="translated-text">（非后代）被保留。这种语义反事实状态</span><span class="original-text">(non-descendants) are preserved. This semantic counterfactual state</span><math alttext="C^{\prime}" class="ltx_Math" display="inline" id="S5.SS2.p1.8.m8" intent=":literal"><semantics><msup><mi>C</mi><mo>′</mo></msup><annotation encoding="application/x-tex">C^{\prime}</annotation></semantics></math><span class="translated-text">然后转化为如下定义的扩散指导。概念操纵器的提示如图所示</span><span class="original-text">is then translated into diffusion guidance as defined below. The prompt for the concept manipulator is specified in Figure</span><a class="ltx_ref" href="#S5.F3" title="Figure 3 ‣ 5.1. VLM-based Concept Extractor ‣ 5. Methodology ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_tag">3</span></a>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S5.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.3. </span><span class="translated-text">基于扩散的反事实生成器</span><span class="original-text">Diffusion-based Counterfactual Generator</span></h3>
+<div class="ltx_para" id="S5.SS3.p1">
+<p class="ltx_p" id="S5.SS3.p1.1"><span class="translated-text">在本节中，我们提供了详细信息</span><span class="original-text">In this section, we provide the details of the</span><span class="ltx_text ltx_font_italic" id="S5.SS3.p1.1.1"><span class="translated-text">反事实生成器</span><span class="original-text">Counterfactual Generator</span></span><span class="translated-text">。由于我们无法机械地改变稳定扩散模型来强制潜在空间中的结构因果机制，因此我们主要依赖于满足以下条件的指导</span><span class="original-text">. Since we cannot mechanistically change the Stable Diffusion model to enforce structural causal mechanisms in the latent space, we primarily rely on guidance satisfying</span><span class="ltx_text ltx_font_italic" id="S5.SS3.p1.1.2"><span class="translated-text">反事实极简性</span><span class="original-text">counterfactual minimality</span></span><span class="translated-text">。在本节中，我们从 LEDITS++ 框架中获取灵感</span><span class="original-text">. In this section, we take inspiration from the LEDITS++ framework</span><cite class="ltx_cite ltx_citemacro_citep">(Brack et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib3" title="">2024</a>)</cite><span class="translated-text">并开发一种基于 VLM 的反事实生成方法</span><span class="original-text">and develop a VLM-informed counterfactual generation method</span><span class="ltx_text ltx_font_bold" id="S5.SS3.p1.1.3"><span class="translated-text">因果语义指导（CSG）</span><span class="original-text">Causal Semantic Guidance (CSG)</span></span><span class="translated-text">，一种与 VLM 相结合的无分类器引导方法</span><span class="original-text">, a classifier-free guidance approach coupled with a VLM as the</span><span class="ltx_text ltx_font_italic" id="S5.SS3.p1.1.4"><span class="translated-text">概念机械手</span><span class="original-text">Concept Manipulator</span></span><span class="translated-text">实现忠实的反事实图像生成。遵循珍珠范式</span><span class="original-text">to achieve faithful counterfactual image generation. Following the Pearlian paradigm</span><cite class="ltx_cite ltx_citemacro_citep">(Pearl, <a class="ltx_ref" href="#bib.bib16" title="">2009</a>)</cite><span class="translated-text">，我们通过结构化的溯因-行动-预测风格的过程来实现反事实编辑。</span><span class="original-text">, we implement the counterfactual edit through a structured Abduction-Action-Prediction style procedure.</span></p>
+</div>
+<section class="ltx_paragraph" id="S5.SS3.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="ltx_text ltx_font_bold ltx_framed ltx_framed_underline" id="S5.SS3.SSS0.Px1.1.1"><span class="translated-text">绑架</span><span class="original-text">Abduction</span></span></h4>
+<div class="ltx_para" id="S5.SS3.SSS0.Px1.p1">
+<p class="ltx_p" id="S5.SS3.SSS0.Px1.p1.3"><span class="translated-text">我们首先捕捉噪音</span><span class="original-text">We first capture the noise</span><math alttext="z_{T}" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px1.p1.1.m1" intent=":literal"><semantics><msub><mi>z</mi><mi>T</mi></msub><annotation encoding="application/x-tex">z_{T}</annotation></semantics></math><span class="translated-text">具体到事实图像</span><span class="original-text">specific to the factual image</span><math alttext="X_{0}" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px1.p1.2.m2" intent=":literal"><semantics><msub><mi>X</mi><mn>0</mn></msub><annotation encoding="application/x-tex">X_{0}</annotation></semantics></math><span class="translated-text">通过执行采样过程的反转。我们利用快速二阶 DPM-Solver++ 反演</span><span class="original-text">by performing an inversion of the sampling process. We utilize the fast second-order DPM-Solver++ inversion</span><cite class="ltx_cite ltx_citemacro_citep">(Lu et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib12" title="">2025</a>)</cite><span class="translated-text">获得潜在的表征</span><span class="original-text">to obtain the latent representation</span><math alttext="z_{T}" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px1.p1.3.m3" intent=":literal"><semantics><msub><mi>z</mi><mi>T</mi></msub><annotation encoding="application/x-tex">z_{T}</annotation></semantics></math><span class="translated-text">通过前向扩散。</span><span class="original-text">via forward diffusion.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S5.SS3.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="ltx_text ltx_font_bold ltx_framed ltx_framed_underline" id="S5.SS3.SSS0.Px2.1.1"><span class="translated-text">行动</span><span class="original-text">Action</span></span></h4>
+<div class="ltx_para" id="S5.SS3.SSS0.Px2.p1">
+<p class="ltx_p" id="S5.SS3.SSS0.Px2.p1.5"><span class="translated-text">鉴于反事实状态</span><span class="original-text">Given the counterfactual states</span><math alttext="C^{\prime}" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.1.m1" intent=":literal"><semantics><msup><mi>C</mi><mo>′</mo></msup><annotation encoding="application/x-tex">C^{\prime}</annotation></semantics></math><span class="translated-text">从 VLM 概念操纵器获得，我们现在可以利用无分类器指导和解缠结图像编辑技术来实现反事实图像编辑。现在，对于给定的干预概念</span><span class="original-text">obtained from the VLM Concept Manipulator, we can now utilize classifier-free guidance and disentangled image editing techniques to realize counterfactual image edits. Now, for a given intervened concept</span><math alttext="C_{i}" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.2.m2" intent=":literal"><semantics><msub><mi>C</mi><mi>i</mi></msub><annotation encoding="application/x-tex">C_{i}</annotation></semantics></math><span class="translated-text">，我们构造一个干预提示</span><span class="original-text">, we construct an interventional prompt</span><math alttext="Y_{C_{i}}" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.3.m3" intent=":literal"><semantics><msub><mi>Y</mi><msub><mi>C</mi><mi>i</mi></msub></msub><annotation encoding="application/x-tex">Y_{C_{i}}</annotation></semantics></math><span class="translated-text">遵循基本提示的风格</span><span class="original-text">following the style of the base prompt</span><math alttext="Y" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.4.m4" intent=":literal"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math><span class="translated-text">和一组提示</span><span class="original-text">and a set of prompts</span><math alttext="Y_{\textbf{De}(C_{i})}" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.5.m5" intent=":literal"><semantics><msub><mi>Y</mi><mrow><mtext class="ltx_mathvariant_bold">De</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>C</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow></msub><annotation encoding="application/x-tex">Y_{\textbf{De}(C_{i})}</annotation></semantics></math><span class="translated-text">为了子孙后代。对于后代概念的集合，我们将指导项定义为以下总和</span><span class="original-text">for descendants. For the collection of descendant concepts, we define the guidance term as the following sum</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S5.E9">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_left" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_left">(9)</span></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\gamma(X_{t},Y_{\textbf{De}(C_{i})})=\sum_{c\in\textbf{De}(C_{i})}\phi(\psi;s_{c},\lambda)\psi(X_{t},Y_{c})" class="ltx_Math" display="block" id="S5.E9.m1" intent=":literal"><semantics><mrow><mrow><mi>γ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo>,</mo><msub><mi>Y</mi><mrow><mtext class="ltx_mathvariant_bold">De</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>C</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow></msub><mo stretchy="false">)</mo></mrow></mrow><mo rspace="0.111em">=</mo><mrow><munder><mo movablelimits="false">∑</mo><mrow><mi>c</mi><mo>∈</mo><mrow><mtext class="ltx_mathvariant_bold">De</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>C</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow></munder><mrow><mi>ϕ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>ψ</mi><mo>;</mo><msub><mi>s</mi><mi>c</mi></msub><mo>,</mo><mi>λ</mi><mo stretchy="false">)</mo></mrow><mo lspace="0em" rspace="0em">​</mo><mi>ψ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo>,</mo><msub><mi>Y</mi><mi>c</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><annotation encoding="application/x-tex">\gamma(X_{t},Y_{\textbf{De}(C_{i})})=\sum_{c\in\textbf{De}(C_{i})}\phi(\psi;s_{c},\lambda)\psi(X_{t},Y_{c})</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S5.SS3.SSS0.Px2.p1.8"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\phi" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.6.m1" intent=":literal"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math><span class="translated-text">应用元素编辑指导尺度</span><span class="original-text">applies an elementwise edit guidance scale</span><math alttext="s_{c}" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.7.m2" intent=":literal"><semantics><msub><mi>s</mi><mi>c</mi></msub><annotation encoding="application/x-tex">s_{c}</annotation></semantics></math><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="\psi" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.8.m3" intent=":literal"><semantics><mi>ψ</mi><annotation encoding="application/x-tex">\psi</annotation></semantics></math><span class="translated-text">定义为</span><span class="original-text">is defined as</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S5.E10">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_left" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_left">(10)</span></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\psi(X_{t},Y_{c})=\epsilon_{\theta}(X_{t},Y_{c})-\epsilon_{\theta}(X_{t})" class="ltx_Math" display="block" id="S5.E10.m1" intent=":literal"><semantics><mrow><mrow><mi>ψ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo>,</mo><msub><mi>Y</mi><mi>c</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mrow><msub><mi>ϵ</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo>,</mo><msub><mi>Y</mi><mi>c</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>−</mo><mrow><msub><mi>ϵ</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><annotation encoding="application/x-tex">\psi(X_{t},Y_{c})=\epsilon_{\theta}(X_{t},Y_{c})-\epsilon_{\theta}(X_{t})</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S5.SS3.SSS0.Px2.p1.18"><span class="translated-text">的</span><span class="original-text">The</span><math alttext="\phi" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.9.m1" intent=":literal"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math><span class="translated-text">术语缩放图像的元素及其与提示相关的分数估计</span><span class="original-text">term scales elements of the image and its score estimate that are relevant to the prompt</span><math alttext="Y" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.10.m2" intent=":literal"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math><span class="translated-text">。更大的缩放因子</span><span class="original-text">. A larger scaling factors</span><math alttext="s_{c}" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.11.m3" intent=":literal"><semantics><msub><mi>s</mi><mi>c</mi></msub><annotation encoding="application/x-tex">s_{c}</annotation></semantics></math><span class="translated-text">自然地增加了干预的效果，并且</span><span class="original-text">naturally increases the effect of the intervention, and</span><math alttext="\lambda" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.12.m4" intent=":literal"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math><span class="translated-text">选择相关像素。
+术语</span><span class="original-text">selects the relevant pixels.
+The term</span><math alttext="\phi" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.13.m5" intent=":literal"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math><span class="translated-text">是二进制掩码的交集</span><span class="original-text">is an intersection of a binary masks</span><math alttext="M^{1}_{c}" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.14.m6" intent=":literal"><semantics><msubsup><mi>M</mi><mi>c</mi><mn>1</mn></msubsup><annotation encoding="application/x-tex">M^{1}_{c}</annotation></semantics></math><span class="translated-text">从 UNet 交叉注意力层生成一个概念</span><span class="original-text">generated from UNet cross-attention layers for a concept</span><math alttext="c" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.15.m7" intent=":literal"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="M^{2}" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.16.m8" intent=":literal"><semantics><msup><mi>M</mi><mn>2</mn></msup><annotation encoding="application/x-tex">M^{2}</annotation></semantics></math><span class="translated-text">从无条件噪声估计生成（阈值由值</span><span class="original-text">generated from the unconditioned noise estimate (thresholded by the value</span><math alttext="\lambda" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.17.m9" intent=":literal"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math><span class="translated-text">)，按一个因子缩放</span><span class="original-text">), scaled by a factor</span><math alttext="s_{c}" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.18.m10" intent=":literal"><semantics><msub><mi>s</mi><mi>c</mi></msub><annotation encoding="application/x-tex">s_{c}</annotation></semantics></math>.</p>
+<table class="ltx_equation ltx_eqn_table" id="S5.E11">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_left" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_left">(11)</span></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\phi(\psi;s_{c},\lambda)=s_{c}M_{c}^{1}M^{2}" class="ltx_Math" display="block" id="S5.E11.m1" intent=":literal"><semantics><mrow><mrow><mi>ϕ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>ψ</mi><mo>;</mo><msub><mi>s</mi><mi>c</mi></msub><mo>,</mo><mi>λ</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><msub><mi>s</mi><mi>c</mi></msub><mo lspace="0em" rspace="0em">​</mo><msubsup><mi>M</mi><mi>c</mi><mn>1</mn></msubsup><mo lspace="0em" rspace="0em">​</mo><msup><mi>M</mi><mn>2</mn></msup></mrow></mrow><annotation encoding="application/x-tex">\phi(\psi;s_{c},\lambda)=s_{c}M_{c}^{1}M^{2}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S5.SS3.SSS0.Px2.p1.20"><span class="translated-text">掩模的交集既关注相关图像区域又关注来自后代的细粒度语义信息。直观地看，</span><span class="original-text">The intersection of the masks focuses both on relevant image regions and fine-grained semantic information from the descendants. Intuitively, the</span><math alttext="M^{2}" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.19.m1" intent=":literal"><semantics><msup><mi>M</mi><mn>2</mn></msup><annotation encoding="application/x-tex">M^{2}</annotation></semantics></math><span class="translated-text">保留其他特征，包括非后代概念</span><span class="original-text">preserves other features, including the non-descendant concepts</span><math alttext="\textbf{ND}(C_{i})" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px2.p1.20.m2" intent=":literal"><semantics><mrow><mtext class="ltx_mathvariant_bold">ND</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>C</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\textbf{ND}(C_{i})</annotation></semantics></math>.</p>
+</div>
+<figure class="ltx_figure" id="S5.F4">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S5.F4.sf1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="703" id="S5.F4.sf1.g1" src="https://arxiv.org/html/2605.23861v1/x2.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S5.F4.sf1.2.1.1" style="font-size:90%;">(a)</span> </span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S5.F4.sf2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="708" id="S5.F4.sf2.g1" src="https://arxiv.org/html/2605.23861v1/x3.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S5.F4.sf2.2.1.1" style="font-size:90%;">(b)</span> </span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S5.F4.2.1.1" style="font-size:90%;">Figure 4</span>. </span><span class="ltx_text" id="S5.F4.3.2" style="font-size:90%;">Image Counterfactual Generation on human facial characteristics for (a) close-up profile and (b) garden scene</span></figcaption>
+</figure>
+<figure class="ltx_figure" id="S5.F5"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="547" id="S5.F5.g1" src="https://arxiv.org/html/2605.23861v1/x4.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S5.F5.2.1.1" style="font-size:90%;">Figure 5</span>. </span><span class="ltx_text" id="S5.F5.3.2" style="font-size:90%;">Counterfactual Generation on weather scenes</span></figcaption>
+</figure>
+</section>
+<section class="ltx_paragraph" id="S5.SS3.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="ltx_text ltx_font_bold ltx_framed ltx_framed_underline" id="S5.SS3.SSS0.Px3.1.1"><span class="translated-text">预测</span><span class="original-text">Prediction</span></span></h4>
+<div class="ltx_para" id="S5.SS3.SSS0.Px3.p1">
+<p class="ltx_p" id="S5.SS3.SSS0.Px3.p1.3"><span class="translated-text">我们定义分数更新如下</span><span class="original-text">We define the score update as follows</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S5.E12">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_left" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_left">(12)</span></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\begin{split}\epsilon_{\theta}(X_{t},Y_{C^{\prime}})=\epsilon_{\theta}(X_{t},Y_{C_{i}})+\gamma_{t}(X_{t},Y_{\textbf{De}(C_{i})})\end{split}" class="ltx_Math" display="block" id="S5.E12.m1" intent=":literal"><semantics><mtable displaystyle="true"><mtr><mtd class="ltx_align_right" columnalign="right"><mrow><mrow><msub><mi>ϵ</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo>,</mo><msub><mi>Y</mi><msup><mi>C</mi><mo>′</mo></msup></msub><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mrow><msub><mi>ϵ</mi><mi>θ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo>,</mo><msub><mi>Y</mi><msub><mi>C</mi><mi>i</mi></msub></msub><mo stretchy="false">)</mo></mrow></mrow><mo>+</mo><mrow><msub><mi>γ</mi><mi>t</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo>,</mo><msub><mi>Y</mi><mrow><mtext class="ltx_mathvariant_bold">De</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>C</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow></msub><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{split}\epsilon_{\theta}(X_{t},Y_{C^{\prime}})=\epsilon_{\theta}(X_{t},Y_{C_{i}})+\gamma_{t}(X_{t},Y_{\textbf{De}(C_{i})})\end{split}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S5.SS3.SSS0.Px3.p1.2"><span class="translated-text">其中指导术语</span><span class="original-text">where the guidance term</span><math alttext="\gamma" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px3.p1.1.m1" intent=":literal"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math><span class="translated-text">推动干预评分估计</span><span class="original-text">pushes the interventional score estimate</span><math alttext="\epsilon(X_{t},Y_{C_{i}})" class="ltx_Math" display="inline" id="S5.SS3.SSS0.Px3.p1.2.m2" intent=":literal"><semantics><mrow><mi>ϵ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo>,</mo><msub><mi>Y</mi><msub><mi>C</mi><mi>i</mi></msub></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\epsilon(X_{t},Y_{C_{i}})</annotation></semantics></math><span class="translated-text">朝着后代概念估计最终实现满足因果图的最小反事实编辑。</span><span class="original-text">toward the descendant concepts estimate to ultimately realize a minimal counterfactual edit satisfying the causal graph.</span></p>
+</div>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6. </span><span class="translated-text">实验</span><span class="original-text">Experiments</span></h2>
+<div class="ltx_para" id="S6.p1">
+<p class="ltx_p" id="S6.p1.1"><span class="translated-text">在本节中，我们凭经验证明我们可以使用我们提出的框架生成准确的图像反事实作为概念演示。具体来说，我们展示了 VLM 介入推理与组合编辑技术相结合的结果，并与基线编辑方法进行了比较。</span><span class="original-text">In this section, we empirically show as a demonstration of concept that we can produce accurate image counterfactuals using our proposed framework. Specifically, we show the result of VLM interventional reasoning coupled with the compositional editing technique compared to baseline editing methods.</span></p>
+</div>
+<section class="ltx_paragraph" id="S6.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph">
+<span class="ltx_text ltx_font_bold" id="S6.SS0.SSS0.Px1.1.1"><span class="translated-text">数据集</span><span class="original-text">Datasets</span></span>.</h4>
+<div class="ltx_para" id="S6.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S6.SS0.SSS0.Px1.p1.2"><span class="translated-text">我们在直接从稳定扩散 XL (SDXL) 生成的一小组图像上定性评估我们的方法，如图所示</span><span class="original-text">We qualitatively evaluate our method on a small set of images generated directly from Stable Diffusion XL (SDXL), as shown in Figures</span><a class="ltx_ref" href="#S5.F4" title="Figure 4 ‣ Action ‣ 5.3. Diffusion-based Counterfactual Generator ‣ 5. Methodology ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">和</span><span class="original-text">and</span><a class="ltx_ref" href="#S5.F5" title="Figure 5 ‣ Action ‣ 5.3. Diffusion-based Counterfactual Generator ‣ 5. Methodology ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">。我们还在两个基准数据集上进行了更大规模的实验：MS-COCO</span><span class="original-text">. We also perform a larger scale experiment on two benchmark datasets: MS-COCO</span><cite class="ltx_cite ltx_citemacro_citep">(Lin et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib11" title="">2014</a>)</cite><span class="translated-text">和 CelebA 总部</span><span class="original-text">and CelebA-HQ</span><cite class="ltx_cite ltx_citemacro_citep">(Karras et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib5" title="">2018</a>)</cite><span class="translated-text">。 MS-COCO 由带有自然语言标题的图像组成，描述了各种日常场景，例如物体、动物、户外环境和复杂的多实体组合。 CelebA-HQ 是一个包含 30,000 张名人肖像图像的高质量人脸数据集，每张图像都带有描述性文本标题，涵盖年龄、性别、发色和表情等面部属性。对于每个数据集，我们随机采样</span><span class="original-text">. MS-COCO consists of images with natural language captions describing diverse everyday scenes such as objects, animals, outdoor environments, and complex multi-entity compositions. CelebA-HQ is a high-quality human face dataset of 30,000 celebrity portrait images, each annotated with a descriptive text caption covering facial attributes such as age, gender, hair color, and expression. For each dataset, we randomly sample</span><math alttext="75" class="ltx_Math" display="inline" id="S6.SS0.SSS0.Px1.p1.1.m1" intent=":literal"><semantics><mn>75</mn><annotation encoding="application/x-tex">75</annotation></semantics></math><span class="translated-text">每个数据集的图像使用固定种子以确保再现性，总共</span><span class="original-text">images per dataset using a fixed seed to ensure reproducibility, for a total of</span><math alttext="N=150" class="ltx_Math" display="inline" id="S6.SS0.SSS0.Px1.p1.2.m2" intent=":literal"><semantics><mrow><mi>N</mi><mo>=</mo><mn>150</mn></mrow><annotation encoding="application/x-tex">N=150</annotation></semantics></math><span class="translated-text">例子。在整个可用分割上进行采样，无需替换。每个采样图像及其相关的标题都通过完整的管道：概念提取、操作、跨所有编辑方法的生成。</span><span class="original-text">examples. Sampling is performed without replacement over the full available split. Each sampled image and its associated caption are passed through the complete pipeline: concept extraction, manipulation, generation across all editing methods.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S6.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph">
+<span class="ltx_text ltx_font_bold" id="S6.SS0.SSS0.Px2.1.1"><span class="translated-text">实施</span><span class="original-text">Implementation</span></span>.</h4>
+<div class="ltx_para" id="S6.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="S6.SS0.SSS0.Px2.p1.1"><span class="translated-text">我们的管道在四个不同的阶段实现自动化因果概念发现和反事实生成。首先，一条Qwen3-VL-30B-A3B-指令</span><span class="original-text">Our pipeline implements automated causal concept discovery and counterfactual generation across four distinct stages. First, a Qwen3-VL-30B-A3B-Instruct</span><cite class="ltx_cite ltx_citemacro_citep">(Bai et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib2" title="">2025</a>)</cite><span class="translated-text">视觉语言模型 (VLM) 分析输入图像和文本描述，以提取一组高级语义概念，例如头发颜色或年龄及其下游影响。此阶段构建因果关系的有向无环图（DAG），在 0.1 的温度和 2,048 个代币的预算下进行推理。其次，VLM 以图像和发现的图为条件，提出了温度为 0.2 时的三种不同的因果干预措施，限制为 3,072 个输出标记。每个干预措施都针对一个独特的概念，通过 DAG 传播其效果，将所有修改的概念状态记录为描述性短语-值对，并生成文本到图像的生成提示。</span><span class="original-text">vision-language model (VLM) analyzes an input image and a textual description to extract a set of high-level semantic concepts, such as hair color or age, and their downstream effects. This stage constructs a directed acyclic graph (DAG) of causal relationships, with inference performed at a temperature of 0.1 and a budget of 2,048 tokens. Second, the VLM, conditioned on both the image and the discovered graph, proposes three diverse causal interventions at a temperature of 0.2 with a limit of 3,072 output tokens. Each intervention targets a unique concept, propagates its effects through the DAG, records all modified concept states as descriptive phrase-value pairs, and produces a text-to-image generation prompt.</span></p>
+</div>
+<div class="ltx_para" id="S6.SS0.SSS0.Px2.p2">
+<p class="ltx_p" id="S6.SS0.SSS0.Px2.p2.1"><span class="translated-text">第三，使用 Stable Diffusion XL 生成反事实图像</span><span class="original-text">Third, counterfactual images are generated with Stable Diffusion XL</span><cite class="ltx_cite ltx_citemacro_citep">(Podell et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib17" title="">2024</a>)</cite><span class="translated-text">通过 DDIMInversion、DDPMInversion 作为基线和因果语义指导。对于 DDIMInversion 和 DDPMInversion，我们将无分类器指导与包含所有概念的完全指定提示结合在一起。对于 CSG，我们使用 LEDITS++ 管道和 DPM-Solver++ 调度程序将原始图像反转为噪声超过 100 个步骤，源引导尺度为 3.5，反转跳跃率为 0.15。然后，系统使用传播的概念值作为每个概念的编辑提示，对 CSG 编辑下的图像进行去噪。这涉及 8.0 的编辑指导比例、0.7 的编辑阈值、10 个预热步骤和交叉掩码，同时如果没有下游概念受到影响，则回退到直接操作值。</span><span class="original-text">via DDIMInversion, DDPMInversion as baselines, and Causal Semantic Guidance. For DDIMInversion and DDPMInversion, we incorporate classifier-free guidance with the fully specified prompt with all concepts included. For CSG, we use the LEDITS++ pipeline and a DPM-Solver++ scheduler to invert the original image into noise over 100 steps with a source guidance scale of 3.5 and an inversion skip ratio of 0.15. The system then denoises the image under the CSG edit using the propagated concept values as per-concept editing prompts. This involves an edit guidance scale of 8.0, an edit threshold of 0.7, 10 warmup steps, and intersect masking, while falling back to the direct manipulation value if no downstream concepts are affected.</span></p>
+</div>
+<figure class="ltx_table" id="S6.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S6.T1.8.1.1" style="font-size:90%;">Table 1</span>. </span><span class="ltx_text" id="S6.T1.9.2" style="font-size:90%;">Evaluation Results</span></figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S6.T1.6">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S6.T1.6.7.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S6.T1.6.7.1.1" rowspan="2"><span class="ltx_text ltx_font_bold" id="S6.T1.6.7.1.1.1">Method</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="2" id="S6.T1.6.7.1.2"><span class="ltx_text ltx_font_bold" id="S6.T1.6.7.1.2.1">CelebA-HQ</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="2" id="S6.T1.6.7.1.3"><span class="ltx_text ltx_font_bold" id="S6.T1.6.7.1.3.1">MS-COCO</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="2" id="S6.T1.6.7.1.4"><span class="ltx_text ltx_font_bold" id="S6.T1.6.7.1.4.1">Average</span></th>
+</tr>
+<tr class="ltx_tr" id="S6.T1.6.6">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S6.T1.1.1.1">VLM-Eff. <math alttext="\uparrow" class="ltx_Math" display="inline" id="S6.T1.1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S6.T1.2.2.2">LPIPS <math alttext="\downarrow" class="ltx_Math" display="inline" id="S6.T1.2.2.2.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S6.T1.3.3.3">VLM-Eff. <math alttext="\uparrow" class="ltx_Math" display="inline" id="S6.T1.3.3.3.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S6.T1.4.4.4">LPIPS <math alttext="\downarrow" class="ltx_Math" display="inline" id="S6.T1.4.4.4.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_nopad_l ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S6.T1.5.5.5">VLM-Eff. <math alttext="\uparrow" class="ltx_Math" display="inline" id="S6.T1.5.5.5.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S6.T1.6.6.6">LPIPS <math alttext="\downarrow" class="ltx_Math" display="inline" id="S6.T1.6.6.6.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S6.T1.6.8.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S6.T1.6.8.1.1">DDIM Inversion</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S6.T1.6.8.1.2">0.792</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S6.T1.6.8.1.3">0.4836</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_t" id="S6.T1.6.8.1.4">0.741</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S6.T1.6.8.1.5">0.4759</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_t" id="S6.T1.6.8.1.6">0.767</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S6.T1.6.8.1.7">0.4798</td>
+</tr>
+<tr class="ltx_tr" id="S6.T1.6.9.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S6.T1.6.9.2.1">DDPM Inversion</th>
+<td class="ltx_td ltx_align_center" id="S6.T1.6.9.2.2">0.756</td>
+<td class="ltx_td ltx_align_center" id="S6.T1.6.9.2.3">0.2244</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="S6.T1.6.9.2.4">0.655</td>
+<td class="ltx_td ltx_align_center" id="S6.T1.6.9.2.5">0.2035</td>
+<td class="ltx_td ltx_nopad_l ltx_align_center" id="S6.T1.6.9.2.6">0.705</td>
+<td class="ltx_td ltx_align_center" id="S6.T1.6.9.2.7">0.2139</td>
+</tr>
+<tr class="ltx_tr" id="S6.T1.6.10.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S6.T1.6.10.3.1">CSG (Ours)</th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S6.T1.6.10.3.2"><span class="ltx_text ltx_font_bold" id="S6.T1.6.10.3.2.1">0.854</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S6.T1.6.10.3.3"><span class="ltx_text ltx_font_bold" id="S6.T1.6.10.3.3.1">0.1980</span></td>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_bb" id="S6.T1.6.10.3.4"><span class="ltx_text ltx_font_bold" id="S6.T1.6.10.3.4.1">0.762</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S6.T1.6.10.3.5"><span class="ltx_text ltx_font_bold" id="S6.T1.6.10.3.5.1">0.1750</span></td>
+<td class="ltx_td ltx_nopad_l ltx_align_center ltx_border_bb" id="S6.T1.6.10.3.6"><span class="ltx_text ltx_font_bold" id="S6.T1.6.10.3.6.1">0.808</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S6.T1.6.10.3.7"><span class="ltx_text ltx_font_bold" id="S6.T1.6.10.3.7.1">0.1865</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure class="ltx_figure" id="S6.F6"><span class="ltx_inline-block"><svg class="ltx_picture ltx_centering" height="1788.14" id="S6.F6.pic1" overflow="visible" version="1.1" viewbox="0 0 600 1788.14" width="600"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,1788.14) matrix(1 0 0 -1 0 0)"><g fill="#808080" fill-opacity="1.0" style="--ltx-fill-color:#808080;"><path d="M 0 5.91 L 0 1782.24 C 0 1785.5 2.64 1788.14 5.91 1788.14 L 594.09 1788.14 C 597.36 1788.14 600 1785.5 600 1782.24 L 600 5.91 C 600 2.64 597.36 0 594.09 0 L 5.91 0 C 2.64 0 0 2.64 0 5.91 Z" style="stroke:none"></path></g><g fill="#FFFFFF" fill-opacity="1.0" style="--ltx-fill-color:#FFFFFF;"><path d="M 1.97 5.91 L 1.97 1106.3 L 598.03 1106.3 L 598.03 5.91 C 598.03 3.73 596.27 1.97 594.09 1.97 L 5.91 1.97 C 3.73 1.97 1.97 3.73 1.97 5.91 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 21.65 1770.85)"><foreignobject color="#FFFFFF" height="670.03" overflow="visible" style="--ltx-fg-color:#FFFFFF;--ltx-fo-width:40.23em;--ltx-fo-height:0.82em;--ltx-fo-depth:47.6em;" transform="matrix(1 0 0 -1 0 11.39)" width="556.69"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S6.F6.pic1.2.2.2.1.1" style="width:40.23em;">
+<span class="ltx_p ltx_align_center" id="S6.F6.pic1.2.2.2.1.1.1"><span class="ltx_text ltx_font_bold" id="S6.F6.pic1.2.2.2.1.1.1.1" style="font-size:120%;">VLM Effectiveness Evaluation Prompt</span></span>
+</span></span></span></foreignobject></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 21.65 16.2)"><foreignobject color="#000000" height="1080.71" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:40.23em;--ltx-fo-height:77.93em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 1078.29)" width="556.69"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1" style="width:54.74em;">
+<span class="ltx_p ltx_align_left" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2"><span class="ltx_text ltx_font_typewriter" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.2.1" style="font-size:70%;">You look at images and answer simple questions about what is shown in them. 
+<br class="ltx_break"/>
+You always respond with valid, well-formed JSON and nothing else — no prose, no markdown, no explanation outside the JSON object.</span></span>
+<span class="ltx_p ltx_align_left" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.3"><span class="ltx_text ltx_font_typewriter" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.3.1" style="font-size:70%;">Look at the given image. It was generated with the following prompt:
+&lt;prompt&gt;
+{generation_prompt}
+&lt;/prompt&gt;</span></span>
+<span class="ltx_p ltx_align_left" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1"><span class="ltx_text ltx_font_typewriter" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1" style="font-size:70%;">The one thing that was changed to produce this image was: 
+<br class="ltx_break"/> {target_concept_name}: {original_value} <math alttext="\rightarrow" class="ltx_Math" display="inline" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> {new_value} 
+<br class="ltx_break"/></span></span>
+<span class="ltx_p ltx_align_left" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.4"><span class="ltx_text ltx_font_typewriter" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.4.1" style="font-size:70%;">Below is a checklist of concepts and the value each one should have in the image. 
+<br class="ltx_break"/></span></span>
+<span class="ltx_p ltx_align_left" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.5"><span class="ltx_text ltx_font_typewriter" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.5.1" style="font-size:70%;">&lt;checklist&gt;
+{checklist_text}
+&lt;/checklist&gt; 
+<br class="ltx_break"/></span></span>
+<span class="ltx_p ltx_align_left" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.6"><span class="ltx_text ltx_font_typewriter" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.6.1" style="font-size:70%;">Your task: 
+<br class="ltx_break"/></span></span>
+<span class="ltx_p ltx_align_left" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.7"><span class="ltx_text ltx_font_typewriter ltx_font_bold" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.7.1" style="font-size:70%;">1. CHECKLIST EVALUATION<span class="ltx_text ltx_font_medium" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.7.1.1">
+<br class="ltx_break"/>For each item in the checklist, answer "yes" if that value is clearly present in the image, or "no" if it is not. 
+<br class="ltx_break"/></span></span></span>
+<span class="ltx_p ltx_align_left" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.8"><span class="ltx_text ltx_font_typewriter ltx_font_bold" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.8.1" style="font-size:70%;">2. VERDICT ASSIGNMENT<span class="ltx_text ltx_font_medium" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.8.1.1">
+<br class="ltx_break"/>• "success" — all checklist items are "yes" 
+<br class="ltx_break"/>• "partial" — most checklist items are "yes" but some are wrong 
+<br class="ltx_break"/>• "failure" — the main changed concept is not visible, OR most checklist items are "no" 
+<br class="ltx_break"/></span></span></span>
+<span class="ltx_p ltx_align_left" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.9"><span class="ltx_text ltx_font_typewriter ltx_font_bold" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.9.1" style="font-size:70%;">3. REASONING<span class="ltx_text ltx_font_medium" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.9.1.1">
+<br class="ltx_break"/>Write one or two sentences explaining your verdict. 
+<br class="ltx_break"/></span></span></span>
+<span class="ltx_p ltx_align_left" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.10"><span class="ltx_text ltx_font_typewriter" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.10.1" style="font-size:70%;">Return ONLY the following JSON: 
+<br class="ltx_break"/></span></span><pre class="ltx_verbatim ltx_align_left ltx_font_typewriter" id="S6.F6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.11" style="font-size:70%;">
+{
+  "intervention_id": "...",
+  "concept_checks": [
+      {
+      "concept_name": "...",
+      "expected_value": "...",
+      "present": "yes|no"
+      }
+  ],
+  "verdict": "success|partial|failure",
+  "reasoning": "..."
+}
+</pre>
+</span></span></span></foreignobject></g></g></svg></span>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S6.F6.2.1.1" style="font-size:90%;">Figure 6</span>. </span><span class="ltx_text" id="S6.F6.3.2" style="font-size:90%;">VLM effectiveness evaluation prompt</span></figcaption>
+</figure>
+</section>
+<section class="ltx_paragraph" id="S6.SS0.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph">
+<span class="ltx_text ltx_font_bold" id="S6.SS0.SSS0.Px3.1.1"><span class="translated-text">定性评价</span><span class="original-text">Qualitative Evaluation</span></span>.</h4>
+<div class="ltx_para" id="S6.SS0.SSS0.Px3.p1">
+<p class="ltx_p" id="S6.SS0.SSS0.Px3.p1.1"><span class="translated-text">我们根据稳定扩散 XL 生成的几个图像样本评估我们的方法。我们发现，在基于 VLM 指定的因果图生成最小反事实一致编辑方面，我们的方法始终优于基线。例如，如图</span><span class="original-text">We evaluate our method based on several image samples generated from Stable Diffusion XL. We find that our approach consistently outperforms baselines in generating minimal counterfactually consistent edits based on the causal graph specified by the VLM. For example, in Figure</span><a class="ltx_ref" href="#S5.F4.sf1" title="In Figure 4 ‣ Action ‣ 5.3. Diffusion-based Counterfactual Generator ‣ 5. Methodology ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_tag">4(a)</span></a><span class="translated-text">，对性别属性的干预应该会导致面部毛发发生变化，同时保留原始图像中的所有其他属性。 DDIM 和 DDPM 反转引入了不必要的变化，而 CSG 生成具有下游效果的最小且一致的编辑。我们还发现，我们的方法在处理天气等更复杂的概念时效果很好。图中</span><span class="original-text">, intervening on the gender attribute should cause facial hair to change while preserving every other attribute in the original image. DDIM and DDPM Inversion introduce unnecessary variations, while CSG generates a minimal and consistent edit with downstream effects. We also find that our method works well when manipulating more complex concepts such as weather. In Figure</span><a class="ltx_ref" href="#S5.F5" title="Figure 5 ‣ Action ‣ 5.3. Diffusion-based Counterfactual Generator ‣ 5. Methodology ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">，第一行显示了对天气从雨天到干燥天气的干预。我们的方法生成的编辑显示了清晰的背景和干燥的头发，这是根据 VLM 推断的（例如，阳光明媚的天气会导致头发干燥和蓬松），而基线要么会增加高变化，要么无法包含因果变化。</span><span class="original-text">, the first row shows an intervention on the weather from rainy to dry weather. The edit generated by our method shows a clear background and dry hair, which are inferred according to the VLM (e.g., sunny weather causes dry hair and fluffy hair) whereas baselines either add high variations or fail to incorporate causal changes.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S6.SS0.SSS0.Px4">
+<h4 class="ltx_title ltx_title_paragraph">
+<span class="ltx_text ltx_font_bold" id="S6.SS0.SSS0.Px4.1.1"><span class="translated-text">定量评价</span><span class="original-text">Quantitative Evaluation</span></span>.</h4>
+<div class="ltx_para" id="S6.SS0.SSS0.Px4.p1">
+<p class="ltx_p" id="S6.SS0.SSS0.Px4.p1.1"><span class="translated-text">我们还对 CelebA-HQ 和 MS-COCO 数据集的子集进行定量评估。给定一个反事实图像，我们评估</span><span class="original-text">We also provide a quantitative evaluation on a subset of the CelebA-HQ and MS-COCO datasets. Given a counterfactual image, we evaluate</span><span class="ltx_text ltx_font_bold" id="S6.SS0.SSS0.Px4.p1.1.1"><span class="translated-text">有效性</span><span class="original-text">effectiveness</span></span><span class="translated-text">通过使用干预措施</span><span class="original-text">of the intervention by using</span><span class="ltx_text ltx_font_bold" id="S6.SS0.SSS0.Px4.p1.1.2"><span class="translated-text">VLM效应</span><span class="original-text">VLM-Eff</span></span><span class="translated-text">，一种基于 VLM 的方法，用于识别生成的图像是否包含每个反事实概念值，类似于</span><span class="original-text">, a VLM-based approach to identify whether the generated image contains each counterfactual concept value, similar to</span><cite class="ltx_cite ltx_citemacro_citep">(Spyrou et al<span class="ltx_text">.</span>, <a class="ltx_ref" href="#bib.bib25" title="">2025</a>)</cite><span class="translated-text">。我们在图中包含了有效性提示</span><span class="original-text">. We include the effectiveness prompt in the Figure</span><a class="ltx_ref" href="#S6.F6" title="Figure 6 ‣ Implementation. ‣ 6. Experiments ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">供参考。评估</span><span class="original-text">for reference. To evaluate</span><span class="ltx_text ltx_font_bold" id="S6.SS0.SSS0.Px4.p1.1.3"><span class="translated-text">极简性</span><span class="original-text">minimality</span></span><span class="translated-text">，或者生成的图像的最小编辑量是多少，我们利用与原始图像的感知相似性，并使用以下方法进行量化</span><span class="original-text">, or how much of a minimal edit the generated image is, we utilize perceptual similarity to the original image, quantified using</span><span class="ltx_text ltx_font_bold" id="S6.SS0.SSS0.Px4.p1.1.4">LPIPS</span><span class="translated-text">具有 VGG 骨干。我们报告平均 VLM-Eff。表中所有方法的 LPIPS 分数</span><span class="original-text">with a VGG backbone. We report the average VLM-Eff. and LPIPS score for all methods in Table</span><a class="ltx_ref" href="#S6.T1" title="Table 1 ‣ Implementation. ‣ 6. Experiments ‣ Leveraging Foundation Models for Causal Generative Modeling"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">。我们的结果表明，与标准编辑技术相比，CSG 能够进行更准确的反事实编辑，同时满足极简性。</span><span class="original-text">. Our results demonstrate that CSG is capable of more accurate counterfactual edits, while satisfying minimality compared to standard editing techniques.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S7">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">7. </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h2>
+<div class="ltx_para" id="S7.p1">
+<p class="ltx_p" id="S7.p1.1"><span class="translated-text">在这项工作中，我们提出了基础模型驱动的因果生成模型，这是由预训练的基础模型组件组成的因果生成模型的抽象。然后，我们开发了一个框架，使用大型视觉语言模型进行概念提取和操作，并使用稳定扩散 XL 进行反事实生成。我们提出因果语义指导，这是一种在 LEDITS++ 上扩展的推理时间编辑方法，以确保在反事实生成的图像中充分表示对后代概念的干预和传播。定性和定量的实证评估表明，我们的框架有望利用基础模型的力量来模块化和自动化因果生成建模的过程。</span><span class="original-text">In this work, we propose Foundation Model Powered Causal Generative Model, an abstraction for causal generative modeling consisting of pretrained foundation model components. We then develop a framework using large vision-language models for concept extraction and manipulation and Stable Diffusion XL for counterfactual generation. We propose Causal Semantic Guidance, an inference-time editing approach extending on LEDITS++ to ensure interventions and propagation to descendant concepts are sufficiently represented in the counterfactually generated image. Qualitative and quantitative empirical evaluation shows that our framework is promising for modularizing and automating the process of causal generative modeling by utilizing the power of foundation models.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="Sx1">
+<h2 class="ltx_title ltx_title_section"><span class="translated-text">致谢</span><span class="original-text">Acknowledgements</span></h2>
+<div class="ltx_para" id="Sx1.p1">
+<p class="ltx_p" id="Sx1.p1.1"><span class="translated-text">这项工作得到了国家科学基金会的部分支持，奖项为 1910284、1946391、2147375、美国国立卫生研究院国家普通医学科学研究所
+健康奖 P20GM139768，以及
+阿肯色州综合代谢研究中心
+在阿肯色大学。</span><span class="original-text">This work is supported in part by National Science Foundation under awards 1910284, 1946391, 2147375, the National Institute of General Medical Sciences of National Institutes of
+Health under award P20GM139768, and the
+Arkansas Integrative Metabolic Research Center
+at University of Arkansas.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist">
+<li class="ltx_bibitem" id="bib.bib1">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">(1)</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib2">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bai et al<span class="ltx_text" id="bib.bib2.2.2.1">.</span> (2025)</span>
+<span class="ltx_bibblock">
+Shuai Bai, Yuxuan Cai, Ruizhe Chen, Keqin Chen, Xionghui Chen, Zesen Cheng, Lianghao Deng, Wei Ding, Chang Gao, Chunjiang Ge, et al<span class="ltx_text" id="bib.bib2.3.1">.</span> 2025.
+
+</span>
+<span class="ltx_bibblock">Qwen3-vl technical report.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib2.4.1">arXiv preprint arXiv:2511.21631</em> (2025).
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib3">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Brack et al<span class="ltx_text" id="bib.bib3.2.2.1">.</span> (2024)</span>
+<span class="ltx_bibblock">
+Manuel Brack, Felix Friedrich, Katharia Kornmeier, Linoy Tsaban, Patrick Schramowski, Kristian Kersting, and Apolinario Passos. 2024.
+
+</span>
+<span class="ltx_bibblock">LEDITS++: Limitless Image Editing using Text-to-Image Models. In <em class="ltx_emph ltx_font_italic" id="bib.bib3.3.1">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib4">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ho et al<span class="ltx_text" id="bib.bib4.2.2.1">.</span> (2020)</span>
+<span class="ltx_bibblock">
+Jonathan Ho, Ajay Jain, and Pieter Abbeel. 2020.
+
+</span>
+<span class="ltx_bibblock">Denoising Diffusion Probabilistic Models. In <em class="ltx_emph ltx_font_italic" id="bib.bib4.3.1">Advances in Neural Information Processing Systems</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib5">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Karras et al<span class="ltx_text" id="bib.bib5.2.2.1">.</span> (2018)</span>
+<span class="ltx_bibblock">
+Tero Karras, Timo Aila, Samuli Laine, and Jaakko Lehtinen. 2018.
+
+</span>
+<span class="ltx_bibblock">Progressive Growing of GANs for Improved Quality, Stability, and Variation. In <em class="ltx_emph ltx_font_italic" id="bib.bib5.3.1">International Conference on Learning Representations</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib6">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kocaoglu et al<span class="ltx_text" id="bib.bib6.2.2.1">.</span> (2018)</span>
+<span class="ltx_bibblock">
+Murat Kocaoglu, Christopher Snyder, Alexandros G. Dimakis, and Sriram Vishwanath. 2018.
+
+</span>
+<span class="ltx_bibblock">CausalGAN: Learning Causal Implicit Generative Models with Adversarial Training. In <em class="ltx_emph ltx_font_italic" id="bib.bib6.3.1">International Conference on Learning Representations</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib7">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Komanduri et al<span class="ltx_text" id="bib.bib7.2.2.1">.</span> (2025)</span>
+<span class="ltx_bibblock">
+Aneesh Komanduri, Karuna Bhaila, and Xintao Wu. 2025.
+
+</span>
+<span class="ltx_bibblock">CausalVLBench: Benchmarking Visual Causal Reasoning in Large Vision-Language Models. In <em class="ltx_emph ltx_font_italic" id="bib.bib7.3.1">Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib8">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Komanduri et al<span class="ltx_text" id="bib.bib8.2.2.1">.</span> (2024b)</span>
+<span class="ltx_bibblock">
+Aneesh Komanduri, Xintao Wu, Yongkai Wu, and Feng Chen. 2024b.
+
+</span>
+<span class="ltx_bibblock">From Identifiable Causal Representations to Controllable Counterfactual Generation: A Survey on Causal Generative Modeling.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib8.3.1">Transactions on Machine Learning Research</em> (2024).
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib9">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Komanduri et al<span class="ltx_text" id="bib.bib9.2.2.1">.</span> (2024a)</span>
+<span class="ltx_bibblock">
+Aneesh Komanduri, Yongkai Wu, Feng Chen, and Xintao Wu. 2024a.
+
+</span>
+<span class="ltx_bibblock">Learning Causally Disentangled Representations via the Principle of Independent Causal Mechanisms. In <em class="ltx_emph ltx_font_italic" id="bib.bib9.3.1">Proceedings of the 33rd International Joint Conference on Artificial Intelligence</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib10">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Komanduri et al<span class="ltx_text" id="bib.bib10.2.2.1">.</span> (2024c)</span>
+<span class="ltx_bibblock">
+Aneesh Komanduri, Chen Zhao, Feng Chen, and Xintao Wu. 2024c.
+
+</span>
+<span class="ltx_bibblock">Causal Diffusion Autoencoders: Toward Counterfactual Generation via Diffusion Probabilistic Models. In <em class="ltx_emph ltx_font_italic" id="bib.bib10.3.1">Proceedings of the 27th European Conference on Artificial Intelligence</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib11">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lin et al<span class="ltx_text" id="bib.bib11.2.2.1">.</span> (2014)</span>
+<span class="ltx_bibblock">
+Tsung-Yi Lin, Michael Maire, Serge J. Belongie, James Hays, Pietro Perona, Deva Ramanan, Piotr Dollár, and C. Lawrence Zitnick. 2014.
+
+</span>
+<span class="ltx_bibblock">Microsoft COCO: Common Objects in Context. In <em class="ltx_emph ltx_font_italic" id="bib.bib11.3.1">European Conference on Computer Vision</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib12">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lu et al<span class="ltx_text" id="bib.bib12.2.2.1">.</span> (2025)</span>
+<span class="ltx_bibblock">
+Cheng Lu, Yuhao Zhou, Fan Bao, Jianfei Chen, Chongxuan Li, and Jun Zhu. 2025.
+
+</span>
+<span class="ltx_bibblock">Dpm-solver++: Fast solver for guided sampling of diffusion probabilistic models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib12.3.1">Machine Intelligence Research</em> 22, 4 (2025), 730–751.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib13">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Mou et al<span class="ltx_text" id="bib.bib13.2.2.1">.</span> (2024)</span>
+<span class="ltx_bibblock">
+Chong Mou, Xintao Wang, Liangbin Xie, Yanze Wu, Jian Zhang, Zhongang Qi, and Ying Shan. 2024.
+
+</span>
+<span class="ltx_bibblock">T2i-adapter: Learning adapters to dig out more controllable ability for text-to-image diffusion models. In <em class="ltx_emph ltx_font_italic" id="bib.bib13.3.1">Proceedings of the AAAI Conference on Artificial Intelligence</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib14">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Nichol and Dhariwal (2021)</span>
+<span class="ltx_bibblock">
+Alexander Quinn Nichol and Prafulla Dhariwal. 2021.
+
+</span>
+<span class="ltx_bibblock">Improved Denoising Diffusion Probabilistic Models. In <em class="ltx_emph ltx_font_italic" id="bib.bib14.1.1">Proceedings of the 38th International Conference on Machine Learning</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib15">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Pawlowski et al<span class="ltx_text" id="bib.bib15.2.2.1">.</span> (2020)</span>
+<span class="ltx_bibblock">
+Nick Pawlowski, Daniel Coelho de Castro, and Ben Glocker. 2020.
+
+</span>
+<span class="ltx_bibblock">Deep Structural Causal Models for Tractable Counterfactual Inference. In <em class="ltx_emph ltx_font_italic" id="bib.bib15.3.1">Advances in Neural Information Processing Systems</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib16">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Pearl (2009)</span>
+<span class="ltx_bibblock">
+Judea Pearl. 2009.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib16.1.1">Causality</em> (2 ed.).
+
+</span>
+<span class="ltx_bibblock">Cambridge University Press, Cambridge, UK.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib17">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Podell et al<span class="ltx_text" id="bib.bib17.2.2.1">.</span> (2024)</span>
+<span class="ltx_bibblock">
+Dustin Podell, Zion English, Kyle Lacey, Andreas Blattmann, Tim Dockhorn, Jonas Müller, Joe Penna, and Robin Rombach. 2024.
+
+</span>
+<span class="ltx_bibblock">SDXL: Improving Latent Diffusion Models for High-Resolution Image Synthesis. In <em class="ltx_emph ltx_font_italic" id="bib.bib17.3.1">The Twelfth International Conference on Learning Representations</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib18">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Radford et al<span class="ltx_text" id="bib.bib18.2.2.1">.</span> (2021)</span>
+<span class="ltx_bibblock">
+Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, Gretchen Krueger, and Ilya Sutskever. 2021.
+
+</span>
+<span class="ltx_bibblock">Learning Transferable Visual Models From Natural Language Supervision. In <em class="ltx_emph ltx_font_italic" id="bib.bib18.3.1">Proceedings of the 38th International Conference on Machine Learning</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib19">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ramesh et al<span class="ltx_text" id="bib.bib19.2.2.1">.</span> (2021)</span>
+<span class="ltx_bibblock">
+Aditya Ramesh, Mikhail Pavlov, Gabriel Goh, Scott Gray, Chelsea Voss, Alec Radford, Mark Chen, and Ilya Sutskever. 2021.
+
+</span>
+<span class="ltx_bibblock">Zero-Shot Text-to-Image Generation. In <em class="ltx_emph ltx_font_italic" id="bib.bib19.3.1">Proceedings of the 38th International Conference on Machine Learning</em>. 8821–8831.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib20">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ribeiro et al<span class="ltx_text" id="bib.bib20.2.2.1">.</span> (2025)</span>
+<span class="ltx_bibblock">
+Fabio De Sousa Ribeiro, Ainkaran Santhirasekaram, and Ben Glocker. 2025.
+
+</span>
+<span class="ltx_bibblock">Counterfactual Identifiability via Dynamic Optimal Transport. In <em class="ltx_emph ltx_font_italic" id="bib.bib20.3.1">The Thirty-ninth Annual Conference on Neural Information Processing Systems</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib21">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Rombach et al<span class="ltx_text" id="bib.bib21.2.2.1">.</span> (2022)</span>
+<span class="ltx_bibblock">
+Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Björn Ommer. 2022.
+
+</span>
+<span class="ltx_bibblock">High-Resolution Image Synthesis With Latent Diffusion Models. In <em class="ltx_emph ltx_font_italic" id="bib.bib21.3.1">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib22">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sanchez and Tsaftaris (2022)</span>
+<span class="ltx_bibblock">
+Pedro Sanchez and Sotirios A Tsaftaris. 2022.
+
+</span>
+<span class="ltx_bibblock">Diffusion causal models for counterfactual estimation.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib22.1.1">Conference on Causal Learning and Reasoning (CLeaR)</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib23">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Scholkopf et al<span class="ltx_text" id="bib.bib23.2.2.1">.</span> (2021)</span>
+<span class="ltx_bibblock">
+Bernhard Scholkopf, Francesco Locatello, Stefan Bauer, Nan Rosemary Ke, Nal Kalchbrenner, Anirudh Goyal, and Yoshua Bengio. 2021.
+
+</span>
+<span class="ltx_bibblock">Toward Causal Representation Learning.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib23.3.1">Proc. IEEE</em> 109 (May 2021), 612–634.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib24">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Song et al<span class="ltx_text" id="bib.bib24.2.2.1">.</span> (2021)</span>
+<span class="ltx_bibblock">
+Jiaming Song, Chenlin Meng, and Stefano Ermon. 2021.
+
+</span>
+<span class="ltx_bibblock">Denoising Diffusion Implicit Models. In <em class="ltx_emph ltx_font_italic" id="bib.bib24.3.1">International Conference on Learning Representations</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib25">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Spyrou et al<span class="ltx_text" id="bib.bib25.2.2.1">.</span> (2025)</span>
+<span class="ltx_bibblock">
+Nikos Spyrou, Athanasios Vlontzos, Paraskevas Pegios, Thomas Melistas, Nefeli Gkouti, Yannis Panagakis, Giorgos Papanastasiou, and Sotirios A Tsaftaris. 2025.
+
+</span>
+<span class="ltx_bibblock">Causally steered diffusion for automated video counterfactual generation.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib25.3.1">arXiv preprint arXiv:2506.14404</em> (2025).
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib26">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Vashishtha et al<span class="ltx_text" id="bib.bib26.2.2.1">.</span> (2023)</span>
+<span class="ltx_bibblock">
+Aniket Vashishtha, Abbavaram Gowtham Reddy, Abhinav Kumar, Saketh Bachu, Vineeth N. Balasubramanian, and Amit Sharma. 2023.
+
+</span>
+<span class="ltx_bibblock">Causal Inference using LLM-Guided Discovery. In <em class="ltx_emph ltx_font_italic" id="bib.bib26.3.1">AAAI 2024 Workshop on ”Are Large Language Models Simply Causal Parrots?”</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib27">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Verma et al<span class="ltx_text" id="bib.bib27.2.2.1">.</span> (2025)</span>
+<span class="ltx_bibblock">
+Vishal Verma, Sawal Acharya, Devansh Bhardwaj, Samuel Simko, Yongjin Yang, Anahita Haghighat, Dominik Janzing, Mrinmaya Sachan, Bernhard Schölkopf, and Zhijing Jin. 2025.
+
+</span>
+<span class="ltx_bibblock">Causal AI Scientist: Facilitating Causal Data Science with Large Language Models. In <em class="ltx_emph ltx_font_italic" id="bib.bib27.3.1">NeurIPS 2025 Workshop on CauScien: Uncovering Causality in Science</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib28">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wang et al<span class="ltx_text" id="bib.bib28.2.2.1">.</span> (2023)</span>
+<span class="ltx_bibblock">
+Zihao Wang, Lin Gui, Jeffrey Negrea, and Victor Veitch. 2023.
+
+</span>
+<span class="ltx_bibblock">Concept Algebra for (Score-Based) Text-Controlled Generative Models. In <em class="ltx_emph ltx_font_italic" id="bib.bib28.3.1">Advances in Neural Information Processing Systems</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib29">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wu et al<span class="ltx_text" id="bib.bib29.2.2.1">.</span> (2023)</span>
+<span class="ltx_bibblock">
+Qiucheng Wu, Yujian Liu, Handong Zhao, Ajinkya Kale, Trung Bui, Tong Yu, Zhe Lin, Yang Zhang, and Shiyu Chang. 2023.
+
+</span>
+<span class="ltx_bibblock">Uncovering the Disentanglement Capability in Text-to-Image Diffusion Models. In <em class="ltx_emph ltx_font_italic" id="bib.bib29.3.1">2023 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)</em>. 1900–1910.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_href" href="https://doi.org/10.1109/CVPR52729.2023.00189" title="">doi:<span class="ltx_ref ltx_nolink">10.1109/CVPR52729.2023.00189</span></a>
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib30">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang et al<span class="ltx_text" id="bib.bib30.2.2.1">.</span> (2023)</span>
+<span class="ltx_bibblock">
+Tao Yang, Yuwang Wang, Yan Lu, and Nanning Zheng. 2023.
+
+</span>
+<span class="ltx_bibblock">DisDiff: Unsupervised Disentanglement of Diffusion Probabilistic Models. In <em class="ltx_emph ltx_font_italic" id="bib.bib30.3.1">Advances in Neural Information Processing Systems</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib31">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zečević et al<span class="ltx_text" id="bib.bib31.2.2.1">.</span> (2023)</span>
+<span class="ltx_bibblock">
+Matej Zečević, Moritz Willig, Devendra Singh Dhami, and Kristian Kersting. 2023.
+
+</span>
+<span class="ltx_bibblock">Causal Parrots: Large Language Models May Talk Causality But Are Not Causal.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib31.3.1">Transactions on Machine Learning Research</em> (2023).
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib32">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhang et al<span class="ltx_text" id="bib.bib32.2.2.1">.</span> (2023)</span>
+<span class="ltx_bibblock">
+Lvmin Zhang, Anyi Rao, and Maneesh Agrawala. 2023.
+
+</span>
+<span class="ltx_bibblock">Adding conditional control to text-to-image diffusion models. In <em class="ltx_emph ltx_font_italic" id="bib.bib32.3.1">Proceedings of the IEEE/CVF International Conference on Computer Vision</em>.
+
+</span>
+<span class="ltx_bibblock">
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2605.23861v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div aria-hidden="true" id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
