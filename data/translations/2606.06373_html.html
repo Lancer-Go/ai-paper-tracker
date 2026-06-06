@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">LatentWave：无线基础模型的 JEPA 预训练</span><span class="original-text">LatentWave: JEPA Pretraining for Wireless Foundation Models</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 6 月 4 日星期四 16:37:50 生成 http://dlmf.nist.gov/LaTeXML/。</span><span class="original-text">Generated on Thu Jun  4 16:37:50 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2606.06373" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2606.06373" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2606.06373v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2606.06373v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">I </span><span class="ltx_text ltx_font_smallcaps">Introduction</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S2" title="In LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">II </span><span class="ltx_text ltx_font_smallcaps">Related Work</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">III </span><span class="ltx_text ltx_font_smallcaps">LatentWave Methodology</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-A</span> </span><span class="ltx_text ltx_font_italic">Proposed Pretraining Framework and Architecture</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS2" title="In III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-B</span> </span><span class="ltx_text ltx_font_italic">Masking Strategy</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS3" title="In III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-C</span> </span><span class="ltx_text ltx_font_italic">Pretraining Data</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS4" title="In III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-D</span> </span><span class="ltx_text ltx_font_italic">Baseline and Downstream Evaluation</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">IV </span><span class="ltx_text ltx_font_smallcaps">Results</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In IV Results ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-A</span> </span><span class="ltx_text ltx_font_italic">Experimental Setup</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS2" title="In IV Results ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-B</span> </span><span class="ltx_text ltx_font_italic">Main Results</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS3" title="In IV Results ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-C</span> </span><span class="ltx_text ltx_font_italic">Masking Ablations</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S5" title="In LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">V </span><span class="ltx_text ltx_font_smallcaps">Conclusion</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：arXiv.org 永久非独占许可证</span><span class="original-text">License: arXiv.org perpetual non-exclusive license</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2606.06373v1 [eess.SP] 2026 年 6 月 4 日</span><span class="original-text">arXiv:2606.06373v1 [eess.SP] 04 Jun 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">LatentWave：JEPA 预训练</span><span class="original-text">LatentWave: JEPA Pretraining for</span><br class="ltx_break"/><span class="translated-text">无线基础模型</span><span class="original-text">Wireless Foundation Models</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Ahmed Mohamed, Ahmed Aboulfotouh, and
+Hatem Abou-Zeid
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">无线基础模型已成为为每个无线任务构建单独模型的有前途的替代方案。然而，现有方法依赖于屏蔽输入重建，这可能会使表示偏向低级信号细节。在本文中，我们提出了 LatentWave，这是一种使用联合嵌入预测架构 (JEPA) 在不同无线频谱图和信道状态信息 (CSI) 上进行预训练的无线基础模型。通过预测潜在空间中的屏蔽区域，LatentWave 学习到的表示形式在不同的下游任务中更容易转移。
+所提出的架构在预训练期间采用每通道补丁嵌入和随机通道采样，使其能够处理可变天线数量并提高跨异构无线配置的可用性。
+我们在四个下游任务上评估 LatentWave：RF 信号分类、5G NR 定位、波束预测和 LoS/NLoS 分类，并与在相同数据上预训练的掩模建模基线 (WavesFM) 进行比较。此外，我们表明掩蔽几何引入了与任务相关的归纳偏差：频率掩蔽强烈支持与通道相关的任务，例如定位和波束预测，而区域掩蔽更好地保留了信号分类的可辨别性。</span><span class="original-text">Wireless foundation models have emerged as a promising alternative to building separate models for each wireless task. However, existing approaches rely on masked input reconstruction, which can bias representations toward low-level signal details. In this paper, we propose LatentWave, a wireless foundation model pretrained using a Joint-Embedding Predictive Architecture (JEPA) on diverse wireless spectrograms and channel state information (CSI). By predicting masked regions in latent space, LatentWave learns representations that are more transferable out of the box across diverse downstream tasks.
+The proposed architecture employs per-channel patch embeddings with stochastic channel sampling during pretraining, allowing it to process variable antenna counts and improving usability across heterogeneous wireless configurations.
+We evaluate LatentWave on four downstream tasks: RF signal classification, 5G NR positioning, beam prediction, and LoS/NLoS classification, comparing against a masked-modeling baseline (WavesFM) pretrained on the same data. Additionally, we show that the masking geometry introduces a task-dependent inductive bias: frequency masking strongly favors channel-related tasks such as positioning and beam prediction, while region masking better preserves discriminability for signal classification.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span class="ltx_text ltx_font_smallcaps" id="S1.1.1"><span class="translated-text">简介</span><span class="original-text">Introduction</span></span>
+</h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">传统的无线人工智能系统需要为每个任务和环境构建单独的模型，从而创建越来越多的专用管道集合</span><span class="original-text">Conventional wireless AI systems require building a separate model for each task and environment, creating a growing collection of specialized pipelines</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib16" title="Artificial intelligence in 6G wireless networks: opportunities, Applications, and Challenges">3</a>]</cite><span class="translated-text">开发、部署和维护成本高昂。
+基础模型和自我监督学习</span><span class="original-text">that are expensive to develop, deploy, and maintain.
+Foundation models and self-supervised learning</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib17" title="Revolutionizing wireless networks with self-supervised learning: a Pathway to Intelligent Communications">15</a>]</cite><span class="translated-text">提供了一种引人注目的替代方案：通过从不同的、未标记的数据中学习通用模式，单个预训练模型可以快速适应新的下游任务，用一个通用且适应性强的架构取代许多专用系统。
+在网络软件化的背景下，这种架构可以被视为可重用的软件智能层，它将异构无线测量映射到与任务无关的表示。无线基础模型不是为每个无线服务部署单独的 AI 模型，而是提供一个共享底层，可以支持多种下游功能，例如传感、定位和波束管理。</span><span class="original-text">offer a compelling alternative: by learning general patterns from diverse, unlabeled data, a single pretrained model can be rapidly adapted to new downstream tasks, replacing many specialized systems with one general and adaptable architecture.
+In the context of network softwarization, such an architecture can be viewed as a reusable software intelligence layer that maps heterogeneous wireless measurements into task-agnostic representations. Rather than deploying separate AI models for each wireless service, the Wireless Foundation Model provides a shared substrate that can support multiple downstream functions such as sensing, localization, and beam management.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">最近在无线领域朝着这种范式取得了进展，包括</span><span class="original-text">Recent advances have been made toward this paradigm in the wireless domain, including the works in</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="6G WavesFM: a foundation model for sensing, communication, and localization">2</a>, <a class="ltx_ref" href="#bib.bib10" title="WirelessGPT: a generative pre-trained multi-task learning framework for wireless communication">14</a>, <a class="ltx_ref" href="#bib.bib18" title="IQFM—A wireless foundation model for I/Q streams in AI-Native 6G">8</a>, <a class="ltx_ref" href="#bib.bib14" title="Multimodal wireless foundation models">1</a>, <a class="ltx_ref" href="#bib.bib13" title="CSI2Vec: towards a universal CSI feature representation for positioning and channel charting">10</a>]</cite><span class="translated-text">。无线基础模型的主要预训练策略是通过像素空间重建进行掩蔽建模。然而，这种方法有一个重要的限制——通过要求模型重建原始输入值，模型被迫将表示能力专用于低级频谱细节、噪声纹理和细粒度的幅度变化，这些对下游任务来说可能几乎没有区分价值。
+结果表明，通过像素空间掩蔽和重建进行预训练的无线基础模型需要对最后几层进行微调或参数有效的适应，以在与预训练分布有很大不同的任务上实现有竞争力的性能。
+这表明仅冻结表示并不能完全捕获不同无线任务所需的高级语义结构。</span><span class="original-text">. The dominant pretraining strategy for Wireless Foundation Models has been masked modeling with pixel-space reconstruction. However, this approach has an important limitation - by requiring the model to reconstruct raw input values, the model is forced to dedicate representational capacity to low-level spectral details, noise textures, and fine-grained amplitude variations that may carry little discriminative value for downstream tasks.
+Results indicate that Wireless Foundation Models pretrained with pixel-space masking and reconstruction require either fine-tuning of several last layers or parameter-efficient adaptation to achieve competitive performance on tasks that differ substantially from the pretraining distributions.
+This suggests that the frozen representations alone do not fully capture the high-level semantic structure needed for diverse wireless tasks.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">联合嵌入预测架构框架</span><span class="original-text">The Joint-Embedding Predictive Architecture framework</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="Self-supervised learning from images with a joint-embedding predictive architecture">5</a>]</cite><span class="translated-text">提供了一种替代方案 - 联合嵌入预测架构不是重建丢失的像素，而是训练一个模型来预测</span><span class="original-text">offers an alternative - instead of reconstructing missing pixels, Joint-Embedding Predictive Architecture trains a model to predict the representations of</span><em class="ltx_emph ltx_font_italic" id="S1.p3.1.1"><span class="translated-text">遮蔽区域</span><span class="original-text">masked regions</span></em><span class="translated-text">在一个习得的潜在空间中。由于预测目标本身就是一个学习的抽象，因此鼓励模型捕获更高级别的语义特征，同时丢弃不相关的低级别变化。然而，对于利用 CSI 和频谱图的无线模式和任务，尚未探索这种方法的有效性。</span><span class="original-text">in a learned latent space. Because the prediction target is itself a learned abstraction, the model is encouraged to capture higher-level semantic features while discarding irrelevant low-level variation. However, the effectiveness of such an approach has not been explored for wireless modalities and tasks that leverage CSI and spectrograms.</span></p>
+</div>
+<figure class="ltx_figure" id="S1.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="337" id="S1.F1.g1" src="https://arxiv.org/html/2606.06373v1/figures/latent-wfm-diagram.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S1.F1.2.1.1" style="font-size:90%;">Figure 1</span>: </span><span class="ltx_text" id="S1.F1.3.2" style="font-size:90%;">Latent-WFM architecture. Pretraining (top): a JEPA-based self-supervised approach predicts latent representations of masked spectrogram patches. Fine-tuning (bottom): the pretrained encoder is adapted to downstream wireless tasks.</span></figcaption>
+</figure>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">在本文中，我们提出</span><span class="original-text">In this paper, we present</span><span class="ltx_text ltx_font_bold" id="S1.p4.1.1"><span class="translated-text">潜波</span><span class="original-text">LatentWave</span></span><span class="translated-text">，一个无线基础模型，在无线频谱图和 CSI 的不同数据集上使用联合嵌入预测架构进行预训练。我们评估了跨越通信、传感和定位的四个下游任务的学习表征。我们的主要贡献如下：</span><span class="original-text">, a Wireless Foundation Model pretrained with Joint-Embedding Predictive Architecture on a diverse dataset of wireless spectrograms and CSI. We evaluate the learned representations on four downstream tasks spanning communication, sensing, and positioning. Our main contributions are as follows:</span></p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<ul class="ltx_itemize" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="translated-text">我们建议</span><span class="original-text">We propose</span><span class="ltx_text ltx_font_bold" id="S1.I1.i1.p1.1.1"><span class="translated-text">潜波</span><span class="original-text">LatentWave</span></span><span class="translated-text">，第一个基于联合嵌入预测架构的无线基础模型，旨在支持涉及频谱图和 CSI 输入的各种下游无线任务。该架构采用每通道补丁嵌入，允许处理可变天线数量，并在预训练期间采用随机通道采样策略，使模型暴露于不同的天线配置，从而实现跨异构无线设置的泛化。</span><span class="original-text">, the first Joint-Embedding Predictive Architecture-based Wireless Foundation Model designed to support diverse downstream wireless tasks involving both spectrogram and CSI inputs. The architecture employs a per-channel patch embedding that allows processing of variable antenna counts, and a stochastic channel sampling strategy during pretraining that exposes the model to varying antenna configurations, enabling generalization across heterogeneous wireless setups.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="translated-text">我们对四种掩蔽策略进行了系统比较：区域、频率、时间和具有不同数量掩蔽的随机策略。我们表明，掩蔽几何引入了与任务相关的归纳偏差：频率掩蔽有利于与通道相关的任务，例如定位和波束预测，而区域和时间掩蔽更好地保留了信号分类所需的时间可辨别性。没有一个单一的策略能够主宰所有的任务。</span><span class="original-text">We conduct a systematic comparison of four masking strategies: region, frequency, time, and random with varying numbers of masks. We show that the masking geometry introduces a task-dependent inductive bias: frequency masking favors channel-related tasks such as positioning and beam prediction, while region and time masking better preserve temporal discriminability needed for signal classification. No single strategy dominates all tasks.</span></p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span class="ltx_text ltx_font_smallcaps" id="S2.1.1"><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></span>
+</h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="translated-text">最近的几项工作探索了无线基础模型的开发。
+波浪调频</span><span class="original-text">Several recent works have explored the development of wireless foundation models.
+WavesFM</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="6G WavesFM: a foundation model for sensing, communication, and localization">2</a>]</cite><span class="translated-text">证明掩蔽建模可以从类似图像的无线模式（包括频谱图和 CSI）学习广泛的可转移表示，共同支持传感、定位和通信任务。
+其他值得注意的工作提出了 CSI 特征提取的基础模型，使用掩模建模作为预训练目标，并对视线/非视线分类和波束预测进行评估</span><span class="original-text">demonstrated that masked modeling can learn broadly transferable representations from image-like wireless modalities, including spectrograms and CSI, jointly supporting sensing, localization, and communication tasks.
+Other notable efforts have proposed foundation models for CSI feature extraction, using masked modeling as the pretraining objective with evaluation on line-of-sight/non-line-of-sight classification, and beam prediction</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib10" title="WirelessGPT: a generative pre-trained multi-task learning framework for wireless communication">14</a>]</cite><span class="translated-text">。对比学习也被探索作为一种替代的自我监督策略：CSI2Vec</span><span class="original-text">. Contrastive learning has also been explored as an alternative self-supervised strategy: CSI2Vec</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="CSI2Vec: towards a universal CSI feature representation for positioning and channel charting">10</a>]</cite><span class="translated-text">采用基于三元组的对比目标并验证其在定位和通道图表上的表示，而 IQFM</span><span class="original-text">employs a triplet-based contrastive objective and validates its representations on positioning and channel charting, while IQFM</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib18" title="IQFM—A wireless foundation model for I/Q streams in AI-Native 6G">8</a>]</cite><span class="translated-text">从原始同相和正交 (IQ) 信号中学习通用特征，用于调制分类、射频设备指纹识别和到达角估计，在少量样本设置中展示了强大的采样效率。多模式方法</span><span class="original-text">learns general-purpose features from raw in-phase and quadrature (IQ) signals for modulation classification, RF device fingerprinting, and angle-of-arrival estimation, demonstrating strong sample efficiency in few-shot settings. Multi-modal approaches</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="Multimodal wireless foundation models">1</a>]</cite><span class="translated-text">联合处理频谱图、CSI 和 IQ 信号的方法也得到了研究。</span><span class="original-text">that jointly handle spectrograms, CSI, and IQ signals have also been investigated.</span></p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="translated-text">最近，WirelessJEPA</span><span class="original-text">More recently, WirelessJEPA</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib15" title="WirelessJEPA: a multi-antenna foundation model using spatio-temporal wireless latent predictions">6</a>]</cite><span class="translated-text">在潜在预测框架内应用 CNN 来学习 IQ 信号的表示，在多个下游任务上优于对比方法。然而，这项工作仅限于预训练和下游的 I/Q 信号。
+最近，工作在</span><span class="original-text">applied CNNs within a latent prediction framework to learn representations of IQ signals outperforming contrastive approaches on multiple downstream tasks. However, this work is limited to I/Q signals in both pretraining and downstream.
+More recently, the work in</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib21" title="Structured latent dynamics in wireless CSI via homomorphic world models">9</a>]</cite><span class="translated-text">提出了一种基于 JEPA 的方法来模拟 CSI 的时间演化。
+他们的结果显示出强大的长期预测，表明基于 JEPA 的学习可以以 CSI 嵌入的形式捕获有意义的时间无线动态。虽然这项工作对于时间 CSI 表示学习和预测很有价值，但它并不专注于学习无线基础模型的通用特征，这些特征将使得
+一系列广泛且多样化的下游无线任务。</span><span class="original-text">proposed a JEPA-based approach to model the temporal evolution of CSI.
+Their results show strong long-horizon prediction, suggesting that JEPA-based learning can capture meaningful temporal wireless dynamics in the form of CSI embeddings. While this work is valuable for temporal CSI representation learning and prediction, it does not focus on learning general-purpose features for wireless foundation models that would enable
+a broad and diverse set of downstream wireless tasks.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section"><span class="translated-text">三、</span><span class="original-text">III</span></span><span class="ltx_text ltx_font_smallcaps" id="S3.1.1"><span class="translated-text">潜波方法论</span><span class="original-text">LatentWave Methodology</span></span>
+</h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="translated-text">本节介绍 LatentWave 方法，包括架构和掩蔽策略、训练算法以及用于预训练和下游任务的数据集。</span><span class="original-text">This section presents the LatentWave methodology, including the architecture and masking strategies, training algorithms, and datasets for pretraining and downstream tasks.</span></p>
+</div>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS1.4.1.1"><span class="translated-text">Ⅲ-A</span><span class="original-text">III-A</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS1.5.2"><span class="translated-text">拟议的预训练框架和架构</span><span class="original-text">Proposed Pretraining Framework and Architecture</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">我们的基础模型使用联合嵌入预测架构框架在多样化、未标记的无线信号频谱图和 CSI 数据集上进行预训练</span><span class="original-text">Our foundation model is pretrained on a diverse, unlabeled dataset of wireless signal spectrograms and CSI using the Joint-Embedding Predictive Architecture framework</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="Self-supervised learning from images with a joint-embedding predictive architecture">5</a>]</cite><span class="translated-text">。核心原理是通过在学习的潜在空间中进行预测来学习表示，而不是重建原始输入数据，如图 1 所示。</span><span class="original-text">. The core principle is to learn representations by predicting in a learned latent space rather than reconstructing raw input data, as shown in Fig.</span><a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ I Introduction ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">。联合嵌入预测架构是一个自我监督框架，通过三个交互组件对屏蔽输入进行操作：</span><span class="original-text">. Joint-Embedding Predictive Architecture is a self-supervised framework that operates on masked inputs through three interacting components: a</span><em class="ltx_emph ltx_font_italic" id="S3.SS1.p1.1.1"><span class="translated-text">上下文编码器</span><span class="original-text">context encoder</span></em><span class="translated-text">, 一个</span><span class="original-text">, a</span><em class="ltx_emph ltx_font_italic" id="S3.SS1.p1.1.2"><span class="translated-text">目标编码器</span><span class="original-text">target encoder</span></em><span class="translated-text">，和一个</span><span class="original-text">, and a</span><em class="ltx_emph ltx_font_italic" id="S3.SS1.p1.1.3"><span class="translated-text">预测器</span><span class="original-text">predictor</span></em><span class="translated-text">。给定一个输入，其内容的子集被屏蔽。上下文编码器仅处理可见（未屏蔽）部分并将它们映射到潜在表示。共享相同架构的目标编码器处理完整的输入并生成潜在目标。然后，预测器仅使用上下文编码器的输出来预测目标编码器对屏蔽区域的表示。预测发生在潜在空间而不是原始输入空间。此过程详细说明于</span><span class="original-text">. Given an input, a subset of its content is masked. The context encoder processes only the visible (unmasked) portions and maps them to latent representations. The target encoder, which shares the same architecture, processes the complete input and produces latent targets. The predictor then forecasts the target encoder’s representations of the masked regions using only the context encoder’s output. Predictions occur in the latent space rather than in the raw input space. This process is illustrated in detail in</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="Self-supervised learning from images with a joint-embedding predictive architecture">5</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S3.SS1.p2">
+<p class="ltx_p" id="S3.SS1.p2.12"><span class="translated-text">我们现在描述这个无线数据框架的实例。让</span><span class="original-text">We now describe our instantiation of this framework for wireless data. Let</span><math alttext="x\in\mathbb{R}^{C\times H\times W}" class="ltx_Math" display="inline" id="S3.SS1.p2.1.m1" intent=":literal"><semantics><mrow><mi>x</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>C</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>H</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>W</mi></mrow></msup></mrow><annotation encoding="application/x-tex">x\in\mathbb{R}^{C\times H\times W}</annotation></semantics></math><span class="translated-text">输入信号用</span><span class="original-text">denote input signals with</span><math alttext="C" class="ltx_Math" display="inline" id="S3.SS1.p2.2.m2" intent=":literal"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math><span class="translated-text">天线，</span><span class="original-text">antennas,</span><math alttext="H" class="ltx_Math" display="inline" id="S3.SS1.p2.3.m3" intent=":literal"><semantics><mi>H</mi><annotation encoding="application/x-tex">H</annotation></semantics></math><span class="translated-text">频率仓和</span><span class="original-text">frequency bins and</span><math alttext="W" class="ltx_Math" display="inline" id="S3.SS1.p2.4.m4" intent=":literal"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math><span class="translated-text">时间步数。每个天线通道</span><span class="original-text">time steps. Each antenna channel</span><math alttext="x^{(c)}\in\mathbb{R}^{H\times W}" class="ltx_Math" display="inline" id="S3.SS1.p2.5.m5" intent=":literal"><semantics><mrow><msup><mi>x</mi><mrow><mo stretchy="false">(</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></msup><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>H</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>W</mi></mrow></msup></mrow><annotation encoding="application/x-tex">x^{(c)}\in\mathbb{R}^{H\times W}</annotation></semantics></math>, <math alttext="c=1,\ldots,C" class="ltx_Math" display="inline" id="S3.SS1.p2.6.m6" intent=":literal"><semantics><mrow><mi>c</mi><mo>=</mo><mrow><mn>1</mn><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><mi>C</mi></mrow></mrow><annotation encoding="application/x-tex">c=1,\ldots,C</annotation></semantics></math><span class="translated-text">，被独立地划分为一个网格</span><span class="original-text">, is independently divided into a grid of</span><math alttext="\frac{H}{p_{h}}\times\frac{W}{p_{w}}" class="ltx_Math" display="inline" id="S3.SS1.p2.7.m7" intent=":literal"><semantics><mrow><mfrac><mi>H</mi><msub><mi>p</mi><mi>h</mi></msub></mfrac><mo lspace="0.222em" rspace="0.222em">×</mo><mfrac><mi>W</mi><msub><mi>p</mi><mi>w</mi></msub></mfrac></mrow><annotation encoding="application/x-tex">\frac{H}{p_{h}}\times\frac{W}{p_{w}}</annotation></semantics></math><span class="translated-text">大小不重叠的补丁</span><span class="original-text">non-overlapping patches of size</span><math alttext="p_{h}\times p_{w}" class="ltx_Math" display="inline" id="S3.SS1.p2.8.m8" intent=":literal"><semantics><mrow><msub><mi>p</mi><mi>h</mi></msub><mo lspace="0.222em" rspace="0.222em">×</mo><msub><mi>p</mi><mi>w</mi></msub></mrow><annotation encoding="application/x-tex">p_{h}\times p_{w}</annotation></semantics></math><span class="translated-text">。共享线性投影将每个单通道补丁映射到</span><span class="original-text">. A shared linear projection maps each single-channel patch to a</span><math alttext="D" class="ltx_Math" display="inline" id="S3.SS1.p2.9.m9" intent=":literal"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math><span class="translated-text">维嵌入。这总共产生</span><span class="original-text">-dimensional embedding. This yields a total of</span><math alttext="N=C\times\frac{H}{p_{h}}\times\frac{W}{p_{w}}" class="ltx_Math" display="inline" id="S3.SS1.p2.10.m10" intent=":literal"><semantics><mrow><mi>N</mi><mo>=</mo><mrow><mi>C</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mfrac><mi>H</mi><msub><mi>p</mi><mi>h</mi></msub></mfrac><mo lspace="0.222em" rspace="0.222em">×</mo><mfrac><mi>W</mi><msub><mi>p</mi><mi>w</mi></msub></mfrac></mrow></mrow><annotation encoding="application/x-tex">N=C\times\frac{H}{p_{h}}\times\frac{W}{p_{w}}</annotation></semantics></math><span class="translated-text">补丁令牌</span><span class="original-text">patch tokens</span><math alttext="\mathbf{z}=[z_{1},z_{2},\ldots,z_{N}]\in\mathbb{R}^{N\times D}" class="ltx_Math" display="inline" id="S3.SS1.p2.11.m11" intent=":literal"><semantics><mrow><mi>𝐳</mi><mo>=</mo><mrow><mo stretchy="false">[</mo><msub><mi>z</mi><mn>1</mn></msub><mo>,</mo><msub><mi>z</mi><mn>2</mn></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>z</mi><mi>N</mi></msub><mo stretchy="false">]</mo></mrow><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>N</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>D</mi></mrow></msup></mrow><annotation encoding="application/x-tex">\mathbf{z}=[z_{1},z_{2},\ldots,z_{N}]\in\mathbb{R}^{N\times D}</annotation></semantics></math><span class="translated-text">。因为投影在各个通道上运行，而不是在所有通道上运行</span><span class="original-text">. Because the projection operates on individual channels rather than across all</span><math alttext="C" class="ltx_Math" display="inline" id="S3.SS1.p2.12.m12" intent=":literal"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math><span class="translated-text">同时，补丁嵌入层与输入天线的数量解耦，允许同一模型摄取具有任意数量通道的输入，而无需修改架构。正弦位置嵌入被添加到每个标记中，以编码其在信号网格内的空间位置。</span><span class="original-text">channels simultaneously, the patch embedding layer is decoupled from the number of input antennas, allowing the same model to ingest inputs with an arbitrary number of channels without architectural modification. Sinusoidal positional embeddings are added to each token to encode its spatial position within the signal grid.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p3">
+<p class="ltx_p" id="S3.SS1.p3.4"><span class="translated-text">为了提高针对不同通道配置的鲁棒性，我们在预训练期间采用随机通道采样策略。对于每个训练样本</span><span class="original-text">To improve robustness against varying channel configurations, we employ a stochastic channel sampling strategy during pretraining. For each training sample with</span><math alttext="C" class="ltx_Math" display="inline" id="S3.SS1.p3.1.m1" intent=":literal"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math><span class="translated-text">可用的通道，我们统一抽取一个随机整数</span><span class="original-text">available channels, we uniformly draw a random integer</span><math alttext="C^{\prime}\sim\mathcal{U}\{1,C\}" class="ltx_Math" display="inline" id="S3.SS1.p3.2.m2" intent=":literal"><semantics><mrow><msup><mi>C</mi><mo>′</mo></msup><mo>∼</mo><mrow><mi class="ltx_font_mathcaligraphic">𝒰</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">{</mo><mn>1</mn><mo>,</mo><mi>C</mi><mo stretchy="false">}</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">C^{\prime}\sim\mathcal{U}\{1,C\}</annotation></semantics></math><span class="translated-text">并保留随机选择的子集</span><span class="original-text">and retain a randomly selected subset of</span><math alttext="C^{\prime}" class="ltx_Math" display="inline" id="S3.SS1.p3.3.m3" intent=":literal"><semantics><msup><mi>C</mi><mo>′</mo></msup><annotation encoding="application/x-tex">C^{\prime}</annotation></semantics></math><span class="translated-text">通道，丢弃其余部分。因此，有效令牌序列长度变化为</span><span class="original-text">channels, discarding the rest. The effective token sequence length thus varies as</span><math alttext="N=C^{\prime}\times\frac{H}{p_{h}}\times\frac{W}{p_{w}}" class="ltx_Math" display="inline" id="S3.SS1.p3.4.m4" intent=":literal"><semantics><mrow><mi>N</mi><mo>=</mo><mrow><msup><mi>C</mi><mo>′</mo></msup><mo lspace="0.222em" rspace="0.222em">×</mo><mfrac><mi>H</mi><msub><mi>p</mi><mi>h</mi></msub></mfrac><mo lspace="0.222em" rspace="0.222em">×</mo><mfrac><mi>W</mi><msub><mi>p</mi><mi>w</mi></msub></mfrac></mrow></mrow><annotation encoding="application/x-tex">N=C^{\prime}\times\frac{H}{p_{h}}\times\frac{W}{p_{w}}</annotation></semantics></math><span class="translated-text">跨迭代，使模型暴露于不同的天线配置。</span><span class="original-text">across iterations, exposing the model to diverse antenna configurations.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p4">
+<p class="ltx_p" id="S3.SS1.p4.2"><span class="translated-text">在预训练期间，我们采用多块掩蔽策略，其中跨越有意义的时间频率天线区域的几个连续块被掩蔽（而不是随机的单个补丁）。这鼓励模型学习高级语义结构以预测缺失区域，因为仅局部插值是不够的。屏蔽补丁索引形成集合</span><span class="original-text">During pretraining, we adopt a multi-block masking strategy in which several contiguous blocks spanning meaningful time–frequency-antenna regions are masked (rather than random individual patches). This encourages the model to learn high-level semantic structure in order to predict the missing regions, as local interpolation alone is insufficient. The masked patch indices form the set</span><math alttext="\mathcal{M}\subset\{1,\ldots,N\}" class="ltx_Math" display="inline" id="S3.SS1.p4.1.m1" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">ℳ</mi><mo>⊂</mo><mrow><mo stretchy="false">{</mo><mn>1</mn><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><mi>N</mi><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{M}\subset\{1,\ldots,N\}</annotation></semantics></math><span class="translated-text">，互补可见集定义为</span><span class="original-text">, and the complementary visible set is defined as</span><math alttext="\mathcal{V}=\{1,\ldots,N\}\setminus\mathcal{M}" class="ltx_Math" display="inline" id="S3.SS1.p4.2.m2" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">𝒱</mi><mo>=</mo><mrow><mrow><mo stretchy="false">{</mo><mn>1</mn><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><mi>N</mi><mo stretchy="false">}</mo></mrow><mo>∖</mo><mi class="ltx_font_mathcaligraphic">ℳ</mi></mrow></mrow><annotation encoding="application/x-tex">\mathcal{V}=\{1,\ldots,N\}\setminus\mathcal{M}</annotation></semantics></math><span class="translated-text">。掩蔽策略及其超参数的完整细节在第 1 节中提供。</span><span class="original-text">. Full details of the masking strategy and its hyperparameters are provided in Section</span><a class="ltx_ref" href="#S3.SS2" title="III-B Masking Strategy ‣ III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">III-B</span></span></a>.</p>
+</div>
+<div class="ltx_para" id="S3.SS1.p5">
+<p class="ltx_p" id="S3.SS1.p5.2"><span class="ltx_text ltx_font_bold" id="S3.SS1.p5.2.1"><span class="translated-text">上下文编码器。</span><span class="original-text">Context Encoder.</span></span><span class="translated-text">上下文编码器</span><span class="original-text">The context encoder</span><math alttext="E_{\mathrm{cxt}}(\,\cdot\,;\theta)" class="ltx_Math" display="inline" id="S3.SS1.p5.1.m1" intent=":literal"><semantics><mrow><msub><mi>E</mi><mi>cxt</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mo>⋅</mo><mo>;</mo><mi>θ</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">E_{\mathrm{cxt}}(\,\cdot\,;\theta)</annotation></semantics></math><span class="translated-text">是一个标准的 Vision Transformer</span><span class="original-text">is a standard Vision Transformer</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="An image is worth 16x16 words: transformers for image recognition at scale">7</a>]</cite><span class="translated-text">。它仅接收可见的补丁令牌</span><span class="original-text">. It receives only the visible patch tokens</span><math alttext="\{z_{i}\}_{i\in\mathcal{V}}" class="ltx_Math" display="inline" id="S3.SS1.p5.2.m2" intent=":literal"><semantics><msub><mrow><mo stretchy="false">{</mo><msub><mi>z</mi><mi>i</mi></msub><mo stretchy="false">}</mo></mrow><mrow><mi>i</mi><mo>∈</mo><mi class="ltx_font_mathcaligraphic">𝒱</mi></mrow></msub><annotation encoding="application/x-tex">\{z_{i}\}_{i\in\mathcal{V}}</annotation></semantics></math><span class="translated-text">并产生它们的潜在表征：</span><span class="original-text">and produces their latent representations:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="h=E_{\mathrm{cxt}}\!\bigl(\{z_{i}\}_{i\in\mathcal{V}};\,\theta\bigr)\in\mathbb{R}^{|\mathcal{V}|\times D}." class="ltx_Math" display="block" id="S3.E1.m1" intent=":literal"><semantics><mrow><mrow><mi>h</mi><mo>=</mo><mrow><msub><mi>E</mi><mi>cxt</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="1.200em" minsize="1.200em">(</mo><msub><mrow><mo stretchy="false">{</mo><msub><mi>z</mi><mi>i</mi></msub><mo stretchy="false">}</mo></mrow><mrow><mi>i</mi><mo>∈</mo><mi class="ltx_font_mathcaligraphic">𝒱</mi></mrow></msub><mo rspace="0.337em">;</mo><mi>θ</mi><mo maxsize="1.200em" minsize="1.200em">)</mo></mrow></mrow><mo>∈</mo><msup><mi>ℝ</mi><mrow><mrow><mo stretchy="false">|</mo><mi class="ltx_font_mathcaligraphic">𝒱</mi><mo rspace="0.055em" stretchy="false">|</mo></mrow><mo rspace="0.222em">×</mo><mi>D</mi></mrow></msup></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">h=E_{\mathrm{cxt}}\!\bigl(\{z_{i}\}_{i\in\mathcal{V}};\,\theta\bigr)\in\mathbb{R}^{|\mathcal{V}|\times D}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS1.p5.3"><span class="translated-text">通过仅处理未屏蔽的子集，鼓励上下文编码器从不完整的观察中构建上下文表示。</span><span class="original-text">By processing only the unmasked subset, the context encoder is encouraged to build contextual representations from incomplete observations.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p6">
+<p class="ltx_p" id="S3.SS1.p6.2"><span class="ltx_text ltx_font_bold" id="S3.SS1.p6.2.1"><span class="translated-text">目标编码器。</span><span class="original-text">Target Encoder.</span></span><span class="translated-text">目标编码器</span><span class="original-text">The target encoder</span><math alttext="E_{\mathrm{tgt}}(\,\cdot\,;\bar{\theta})" class="ltx_Math" display="inline" id="S3.SS1.p6.1.m1" intent=":literal"><semantics><mrow><msub><mi>E</mi><mi>tgt</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mo>⋅</mo><mo>;</mo><mover accent="true"><mi>θ</mi><mo>¯</mo></mover><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">E_{\mathrm{tgt}}(\,\cdot\,;\bar{\theta})</annotation></semantics></math><span class="translated-text">与上下文编码器共享相同的 Vision Transformer 架构，但处理</span><span class="original-text">shares the same Vision Transformer architecture as the context encoder but processes the</span><em class="ltx_emph ltx_font_italic" id="S3.SS1.p6.2.2"><span class="translated-text">完成</span><span class="original-text">complete</span></em><span class="translated-text">补丁标记序列（在</span><span class="original-text">sequence of patch tokens (over the</span><math alttext="C^{\prime}" class="ltx_Math" display="inline" id="S3.SS1.p6.2.m2" intent=":literal"><semantics><msup><mi>C</mi><mo>′</mo></msup><annotation encoding="application/x-tex">C^{\prime}</annotation></semantics></math><span class="translated-text">采样通道）以产生潜在目标：</span><span class="original-text">sampled channels) to produce the latent targets:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="y=E_{\mathrm{tgt}}\!\bigl(\{z_{i}\}_{i=1}^{N};\,\bar{\theta}\bigr)\in\mathbb{R}^{N\times D}." class="ltx_Math" display="block" id="S3.E2.m1" intent=":literal"><semantics><mrow><mrow><mi>y</mi><mo>=</mo><mrow><msub><mi>E</mi><mi>tgt</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="1.200em" minsize="1.200em">(</mo><msubsup><mrow><mo stretchy="false">{</mo><msub><mi>z</mi><mi>i</mi></msub><mo stretchy="false">}</mo></mrow><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></msubsup><mo rspace="0.337em">;</mo><mover accent="true"><mi>θ</mi><mo>¯</mo></mover><mo maxsize="1.200em" minsize="1.200em">)</mo></mrow></mrow><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>N</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>D</mi></mrow></msup></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">y=E_{\mathrm{tgt}}\!\bigl(\{z_{i}\}_{i=1}^{N};\,\bar{\theta}\bigr)\in\mathbb{R}^{N\times D}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS1.p6.4"><span class="translated-text">没有梯度流过目标编码器。相反，它的参数被更新为上下文编码器权重的指数移动平均值：</span><span class="original-text">No gradients flow through the target encoder. Instead, its parameters are updated as an Exponential Moving Average of the context encoder weights:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E3">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\bar{\theta}_{t}=\tau\,\bar{\theta}_{t-1}+(1-\tau)\,\theta_{t}," class="ltx_Math" display="block" id="S3.E3.m1" intent=":literal"><semantics><mrow><mrow><msub><mover accent="true"><mi>θ</mi><mo>¯</mo></mover><mi>t</mi></msub><mo>=</mo><mrow><mrow><mi>τ</mi><mo lspace="0.170em" rspace="0em">​</mo><msub><mover accent="true"><mi>θ</mi><mo>¯</mo></mover><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub></mrow><mo>+</mo><mrow><mrow><mo stretchy="false">(</mo><mrow><mn>1</mn><mo>−</mo><mi>τ</mi></mrow><mo stretchy="false">)</mo></mrow><mo lspace="0.170em" rspace="0em">​</mo><msub><mi>θ</mi><mi>t</mi></msub></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\bar{\theta}_{t}=\tau\,\bar{\theta}_{t-1}+(1-\tau)\,\theta_{t},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS1.p6.3"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\tau\in(0,1)" class="ltx_Math" display="inline" id="S3.SS1.p6.3.m1" intent=":literal"><semantics><mrow><mi>τ</mi><mo>∈</mo><mrow><mo stretchy="false">(</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\tau\in(0,1)</annotation></semantics></math><span class="translated-text">是动量系数。这种不对称更新规则确保目标编码器平滑演化以提供稳定的训练目标，防止表示崩溃。</span><span class="original-text">is the momentum coefficient. This asymmetric update rule ensures the target encoder evolves smoothly to provide stable training targets, preventing representation collapse.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p7">
+<p class="ltx_p" id="S3.SS1.p7.2"><span class="ltx_text ltx_font_bold" id="S3.SS1.p7.2.1"><span class="translated-text">预测器。</span><span class="original-text">Predictor.</span></span><span class="translated-text">预测器</span><span class="original-text">The predictor</span><math alttext="P(\,\cdot\,;\phi)" class="ltx_Math" display="inline" id="S3.SS1.p7.1.m1" intent=":literal"><semantics><mrow><mi>P</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mo>⋅</mo><mo>;</mo><mi>ϕ</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">P(\,\cdot\,;\phi)</annotation></semantics></math><span class="translated-text">是一个更小、更窄的视觉变压器。它采用上下文编码器输出</span><span class="original-text">is a smaller, narrower Vision Transformer. It takes the context encoder output</span><math alttext="h" class="ltx_Math" display="inline" id="S3.SS1.p7.2.m2" intent=":literal"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math><span class="translated-text">并预测与屏蔽位置对应的潜在表示：</span><span class="original-text">and forecasts the latent representations corresponding to the masked positions:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E4">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\hat{y}=P\!\bigl(h;\,\phi\bigr)\in\mathbb{R}^{|\mathcal{M}|\times D}." class="ltx_Math" display="block" id="S3.E4.m1" intent=":literal"><semantics><mrow><mrow><mover accent="true"><mi>y</mi><mo>^</mo></mover><mo>=</mo><mrow><mpadded style="width:0.611em;" width="0.611em"><mi>P</mi></mpadded><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="1.200em" minsize="1.200em">(</mo><mi>h</mi><mo rspace="0.337em">;</mo><mi>ϕ</mi><mo maxsize="1.200em" minsize="1.200em">)</mo></mrow></mrow><mo>∈</mo><msup><mi>ℝ</mi><mrow><mrow><mo stretchy="false">|</mo><mi class="ltx_font_mathcaligraphic">ℳ</mi><mo rspace="0.055em" stretchy="false">|</mo></mrow><mo rspace="0.222em">×</mo><mi>D</mi></mrow></msup></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\hat{y}=P\!\bigl(h;\,\phi\bigr)\in\mathbb{R}^{|\mathcal{M}|\times D}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS1.p7.3"><span class="translated-text">预测器的有限容量是故意的：它迫使上下文编码器产生最大信息量的表示，而不是将预测任务卸载给预测器。</span><span class="original-text">The predictor’s limited capacity is deliberate: it forces the context encoder to produce maximally informative representations rather than offloading the prediction task to the predictor.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p8">
+<p class="ltx_p" id="S3.SS1.p8.3"><span class="translated-text">该模型经过端到端训练，以最小化屏蔽位置上的预测表示和目标表示之间的均方误差：</span><span class="original-text">The model is trained end-to-end to minimize the mean squared error between the predicted and target representations over the masked positions:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E5">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{L}=\frac{1}{|\mathcal{M}|}\sum_{i\in\mathcal{M}}\bigl\|\hat{y}_{i}-y_{i}\bigr\|_{2}^{2}," class="ltx_Math" display="block" id="S3.E5.m1" intent=":literal"><semantics><mrow><mrow><mi class="ltx_font_mathcaligraphic">ℒ</mi><mo>=</mo><mrow><mfrac><mn>1</mn><mrow><mo stretchy="false">|</mo><mi class="ltx_font_mathcaligraphic">ℳ</mi><mo stretchy="false">|</mo></mrow></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><munder><mo movablelimits="false" rspace="0em">∑</mo><mrow><mi>i</mi><mo>∈</mo><mi class="ltx_font_mathcaligraphic">ℳ</mi></mrow></munder><msubsup><mrow><mo maxsize="1.200em" minsize="1.200em" stretchy="true">‖</mo><mrow><msub><mover accent="true"><mi>y</mi><mo>^</mo></mover><mi>i</mi></msub><mo>−</mo><msub><mi>y</mi><mi>i</mi></msub></mrow><mo maxsize="1.200em" minsize="1.200em" stretchy="true">‖</mo></mrow><mn>2</mn><mn>2</mn></msubsup></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathcal{L}=\frac{1}{|\mathcal{M}|}\sum_{i\in\mathcal{M}}\bigl\|\hat{y}_{i}-y_{i}\bigr\|_{2}^{2},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(5)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS1.p8.2"><span class="translated-text">梯度仅流经上下文编码器参数</span><span class="original-text">with gradients flowing only through the context encoder parameters</span><math alttext="\theta" class="ltx_Math" display="inline" id="S3.SS1.p8.1.m1" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math><span class="translated-text">和预测参数</span><span class="original-text">and the predictor parameters</span><math alttext="\phi" class="ltx_Math" display="inline" id="S3.SS1.p8.2.m2" intent=":literal"><semantics><mi>ϕ</mi><annotation encoding="application/x-tex">\phi</annotation></semantics></math><span class="translated-text">。完整的预训练过程总结在算法中</span><span class="original-text">. The complete pretraining procedure is summarized in Algorithm</span><a class="ltx_ref" href="#alg1" title="In III-A Proposed Pretraining Framework and Architecture ‣ III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+</div>
+<div class="ltx_para" id="S3.SS1.p9">
+<p class="ltx_p" id="S3.SS1.p9.1"><span class="ltx_text ltx_font_bold" id="S3.SS1.p9.1.1"><span class="translated-text">潜波基础模型。</span><span class="original-text">LatentWave Foundation Model.</span></span><span class="translated-text">预训练后，提取目标编码器作为下游任务的基础模型。因为它在整个预训练过程中处理完整的频谱图，而没有任何掩蔽，所以它的表示直接与微调期间遇到的完整输入对齐，这与上下文编码器不同，上下文编码器专门针对部分观察进行训练。</span><span class="original-text">After pretraining, the target encoder is extracted as the foundation model for downstream tasks. Because it processed complete spectrograms throughout pretraining without any masking, its representations are directly aligned with the full inputs encountered during fine-tuning, unlike the context encoder, which was trained exclusively on partial observations.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p10">
+<p class="ltx_p" id="S3.SS1.p10.8"><span class="translated-text">上下文和目标编码器是具有 8 个变换层、8 个注意力头、嵌入维度的 Vision Transformer 模型</span><span class="original-text">The context and target encoders are Vision Transformer models with 8 transformer layers, 8 attention heads, embedding dimension</span><math alttext="D{=}256" class="ltx_Math" display="inline" id="S3.SS1.p10.1.m1" intent=":literal"><semantics><mrow><mi>D</mi><mo>=</mo><mn>256</mn></mrow><annotation encoding="application/x-tex">D{=}256</annotation></semantics></math><span class="translated-text">和补丁大小</span><span class="original-text">, and patch size</span><math alttext="16{\times}16" class="ltx_Math" display="inline" id="S3.SS1.p10.2.m2" intent=":literal"><semantics><mrow><mn>16</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>16</mn></mrow><annotation encoding="application/x-tex">16{\times}16</annotation></semantics></math><span class="translated-text">，总计约</span><span class="original-text">, totaling approximately</span><math alttext="6.4" class="ltx_Math" display="inline" id="S3.SS1.p10.3.m3" intent=":literal"><semantics><mn>6.4</mn><annotation encoding="application/x-tex">6.4</annotation></semantics></math><span class="translated-text">M参数。预测器是一个较小的 Vision Transformer，具有 4 层、4 个注意力头、嵌入维度 128 和大约 880K 个参数。预训练运行 240 个时期，批量大小为 256，使用余弦学习率计划</span><span class="original-text">M parameters. The predictor is a smaller Vision Transformer with 4 layers, 4 attention heads, embedding dimension 128, and approximately 880K parameters. Pretraining runs for 240 epochs with batch size 256, using a cosine learning rate schedule from</span><math alttext="10^{-6}" class="ltx_Math" display="inline" id="S3.SS1.p10.4.m4" intent=":literal"><semantics><msup><mn>10</mn><mrow><mo>−</mo><mn>6</mn></mrow></msup><annotation encoding="application/x-tex">10^{-6}</annotation></semantics></math><span class="translated-text">达到一个顶峰</span><span class="original-text">to a peak of</span><math alttext="10^{-3}" class="ltx_Math" display="inline" id="S3.SS1.p10.5.m5" intent=":literal"><semantics><msup><mn>10</mn><mrow><mo>−</mo><mn>3</mn></mrow></msup><annotation encoding="application/x-tex">10^{-3}</annotation></semantics></math><span class="translated-text">有 12 个预热阶段，权重衰减为 0.04，EMA 动量从 0.996 退火到 1.0。对于掩蔽，目标比例采样自</span><span class="original-text">with 12 warmup epochs, weight decay of 0.04, and EMA momentum annealed from 0.996 to 1.0. For masking, the target scale is sampled from</span><math alttext="[0.15,0.2]" class="ltx_Math" display="inline" id="S3.SS1.p10.6.m6" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><mn>0.15</mn><mo>,</mo><mn>0.2</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[0.15,0.2]</annotation></semantics></math><span class="translated-text">长宽比为</span><span class="original-text">with aspect ratio in</span><math alttext="[0.75,1.5]" class="ltx_Math" display="inline" id="S3.SS1.p10.7.m7" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><mn>0.75</mn><mo>,</mo><mn>1.5</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[0.75,1.5]</annotation></semantics></math><span class="translated-text">，上下文范围从</span><span class="original-text">, and the context scale from</span><math alttext="[0.85,1.0]" class="ltx_Math" display="inline" id="S3.SS1.p10.8.m8" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><mn>0.85</mn><mo>,</mo><mn>1.0</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[0.85,1.0]</annotation></semantics></math>.</p>
+</div>
+<figure class="ltx_float ltx_algorithm" id="alg1">
+<div class="ltx_listing ltx_lst_numbers_left ltx_listing" id="alg1.1">
+<div class="ltx_listingline" id="alg1.1.1">
+<div class="ltx_listing ltx_listing" id="alg1.1.1.1">
+<div class="ltx_listingline" id="alg1.l0">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l0.1.1.1" style="font-size:80%;">0:</span></span> Dataset <math alttext="\mathcal{D}" class="ltx_Math" display="inline" id="alg1.l0.m1" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒟</mi><annotation encoding="application/x-tex">\mathcal{D}</annotation></semantics></math>, epochs <math alttext="E" class="ltx_Math" display="inline" id="alg1.l0.m2" intent=":literal"><semantics><mi>E</mi><annotation encoding="application/x-tex">E</annotation></semantics></math>, total steps <math alttext="T" class="ltx_Math" display="inline" id="alg1.l0.m3" intent=":literal"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>, EMA
+</div>
+<div class="ltx_listingline" id="alg1.1.1.1.1">bounds <math alttext="[\tau_{\min},\tau_{\max}]" class="ltx_Math" display="inline" id="alg1.1.1.1.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><msub><mi>τ</mi><mi>min</mi></msub><mo>,</mo><msub><mi>τ</mi><mi>max</mi></msub><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[\tau_{\min},\tau_{\max}]</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.1.1.1.2">0.5em
+
+</div>
+<div class="ltx_listingline" id="alg1.l1">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l1.1.1.1" style="font-size:80%;">1:</span></span> <math alttext="\triangleright" class="ltx_Math" display="inline" id="alg1.l1.m1" intent=":literal"><semantics><mo>⊳</mo><annotation encoding="application/x-tex">\triangleright</annotation></semantics></math> <span class="ltx_text ltx_font_italic" id="alg1.l1.2">Initialization</span>
+</div>
+<div class="ltx_listingline" id="alg1.l2">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l2.1.1.1" style="font-size:80%;">2:</span></span> Initialize context encoder <math alttext="E_{cxt}(\theta)" class="ltx_Math" display="inline" id="alg1.l2.m1" intent=":literal"><semantics><mrow><msub><mi>E</mi><mrow><mi>c</mi><mo lspace="0em" rspace="0em">​</mo><mi>x</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>θ</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">E_{cxt}(\theta)</annotation></semantics></math> and predictor <math alttext="P(\phi)" class="ltx_Math" display="inline" id="alg1.l2.m2" intent=":literal"><semantics><mrow><mi>P</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>ϕ</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">P(\phi)</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l3">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l3.1.1.1" style="font-size:80%;">3:</span></span> <math alttext="E_{tgt}(\bar{\theta})\leftarrow\text{copy}(E_{cxt}(\theta))" class="ltx_Math" display="inline" id="alg1.l3.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>E</mi><mrow><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>g</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mover accent="true"><mi>θ</mi><mo>¯</mo></mover><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">←</mo><mrow><mtext>copy</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><msub><mi>E</mi><mrow><mi>c</mi><mo lspace="0em" rspace="0em">​</mo><mi>x</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>θ</mi><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">E_{tgt}(\bar{\theta})\leftarrow\text{copy}(E_{cxt}(\theta))</annotation></semantics></math> {Initialize target encoder}
+
+</div>
+<div class="ltx_listingline" id="alg1.l4">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l4.1.1.1" style="font-size:80%;">4:</span></span> Disable gradient tracking for <math alttext="E_{tgt}" class="ltx_Math" display="inline" id="alg1.l4.m1" intent=":literal"><semantics><msub><mi>E</mi><mrow><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>g</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi></mrow></msub><annotation encoding="application/x-tex">E_{tgt}</annotation></semantics></math> {EMA updated.}
+
+</div>
+<div class="ltx_listingline" id="alg1.l5">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l5.1.1.1" style="font-size:80%;">5:</span></span> <math alttext="t\leftarrow 0" class="ltx_Math" display="inline" id="alg1.l5.m1" intent=":literal"><semantics><mrow><mi>t</mi><mo stretchy="false">←</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">t\leftarrow 0</annotation></semantics></math> {Global step counter}
+
+</div>
+<div class="ltx_listingline" id="alg1.1.1.1.3">
+</div>
+<div class="ltx_listingline" id="alg1.l6">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l6.1.1.1" style="font-size:80%;">6:</span></span> <span class="ltx_text ltx_font_bold" id="alg1.l6.2">for</span> <math alttext="e=1" class="ltx_Math" display="inline" id="alg1.l6.m1" intent=":literal"><semantics><mrow><mi>e</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">e=1</annotation></semantics></math> <span class="ltx_text ltx_font_bold" id="alg1.l6.3">to</span> <math alttext="E" class="ltx_Math" display="inline" id="alg1.l6.m2" intent=":literal"><semantics><mi>E</mi><annotation encoding="application/x-tex">E</annotation></semantics></math> <span class="ltx_text ltx_font_bold" id="alg1.l6.4">do</span>
+</div>
+<div class="ltx_listingline" id="alg1.l7">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l7.1.1.1" style="font-size:80%;">7:</span></span>  <span class="ltx_text ltx_font_bold" id="alg1.l7.2">for</span> each mini-batch <math alttext="x\in\mathcal{D}" class="ltx_Math" display="inline" id="alg1.l7.m1" intent=":literal"><semantics><mrow><mi>x</mi><mo>∈</mo><mi class="ltx_font_mathcaligraphic">𝒟</mi></mrow><annotation encoding="application/x-tex">x\in\mathcal{D}</annotation></semantics></math> <span class="ltx_text ltx_font_bold" id="alg1.l7.3">do</span>
+</div>
+<div class="ltx_listingline" id="alg1.l8">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l8.1.1.1" style="font-size:80%;">8:</span></span>   <math alttext="t\leftarrow t+1" class="ltx_Math" display="inline" id="alg1.l8.m1" intent=":literal"><semantics><mrow><mi>t</mi><mo stretchy="false">←</mo><mrow><mi>t</mi><mo>+</mo><mn>1</mn></mrow></mrow><annotation encoding="application/x-tex">t\leftarrow t+1</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.1.1.1.4">0.5em
+
+</div>
+<div class="ltx_listingline" id="alg1.l9">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l9.1.1.1" style="font-size:80%;">9:</span></span>   <math alttext="\triangleright" class="ltx_Math" display="inline" id="alg1.l9.m1" intent=":literal"><semantics><mo>⊳</mo><annotation encoding="application/x-tex">\triangleright</annotation></semantics></math> <span class="ltx_text ltx_font_bold" id="alg1.l9.2">Multi-block masking</span>
+</div>
+<div class="ltx_listingline" id="alg1.l10">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l10.1.1.1" style="font-size:80%;">10:</span></span>   Sample <math alttext="N_{m}" class="ltx_Math" display="inline" id="alg1.l10.m1" intent=":literal"><semantics><msub><mi>N</mi><mi>m</mi></msub><annotation encoding="application/x-tex">N_{m}</annotation></semantics></math> target masks <math alttext="\{M_{t}^{(i)}\}_{i=1}^{N_{m}}" class="ltx_Math" display="inline" id="alg1.l10.m2" intent=":literal"><semantics><msubsup><mrow><mo stretchy="false">{</mo><msubsup><mi>M</mi><mi>t</mi><mrow><mo stretchy="false">(</mo><mi>i</mi><mo stretchy="false">)</mo></mrow></msubsup><mo stretchy="false">}</mo></mrow><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>N</mi><mi>m</mi></msub></msubsup><annotation encoding="application/x-tex">\{M_{t}^{(i)}\}_{i=1}^{N_{m}}</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l11">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l11.1.1.1" style="font-size:80%;">11:</span></span>   <math alttext="M_{c}\leftarrow\text{SampleContext}(x,\;\{M_{t}^{(i)}\})" class="ltx_Math" display="inline" id="alg1.l11.m1" intent=":literal"><semantics><mrow><msub><mi>M</mi><mi>c</mi></msub><mo stretchy="false">←</mo><mrow><mtext>SampleContext</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo rspace="0.447em">,</mo><mrow><mo stretchy="false">{</mo><msubsup><mi>M</mi><mi>t</mi><mrow><mo stretchy="false">(</mo><mi>i</mi><mo stretchy="false">)</mo></mrow></msubsup><mo stretchy="false">}</mo></mrow><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">M_{c}\leftarrow\text{SampleContext}(x,\;\{M_{t}^{(i)}\})</annotation></semantics></math> {Context
+</div>
+<div class="ltx_listingline" id="alg1.1.1.1.5">mask excluding target regions}
+
+</div>
+<div class="ltx_listingline" id="alg1.l12">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l12.1.1.1" style="font-size:80%;">12:</span></span>   <math alttext="x_{vis}\leftarrow\text{Apply}(x,\;M_{c})" class="ltx_Math" display="inline" id="alg1.l12.m1" intent=":literal"><semantics><mrow><msub><mi>x</mi><mrow><mi>v</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi></mrow></msub><mo stretchy="false">←</mo><mrow><mtext>Apply</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo rspace="0.447em">,</mo><msub><mi>M</mi><mi>c</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">x_{vis}\leftarrow\text{Apply}(x,\;M_{c})</annotation></semantics></math> {Extract visible patches
+</div>
+<div class="ltx_listingline" id="alg1.1.1.1.6">via context mask}
+
+</div>
+<div class="ltx_listingline" id="alg1.1.1.1.7">0.5em
+
+</div>
+<div class="ltx_listingline" id="alg1.l13">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l13.1.1.1" style="font-size:80%;">13:</span></span>   <math alttext="\triangleright" class="ltx_Math" display="inline" id="alg1.l13.m1" intent=":literal"><semantics><mo>⊳</mo><annotation encoding="application/x-tex">\triangleright</annotation></semantics></math> <span class="ltx_text ltx_font_bold" id="alg1.l13.2">Context encoding and prediction</span>
+</div>
+<div class="ltx_listingline" id="alg1.l14">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l14.1.1.1" style="font-size:80%;">14:</span></span>   <math alttext="h\leftarrow E_{cxt}(x_{vis};\;\theta)" class="ltx_Math" display="inline" id="alg1.l14.m1" intent=":literal"><semantics><mrow><mi>h</mi><mo stretchy="false">←</mo><mrow><msub><mi>E</mi><mrow><mi>c</mi><mo lspace="0em" rspace="0em">​</mo><mi>x</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mrow><mi>v</mi><mo lspace="0em" rspace="0em">​</mo><mi>i</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi></mrow></msub><mo rspace="0.447em">;</mo><mi>θ</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">h\leftarrow E_{cxt}(x_{vis};\;\theta)</annotation></semantics></math> {Encode visible patches}
+
+</div>
+<div class="ltx_listingline" id="alg1.l15">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l15.1.1.1" style="font-size:80%;">15:</span></span>   <math alttext="\hat{y}\leftarrow P(h,\;\text{pos}(\{M_{t}^{(i)}\});\;\phi)" class="ltx_Math" display="inline" id="alg1.l15.m1" intent=":literal"><semantics><mrow><mover accent="true"><mi>y</mi><mo>^</mo></mover><mo stretchy="false">←</mo><mrow><mi>P</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>h</mi><mo rspace="0.447em">,</mo><mrow><mtext>pos</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><mo stretchy="false">{</mo><msubsup><mi>M</mi><mi>t</mi><mrow><mo stretchy="false">(</mo><mi>i</mi><mo stretchy="false">)</mo></mrow></msubsup><mo stretchy="false">}</mo></mrow><mo stretchy="false">)</mo></mrow></mrow><mo rspace="0.447em">;</mo><mi>ϕ</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">\hat{y}\leftarrow P(h,\;\text{pos}(\{M_{t}^{(i)}\});\;\phi)</annotation></semantics></math> {Predict targets
+</div>
+<div class="ltx_listingline" id="alg1.1.1.1.8">with positional info}
+
+</div>
+<div class="ltx_listingline" id="alg1.1.1.1.9">0.5em
+
+</div>
+<div class="ltx_listingline" id="alg1.l16">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l16.1.1.1" style="font-size:80%;">16:</span></span>   <math alttext="\triangleright" class="ltx_Math" display="inline" id="alg1.l16.m1" intent=":literal"><semantics><mo>⊳</mo><annotation encoding="application/x-tex">\triangleright</annotation></semantics></math> <span class="ltx_text ltx_font_bold" id="alg1.l16.2">Target representation</span>
+</div>
+<div class="ltx_listingline" id="alg1.l17">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l17.1.1.1" style="font-size:80%;">17:</span></span>   <math alttext="y_{\text{full}}\leftarrow E_{tgt}(x;\;\bar{\theta})" class="ltx_Math" display="inline" id="alg1.l17.m1" intent=":literal"><semantics><mrow><msub><mi>y</mi><mtext>full</mtext></msub><mo stretchy="false">←</mo><mrow><msub><mi>E</mi><mrow><mi>t</mi><mo lspace="0em" rspace="0em">​</mo><mi>g</mi><mo lspace="0em" rspace="0em">​</mo><mi>t</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo rspace="0.447em">;</mo><mover accent="true"><mi>θ</mi><mo>¯</mo></mover><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">y_{\text{full}}\leftarrow E_{tgt}(x;\;\bar{\theta})</annotation></semantics></math> {Target encoder on full input}
+
+</div>
+<div class="ltx_listingline" id="alg1.l18">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l18.1.1.1" style="font-size:80%;">18:</span></span>   <math alttext="y_{norm}\leftarrow\text{LayerNorm}(y_{\text{full}})" class="ltx_Math" display="inline" id="alg1.l18.m1" intent=":literal"><semantics><mrow><msub><mi>y</mi><mrow><mi>n</mi><mo lspace="0em" rspace="0em">​</mo><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi></mrow></msub><mo stretchy="false">←</mo><mrow><mtext>LayerNorm</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>y</mi><mtext>full</mtext></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">y_{norm}\leftarrow\text{LayerNorm}(y_{\text{full}})</annotation></semantics></math> {Normalize}
+
+</div>
+<div class="ltx_listingline" id="alg1.l19">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l19.1.1.1" style="font-size:80%;">19:</span></span>   <math alttext="y^{(i)}\leftarrow\text{Extract}(y_{norm},\ M_{t}^{(i)})" class="ltx_Math" display="inline" id="alg1.l19.m1" intent=":literal"><semantics><mrow><msup><mi>y</mi><mrow><mo stretchy="false">(</mo><mi>i</mi><mo stretchy="false">)</mo></mrow></msup><mo stretchy="false">←</mo><mrow><mtext>Extract</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>y</mi><mrow><mi>n</mi><mo lspace="0em" rspace="0em">​</mo><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mi>m</mi></mrow></msub><mo rspace="0.667em">,</mo><msubsup><mi>M</mi><mi>t</mi><mrow><mo stretchy="false">(</mo><mi>i</mi><mo stretchy="false">)</mo></mrow></msubsup><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">y^{(i)}\leftarrow\text{Extract}(y_{norm},\ M_{t}^{(i)})</annotation></semantics></math> for <math alttext="i=1,\ldots,N_{m}" class="ltx_Math" display="inline" id="alg1.l19.m2" intent=":literal"><semantics><mrow><mi>i</mi><mo>=</mo><mrow><mn>1</mn><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>N</mi><mi>m</mi></msub></mrow></mrow><annotation encoding="application/x-tex">i=1,\ldots,N_{m}</annotation></semantics></math> {Extract target representations}
+
+</div>
+<div class="ltx_listingline" id="alg1.1.1.1.10">0.5em
+
+</div>
+<div class="ltx_listingline" id="alg1.l20">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l20.1.1.1" style="font-size:80%;">20:</span></span>   <math alttext="\triangleright" class="ltx_Math" display="inline" id="alg1.l20.m1" intent=":literal"><semantics><mo>⊳</mo><annotation encoding="application/x-tex">\triangleright</annotation></semantics></math> <span class="ltx_text ltx_font_bold" id="alg1.l20.2">Loss computation and optimization</span>
+</div>
+<div class="ltx_listingline" id="alg1.l21">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l21.1.1.1" style="font-size:80%;">21:</span></span>   <math alttext="\mathcal{L}\leftarrow\frac{1}{N_{m}}\sum_{i=1}^{N_{m}}\text{MSE}\!\left(\hat{y}^{(i)},\;y^{(i)}\right)" class="ltx_Math" display="inline" id="alg1.l21.m1" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">ℒ</mi><mo stretchy="false">←</mo><mrow><mfrac><mn>1</mn><msub><mi>N</mi><mi>m</mi></msub></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><msubsup><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>N</mi><mi>m</mi></msub></msubsup><mrow><mpadded style="width:2.376em;" width="2.376em"><mtext>MSE</mtext></mpadded><mo lspace="0em" rspace="0em">​</mo><mrow><mo>(</mo><msup><mover accent="true"><mi>y</mi><mo>^</mo></mover><mrow><mo stretchy="false">(</mo><mi>i</mi><mo stretchy="false">)</mo></mrow></msup><mo rspace="0.447em">,</mo><msup><mi>y</mi><mrow><mo stretchy="false">(</mo><mi>i</mi><mo stretchy="false">)</mo></mrow></msup><mo>)</mo></mrow></mrow></mrow></mrow></mrow><annotation encoding="application/x-tex">\mathcal{L}\leftarrow\frac{1}{N_{m}}\sum_{i=1}^{N_{m}}\text{MSE}\!\left(\hat{y}^{(i)},\;y^{(i)}\right)</annotation></semantics></math> {Average loss
+</div>
+<div class="ltx_listingline" id="alg1.1.1.1.11">over masks}
+
+</div>
+<div class="ltx_listingline" id="alg1.l22">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l22.1.1.1" style="font-size:80%;">22:</span></span>   Update <math alttext="\theta,\phi" class="ltx_Math" display="inline" id="alg1.l22.m1" intent=":literal"><semantics><mrow><mi>θ</mi><mo>,</mo><mi>ϕ</mi></mrow><annotation encoding="application/x-tex">\theta,\phi</annotation></semantics></math> via gradient descent on <math alttext="\mathcal{L}" class="ltx_Math" display="inline" id="alg1.l22.m2" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">ℒ</mi><annotation encoding="application/x-tex">\mathcal{L}</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.1.1.1.12">0.5em
+
+</div>
+<div class="ltx_listingline" id="alg1.l23">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l23.1.1.1" style="font-size:80%;">23:</span></span>   <math alttext="\triangleright" class="ltx_Math" display="inline" id="alg1.l23.m1" intent=":literal"><semantics><mo>⊳</mo><annotation encoding="application/x-tex">\triangleright</annotation></semantics></math> <span class="ltx_text ltx_font_bold" id="alg1.l23.2">EMA and schedule updates</span>
+</div>
+<div class="ltx_listingline" id="alg1.l24">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l24.1.1.1" style="font-size:80%;">24:</span></span>   <math alttext="\tau\leftarrow\tau_{\min}+\frac{t}{T}\left(\tau_{\max}-\tau_{\min}\right)" class="ltx_Math" display="inline" id="alg1.l24.m1" intent=":literal"><semantics><mrow><mi>τ</mi><mo stretchy="false">←</mo><mrow><msub><mi>τ</mi><mi>min</mi></msub><mo>+</mo><mrow><mfrac><mi>t</mi><mi>T</mi></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><mo>(</mo><mrow><msub><mi>τ</mi><mi>max</mi></msub><mo>−</mo><msub><mi>τ</mi><mi>min</mi></msub></mrow><mo>)</mo></mrow></mrow></mrow></mrow><annotation encoding="application/x-tex">\tau\leftarrow\tau_{\min}+\frac{t}{T}\left(\tau_{\max}-\tau_{\min}\right)</annotation></semantics></math> {Linear EMA
+</div>
+<div class="ltx_listingline" id="alg1.1.1.1.13">schedule}
+
+</div>
+<div class="ltx_listingline" id="alg1.l25">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l25.1.1.1" style="font-size:80%;">25:</span></span>   <math alttext="\bar{\theta}\leftarrow\tau\,\bar{\theta}+(1-\tau)\,\theta" class="ltx_Math" display="inline" id="alg1.l25.m1" intent=":literal"><semantics><mrow><mover accent="true"><mi>θ</mi><mo>¯</mo></mover><mo stretchy="false">←</mo><mrow><mrow><mi>τ</mi><mo lspace="0.170em" rspace="0em">​</mo><mover accent="true"><mi>θ</mi><mo>¯</mo></mover></mrow><mo>+</mo><mrow><mrow><mo stretchy="false">(</mo><mrow><mn>1</mn><mo>−</mo><mi>τ</mi></mrow><mo stretchy="false">)</mo></mrow><mo lspace="0.170em" rspace="0em">​</mo><mi>θ</mi></mrow></mrow></mrow><annotation encoding="application/x-tex">\bar{\theta}\leftarrow\tau\,\bar{\theta}+(1-\tau)\,\theta</annotation></semantics></math> {EMA update of target
+</div>
+<div class="ltx_listingline" id="alg1.1.1.1.14">encoder}
+
+</div>
+<div class="ltx_listingline" id="alg1.l26">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l26.1.1.1" style="font-size:80%;">26:</span></span>   Update learning rate and weight decay {Cosine schedules}
+
+</div>
+<div class="ltx_listingline" id="alg1.l27">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l27.1.1.1" style="font-size:80%;">27:</span></span>  <span class="ltx_text ltx_font_bold" id="alg1.l27.2">end</span> <span class="ltx_text ltx_font_bold" id="alg1.l27.3">for</span>
+</div>
+<div class="ltx_listingline" id="alg1.l28">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l28.1.1.1" style="font-size:80%;">28:</span></span> <span class="ltx_text ltx_font_bold" id="alg1.l28.2">end</span> <span class="ltx_text ltx_font_bold" id="alg1.l28.3">for</span>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_float"><span class="ltx_text ltx_font_bold" id="alg1.3.1.1">Algorithm 1</span> </span>LatentWave JEPA Pretraining</figcaption>
+</figure>
+<figure class="ltx_table" id="S3.T1">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S3.T1.21.1.1" style="font-size:90%;">TABLE I</span>: </span><span class="ltx_text" id="S3.T1.22.2" style="font-size:90%;">Pretraining Hyperparameters</span></figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T1.19">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T1.19.20.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_tt" id="S3.T1.19.20.1.1"><span class="ltx_text ltx_font_bold" id="S3.T1.19.20.1.1.1">Hyperparameter</span></th>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S3.T1.19.20.1.2"><span class="ltx_text ltx_font_bold" id="S3.T1.19.20.1.2.1">Value</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.19.21.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" colspan="2" id="S3.T1.19.21.2.1"><span class="ltx_text ltx_font_italic" id="S3.T1.19.21.2.1.1">Encoder Architecture</span></th>
+</tr>
+<tr class="ltx_tr" id="S3.T1.2.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.1.1.1">Input size (<math alttext="H\times W" class="ltx_Math" display="inline" id="S3.T1.1.1.1.m1" intent=":literal"><semantics><mrow><mi>H</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>W</mi></mrow><annotation encoding="application/x-tex">H\times W</annotation></semantics></math>)</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.2.2.2"><math alttext="224\times 224" class="ltx_Math" display="inline" id="S3.T1.2.2.2.m1" intent=":literal"><semantics><mrow><mn>224</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>224</mn></mrow><annotation encoding="application/x-tex">224\times 224</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.4.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.3.3.1">Patch size (<math alttext="p_{h}\times p_{w}" class="ltx_Math" display="inline" id="S3.T1.3.3.1.m1" intent=":literal"><semantics><mrow><msub><mi>p</mi><mi>h</mi></msub><mo lspace="0.222em" rspace="0.222em">×</mo><msub><mi>p</mi><mi>w</mi></msub></mrow><annotation encoding="application/x-tex">p_{h}\times p_{w}</annotation></semantics></math>)</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.4.4.2"><math alttext="16\times 16" class="ltx_Math" display="inline" id="S3.T1.4.4.2.m1" intent=":literal"><semantics><mrow><mn>16</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>16</mn></mrow><annotation encoding="application/x-tex">16\times 16</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.5.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.5.5.1">Embedding dimension (<math alttext="D" class="ltx_Math" display="inline" id="S3.T1.5.5.1.m1" intent=":literal"><semantics><mi>D</mi><annotation encoding="application/x-tex">D</annotation></semantics></math>)</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.5.5.2">256</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.19.22.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.19.22.3.1">Transformer layers</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.19.22.3.2">8</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.19.23.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.19.23.4.1">Attention heads</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.19.23.4.2">8</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.6.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.6.6.2">Parameters</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.6.6.1">
+<math alttext="\approx" class="ltx_Math" display="inline" id="S3.T1.6.6.1.m1" intent=":literal"><semantics><mo>≈</mo><annotation encoding="application/x-tex">\approx</annotation></semantics></math> 6.4M</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.19.24.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" colspan="2" id="S3.T1.19.24.5.1"><span class="ltx_text ltx_font_italic" id="S3.T1.19.24.5.1.1">Predictor Architecture</span></th>
+</tr>
+<tr class="ltx_tr" id="S3.T1.19.25.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.19.25.6.1">Embedding dimension</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.19.25.6.2">128</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.19.26.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.19.26.7.1">Transformer layers</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.19.26.7.2">2</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.19.27.8">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.19.27.8.1">Attention heads</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.19.27.8.2">4</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.7.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.7.7.2">Parameters</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.7.7.1">
+<math alttext="\approx" class="ltx_Math" display="inline" id="S3.T1.7.7.1.m1" intent=":literal"><semantics><mo>≈</mo><annotation encoding="application/x-tex">\approx</annotation></semantics></math> 490K</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.19.28.9">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" colspan="2" id="S3.T1.19.28.9.1"><span class="ltx_text ltx_font_italic" id="S3.T1.19.28.9.1.1">Masking Strategy</span></th>
+</tr>
+<tr class="ltx_tr" id="S3.T1.8.8">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.8.8.1">Number of target masks (<math alttext="N_{m}" class="ltx_Math" display="inline" id="S3.T1.8.8.1.m1" intent=":literal"><semantics><msub><mi>N</mi><mi>m</mi></msub><annotation encoding="application/x-tex">N_{m}</annotation></semantics></math>)</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.8.8.2">2</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.10.10">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.9.9.1">Target mask scale (<math alttext="[s_{\min},\;s_{\max}]" class="ltx_Math" display="inline" id="S3.T1.9.9.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><msub><mi>s</mi><mi>min</mi></msub><mo rspace="0.447em">,</mo><msub><mi>s</mi><mi>max</mi></msub><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[s_{\min},\;s_{\max}]</annotation></semantics></math>)</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.10.10.2"><math alttext="[0.15,\;0.2]" class="ltx_Math" display="inline" id="S3.T1.10.10.2.m1" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><mn>0.15</mn><mo>,</mo><mn> 0.2</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[0.15,\;0.2]</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.12.12">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.11.11.1">Aspect ratio (<math alttext="[a_{\min},\;a_{\max}]" class="ltx_Math" display="inline" id="S3.T1.11.11.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><msub><mi>a</mi><mi>min</mi></msub><mo rspace="0.447em">,</mo><msub><mi>a</mi><mi>max</mi></msub><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[a_{\min},\;a_{\max}]</annotation></semantics></math>)</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.12.12.2"><math alttext="[0.75,\;1.5]" class="ltx_Math" display="inline" id="S3.T1.12.12.2.m1" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><mn>0.75</mn><mo>,</mo><mn> 1.5</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[0.75,\;1.5]</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.14.14">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.13.13.1">Context mask scale (<math alttext="[s_{c,\min},\;s_{c,\max}]" class="ltx_Math" display="inline" id="S3.T1.13.13.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><msub><mi>s</mi><mrow><mi>c</mi><mo>,</mo><mi>min</mi></mrow></msub><mo rspace="0.447em">,</mo><msub><mi>s</mi><mrow><mi>c</mi><mo>,</mo><mi>max</mi></mrow></msub><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[s_{c,\min},\;s_{c,\max}]</annotation></semantics></math>)</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.14.14.2"><math alttext="[0.85,\;1.0]" class="ltx_Math" display="inline" id="S3.T1.14.14.2.m1" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><mn>0.85</mn><mo>,</mo><mn> 1.0</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[0.85,\;1.0]</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.19.29.10">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.19.29.10.1">Minimum visible patches</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.19.29.10.2">10</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.19.30.11">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" colspan="2" id="S3.T1.19.30.11.1"><span class="ltx_text ltx_font_italic" id="S3.T1.19.30.11.1.1">Optimization</span></th>
+</tr>
+<tr class="ltx_tr" id="S3.T1.19.31.12">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.19.31.12.1">Epochs</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.19.31.12.2">3000</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.19.32.13">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.19.32.13.1">Warmup epochs</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.19.32.13.2">150</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.19.33.14">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.19.33.14.1">Batch size</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.19.33.14.2">128</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.15.15">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.15.15.2">Initial learning rate</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.15.15.1"><math alttext="1\times 10^{-6}" class="ltx_Math" display="inline" id="S3.T1.15.15.1.m1" intent=":literal"><semantics><mrow><mn>1</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>6</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1\times 10^{-6}</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.16.16">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.16.16.2">Reference learning rate</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.16.16.1"><math alttext="1\times 10^{-3}" class="ltx_Math" display="inline" id="S3.T1.16.16.1.m1" intent=":literal"><semantics><mrow><mn>1</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>3</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1\times 10^{-3}</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.17.17">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.17.17.2">Final learning rate</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.17.17.1"><math alttext="1\times 10^{-6}" class="ltx_Math" display="inline" id="S3.T1.17.17.1.m1" intent=":literal"><semantics><mrow><mn>1</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>6</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1\times 10^{-6}</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.19.34.15">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.19.34.15.1">Initial weight decay</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.19.34.15.2">0.04</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.19.35.16">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.19.35.16.1">Final weight decay</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.19.35.16.2">0.4</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.19.19">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S3.T1.18.18.1">EMA momentum (<math alttext="[\tau_{\min},\;\tau_{\max}]" class="ltx_Math" display="inline" id="S3.T1.18.18.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><msub><mi>τ</mi><mi>min</mi></msub><mo rspace="0.447em">,</mo><msub><mi>τ</mi><mi>max</mi></msub><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[\tau_{\min},\;\tau_{\max}]</annotation></semantics></math>)</th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T1.19.19.2"><math alttext="[0.996,\;1.0]" class="ltx_Math" display="inline" id="S3.T1.19.19.2.m1" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><mn>0.996</mn><mo>,</mo><mn> 1.0</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[0.996,\;1.0]</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure class="ltx_table" id="S3.T2">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S3.T2.25.4.1" style="font-size:90%;">TABLE II</span>: </span><span class="ltx_text" id="S3.T2.6.3" style="font-size:90%;">Downstream performance under linear probing. Classification tasks
+report mean per-class accuracy (%, <math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T2.4.1.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>); positioning reports mean
+positioning error (m, <math alttext="\downarrow" class="ltx_Math" display="inline" id="S3.T2.5.2.m2" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>). Results are mean <math alttext="\pm" class="ltx_Math" display="inline" id="S3.T2.6.3.m3" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math> std over three
+seeds. Best self-supervised result in <span class="ltx_text ltx_font_bold" id="S3.T2.6.3.1">bold</span>.</span></figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="S3.T2.22" style="width:519.8pt;height:93.1pt;vertical-align:-43.3pt;"><span class="ltx_transformed_inner" style="transform:translate(60.0pt,-10.7pt) scale(1.3,1.3) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S3.T2.22.16">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T2.22.16.17.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S3.T2.22.16.17.1.1" style="padding-top:0.75pt;padding-bottom:0.75pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.22.16.17.1.1.1">Task</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T2.22.16.17.1.2" style="padding-top:0.75pt;padding-bottom:0.75pt;">
+<span class="ltx_inline-block" id="S3.T2.22.16.17.1.2.1">
+<span class="ltx_p" id="S3.T2.22.16.17.1.2.1.1"><span class="ltx_text ltx_font_bold" id="S3.T2.22.16.17.1.2.1.1.1">LatentWave</span></span>
+<span class="ltx_p" id="S3.T2.22.16.17.1.2.1.2"><span class="ltx_text ltx_font_bold" id="S3.T2.22.16.17.1.2.1.2.1">(Region)</span></span>
+</span>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T2.22.16.17.1.3" style="padding-top:0.75pt;padding-bottom:0.75pt;">
+<span class="ltx_inline-block" id="S3.T2.22.16.17.1.3.1">
+<span class="ltx_p" id="S3.T2.22.16.17.1.3.1.1"><span class="ltx_text ltx_font_bold" id="S3.T2.22.16.17.1.3.1.1.1">LatentWave</span></span>
+<span class="ltx_p" id="S3.T2.22.16.17.1.3.1.2"><span class="ltx_text ltx_font_bold" id="S3.T2.22.16.17.1.3.1.2.1">(Freq.)</span></span>
+</span>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_tt" id="S3.T2.22.16.17.1.4" style="padding-top:0.75pt;padding-bottom:0.75pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.22.16.17.1.4.1">WavesFM</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T2.22.16.17.1.5" style="padding-top:0.75pt;padding-bottom:0.75pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.22.16.17.1.5.1">Supervised</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T2.10.4.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S3.T2.10.4.4.5" style="padding-top:0.75pt;padding-bottom:0.75pt;">RF Signal Classification</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.7.1.1.1" style="padding-top:0.75pt;padding-bottom:0.75pt;"><math alttext="\mathbf{80.9\pm 2.94}" class="ltx_Math" display="inline" id="S3.T2.7.1.1.1.m1" intent=":literal"><semantics><mrow><mn class="ltx_mathvariant_bold" mathvariant="bold">80.9</mn><mo>±</mo><mn class="ltx_mathvariant_bold" mathvariant="bold">2.94</mn></mrow><annotation encoding="application/x-tex">\mathbf{80.9\pm 2.94}</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.8.2.2.2" style="padding-top:0.75pt;padding-bottom:0.75pt;"><math alttext="66.1\pm 3.10" class="ltx_Math" display="inline" id="S3.T2.8.2.2.2.m1" intent=":literal"><semantics><mrow><mn>66.1</mn><mo>±</mo><mn>3.10</mn></mrow><annotation encoding="application/x-tex">66.1\pm 3.10</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T2.9.3.3.3" style="padding-top:0.75pt;padding-bottom:0.75pt;"><math alttext="80.3\pm 0.73" class="ltx_Math" display="inline" id="S3.T2.9.3.3.3.m1" intent=":literal"><semantics><mrow><mn>80.3</mn><mo>±</mo><mn>0.73</mn></mrow><annotation encoding="application/x-tex">80.3\pm 0.73</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.10.4.4.4" style="padding-top:0.75pt;padding-bottom:0.75pt;"><math alttext="86.5\pm 1.69" class="ltx_Math" display="inline" id="S3.T2.10.4.4.4.m1" intent=":literal"><semantics><mrow><mn>86.5</mn><mo>±</mo><mn>1.69</mn></mrow><annotation encoding="application/x-tex">86.5\pm 1.69</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.14.8.8">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.14.8.8.5" style="padding-top:0.75pt;padding-bottom:0.75pt;">5G NR Positioning (m)</th>
+<td class="ltx_td ltx_align_center" id="S3.T2.11.5.5.1" style="padding-top:0.75pt;padding-bottom:0.75pt;"><math alttext="2.54\pm 0.009" class="ltx_Math" display="inline" id="S3.T2.11.5.5.1.m1" intent=":literal"><semantics><mrow><mn>2.54</mn><mo>±</mo><mn>0.009</mn></mrow><annotation encoding="application/x-tex">2.54\pm 0.009</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.6.6.2" style="padding-top:0.75pt;padding-bottom:0.75pt;"><math alttext="\mathbf{2.32\pm 0.023}" class="ltx_Math" display="inline" id="S3.T2.12.6.6.2.m1" intent=":literal"><semantics><mrow><mn class="ltx_mathvariant_bold" mathvariant="bold">2.32</mn><mo>±</mo><mn class="ltx_mathvariant_bold" mathvariant="bold">0.023</mn></mrow><annotation encoding="application/x-tex">\mathbf{2.32\pm 0.023}</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.13.7.7.3" style="padding-top:0.75pt;padding-bottom:0.75pt;"><math alttext="2.77\pm 0.037" class="ltx_Math" display="inline" id="S3.T2.13.7.7.3.m1" intent=":literal"><semantics><mrow><mn>2.77</mn><mo>±</mo><mn>0.037</mn></mrow><annotation encoding="application/x-tex">2.77\pm 0.037</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.14.8.8.4" style="padding-top:0.75pt;padding-bottom:0.75pt;"><math alttext="0.71\pm 0.001" class="ltx_Math" display="inline" id="S3.T2.14.8.8.4.m1" intent=":literal"><semantics><mrow><mn>0.71</mn><mo>±</mo><mn>0.001</mn></mrow><annotation encoding="application/x-tex">0.71\pm 0.001</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.18.12.12">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.18.12.12.5" style="padding-top:0.75pt;padding-bottom:0.75pt;">Beam Prediction</th>
+<td class="ltx_td ltx_align_center" id="S3.T2.15.9.9.1" style="padding-top:0.75pt;padding-bottom:0.75pt;"><math alttext="51.6\pm 0.35" class="ltx_Math" display="inline" id="S3.T2.15.9.9.1.m1" intent=":literal"><semantics><mrow><mn>51.6</mn><mo>±</mo><mn>0.35</mn></mrow><annotation encoding="application/x-tex">51.6\pm 0.35</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.16.10.10.2" style="padding-top:0.75pt;padding-bottom:0.75pt;"><math alttext="\mathbf{63.1\pm 0.45}" class="ltx_Math" display="inline" id="S3.T2.16.10.10.2.m1" intent=":literal"><semantics><mrow><mn class="ltx_mathvariant_bold" mathvariant="bold">63.1</mn><mo>±</mo><mn class="ltx_mathvariant_bold" mathvariant="bold">0.45</mn></mrow><annotation encoding="application/x-tex">\mathbf{63.1\pm 0.45}</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.17.11.11.3" style="padding-top:0.75pt;padding-bottom:0.75pt;"><math alttext="51.2\pm 0.36" class="ltx_Math" display="inline" id="S3.T2.17.11.11.3.m1" intent=":literal"><semantics><mrow><mn>51.2</mn><mo>±</mo><mn>0.36</mn></mrow><annotation encoding="application/x-tex">51.2\pm 0.36</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.18.12.12.4" style="padding-top:0.75pt;padding-bottom:0.75pt;"><math alttext="88.9\pm 0.50" class="ltx_Math" display="inline" id="S3.T2.18.12.12.4.m1" intent=":literal"><semantics><mrow><mn>88.9</mn><mo>±</mo><mn>0.50</mn></mrow><annotation encoding="application/x-tex">88.9\pm 0.50</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.22.16.16">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S3.T2.22.16.16.5" style="padding-top:0.75pt;padding-bottom:0.75pt;">LoS/NLoS Classification</th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.19.13.13.1" style="padding-top:0.75pt;padding-bottom:0.75pt;"><math alttext="92.9\pm 0.57" class="ltx_Math" display="inline" id="S3.T2.19.13.13.1.m1" intent=":literal"><semantics><mrow><mn>92.9</mn><mo>±</mo><mn>0.57</mn></mrow><annotation encoding="application/x-tex">92.9\pm 0.57</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.20.14.14.2" style="padding-top:0.75pt;padding-bottom:0.75pt;"><math alttext="\mathbf{93.4\pm 0.26}" class="ltx_Math" display="inline" id="S3.T2.20.14.14.2.m1" intent=":literal"><semantics><mrow><mn class="ltx_mathvariant_bold" mathvariant="bold">93.4</mn><mo>±</mo><mn class="ltx_mathvariant_bold" mathvariant="bold">0.26</mn></mrow><annotation encoding="application/x-tex">\mathbf{93.4\pm 0.26}</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_r" id="S3.T2.21.15.15.3" style="padding-top:0.75pt;padding-bottom:0.75pt;"><math alttext="93.4\pm 0.54" class="ltx_Math" display="inline" id="S3.T2.21.15.15.3.m1" intent=":literal"><semantics><mrow><mn>93.4</mn><mo>±</mo><mn>0.54</mn></mrow><annotation encoding="application/x-tex">93.4\pm 0.54</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.22.16.16.4" style="padding-top:0.75pt;padding-bottom:0.75pt;"><math alttext="95.9\pm 0.27" class="ltx_Math" display="inline" id="S3.T2.22.16.16.4.m1" intent=":literal"><semantics><mrow><mn>95.9</mn><mo>±</mo><mn>0.27</mn></mrow><annotation encoding="application/x-tex">95.9\pm 0.27</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+<figure class="ltx_figure" id="S3.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="238" id="S3.F2.g1" src="https://arxiv.org/html/2606.06373v1/figures/JepaMasksv2.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F2.2.1.1" style="font-size:90%;">Figure 2</span>: </span><span class="ltx_text" id="S3.F2.3.2" style="font-size:90%;">JEPA mask geometries to create different wireless inductive biases.</span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS2.4.1.1"><span class="translated-text">Ⅲ-B</span><span class="original-text">III-B</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS2.5.2"><span class="translated-text">掩蔽策略</span><span class="original-text">Masking Strategy</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">屏蔽策略定义了预训练期间面临的预测问题：隐藏哪些信息、保留哪些上下文以及模型必须推断哪些结构。我们研究了四种策略，每种策略都对学习到的表示施加了明显的归纳偏差。
+在所有变体中，编码器可见的上下文是通过移除目标掩码并采样尺度的上下文块来获得的</span><span class="original-text">The masking strategy defines the prediction problem faced during pretraining: what information is hidden, what context remains, and which structures the model must infer. We investigate four strategies, each imposing a distinct inductive bias on the learned representation.
+In all variants, the context visible to the encoder is obtained by removing the target masks and sampling a context block of scale</span><math alttext="s_{c}\in[s_{c,\min},s_{c,\max}]" class="ltx_Math" display="inline" id="S3.SS2.p1.1.m1" intent=":literal"><semantics><mrow><msub><mi>s</mi><mi>c</mi></msub><mo>∈</mo><mrow><mo stretchy="false">[</mo><msub><mi>s</mi><mrow><mi>c</mi><mo>,</mo><mi>min</mi></mrow></msub><mo>,</mo><msub><mi>s</mi><mrow><mi>c</mi><mo>,</mo><mi>max</mi></mrow></msub><mo stretchy="false">]</mo></mrow></mrow><annotation encoding="application/x-tex">s_{c}\in[s_{c,\min},s_{c,\max}]</annotation></semantics></math><span class="translated-text">从剩余的补丁中。在所有情况下，在给定的时频位置屏蔽补丁会消除
+跨所有采样通道的相应标记，确保空间域中一致的预测目标。</span><span class="original-text">from the remaining patches. In all cases, masking a patch at a given time–frequency position removes the
+corresponding tokens across all sampled channels, ensuring a consistent prediction target in the spatial domain.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.p2">
+<p class="ltx_p" id="S3.SS2.p2.3"><span class="ltx_text ltx_font_bold" id="S3.SS2.p2.3.1"><span class="translated-text">区域掩蔽。</span><span class="original-text">Region masking.</span></span><span class="translated-text">关注 I-JEPA</span><span class="original-text">Following I-JEPA</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="Self-supervised learning from images with a joint-embedding predictive architecture">5</a>]</cite>, <math alttext="N_{m}" class="ltx_Math" display="inline" id="S3.SS2.p2.1.m1" intent=":literal"><semantics><msub><mi>N</mi><mi>m</mi></msub><annotation encoding="application/x-tex">N_{m}</annotation></semantics></math><span class="translated-text">通过对目标尺度进行采样来生成二维掩模</span><span class="original-text">two-dimensional masks are generated by sampling a target scale</span><math alttext="s\in[s_{\min},s_{\max}]" class="ltx_Math" display="inline" id="S3.SS2.p2.2.m2" intent=":literal"><semantics><mrow><mi>s</mi><mo>∈</mo><mrow><mo stretchy="false">[</mo><msub><mi>s</mi><mi>min</mi></msub><mo>,</mo><msub><mi>s</mi><mi>max</mi></msub><mo stretchy="false">]</mo></mrow></mrow><annotation encoding="application/x-tex">s\in[s_{\min},s_{\max}]</annotation></semantics></math><span class="translated-text">和纵横比</span><span class="original-text">and an aspect ratio</span><math alttext="a\in[a_{\min},a_{\max}]" class="ltx_Math" display="inline" id="S3.SS2.p2.3.m3" intent=":literal"><semantics><mrow><mi>a</mi><mo>∈</mo><mrow><mo stretchy="false">[</mo><msub><mi>a</mi><mi>min</mi></msub><mo>,</mo><msub><mi>a</mi><mi>max</mi></msub><mo stretchy="false">]</mo></mrow></mrow><annotation encoding="application/x-tex">a\in[a_{\min},a_{\max}]</annotation></semantics></math><span class="translated-text">，它们共同决定了沿频率和时间轴的掩模尺寸。每个掩模都放置在频谱图中均匀随机的位置。掩模可以彼此重叠，但不能与上下文区域重叠。这鼓励模型捕获联合谱时结构，例如调制模式和带宽占用。</span><span class="original-text">, which together determine the mask dimensions along the frequency and time axes. Each mask is placed at a uniformly random position within the spectrogram. Masks may overlap with one another but not with the context region. This encourages the model to capture joint spectro-temporal structure, such as modulation patterns and bandwidth occupancy.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.p3">
+<p class="ltx_p" id="S3.SS2.p3.1"><span class="ltx_text ltx_font_bold" id="S3.SS2.p3.1.1"><span class="translated-text">频率掩蔽。</span><span class="original-text">Frequency masking.</span></span><span class="translated-text">每个</span><span class="original-text">Each of the</span><math alttext="N_{m}" class="ltx_Math" display="inline" id="S3.SS2.p3.1.m1" intent=":literal"><semantics><msub><mi>N</mi><mi>m</mi></msub><annotation encoding="application/x-tex">N_{m}</annotation></semantics></math><span class="translated-text">面具横跨</span><span class="original-text">masks spans the</span><em class="ltx_emph ltx_font_italic" id="S3.SS2.p3.1.2"><span class="translated-text">整个时间轴</span><span class="original-text">entire time axis</span></em><span class="translated-text">同时覆盖频率仓的连续子集。该模型必须从剩余频率内容中重建完整的频谱带，从而偏向于学习频率间依赖性和频谱包络结构。</span><span class="original-text">while covering a contiguous subset of frequency bins. The model must reconstruct complete spectral bands from the remaining frequency content, imposing a bias toward learning inter-frequency dependencies and spectral envelope structure.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.p4">
+<p class="ltx_p" id="S3.SS2.p4.1"><span class="ltx_text ltx_font_bold" id="S3.SS2.p4.1.1"><span class="translated-text">时间掩蔽。</span><span class="original-text">Time masking.</span></span><span class="translated-text">每个</span><span class="original-text">Each of the</span><math alttext="N_{m}" class="ltx_Math" display="inline" id="S3.SS2.p4.1.m1" intent=":literal"><semantics><msub><mi>N</mi><mi>m</mi></msub><annotation encoding="application/x-tex">N_{m}</annotation></semantics></math><span class="translated-text">面具横跨</span><span class="original-text">masks spans the</span><em class="ltx_emph ltx_font_italic" id="S3.SS2.p4.1.2"><span class="translated-text">整个频率轴</span><span class="original-text">entire frequency axis</span></em><span class="translated-text">同时覆盖时间步长的连续子集。该模型必须预测隐藏时刻的完整光谱快照，从而鼓励捕获时间动态，例如突发时序和跨帧的时间相关性。</span><span class="original-text">while covering a contiguous subset of time steps. The model must predict full spectral snapshots at hidden time instants, encouraging the capture of temporal dynamics such as burst timing and temporal correlations across frames.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.p5">
+<p class="ltx_p" id="S3.SS2.p5.1"><span class="ltx_text ltx_font_bold" id="S3.SS2.p5.1.1"><span class="translated-text">随机掩蔽。</span><span class="original-text">Random masking.</span></span><span class="translated-text">与 WavesFM 一样</span><span class="original-text">As in WavesFM</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="6G WavesFM: a foundation model for sensing, communication, and localization">2</a>]</cite><span class="translated-text">，各个补丁被随机均匀采样，没有任何空间连续性约束。这提供了最大的空间多样性，但允许从相邻补丁进行局部插值以部分解决预测任务。</span><span class="original-text">, individual patches are sampled uniformly at random without any spatial contiguity constraint. This provides maximal spatial diversity but allows local interpolation from neighboring patches to partially solve the prediction task.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.p6">
+<p class="ltx_p" id="S3.SS2.p6.1"><span class="translated-text">对于区域、频率和时间策略，我们有所不同</span><span class="original-text">For the region, frequency, and time strategies, we vary</span><math alttext="N_{m}\in\{2,3,4,5,6\}" class="ltx_Math" display="inline" id="S3.SS2.p6.1.m1" intent=":literal"><semantics><mrow><msub><mi>N</mi><mi>m</mi></msub><mo>∈</mo><mrow><mo stretchy="false">{</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo>,</mo><mn>4</mn><mo>,</mo><mn>5</mn><mo>,</mo><mn>6</mn><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">N_{m}\in\{2,3,4,5,6\}</annotation></semantics></math><span class="translated-text">控制总遮蔽面积。章节中介绍了所有策略和掩模计数的系统比较</span><span class="original-text">to control the total masked area. A systematic comparison of all strategies and mask counts is presented in Section</span><a class="ltx_ref" href="#S4.SS3" title="IV-C Masking Ablations ‣ IV Results ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">IV-C</span></span></a>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS3.4.1.1"><span class="translated-text">Ⅲ-C</span><span class="original-text">III-C</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS3.5.2"><span class="translated-text">预训练数据</span><span class="original-text">Pretraining Data</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.2"><span class="translated-text">我们对涵盖频谱图和 CSI 的四个未标记数据集进行预训练。第一个是私人收集的频谱图数据集，其中包含 3200 个 WiFi、LTE、蓝牙、5G-NR 和 ISM 信号，这些信号是使用软件定义无线电在各种 6GHz 以下中心频率、采样率为 10-60 MHz 的情况下通过空中捕获的。第二个是 RF 指纹频谱图数据集，包含大约 6000 个单通道样本</span><span class="original-text">We pretrain on four unlabeled datasets spanning spectrograms and CSI. The first is a privately collected spectrogram dataset that contains 3200 WiFi, LTE, Bluetooth, 5G-NR, and ISM signals captured over the air using Software-Defined Radios at various sub-6GHz center frequencies with sampling rates of 10–60   MHz. The second is an RF fingerprinting spectrogram dataset comprising approximately 6000 single-channel samples</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib25" title="Trust in 5G open RANs through machine learning: RF fingerprinting on the POWDER PAWR platform">11</a>]</cite><span class="translated-text">。第三个是 5G NR 室内 CSI 数据集，包含大约 15 000 个五通道样本</span><span class="original-text">. The third is a 5G NR indoor CSI dataset with approximately 15 000 five-channel samples</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="EfficientFi: toward large-scale lightweight WiFi sensing via CSI compression">13</a>]</cite><span class="translated-text">。第四个是 WiFi CSI 数据集，包含 840 个三通道样本</span><span class="original-text">. The fourth is a WiFi CSI dataset with 840 three-channel samples</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib24" title="Multimodal CSI-based human activity recognition using GANs">12</a>]</cite><span class="translated-text">。预训练语料库总共包含大约 25 000 个具有不同通道数的样本。所有频谱图样本均转换为分贝标度，如下所示</span><span class="original-text">. Together, the pretraining corpus totals roughly 25 000 samples with varying numbers of channels. All spectrogram samples are converted to decibel scale as</span><math alttext="20\log_{10}(\cdot)" class="ltx_Math" display="inline" id="S3.SS3.p1.1.m1" intent=":literal"><semantics><mrow><mn>20</mn><mo lspace="0.167em" rspace="0em">​</mo><mrow><msub><mi>log</mi><mn>10</mn></msub><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mo lspace="0em" rspace="0em">⋅</mo><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">20\log_{10}(\cdot)</annotation></semantics></math><span class="translated-text">。然后将每个样本（无论是频谱图还是 CSI）调整大小以</span><span class="original-text">. Every sample, whether spectrogram or CSI, is then resized to</span><math alttext="224\times 224" class="ltx_Math" display="inline" id="S3.SS3.p1.2.m2" intent=":literal"><semantics><mrow><mn>224</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>224</mn></mrow><annotation encoding="application/x-tex">224\times 224</annotation></semantics></math><span class="translated-text">并使用在每个预训练数据集上计算的每通道平均值和标准差进行归一化。</span><span class="original-text">and normalized using per-channel mean and standard deviation computed over each pretraining dataset.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS4.4.1.1"><span class="translated-text">Ⅲ-D</span><span class="original-text">III-D</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS4.5.2"><span class="translated-text">基线和下游评估</span><span class="original-text">Baseline and Downstream Evaluation</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS4.p1">
+<p class="ltx_p" id="S3.SS4.p1.1"><span class="translated-text">我们使用 WavesFM</span><span class="original-text">We use WavesFM</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="6G WavesFM: a foundation model for sensing, communication, and localization">2</a>]</cite><span class="translated-text">作为主要基线，因为它是通过掩模模型进行预训练的。我们在相同的预训练数据集上重现它，并在相同的下游任务上进行评估。这种受控比较隔离了联合嵌入预测架构预训练目标对表示质量的影响。</span><span class="original-text">as the primary baseline, since it was pretrained with masked modeling. We reproduced it on the same pretraining datasets and evaluated on the same downstream tasks. This controlled comparison isolates the effect of the Joint-Embedding Predictive Architecture pretraining objective on representation quality.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS4.p2">
+<p class="ltx_p" id="S3.SS4.p2.1"><span class="translated-text">我们评估四个下游任务： 使用 CommRad RF 进行射频信号分类</span><span class="original-text">We evaluate on four downstream tasks: RF signal classification using CommRad RF</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="CommRad RF: a dataset of communication radio signals for detection, identification and classification">16</a>]</cite><span class="translated-text">、使用 5G CSI 的 5G NR 定位（室外场景，与预训练期间使用的室内场景不同）、波束预测和 LoS/NLoS 分类均使用 DeepMIMO</span><span class="original-text">, 5G NR positioning using 5G CSI (the outdoor scenario, distinct from the indoor scenario used during pretraining), beam prediction, and LoS/NLoS classification both using DeepMIMO</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib5" title="DeepMIMO: a generic deep learning dataset for millimeter wave and massive MIMO applications">4</a>]</cite><span class="translated-text">。这些任务跨越通信、传感和定位领域，具有与预训练数据不同的几种分布和模式。对于每项任务，我们使用线性探测进行评估，其中编码器被冻结，并且单个线性头在 LatentWave 的平均池补丁表示和 WavesFM 的 CLS 标记上进行训练。</span><span class="original-text">. These tasks span communication, sensing, and positioning domains, with several distributions and modalities that differ from the pretraining data. For each task, we evaluate using linear probing where the encoder is frozen, and a single linear head is trained on the mean-pooled patch representations for LatentWave and the CLS token for WavesFM.</span></p>
+</div>
+<figure class="ltx_table" id="S3.T3">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S3.T3.4.1.1" style="font-size:90%;">TABLE III</span>: </span><span class="ltx_text" id="S3.T3.5.2" style="font-size:90%;">Masking strategy ablation. The effective masking ratio for each configuration is shown
+in the second header row. Evaluation metrics are identical to table <a class="ltx_ref" href="#S3.T2" title="TABLE II ‣ III-A Proposed Pretraining Framework and Architecture ‣ III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">II</span></a>. Best result per task in <span class="ltx_text ltx_font_bold" id="S3.T3.5.2.1">bold</span>.</span></figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T3.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T3.1.2.1">
+<th class="ltx_td ltx_th ltx_th_row ltx_border_tt" id="S3.T3.1.2.1.1" style="padding:0.7pt 4.0pt;"></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="5" id="S3.T3.1.2.1.2" style="padding:0.7pt 4.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.1.2.1.2.1" style="font-size:90%;">Region</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="5" id="S3.T3.1.2.1.3" style="padding:0.7pt 4.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.1.2.1.3.1" style="font-size:90%;">Frequency</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="5" id="S3.T3.1.2.1.4" style="padding:0.7pt 4.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.1.2.1.4.1" style="font-size:90%;">Time</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.1.2.1.5" style="padding:0.7pt 4.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.1.2.1.5.1" style="font-size:90%;">Rand.</span></th>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row" id="S3.T3.1.1.1" style="padding:0.7pt 4.0pt;"><math alttext="N_{m}" class="ltx_Math" display="inline" id="S3.T3.1.1.1.m1" intent=":literal"><semantics><msub><mi mathsize="0.900em">N</mi><mi mathsize="0.900em">m</mi></msub><annotation encoding="application/x-tex">N_{m}</annotation></semantics></math></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.1.1.2" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.1.2.1" style="font-size:90%;">2</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.1.1.3" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.1.3.1" style="font-size:90%;">3</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.1.1.4" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.1.4.1" style="font-size:90%;">4</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.1.1.5" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.1.5.1" style="font-size:90%;">5</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.1.1.6" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.1.6.1" style="font-size:90%;">6</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.1.1.7" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.1.7.1" style="font-size:90%;">2</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.1.1.8" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.1.8.1" style="font-size:90%;">3</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.1.1.9" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.1.9.1" style="font-size:90%;">4</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.1.1.10" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.1.10.1" style="font-size:90%;">5</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.1.1.11" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.1.11.1" style="font-size:90%;">6</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.1.1.12" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.1.12.1" style="font-size:90%;">2</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.1.1.13" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.1.13.1" style="font-size:90%;">3</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.1.1.14" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.1.14.1" style="font-size:90%;">4</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.1.1.15" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.1.15.1" style="font-size:90%;">5</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.1.1.16" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.1.16.1" style="font-size:90%;">6</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.1.1.17" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.1.17.1" style="font-size:90%;">–</span></th>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.3.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row" id="S3.T3.1.3.2.1" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.3.2.1.1" style="font-size:90%;">Mask ratio</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.1.3.2.2" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.3.2.2.1" style="font-size:70%;">29%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.1.3.2.3" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.3.2.3.1" style="font-size:70%;">43%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.1.3.2.4" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.3.2.4.1" style="font-size:70%;">57%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.1.3.2.5" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.3.2.5.1" style="font-size:70%;">71%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.1.3.2.6" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.3.2.6.1" style="font-size:70%;">80%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.1.3.2.7" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.3.2.7.1" style="font-size:70%;">29%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.1.3.2.8" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.3.2.8.1" style="font-size:70%;">43%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.1.3.2.9" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.3.2.9.1" style="font-size:70%;">57%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.1.3.2.10" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.3.2.10.1" style="font-size:70%;">71%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.1.3.2.11" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.3.2.11.1" style="font-size:70%;">80%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.1.3.2.12" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.3.2.12.1" style="font-size:70%;">29%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.1.3.2.13" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.3.2.13.1" style="font-size:70%;">43%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.1.3.2.14" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.3.2.14.1" style="font-size:70%;">57%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.1.3.2.15" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.3.2.15.1" style="font-size:70%;">71%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.1.3.2.16" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.3.2.16.1" style="font-size:70%;">80%</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.1.3.2.17" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.3.2.17.1" style="font-size:70%;">75%</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T3.1.4.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S3.T3.1.4.1.1" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.4.1.1.1" style="font-size:90%;">RF Signal Classif.</span></th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.4.1.2" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.4.1.2.1" style="font-size:90%;">73.3</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.4.1.3" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.4.1.3.1" style="font-size:90%;">73.1</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.4.1.4" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.4.1.4.1" style="font-size:90%;">74.4</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.4.1.5" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.4.1.5.1" style="font-size:90%;">79.7</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.4.1.6" style="padding:0.7pt 4.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.1.4.1.6.1" style="font-size:90%;">83.5</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.4.1.7" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.4.1.7.1" style="font-size:90%;">74.6</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.4.1.8" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.4.1.8.1" style="font-size:90%;">73.9</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.4.1.9" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.4.1.9.1" style="font-size:90%;">68.9</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.4.1.10" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.4.1.10.1" style="font-size:90%;">68.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.4.1.11" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.4.1.11.1" style="font-size:90%;">68.3</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.4.1.12" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.4.1.12.1" style="font-size:90%;">76.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.4.1.13" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.4.1.13.1" style="font-size:90%;">78.2</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.4.1.14" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.4.1.14.1" style="font-size:90%;">77.7</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.4.1.15" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.4.1.15.1" style="font-size:90%;">80.2</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.4.1.16" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.4.1.16.1" style="font-size:90%;">81.5</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.1.4.1.17" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.4.1.17.1" style="font-size:90%;">71.2</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.5.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T3.1.5.2.1" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.5.2.1.1" style="font-size:90%;">5G NR Positioning (m)</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.5.2.2" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.5.2.2.1" style="font-size:90%;">3.19</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.5.2.3" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.5.2.3.1" style="font-size:90%;">2.71</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.5.2.4" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.5.2.4.1" style="font-size:90%;">2.30</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.5.2.5" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.5.2.5.1" style="font-size:90%;">2.45</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.5.2.6" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.5.2.6.1" style="font-size:90%;">2.55</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.5.2.7" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.5.2.7.1" style="font-size:90%;">3.20</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.5.2.8" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.5.2.8.1" style="font-size:90%;">2.95</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.5.2.9" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.5.2.9.1" style="font-size:90%;">2.42</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.5.2.10" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.5.2.10.1" style="font-size:90%;">2.36</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.5.2.11" style="padding:0.7pt 4.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.1.5.2.11.1" style="font-size:90%;">2.32</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.5.2.12" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.5.2.12.1" style="font-size:90%;">3.43</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.5.2.13" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.5.2.13.1" style="font-size:90%;">3.54</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.5.2.14" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.5.2.14.1" style="font-size:90%;">3.43</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.5.2.15" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.5.2.15.1" style="font-size:90%;">3.18</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.5.2.16" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.5.2.16.1" style="font-size:90%;">2.84</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.1.5.2.17" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.5.2.17.1" style="font-size:90%;">2.90</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.6.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S3.T3.1.6.3.1" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.6.3.1.1" style="font-size:90%;">Beam Prediction</span></th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.6.3.2" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.6.3.2.1" style="font-size:90%;">37.2</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.6.3.3" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.6.3.3.1" style="font-size:90%;">40.7</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.6.3.4" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.6.3.4.1" style="font-size:90%;">46.5</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.6.3.5" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.6.3.5.1" style="font-size:90%;">48.6</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.6.3.6" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.6.3.6.1" style="font-size:90%;">51.6</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.6.3.7" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.6.3.7.1" style="font-size:90%;">44.6</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.6.3.8" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.6.3.8.1" style="font-size:90%;">45.6</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.6.3.9" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.6.3.9.1" style="font-size:90%;">49.8</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.6.3.10" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.6.3.10.1" style="font-size:90%;">59.5</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.6.3.11" style="padding:0.7pt 4.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.1.6.3.11.1" style="font-size:90%;">63.5</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.6.3.12" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.6.3.12.1" style="font-size:90%;">33.6</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.6.3.13" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.6.3.13.1" style="font-size:90%;">38.5</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.6.3.14" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.6.3.14.1" style="font-size:90%;">37.4</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.6.3.15" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.6.3.15.1" style="font-size:90%;">38.7</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.6.3.16" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.6.3.16.1" style="font-size:90%;">44.6</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.6.3.17" style="padding:0.7pt 4.0pt;"><span class="ltx_text" id="S3.T3.1.6.3.17.1" style="font-size:90%;">39.2</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span class="ltx_text ltx_font_smallcaps" id="S4.1.1"><span class="translated-text">结果</span><span class="original-text">Results</span></span>
+</h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">我们现在展示并讨论结果。
+部分</span><span class="original-text">We now present and discuss the results.
+Section</span><a class="ltx_ref" href="#S4.SS1" title="IV-A Experimental Setup ‣ IV Results ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">IV-A</span></span></a><span class="translated-text">详细说明评估指标和实施细节。部分</span><span class="original-text">details the evaluation metrics and implementation specifics. Section</span><a class="ltx_ref" href="#S4.SS2" title="IV-B Main Results ‣ IV Results ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">IV-B</span></span></a><span class="translated-text">将 LatentWave 与线性探测下的监督和自监督基线进行比较。部分</span><span class="original-text">compares LatentWave against supervised and self-supervised baselines under linear probing. Section</span><a class="ltx_ref" href="#S4.SS3" title="IV-C Masking Ablations ‣ IV Results ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">IV-C</span></span></a><span class="translated-text">消除掩蔽策略以证明设计选择的合理性。</span><span class="original-text">ablates the masking strategies to justify the design choices.</span></p>
+</div>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS1.4.1.1">IV-A</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS1.5.2"><span class="translated-text">实验装置</span><span class="original-text">Experimental Setup</span></span>
+</h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.1"><span class="translated-text">对于所有下游任务，我们将数据分为 80% 的训练集和 20% 的测试集。我们报告了所有分类任务（即 RF 信号分类、波束预测和 LOS/NLOS 分类）的平均每类精度，因为它比整体精度更忠实地解释了类不平衡。给定</span><span class="original-text">For all downstream tasks, we split the data into 80% training and 20% test sets. We report mean per-class accuracy for all classification tasks, namely RF signal classification, beam prediction, and LOS/NLOS classification, as it accounts for class imbalance more faithfully than overall accuracy. Given</span><math alttext="C" class="ltx_Math" display="inline" id="S4.SS1.p1.1.m1" intent=":literal"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math><span class="translated-text">类，每类的平均准确度定义为</span><span class="original-text">classes, the mean per-class accuracy is defined as</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E6">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathrm{Acc}_{\mathrm{mpc}}=\frac{1}{K}\sum_{k=1}^{K}\frac{n_{k}^{\mathrm{correct}}}{n_{k}}," class="ltx_Math" display="block" id="S4.E6.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>Acc</mi><mi>mpc</mi></msub><mo>=</mo><mrow><mfrac><mn>1</mn><mi>K</mi></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><munderover><mo movablelimits="false">∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></munderover><mfrac><msubsup><mi>n</mi><mi>k</mi><mi>correct</mi></msubsup><msub><mi>n</mi><mi>k</mi></msub></mfrac></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathrm{Acc}_{\mathrm{mpc}}=\frac{1}{K}\sum_{k=1}^{K}\frac{n_{k}^{\mathrm{correct}}}{n_{k}},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(6)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S4.SS1.p1.4"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="n_{k}" class="ltx_Math" display="inline" id="S4.SS1.p1.2.m1" intent=":literal"><semantics><msub><mi>n</mi><mi>k</mi></msub><annotation encoding="application/x-tex">n_{k}</annotation></semantics></math><span class="translated-text">是属于该类别的测试样本总数</span><span class="original-text">is the total number of test samples belonging to class</span><math alttext="k" class="ltx_Math" display="inline" id="S4.SS1.p1.3.m2" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="n_{k}^{\mathrm{correct}}" class="ltx_Math" display="inline" id="S4.SS1.p1.4.m3" intent=":literal"><semantics><msubsup><mi>n</mi><mi>k</mi><mi>correct</mi></msubsup><annotation encoding="application/x-tex">n_{k}^{\mathrm{correct}}</annotation></semantics></math><span class="translated-text">是该类中正确分类的样本数。对于定位任务，我们报告平均定位误差，定义为预测坐标和地面实况坐标之间的平均欧几里德距离：</span><span class="original-text">is the number of correctly classified samples in that class. For the positioning task, we report the mean positioning error, defined as the average Euclidean distance between the predicted and ground-truth coordinates:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S4.E7">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathrm{MPE}=\frac{1}{N}\sum_{i=1}^{N}\bigl\|\hat{\mathbf{p}}_{i}-\mathbf{p}_{i}\bigr\|_{2}," class="ltx_Math" display="block" id="S4.E7.m1" intent=":literal"><semantics><mrow><mrow><mi>MPE</mi><mo>=</mo><mrow><mfrac><mn>1</mn><mi>N</mi></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><munderover><mo movablelimits="false" rspace="0em">∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><msub><mrow><mo maxsize="1.200em" minsize="1.200em" stretchy="true">‖</mo><mrow><msub><mover accent="true"><mi>𝐩</mi><mo>^</mo></mover><mi>i</mi></msub><mo>−</mo><msub><mi>𝐩</mi><mi>i</mi></msub></mrow><mo maxsize="1.200em" minsize="1.200em" stretchy="true">‖</mo></mrow><mn>2</mn></msub></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathrm{MPE}=\frac{1}{N}\sum_{i=1}^{N}\bigl\|\hat{\mathbf{p}}_{i}-\mathbf{p}_{i}\bigr\|_{2},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(7)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S4.SS1.p1.8"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="N" class="ltx_Math" display="inline" id="S4.SS1.p1.5.m1" intent=":literal"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math><span class="translated-text">是测试样本的数量，</span><span class="original-text">is the number of test samples,</span><math alttext="\hat{\mathbf{p}}_{i}\in\mathbb{R}^{3}" class="ltx_Math" display="inline" id="S4.SS1.p1.6.m2" intent=":literal"><semantics><mrow><msub><mover accent="true"><mi>𝐩</mi><mo>^</mo></mover><mi>i</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">\hat{\mathbf{p}}_{i}\in\mathbb{R}^{3}</annotation></semantics></math><span class="translated-text">是预测位置，并且</span><span class="original-text">is the predicted position, and</span><math alttext="\mathbf{p}_{i}\in\mathbb{R}^{3}" class="ltx_Math" display="inline" id="S4.SS1.p1.7.m3" intent=":literal"><semantics><mrow><msub><mi>𝐩</mi><mi>i</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">\mathbf{p}_{i}\in\mathbb{R}^{3}</annotation></semantics></math><span class="translated-text">是的真实位置</span><span class="original-text">is the ground-truth position of the</span><math alttext="i" class="ltx_Math" display="inline" id="S4.SS1.p1.8.m4" intent=":literal"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math><span class="translated-text">第-个样本。</span><span class="original-text">-th sample.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p2">
+<p class="ltx_p" id="S4.SS1.p2.1"><span class="translated-text">对于所有任务，首先使用在训练分割上计算的统计数据将冻结的编码器嵌入标准化为零均值和单位方差。逻辑回归分类器用于分类任务，线性回归用于定位。主要结果报告为三个随机种子的平均值和标准差，控制训练/测试的划分。</span><span class="original-text">For all tasks, the frozen encoder embeddings are first standardized to zero mean and unit variance using statistics computed on the training split. A logistic regression classifier is used for classification tasks, and linear regression for positioning. Main results are reported as the mean and standard deviation over three random seeds, controlling the train/test split.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS2.4.1.1">IV-B</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS2.5.2"><span class="translated-text">主要结果</span><span class="original-text">Main Results</span></span>
+</h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S3.T2" title="TABLE II ‣ III-A Proposed Pretraining Framework and Architecture ‣ III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">II</span></a><span class="translated-text">比较线性探测下所有方法的下游性能。具有区域掩蔽的 LatentWave 在所有任务中的表现与 WavesFM 相当，在射频信号分类和定位方面具有边际增益，这表明潜在空间中的预测与表示质量中的像素级重建相匹配。</span><span class="original-text">compares the downstream performance of all methods under linear probing. LatentWave with region masking performs on par with WavesFM across all tasks, with marginal gains on RF signal classification and positioning, indicating that predicting in latent space matches pixel-level reconstruction in representation quality.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p2">
+<p class="ltx_p" id="S4.SS2.p2.1"><span class="translated-text">切换到频率掩蔽会产生明显不同的情况：波束预测提高了 11 个百分点以上，定位误差从 2.54 m 降低到 2.32 m，但 RF 信号分类从 80.9% 大幅下降到 66.1%。这表明频率掩蔽鼓励捕获有利于通道相关任务的空间和频谱结构的表示，但代价是区分信号类型所需的时间模式。在所有策略中，视距/非视距分类基本上不受影响。</span><span class="original-text">Switching to frequency masking yields a markedly different profile: beam prediction improves by over 11 percentage points and positioning error decreases from 2.54 m to 2.32 m, but RF signal classification drops substantially from 80.9% to 66.1%. This suggests that frequency masking encourages representations that capture spatial and spectral structure beneficial for channel-related tasks, at the cost of temporal patterns needed to discriminate signal types. LoS/NLoS classification remains largely unaffected across all strategies.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p3">
+<p class="ltx_p" id="S4.SS2.p3.1"><span class="translated-text">尽管仅使用带有线性头的冻结编码器，但自监督方法非常接近 RF 分类和 LoS/NLoS 分类的监督上限，而波束预测和定位方面的剩余差距表明缩放预训练数据或探索轻量级微调有明显的好处。</span><span class="original-text">Despite using only a frozen encoder with a linear head, the self-supervised methods closely approach the supervised upper bound on RF classification and LoS/NLoS classification, with the remaining gap on beam prediction and positioning suggesting clear benefit from scaling pretraining data or exploring lightweight fine-tuning.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS3.4.1.1">IV-C</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS3.5.2"><span class="translated-text">掩蔽消融</span><span class="original-text">Masking Ablations</span></span>
+</h3>
+<div class="ltx_para" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.4"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S3.T3" title="TABLE III ‣ III-D Baseline and Downstream Evaluation ‣ III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">III</span></a><span class="translated-text">消除掩蔽策略和掩蔽数量</span><span class="original-text">ablates the masking strategy and the number of masks</span><math alttext="N_{m}" class="ltx_Math" display="inline" id="S4.SS3.p1.1.m1" intent=":literal"><semantics><msub><mi>N</mi><mi>m</mi></msub><annotation encoding="application/x-tex">N_{m}</annotation></semantics></math><span class="translated-text">跨越三个下游任务。有效掩蔽率，即从上下文编码器隐藏的补丁的平均比例，随着</span><span class="original-text">across three downstream tasks. The effective masking ratio, i.e., the average proportion of patches hidden from the context encoder, increases with</span><math alttext="N_{m}" class="ltx_Math" display="inline" id="S4.SS3.p1.2.m2" intent=":literal"><semantics><msub><mi>N</mi><mi>m</mi></msub><annotation encoding="application/x-tex">N_{m}</annotation></semantics></math><span class="translated-text">从 29% 起</span><span class="original-text">from 29% at</span><math alttext="N_{m}{=}2" class="ltx_Math" display="inline" id="S4.SS3.p1.3.m3" intent=":literal"><semantics><mrow><msub><mi>N</mi><mi>m</mi></msub><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">N_{m}{=}2</annotation></semantics></math><span class="translated-text">至 80%</span><span class="original-text">to 80% at</span><math alttext="N_{m}{=}6" class="ltx_Math" display="inline" id="S4.SS3.p1.4.m4" intent=":literal"><semantics><mrow><msub><mi>N</mi><mi>m</mi></msub><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">N_{m}{=}6</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="S4.SS3.p2">
+<p class="ltx_p" id="S4.SS3.p2.2"><span class="translated-text">增加</span><span class="original-text">Increasing</span><math alttext="N_{m}" class="ltx_Math" display="inline" id="S4.SS3.p2.1.m1" intent=":literal"><semantics><msub><mi>N</mi><mi>m</mi></msub><annotation encoding="application/x-tex">N_{m}</annotation></semantics></math><span class="translated-text">持续改进所有结构化策略的波束预测。 RF 信号分类在频率掩蔽下遵循相反的趋势，随着更多的频谱带被隐藏而退化，而区域和时间掩蔽都随着更多的掩蔽而改善。这证实了频率掩蔽使表示偏向频率间结构，但牺牲了信号类型识别所需的时间可辨别性。定位误差通常随着频率和时间策略的掩模数量的增加而减小，而区域掩模在</span><span class="original-text">consistently improves beam prediction across all structured strategies. RF signal classification follows the opposite trend under frequency masking, degrading as more spectral bands are hidden, whereas region and time masking both improve with more masks. This confirms that frequency masking biases representations toward inter-frequency structure at the expense of temporal discriminability needed for signal type recognition. Positioning error generally decreases with more masks for frequency and time strategies, while region masking achieves its best positioning result at</span><math alttext="N_{m}{=}4" class="ltx_Math" display="inline" id="S4.SS3.p2.2.m2" intent=":literal"><semantics><mrow><msub><mi>N</mi><mi>m</mi></msub><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">N_{m}{=}4</annotation></semantics></math><span class="translated-text">在稍微降级之前。</span><span class="original-text">before slightly degrading.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS3.p3">
+<p class="ltx_p" id="S4.SS3.p3.1"><span class="translated-text">75% 比率的随机掩码与低掩码数量的结构化策略相比，具有竞争力，但始终优于较高掩码数量的策略，这证实了具有足够覆盖范围的连续掩码可以产生更强的表示。总体而言，没有任何单一策略能够主导所有任务，从而激发了表中的融合方法</span><span class="original-text">Random masking at a 75% ratio performs competitively with low-mask-count structured strategies but is consistently outperformed by higher mask counts, confirming that contiguous masking with sufficient coverage yields stronger representations. Overall, no single strategy dominates all tasks, motivating the fusion approach in Table</span><a class="ltx_ref" href="#S3.T2" title="TABLE II ‣ III-A Proposed Pretraining Framework and Architecture ‣ III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">II</span></a><span class="translated-text">以及第 3 节中讨论的特定于任务的策略选择</span><span class="original-text">and the task-specific strategy selection discussed in Section</span><a class="ltx_ref" href="#S4.SS2" title="IV-B Main Results ‣ IV Results ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag"><span class="ltx_text">IV-B</span></span></a>.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span class="ltx_text ltx_font_smallcaps" id="S5.1.1"><span class="translated-text">结论</span><span class="original-text">Conclusion</span></span>
+</h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">本文提出了 LatentWave，这是一种基于 JEPA 的无线基础模型，通过预测潜在空间中的屏蔽区域进行学习。该架构通过每通道补丁嵌入和随机通道采样将编码器与固定天线数量解耦，使单个预训练模型能够处理具有不同通道数量的频谱图和 CSI 输入。我们还表明，掩蔽几何引入了与任务相关的归纳偏差：频率掩蔽有利于与通道相关的任务，例如定位和波束预测，而区域掩蔽更好地保留了信号分类的可辨别性。这些发现将掩蔽策略设计视为构建更多可转移无线基础模型的有前途的方向。</span><span class="original-text">This paper presented LatentWave, a JEPA-based wireless foundation model that learns by predicting masked regions in latent space. The architecture decouples the encoder from a fixed antenna count through per-channel patch embedding and stochastic channel sampling, enabling a single pretrained model to handle both spectrogram and CSI inputs with varying numbers of channels. We also showed that the masking geometry introduces a task-dependent inductive bias: frequency masking favors channel-related tasks such as positioning and beam prediction, while region masking better preserves discriminability for signal classification. These findings position masking strategy design as a promising direction for building more transferable wireless foundation models.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib14">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Aboulfotouh and H. Abou-Zeid</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Multimodal wireless foundation models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2511.15162</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib7">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Aboulfotouh, E. Mohammed, and H. Abou-Zeid</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">6G WavesFM: a foundation model for sensing, communication, and localization</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Open J. Commun. Soc.</span> <span class="ltx_text ltx_bib_volume">6</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1109/OJCOMS.2025.3600616" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§II</span></a>,
+<a class="ltx_ref" href="#S3.SS2.p5.1" title="III-B Masking Strategy ‣ III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-B</span></span></a>,
+<a class="ltx_ref" href="#S3.SS4.p1.1" title="III-D Baseline and Downstream Evaluation ‣ III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-D</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib16">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Alhammadi, I. Shayea, A. A. El-Saleh, M. H. Azmi, Z. H. Ismail, L. Kouhalvandi, S. A. Saad, and S. El Kafhali</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Artificial intelligence in 6G wireless networks: opportunities, Applications, and Challenges</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Int. J. Intell. Syst.</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text issn ltx_bib_external">ISSN 0884-8173</span>,
+<a class="ltx_ref ltx_bib_external" href="https://doi.org/10.1155/2024/8845070" title="">Link</a>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1155/2024/8845070" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib5">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Alkhateeb</span><span class="ltx_text ltx_bib_year"> (2019-02)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">DeepMIMO: a generic deep learning dataset for millimeter wave and massive MIMO applications</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proc. Inf. Theory Appl. Workshop (ITA)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_place">San Diego, CA</span>, <span class="ltx_text ltx_bib_pages"> pp. 1–8</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS4.p2.1" title="III-D Baseline and Downstream Evaluation ‣ III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-D</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib2">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Assran, Q. Duval, I. Misra, P. Bojanowski, P. Vincent, M. Rabbat, Y. LeCun, and N. Ballas</span><span class="ltx_text ltx_bib_year"> (2023-06)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Self-supervised learning from images with a joint-embedding predictive architecture</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proc. IEEE Conf. Comput. Vis. Pattern Recognit. (CVPR)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 15619–15629</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="I Introduction ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S3.SS1.p1.1" title="III-A Proposed Pretraining Framework and Architecture ‣ III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-A</span></span></a>,
+<a class="ltx_ref" href="#S3.SS2.p2.3" title="III-B Masking Strategy ‣ III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-B</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib15">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">V. Chu, O. Mashaal, and H. Abou-Zeid</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">WirelessJEPA: a multi-antenna foundation model using spatio-temporal wireless latent predictions</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2601.20190</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib1">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Dosovitskiy, L. Beyer, A. Kolesnikov, D. Weissenborn, X. Zhai, T. Unterthiner, M. Dehghani, M. Minderer, G. Heigold, S. Gelly, J. Uszkoreit, and N. Houlsby</span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">An image is worth 16x16 words: transformers for image recognition at scale</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proc. Int. Conf. Learn. Represent. (ICLR)</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS1.p5.2" title="III-A Proposed Pretraining Framework and Architecture ‣ III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-A</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib18">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">O. Mashaal and H. Abou-Zeid</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">IQFM—A wireless foundation model for I/Q streams in AI-Native 6G</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Open J. Commun. Soc.</span> <span class="ltx_text ltx_bib_volume">7</span> (<span class="ltx_text ltx_bib_number"></span>), <span class="ltx_text ltx_bib_pages"> pp. 1426–1441</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1109/OJCOMS.2026.3661435" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib21">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Naoumi, M. Bennis, and M. Chafii</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Structured latent dynamics in wireless CSI via homomorphic world models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2603.20048</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib13">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">V. Palhares, S. Taner, and C. Studer</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">CSI2Vec: towards a universal CSI feature representation for positioning and channel charting</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2506.05237</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib25">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">G. Reus-Muns, D. Jaisinghani, K. Sankhe, and K. Chowdhury</span><span class="ltx_text ltx_bib_year"> (2020)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Trust in 5G open RANs through machine learning: RF fingerprinting on the POWDER PAWR platform</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proc. IEEE Glob. Commun. Conf. (GLOBECOM)</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS3.p1.2" title="III-C Pretraining Data ‣ III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib24">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D. Wang, J. Yang, W. Cui, L. Xie, and S. Sun</span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Multimodal CSI-based human activity recognition using GANs</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Internet of Things Journal</span> <span class="ltx_text ltx_bib_volume">8</span> (<span class="ltx_text ltx_bib_number">24</span>), <span class="ltx_text ltx_bib_pages"> pp. 17345–17355</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1109/JIOT.2021.3080401" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS3.p1.2" title="III-C Pretraining Data ‣ III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib6">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Yang, X. Chen, H. Zou, D. Wang, Q. Xu, and L. Xie</span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">EfficientFi: toward large-scale lightweight WiFi sensing via CSI compression</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Internet Things J.</span> <span class="ltx_text ltx_bib_volume">9</span> (<span class="ltx_text ltx_bib_number">13</span>), <span class="ltx_text ltx_bib_pages"> pp. 13086–13095</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1109/JIOT.2021.3139958" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS3.p1.2" title="III-C Pretraining Data ‣ III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib10">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">T. Yang, P. Zhang, M. Zheng, Y. Shi, L. Jing, J. Huang, and N. Li</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">WirelessGPT: a generative pre-trained multi-task learning framework for wireless communication</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Network</span> <span class="ltx_text ltx_bib_volume">39</span> (<span class="ltx_text ltx_bib_number">5</span>), <span class="ltx_text ltx_bib_pages"> pp. 58–65</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1109/MNET.2025.3579496" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib17">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Z. Yang, H. Du, D. Niyato, X. Wang, Y. Zhou, L. Feng, F. Zhou, W. Li, and X. Qiu</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Revolutionizing wireless networks with self-supervised learning: a Pathway to Intelligent Communications</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2406.06872</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib3">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Zahid</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">CommRad RF: a dataset of communication radio signals for detection, identification and classification</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Zenodo</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.5281/zenodo.14192970" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://doi.org/10.5281/zenodo.14192970" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS4.p2.1" title="III-D Baseline and Downstream Evaluation ‣ III LatentWave Methodology ‣ LatentWave: JEPA Pretraining for Wireless Foundation Models"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-D</span></span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2606.06373v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div aria-hidden="true" id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
