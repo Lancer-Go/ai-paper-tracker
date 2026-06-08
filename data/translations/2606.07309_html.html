@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">用于语音情感识别的音频语言模型中的声学提示对齐</span><span class="original-text">Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 6 月 5 日星期五 14:25:38 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Fri Jun  5 14:25:38 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2606.07309" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2606.07309" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2606.07309v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2606.07309v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">I </span><span class="ltx_text ltx_font_smallcaps">Introduction</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S2" title="In Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">II </span><span class="ltx_text ltx_font_smallcaps">Related Work</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S3" title="In Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">III </span><span class="ltx_text ltx_font_smallcaps">Methodology</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S4" title="In Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">IV </span><span class="ltx_text ltx_font_smallcaps">Results</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S5" title="In Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">V </span><span class="ltx_text ltx_font_smallcaps">Conclusion</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：arXiv.org 永久非独占许可证</span><span class="original-text">License: arXiv.org perpetual non-exclusive license</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2606.07309v1 [cs.SD] 2026 年 6 月 5 日</span><span class="original-text">arXiv:2606.07309v1 [cs.SD] 05 Jun 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">用于语音情感识别的音频语言模型中的声学提示对齐</span><span class="original-text">Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+
+Iosif Tsangko12,
+Andreas Triantafyllopoulos12,
+Björn W. Schuller1234
+</span><span class="ltx_author_notes">This work was partially funded from the DFG’s Reinhart Koselleck project No. 442218748 (AUDI0NOMOUS) and the EU H2020 project No. 101135556 (INDUX-R).</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">可以通过明确的声学提示来增强遵循指令的音频语言模型（ALM），但当原始音频已经可用时，尚不清楚是否以扎实的方式使用这些提示。我们通过从标准化的语音情感识别（SER）中导出六个可解释的声学概念标记来研究语音情感识别（SER）中的这个问题。</span><span class="original-text">Instruction-following audio language models (ALMs) can be augmented with explicit acoustic cues, yet it remains unclear whether such cues are used in a grounded way when the raw audio is already available. We study this question in speech emotion recognition (SER) by deriving six interpretable acoustic concept tokens from the standardised</span><em class="ltx_emph ltx_font_italic"><span class="translated-text">电子GeMAPS</span><span class="original-text">eGeMAPS</span></em><span class="translated-text">副语言功能集。这些标记总结了能量、音高、动态、亮度、共振峰和语音质量，并附加到文本提示中，同时音频输入保持不变。在广泛使用的 FAU-Aibo 和 IEMOCAP 基准中，对齐的令牌可以提高未加权平均召回率 (UAR)，而打乱、冲突或损坏的令牌会降低相对于对齐令牌的性能，并将混乱转向中性。重要的是，预测在强烈的令牌扰动下不会崩溃，这表明模型对符号提示通道敏感，但仍部分锚定于音频信号。我们认为，仅令牌干预提供了一种实用的方法来探索基于 ALM 的情感计算中基于音频的提示的使用、鲁棒性和可解释性。</span><span class="original-text">paralinguistic feature set. These tokens summarise energy, pitch, dynamics, brightness, formants, and voice quality, and are appended to the textual prompt while the audio input is kept unchanged. Across the widely used FAU-Aibo and IEMOCAP benchmarks, aligned tokens improve unweighted average recall (UAR), whereas shuffled, conflicting, or corrupted tokens reduce performance relative to aligned tokens and shift confusions toward neutral. Importantly, predictions do not collapse under strong token perturbations, suggesting that the models are sensitive to the symbolic cue channel but remain partly anchored to the audio signal. We argue that token-only interventions provide a practical way to probe audio-grounded cue use, robustness, and interpretability in ALM-based affective computing.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span class="ltx_text ltx_font_smallcaps" id="S1.1.1"><span class="translated-text">简介</span><span class="original-text">Introduction</span></span>
+</h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">遵循指令</span><span class="original-text">Instruction-following</span><em class="ltx_emph ltx_font_italic" id="S1.p1.1.1"><span class="translated-text">音频语言模型</span><span class="original-text">audio language models</span></em><span class="translated-text">(ALM) 将音频前端与自回归语言模型结合起来，为各种语音和音频任务提供基于提示的推理和自然语言原理</span><span class="original-text">(ALMs) couple an audio front-end with an autoregressive language model, enabling prompt-based inference and natural language rationales for a wide range of speech and audio tasks</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="Qwen2.5-omni technical report">40</a>, <a class="ltx_ref" href="#bib.bib14" title="Audio flamingo 3: advancing audio intelligence with fully open large audio language models">18</a>, <a class="ltx_ref" href="#bib.bib15" title="Computer audition: from task-specific machine learning to foundation models">37</a>]</cite><span class="translated-text">。
+然而，ALM 的程度</span><span class="original-text">.
+However, the extent to which ALMs</span><em class="ltx_emph ltx_font_italic" id="S1.p1.1.2"><span class="translated-text">使用</span><span class="original-text">use</span></em><span class="translated-text">提示提供的线索，而不仅仅是</span><span class="original-text">prompt-provided cues, rather than merely</span><em class="ltx_emph ltx_font_italic" id="S1.p1.1.3"><span class="translated-text">描述</span><span class="original-text">describing</span></em><span class="translated-text">他们事后，仍不清楚</span><span class="original-text">them post hoc, remains unclear</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib27" title="Towards faithfully interpretable NLP systems: how should we define and evaluate faithfulness?">21</a>, <a class="ltx_ref" href="#bib.bib26" title="ERASER: a benchmark to evaluate rationalized NLP models">12</a>]</cite><span class="translated-text">。
+这对于语音情感识别（SER）尤为重要，特别是考虑到新兴的监管框架越来越多地将其视为“高风险”应用，需要对自动系统的决策具有高度的可解释性</span><span class="original-text">.
+This is particularly important for speech emotion recognition (SER), especially given how emerging regulatory frameworks increasingly consider it a “high-risk” application requiring a high degree of interpretability for decisions of automatic systems</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib24" title="Amendments adopted by the European Parliament on 14 June 2023 on the proposal for a regulation of the European Parliament and of the Council on laying down harmonised rules on artificial intelligence (Artificial Intelligence Act) and amending certain Union legislative acts (COM(2021)0206 – C9-0146/2021 – 2021/0106(COD))">36</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">SER 是计算副语言学的核心主题，其中模型根据韵律、频谱形状和语音质量等声音线索推断情感状态</span><span class="original-text">SER is a core topic in computational paralinguistics, where models infer affective states from vocal cues such as prosody, spectral shape, and voice quality</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib4" title="Computational paralinguistics: emotion, affect and personality in speech and language processing">32</a>]</cite><span class="translated-text">。在过去的几年里，该领域已经从特定于任务的管道转向基础风格表示，包括自监督语音编码器</span><span class="original-text">. Over the last years, the field has moved from task specific pipelines towards foundation style representations, including self supervised speech encoders</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="Wav2vec 2.0: a framework for self-supervised learning of speech representations">5</a>, <a class="ltx_ref" href="#bib.bib7" title="HuBERT: self-supervised speech representation learning by masked prediction of hidden units">20</a>, <a class="ltx_ref" href="#bib.bib8" title="WavLM: large-scale self-supervised pre-training for full stack speech processing">9</a>]</cite><span class="translated-text">和跨模态音频文本预训练</span><span class="original-text">and cross modal audio text pretraining</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib9" title="CLAP: learning audio concepts from natural language supervision">13</a>, <a class="ltx_ref" href="#bib.bib16" title="Affective computing has changed: the foundation model disruption">33</a>]</cite><span class="translated-text">。借助现代 ALM，这种转变还支持基于提示的 SER：可以用话语提示模型并请求离散标签，可选地附有自然语言理由。</span><span class="original-text">. With modern ALMs, this shift also enables prompt-based SER: one can prompt a model with an utterance and request a discrete label, optionally accompanied by a natural language justification.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">在深度学习出现之前，经典的 SER 研究依赖于可解释的、手工制作的声学描述符</span><span class="original-text">Before the advent of deep learning, classic SER research relied on interpretable, handcrafted acoustic descriptors</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="The geneva minimalistic acoustic parameter set (gemaps) for voice research and affective computing">14</a>, <a class="ltx_ref" href="#bib.bib1" title="OpenSMILE: the munich versatile and fast open-source audio feature extractor">15</a>]</cite><span class="translated-text">。
+鉴于这些特征可以很容易地从输入音频中导出，并且通过数十年的研究与情绪表达相关联，我们假设它们也可能为基于 ALM 的 SER 提供有用的辅助线索。
+然而，仅提高性能并不能表明 ALM 是否以基于音频的方式使用此类提示。模型可以受益于对齐的线索，完全忽略它们，或者过度依赖它们，即使它们与语音信号相矛盾。因此，我们在行为上实施合理的提示使用：</span><span class="original-text">.
+Given that these features can be easily derived from the input audio and are linked to emotional expressions through decades of research, we hypothesise that they may also provide useful auxiliary cues for ALM-based SER.
+However, improved performance alone does not show whether an ALM uses such cues in an audio-grounded way. A model could benefit from aligned cues, ignore them entirely, or over-rely on them even when they contradict the speech signal. We therefore operationalise reasonable cue use behaviourally:</span><em class="ltx_emph ltx_font_italic" id="S1.p3.1.1"><span class="translated-text">ALM 应受益于对齐的声学概念标记，但当这些标记被打乱、损坏或矛盾时，应部分锚定到音频</span><span class="original-text">an ALM should benefit from aligned acoustic concept tokens, but should remain partly anchored to the audio when those tokens are shuffled, corrupted, or contradictory</span></em><span class="translated-text">。
+尽管人们对用于可解释语音和音频任务的 ALM 越来越感兴趣，但这种形式的仅令牌干预分析对于 SER 的探索仍然不足。</span><span class="original-text">.
+Despite increasing interest in ALMs for interpretable speech and audio tasks, this form of token-only intervention analysis remains underexplored for SER.</span></p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">在这项工作中，我们首先引入分类</span><span class="original-text">In this work, we first introduce categorical</span><em class="ltx_emph ltx_font_italic" id="S1.p4.1.1">concept tokens</em><span class="translated-text">通过将从目标话语中提取的可解释的声学描述符进行分箱。
+为此，我们建立在</span><span class="original-text">by binning interpretable acoustic descriptors extracted from the target utterance.
+To do so, we build on the</span><em class="ltx_emph ltx_font_italic" id="S1.p4.1.2"><span class="translated-text">电子GeMAPS</span><span class="original-text">eGeMAPS</span></em> feature set <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="The geneva minimalistic acoustic parameter set (gemaps) for voice research and affective computing">14</a>]</cite><span class="translated-text">将特征总结为六个韵律和语音相关类别（能量、音调、动态、亮度、共振峰和语音质量）。
+我们将这些功能转换为提示友好的、基于文本的格式</span><span class="original-text">by summarising features into six prosodic and voice-related categories (energy, pitch, dynamics, brightness, formants, and voice quality).
+We convert the features into a prompt-friendly, text-based format by</span><em class="ltx_emph ltx_font_italic" id="S1.p4.1.3">binning</em><span class="translated-text">将它们分成一组离散的类别。
+These binned</span><span class="original-text">them into a discrete set of categories.
+These binned</span><em class="ltx_emph ltx_font_italic" id="S1.p4.1.4">concept tokens</em><span class="translated-text">然后附加到 ALM 提示符并用作</span><span class="original-text">are then appended to the ALM prompt and function as</span><em class="ltx_emph ltx_font_italic" id="S1.p4.1.5">auxiliary cues</em><span class="translated-text">。
+然后，我们通过在保持音频输入固定的同时扰乱这些概念标记来评估基于音频的提示的使用。
+具体来说，我们测试对齐的令牌、打乱的令牌、故意冲突的令牌以及分级令牌损坏。
+The extent to which ALM predictions respond to these token-only interventions allows us to estimate whether the models use the symbolic cue channel, ignore it, or over-rely on it.
+Across different datasets and ALMs, we observe that concept tokens consistently improve performance when aligned with the audio, while stronger corruption leads to predictable degradation without fully overriding the acoustic signal.</span><span class="original-text">.
+We then evaluate audio-grounded cue use by perturbing these concept tokens while holding the audio input fixed.
+Concretely, we test aligned tokens, shuffled tokens, deliberately conflicting tokens, and graded token corruption.
+The extent to which ALM predictions respond to these token-only interventions allows us to estimate whether the models use the symbolic cue channel, ignore it, or over-rely on it.
+Across different datasets and ALMs, we observe that concept tokens consistently improve performance when aligned with the audio, while stronger corruption leads to predictable degradation without fully overriding the acoustic signal.</span></p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">本文的其余部分组织如下：第 2 节回顾相关工作；第 3 节描述了数据集、模型、概念标记构建和仅标记干预措施；第 4 部分介绍结果；第 5 节总结。</span><span class="original-text">The remainder of this paper is organised as follows: Section 2 reviews related work; Section 3 describes the datasets, models, concept-token construction, and token-only interventions; Section 4 presents results; and Section 5 concludes.</span></p>
+</div>
+<figure class="ltx_table" id="S1.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">TABLE I: </span>Concept tokens derived from <em class="ltx_emph ltx_font_italic" id="S1.T1.21.1">eGeMAPS</em> mean descriptors. We use <math alttext="\mu(\cdot)" class="ltx_Math" display="inline" id="S1.T1.2.m1" intent=":literal"><semantics><mrow><mi>μ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mo lspace="0em" rspace="0em">⋅</mo><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu(\cdot)</annotation></semantics></math> to denote the file-level mean of the corresponding <em class="ltx_emph ltx_font_italic" id="S1.T1.22.2">eGeMAPS</em> dimension.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S1.T1.18">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S1.T1.18.17.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S1.T1.18.17.1.1" style="padding-left:3.0pt;padding-right:3.0pt;"><span class="ltx_text ltx_font_bold" id="S1.T1.18.17.1.1.1" style="font-size:80%;">Concept</span></th>
+<th class="ltx_td ltx_align_justify ltx_align_top ltx_th ltx_th_column ltx_border_tt" id="S1.T1.18.17.1.2" style="padding-left:3.0pt;padding-right:3.0pt;">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.18.17.1.2.1">
+<span class="ltx_p" id="S1.T1.18.17.1.2.1.1" style="width:193.2pt;"><em class="ltx_emph ltx_font_bold ltx_font_italic" id="S1.T1.18.17.1.2.1.1.1" style="font-size:80%;">eGeMAPS</em><span class="ltx_text ltx_font_bold" id="S1.T1.18.17.1.2.1.1.2" style="font-size:80%;"> mean descriptor(s) (compact)</span></span>
+</span>
+</th>
+<th class="ltx_td ltx_align_justify ltx_align_top ltx_th ltx_th_column ltx_border_tt" id="S1.T1.18.17.1.3" style="padding-left:3.0pt;padding-right:3.0pt;">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.18.17.1.3.1">
+<span class="ltx_p" id="S1.T1.18.17.1.3.1.1" style="width:117.3pt;"><span class="ltx_text ltx_font_bold" id="S1.T1.18.17.1.3.1.1.1" style="font-size:80%;">Interpretation / tokenisation</span></span>
+</span>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S1.T1.3.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S1.T1.3.1.2" style="padding-left:3.0pt;padding-right:3.0pt;"><span class="ltx_text" id="S1.T1.3.1.2.1" style="font-size:80%;">ENERGY</span></th>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_t" id="S1.T1.3.1.1" style="padding-left:3.0pt;padding-right:3.0pt;">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.1.1.1">
+<span class="ltx_p" id="S1.T1.3.1.1.1.1" style="width:193.2pt;"><math alttext="\mu(Loudness)" class="ltx_Math" display="inline" id="S1.T1.3.1.1.1.1.m1" intent=":literal"><semantics><mrow><mi mathsize="0.800em">μ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><mrow><mi mathsize="0.800em">L</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">o</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">u</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">d</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">n</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">e</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">s</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">s</mi></mrow><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu(Loudness)</annotation></semantics></math></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_t" id="S1.T1.3.1.3" style="padding-left:3.0pt;padding-right:3.0pt;">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.1.3.1">
+<span class="ltx_p" id="S1.T1.3.1.3.1.1" style="width:117.3pt;"><span class="ltx_text" id="S1.T1.3.1.3.1.1.1" style="font-size:80%;">Overall intensity proxy (loudness). Discretised into 5 quantile bins: </span><span class="ltx_text ltx_font_typewriter" id="S1.T1.3.1.3.1.1.2" style="font-size:80%;">VERY_LOW</span><span class="ltx_text" id="S1.T1.3.1.3.1.1.3" style="font-size:80%;">–</span><span class="ltx_text ltx_font_typewriter" id="S1.T1.3.1.3.1.1.4" style="font-size:80%;">VERY_HIGH</span><span class="ltx_text" id="S1.T1.3.1.3.1.1.5" style="font-size:80%;">.</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S1.T1.4.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S1.T1.4.2.2" style="padding-left:3.0pt;padding-right:3.0pt;"><span class="ltx_text" id="S1.T1.4.2.2.1" style="font-size:80%;">PITCH</span></th>
+<td class="ltx_td ltx_align_justify ltx_align_top" id="S1.T1.4.2.1" style="padding-left:3.0pt;padding-right:3.0pt;">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.4.2.1.1">
+<span class="ltx_p" id="S1.T1.4.2.1.1.1" style="width:193.2pt;"><math alttext="\mu(F0)" class="ltx_Math" display="inline" id="S1.T1.4.2.1.1.1.m1" intent=":literal"><semantics><mrow><mi mathsize="0.800em">μ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><mrow><mi mathsize="0.800em">F</mi><mo lspace="0em" rspace="0em">​</mo><mn mathsize="0.800em">0</mn></mrow><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu(F0)</annotation></semantics></math></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top" id="S1.T1.4.2.3" style="padding-left:3.0pt;padding-right:3.0pt;">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.4.2.3.1">
+<span class="ltx_p" id="S1.T1.4.2.3.1.1" style="width:117.3pt;"><span class="ltx_text" id="S1.T1.4.2.3.1.1.1" style="font-size:80%;">Fundamental frequency (F0) in semitone scale. Discretised into 5 quantile bins; on IEMOCAP, bin edges are computed separately per gender.</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S1.T1.8.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S1.T1.8.6.5" style="padding-left:3.0pt;padding-right:3.0pt;"><span class="ltx_text" id="S1.T1.8.6.5.1" style="font-size:80%;">BRIGHTNESS</span></th>
+<td class="ltx_td ltx_align_justify ltx_align_top" id="S1.T1.8.6.4" style="padding-left:3.0pt;padding-right:3.0pt;">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.8.6.4.4">
+<span class="ltx_p" id="S1.T1.8.6.4.4.4" style="width:193.2pt;"><math alttext="\mu(AR)" class="ltx_Math" display="inline" id="S1.T1.5.3.1.1.1.m1" intent=":literal"><semantics><mrow><mi mathsize="0.800em">μ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><mrow><mi mathsize="0.800em">A</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">R</mi></mrow><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu(AR)</annotation></semantics></math><span class="ltx_text" id="S1.T1.8.6.4.4.4.1" style="font-size:80%;">, </span><math alttext="\mu(HI)" class="ltx_Math" display="inline" id="S1.T1.6.4.2.2.2.m2" intent=":literal"><semantics><mrow><mi mathsize="0.800em">μ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><mrow><mi mathsize="0.800em">H</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">I</mi></mrow><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu(HI)</annotation></semantics></math><span class="ltx_text" id="S1.T1.8.6.4.4.4.2" style="font-size:80%;">, </span><math alttext="\mu(Slope_{0Hz-500Hz})" class="ltx_Math" display="inline" id="S1.T1.7.5.3.3.3.m3" intent=":literal"><semantics><mrow><mi mathsize="0.800em">μ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><mrow><mi mathsize="0.800em">S</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">l</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">o</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">p</mi><mo lspace="0em" rspace="0em">​</mo><msub><mi mathsize="0.800em">e</mi><mrow><mrow><mn mathsize="0.800em">0</mn><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">H</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">z</mi></mrow><mo mathsize="0.800em">−</mo><mrow><mn mathsize="0.800em">500</mn><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">H</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">z</mi></mrow></mrow></msub></mrow><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu(Slope_{0Hz-500Hz})</annotation></semantics></math><span class="ltx_text" id="S1.T1.8.6.4.4.4.3" style="font-size:80%;">, </span><math alttext="\mu(Slope_{500Hz-1500Hz})" class="ltx_Math" display="inline" id="S1.T1.8.6.4.4.4.m4" intent=":literal"><semantics><mrow><mi mathsize="0.800em">μ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><mrow><mi mathsize="0.800em">S</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">l</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">o</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">p</mi><mo lspace="0em" rspace="0em">​</mo><msub><mi mathsize="0.800em">e</mi><mrow><mrow><mn mathsize="0.800em">500</mn><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">H</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">z</mi></mrow><mo mathsize="0.800em">−</mo><mrow><mn mathsize="0.800em">1500</mn><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">H</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">z</mi></mrow></mrow></msub></mrow><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu(Slope_{500Hz-1500Hz})</annotation></semantics></math></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top" id="S1.T1.8.6.6" style="padding-left:3.0pt;padding-right:3.0pt;">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.8.6.6.1">
+<span class="ltx_p" id="S1.T1.8.6.6.1.1" style="width:117.3pt;"><span class="ltx_text" id="S1.T1.8.6.6.1.1.1" style="font-size:80%;">Spectral tilt / spectral energy distribution proxies (brighter vs darker timbre). Discretised into 5 quantile bins: </span><span class="ltx_text ltx_font_typewriter" id="S1.T1.8.6.6.1.1.2" style="font-size:80%;">VERY_DARK</span><span class="ltx_text" id="S1.T1.8.6.6.1.1.3" style="font-size:80%;">–</span><span class="ltx_text ltx_font_typewriter" id="S1.T1.8.6.6.1.1.4" style="font-size:80%;">VERY_BRIGHT</span><span class="ltx_text" id="S1.T1.8.6.6.1.1.5" style="font-size:80%;">.</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S1.T1.9.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S1.T1.9.7.2" style="padding-left:3.0pt;padding-right:3.0pt;"><span class="ltx_text" id="S1.T1.9.7.2.1" style="font-size:80%;">DYNAMICS</span></th>
+<td class="ltx_td ltx_align_justify ltx_align_top" id="S1.T1.9.7.1" style="padding-left:3.0pt;padding-right:3.0pt;">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.9.7.1.1">
+<span class="ltx_p" id="S1.T1.9.7.1.1.1" style="width:193.2pt;"><math alttext="\mu(Flux)" class="ltx_Math" display="inline" id="S1.T1.9.7.1.1.1.m1" intent=":literal"><semantics><mrow><mi mathsize="0.800em">μ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><mrow><mi mathsize="0.800em">F</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">l</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">u</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">x</mi></mrow><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu(Flux)</annotation></semantics></math></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top" id="S1.T1.9.7.3" style="padding-left:3.0pt;padding-right:3.0pt;">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.9.7.3.1">
+<span class="ltx_p" id="S1.T1.9.7.3.1.1" style="width:117.3pt;"><span class="ltx_text" id="S1.T1.9.7.3.1.1.1" style="font-size:80%;">Spectral change rate over time (more/less dynamic signal). Discretised into 5 quantile bins: </span><span class="ltx_text ltx_font_typewriter" id="S1.T1.9.7.3.1.1.2" style="font-size:80%;">VERY_STATIC</span><span class="ltx_text" id="S1.T1.9.7.3.1.1.3" style="font-size:80%;">–</span><span class="ltx_text ltx_font_typewriter" id="S1.T1.9.7.3.1.1.4" style="font-size:80%;">VERY_DYNAMIC</span><span class="ltx_text" id="S1.T1.9.7.3.1.1.5" style="font-size:80%;">.</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S1.T1.12.10">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S1.T1.12.10.4" style="padding-left:3.0pt;padding-right:3.0pt;"><span class="ltx_text" id="S1.T1.12.10.4.1" style="font-size:80%;">FORMANTS</span></th>
+<td class="ltx_td ltx_align_justify ltx_align_top" id="S1.T1.12.10.3" style="padding-left:3.0pt;padding-right:3.0pt;">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.12.10.3.3">
+<span class="ltx_p" id="S1.T1.12.10.3.3.3" style="width:193.2pt;"><math alttext="\mu(F1_{f})" class="ltx_Math" display="inline" id="S1.T1.10.8.1.1.1.m1" intent=":literal"><semantics><mrow><mi mathsize="0.800em">μ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><mrow><mi mathsize="0.800em">F</mi><mo lspace="0em" rspace="0em">​</mo><msub><mn mathsize="0.800em">1</mn><mi mathsize="0.800em">f</mi></msub></mrow><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu(F1_{f})</annotation></semantics></math><span class="ltx_text" id="S1.T1.12.10.3.3.3.1" style="font-size:80%;">, </span><math alttext="\mu(F2_{f})" class="ltx_Math" display="inline" id="S1.T1.11.9.2.2.2.m2" intent=":literal"><semantics><mrow><mi mathsize="0.800em">μ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><mrow><mi mathsize="0.800em">F</mi><mo lspace="0em" rspace="0em">​</mo><msub><mn mathsize="0.800em">2</mn><mi mathsize="0.800em">f</mi></msub></mrow><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu(F2_{f})</annotation></semantics></math><span class="ltx_text" id="S1.T1.12.10.3.3.3.2" style="font-size:80%;">, </span><math alttext="\mu(F3_{f})" class="ltx_Math" display="inline" id="S1.T1.12.10.3.3.3.m3" intent=":literal"><semantics><mrow><mi mathsize="0.800em">μ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><mrow><mi mathsize="0.800em">F</mi><mo lspace="0em" rspace="0em">​</mo><msub><mn mathsize="0.800em">3</mn><mi mathsize="0.800em">f</mi></msub></mrow><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu(F3_{f})</annotation></semantics></math></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top" id="S1.T1.12.10.5" style="padding-left:3.0pt;padding-right:3.0pt;">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.12.10.5.1">
+<span class="ltx_p" id="S1.T1.12.10.5.1.1" style="width:117.3pt;"><span class="ltx_text" id="S1.T1.12.10.5.1.1.1" style="font-size:80%;">Resonant structure of the vocal tract (formant frequencies). Discretised into 5 quantile bins; on IEMOCAP, bin edges are computed separately per gender.</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S1.T1.18.16">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S1.T1.18.16.7" style="padding-left:3.0pt;padding-right:3.0pt;"><span class="ltx_text" id="S1.T1.18.16.7.1" style="font-size:80%;">VOICE_QUALITY</span></th>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_bb" id="S1.T1.18.16.6" style="padding-left:3.0pt;padding-right:3.0pt;">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.18.16.6.6">
+<span class="ltx_p" id="S1.T1.18.16.6.6.6" style="width:193.2pt;"><math alttext="\mu(Jitter)" class="ltx_Math" display="inline" id="S1.T1.13.11.1.1.1.m1" intent=":literal"><semantics><mrow><mi mathsize="0.800em">μ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><mrow><mi mathsize="0.800em">J</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">i</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">t</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">t</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">e</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">r</mi></mrow><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu(Jitter)</annotation></semantics></math><span class="ltx_text" id="S1.T1.18.16.6.6.6.1" style="font-size:80%;">, </span><math alttext="\mu(Shimmer)" class="ltx_Math" display="inline" id="S1.T1.14.12.2.2.2.m2" intent=":literal"><semantics><mrow><mi mathsize="0.800em">μ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><mrow><mi mathsize="0.800em">S</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">h</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">i</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">m</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">m</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">e</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">r</mi></mrow><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu(Shimmer)</annotation></semantics></math><span class="ltx_text" id="S1.T1.18.16.6.6.6.2" style="font-size:80%;">, </span><math alttext="\mu(HNR)" class="ltx_Math" display="inline" id="S1.T1.15.13.3.3.3.m3" intent=":literal"><semantics><mrow><mi mathsize="0.800em">μ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><mrow><mi mathsize="0.800em">H</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">N</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.800em">R</mi></mrow><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu(HNR)</annotation></semantics></math><span class="ltx_text" id="S1.T1.18.16.6.6.6.3" style="font-size:80%;">, </span><math alttext="\mu(H1\!-\!H2)" class="ltx_Math" display="inline" id="S1.T1.16.14.4.4.4.m4" intent=":literal"><semantics><mrow><mi mathsize="0.800em">μ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><mrow><mrow><mi mathsize="0.800em">H</mi><mo lspace="0em" rspace="0em">​</mo><mn mathsize="0.800em">1</mn></mrow><mo lspace="0.052em" mathsize="0.800em" rspace="0.052em">−</mo><mrow><mi mathsize="0.800em">H</mi><mo lspace="0em" rspace="0em">​</mo><mn mathsize="0.800em">2</mn></mrow></mrow><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu(H1\!-\!H2)</annotation></semantics></math><span class="ltx_text" id="S1.T1.18.16.6.6.6.4" style="font-size:80%;">, </span><math alttext="\mu(H1\!-\!A3)" class="ltx_Math" display="inline" id="S1.T1.17.15.5.5.5.m5" intent=":literal"><semantics><mrow><mi mathsize="0.800em">μ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><mrow><mrow><mi mathsize="0.800em">H</mi><mo lspace="0em" rspace="0em">​</mo><mn mathsize="0.800em">1</mn></mrow><mo lspace="0.052em" mathsize="0.800em" rspace="0.052em">−</mo><mrow><mi mathsize="0.800em">A</mi><mo lspace="0em" rspace="0em">​</mo><mn mathsize="0.800em">3</mn></mrow></mrow><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu(H1\!-\!A3)</annotation></semantics></math><span class="ltx_text" id="S1.T1.18.16.6.6.6.5" style="font-size:80%;"> (and </span><math alttext="\mu(F0)" class="ltx_Math" display="inline" id="S1.T1.18.16.6.6.6.m6" intent=":literal"><semantics><mrow><mi mathsize="0.800em">μ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><mrow><mi mathsize="0.800em">F</mi><mo lspace="0em" rspace="0em">​</mo><mn mathsize="0.800em">0</mn></mrow><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu(F0)</annotation></semantics></math><span class="ltx_text" id="S1.T1.18.16.6.6.6.6" style="font-size:80%;"> as auxiliary cue)</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_bb" id="S1.T1.18.16.8" style="padding-left:3.0pt;padding-right:3.0pt;">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.18.16.8.1">
+<span class="ltx_p" id="S1.T1.18.16.8.1.1" style="width:117.3pt;"><span class="ltx_text" id="S1.T1.18.16.8.1.1.1" style="font-size:80%;">Heuristic categorical label from perturbation/noise and harmonic-structure cues: </span><span class="ltx_text ltx_font_typewriter" id="S1.T1.18.16.8.1.1.2" style="font-size:80%;">MODAL</span><span class="ltx_text" id="S1.T1.18.16.8.1.1.3" style="font-size:80%;">/</span><span class="ltx_text ltx_font_typewriter" id="S1.T1.18.16.8.1.1.4" style="font-size:80%;">BREATHY</span><span class="ltx_text" id="S1.T1.18.16.8.1.1.5" style="font-size:80%;">/</span><span class="ltx_text ltx_font_typewriter" id="S1.T1.18.16.8.1.1.6" style="font-size:80%;">PRESSED</span><span class="ltx_text" id="S1.T1.18.16.8.1.1.7" style="font-size:80%;">/</span><span class="ltx_text ltx_font_typewriter" id="S1.T1.18.16.8.1.1.8" style="font-size:80%;">ROUGH</span><span class="ltx_text" id="S1.T1.18.16.8.1.1.9" style="font-size:80%;">/</span><span class="ltx_text ltx_font_typewriter" id="S1.T1.18.16.8.1.1.10" style="font-size:80%;">CREAKY</span><span class="ltx_text" id="S1.T1.18.16.8.1.1.11" style="font-size:80%;"> (optionally </span><span class="ltx_text ltx_font_typewriter" id="S1.T1.18.16.8.1.1.12" style="font-size:80%;">UNVOICED</span><span class="ltx_text" id="S1.T1.18.16.8.1.1.13" style="font-size:80%;">).</span></span>
+</span>
+</td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span class="ltx_text ltx_font_smallcaps" id="S2.1.1"><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></span>
+</h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="translated-text">最近的 ALM 评估越来越以基准驱动，具有广泛的任务覆盖范围和 AudioBench 中提出的统一评分协议</span><span class="original-text">Recent ALM evaluation is increasingly benchmark-driven, with broad task coverage and unified scoring protocols proposed in AudioBench</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib39" title="AudioBench: a universal benchmark for audio large language models">39</a>]</cite><span class="translated-text">, 空气凳</span><span class="original-text">, AIR-Bench</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib40" title="AIR-bench: benchmarking large audio-language models via generative comprehension">44</a>]</cite><span class="translated-text">和 VocalBench</span><span class="original-text">, and VocalBench</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib41" title="VocalBench: benchmarking the vocal conversational abilities for speech interaction models">29</a>]</cite><span class="translated-text">。除了总体基准分数之外，最近的工作还关注可靠性问题，例如检测单个事件时的幻觉和错误</span><span class="original-text">. Beyond aggregate benchmark scores, recent work focuses on reliability issues, such as hallucinations and errors on detecting individual events</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib42" title="Understanding sounds, missing the questions: the challenge of object hallucination in large audio-language models">27</a>]</cite><span class="translated-text">，采用基于合成负样本的缓解策略</span><span class="original-text">, with mitigation strategies based on synthesising negative samples</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib43" title="Teaching audio-aware large language models what does not hear: mitigating hallucinations through synthesized negative samples">28</a>]</cite><span class="translated-text">。
+ALM 的面向推理的评估也已通过多跳推理基准正式化</span><span class="original-text">.
+Reasoning-oriented assessment for ALMs has also been formalised via multi-hop reasoning benchmarks</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib44" title="SAKURA: on the multi-hop reasoning of large audio-language models based on speech and audio information">43</a>]</cite><span class="translated-text">以及通过扰动不变性进行置信度估计的时间推理</span><span class="original-text">and temporal reasoning with confidence estimation via perturbation-invariance</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib45" title="Benchmarking and confidence evaluation of lalms for temporal reasoning">7</a>]</cite><span class="translated-text">，与我们基于干预的一致性分析保持一致。
+最后，有证据表明（很大程度上）冻结的法学硕士骨干可以通过学习的语音接口感知副语言属性</span><span class="original-text">, aligning with our intervention-based consistency analysis.
+Finally, evidence that (largely) frozen LLM backbones can perceive paralinguistic attributes through learnt speech interfaces</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib46" title="Frozen large language models can perceive paralinguistic aspects of speech">26</a>]</cite><span class="translated-text">支持我们使用概念/副语言线索来提高 ALM 的性能和可靠性。</span><span class="original-text">supports our use of concept/paralinguistic cues for improving the performance and reliability of ALMs.</span></p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="ltx_text ltx_font_bold" id="S2.p2.1.1"><span class="translated-text">SER 和计算副语言学的音频基础模型。</span><span class="original-text">Audio foundation models for SER and computational paralinguistics.</span></span>
+<em class="ltx_emph ltx_font_italic" id="S2.p2.1.2"><span class="translated-text">计算副语言学</span><span class="original-text">Computational paralinguistics</span></em><span class="translated-text">将语音与说话者的状态和特征联系起来，以 SER 作为其中心任务之一</span><span class="original-text">links speech to speaker states and traits, with SER as one of its central tasks</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib4" title="Computational paralinguistics: emotion, affect and personality in speech and language processing">32</a>]</cite><span class="translated-text">。早期的 SER 管道依赖于专家设计的声学描述符，通常使用诸如</span><span class="original-text">. Earlier SER pipelines relied on expert-designed acoustic descriptors, typically extracted with toolkits such as</span><em class="ltx_emph ltx_font_italic" id="S2.p2.1.3"><span class="translated-text">开放微笑</span><span class="original-text">openSMILE</span></em> <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="OpenSMILE: the munich versatile and fast open-source audio feature extractor">15</a>]</cite><span class="translated-text">。广泛使用的功能集包括</span><span class="original-text">. Widely used feature sets include</span><em class="ltx_emph ltx_font_italic" id="S2.p2.1.4"><span class="translated-text">电子GeMAPS</span><span class="original-text">eGeMAPS</span></em> <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="The geneva minimalistic acoustic parameter set (gemaps) for voice research and affective computing">14</a>]</cite><span class="translated-text">（除其他外），为情感分析和基准测试提供可解释的界面</span><span class="original-text">(among others), which provide an interpretable interface for affective analysis and benchmarking</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib19" title="The interspeech 2009 emotion challenge">34</a>, <a class="ltx_ref" href="#bib.bib5" title="Dawn of the transformer era in speech emotion recognition: closing the valence gap">38</a>]</cite><span class="translated-text">。最近，自监督语音编码器（wav2vec 2.0、HuBERT、WavLM）已成为下游副语言预测的标准骨干</span><span class="original-text">. More recently, self-supervised speech encoders (wav2vec 2.0, HuBERT, WavLM) have become standard backbones for downstream paralinguistic prediction</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="Wav2vec 2.0: a framework for self-supervised learning of speech representations">5</a>, <a class="ltx_ref" href="#bib.bib7" title="HuBERT: self-supervised speech representation learning by masked prediction of hidden units">20</a>, <a class="ltx_ref" href="#bib.bib8" title="WavLM: large-scale self-supervised pre-training for full stack speech processing">9</a>, <a class="ltx_ref" href="#bib.bib5" title="Dawn of the transformer era in speech emotion recognition: closing the valence gap">38</a>]</cite><span class="translated-text">。
+同时，</span><span class="original-text">.
+In parallel,</span><em class="ltx_emph ltx_font_italic" id="S2.p2.1.5"><span class="translated-text">对比音频文本预训练</span><span class="original-text">contrastive audio-text pretraining</span></em><span class="translated-text">（例如 CLAP）在共享嵌入空间中对齐音频和文本，从而实现零样本匹配</span><span class="original-text">(e.g., CLAP) aligns audio and text in a shared embedding space, enabling zero-shot matching</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib9" title="CLAP: learning audio concepts from natural language supervision">13</a>]</cite><span class="translated-text">。 For computational paralinguistics in particular, ParaCLAP leverages feature-derived prompting to form text queries, with SmoothCLAP additionally introducing soft-target supervision to better reflect graded affective similarity</span><span class="original-text">. For computational paralinguistics in particular, ParaCLAP leverages feature-derived prompting to form text queries, with SmoothCLAP additionally introducing soft-target supervision to better reflect graded affective similarity</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib10" title="ParaCLAP: towards a general language-audio model for computational paralinguistic tasks">24</a>, <a class="ltx_ref" href="#bib.bib11" title="SmoothCLAP: soft-target enhanced contrastive language-audio pretraining for affective computing">25</a>]</cite><span class="translated-text">。 While these contrastive encoders provide strong retrieval-style baselines, they are not designed to consume structured, per-utterance auxiliary cues.</span><span class="original-text">. While these contrastive encoders provide strong retrieval-style baselines, they are not designed to consume structured, per-utterance auxiliary cues.</span><em class="ltx_emph ltx_font_italic" id="S2.p2.1.6"><span class="translated-text">生成式 ALM</span><span class="original-text">Generative ALMs</span></em><span class="translated-text">instead couple an audio encoder with an instruction-following autoregressive LLM, enabling audio-conditioned text generation and structured outputs.代表性的开源模型包括Qwen2-Audio</span><span class="original-text">instead couple an audio encoder with an instruction-following autoregressive LLM, enabling audio-conditioned text generation and structured outputs. Representative open-source models include Qwen2-Audio</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib34" title="Qwen2-audio: improving audio understanding in large language models">42</a>]</cite><span class="translated-text">、Qwen2.5-Omni</span><span class="original-text">, Qwen2.5-Omni</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib35" title="Qwen3-omni technical report">41</a>]</cite><span class="translated-text">和音频火烈鸟 3</span><span class="original-text">, and Audio Flamingo 3</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="Audio flamingo 3: advancing audio intelligence with fully open large audio language models">18</a>]</cite><span class="translated-text">。最近的工作试图明确针对多步骤</span><span class="original-text">. Very recent work has tried to explicitly target multi-step</span><em class="ltx_emph ltx_font_italic" id="S2.p2.1.7"><span class="translated-text">音频推理</span><span class="original-text">audio reasoning</span></em> (e.g., Audio-Reasoner and ECHO), motivating evaluation protocols that go beyond aggregate accuracy and probe how models use intermediate information <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib33" title="Audio-reasoner: improving reasoning capability in large audio language models">10</a>, <a class="ltx_ref" href="#bib.bib36" title="ECHO: towards advanced audio comprehension via audio-interleaved reasoning">17</a>]</cite><span class="translated-text">。最后，尽管 SER 的可解释性已经提高（通常通过特征归因和事后分析），但此类解释本身并不能建立</span><span class="original-text">. Finally, although explainability for SER has advanced (often via feature attribution and post-hoc analyses), such explanations do not by themselves establish</span><em class="ltx_emph ltx_font_italic" id="S2.p2.1.8"><span class="translated-text">忠实的</span><span class="original-text">faithful</span></em><span class="translated-text">使用提供的线索，激发我们基于干预的测试</span><span class="original-text">use of provided cues, motivating our intervention-based tests</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib37" title="Unveiling hidden factors: explainable ai for feature boosting in speech emotion recognition: n. alaa et al.">30</a>, <a class="ltx_ref" href="#bib.bib38" title="Improving audio explanations using audio language models">3</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.p3">
+<p class="ltx_p" id="S2.p3.1"><span class="ltx_text ltx_font_bold" id="S2.p3.1.1"><span class="translated-text">基于忠诚度和干预的解释评估。</span><span class="original-text">Faithfulness and intervention based evaluation of explanations.</span></span><span class="translated-text">广泛的可解释性文献表明，即使不忠实于潜在的决策过程，解释也可能是合理的</span><span class="original-text">A broad interpretability literature has shown that explanations can be plausible without being faithful to the underlying decision process</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib27" title="Towards faithfully interpretable NLP systems: how should we define and evaluate faithfulness?">21</a>, <a class="ltx_ref" href="#bib.bib26" title="ERASER: a benchmark to evaluate rationalized NLP models">12</a>]</cite><span class="translated-text">。常见的评估策略包括基于扰动的测试，其中基本假设是删除或改变所谓的线索应该改变预测</span><span class="original-text">. Common evaluation strategies include perturbation-based tests, in which the basic assumption is that removing or altering purported cues should change the prediction</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib21" title="Attention is not explanation">23</a>, <a class="ltx_ref" href="#bib.bib22" title="Sanity checks for saliency maps">1</a>, <a class="ltx_ref" href="#bib.bib23" title="Improving audio explanations using audio language models">2</a>]</cite><span class="translated-text">。这些想法最近在大型模型的背景下被重新审视，其中内部干预可以揭示超越事后理由的因果结构</span><span class="original-text">. These ideas have recently been revisited in the context of large models, where internal interventions can reveal causal structure beyond post hoc rationales</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib25" title="Investigating faithfulness in large audio language models">22</a>]</cite><span class="translated-text">。在音频语言环境中，神经元水平研究提供了补充证据，表明有针对性的干预可以选择性地调节情绪相关行为</span><span class="original-text">. In the audio-language setting, neuron level studies have provided complementary evidence that targeted interventions can selectively modulate emotion-related behaviour</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib28" title="Discovering and causally validating emotion-sensitive neurons in large audio-language models">45</a>]</cite><span class="translated-text">。我们的工作遵循干预原则，但重点是</span><span class="original-text">. Our work follows the intervention principle, but focuses on</span><em class="ltx_emph ltx_font_italic" id="S2.p3.1.2"><span class="translated-text">明确的</span><span class="original-text">explicit</span></em> auxiliary cues that are visible to the language model at inference time, enabling controlled tests without modifying model weights or internal activations.</p>
+</div>
+<div class="ltx_para" id="S2.p4">
+<p class="ltx_p" id="S2.p4.1"><span class="ltx_text ltx_font_bold" id="S2.p4.1.1"><span class="translated-text">音频语言模型中基于音频的提示的使用。</span><span class="original-text">Audio-grounded cue use in audio language models.</span></span></p>
+</div>
+<div class="ltx_para" id="S2.p5">
+<p class="ltx_p" id="S2.p5.1"><span class="translated-text">ALM支持灵活提示，方便</span><span class="original-text">ALMs support flexible prompting, facilitating the</span><em class="ltx_emph ltx_font_italic" id="S2.p5.1.1"><span class="translated-text">包含辅助上下文</span><span class="original-text">inclusion of auxiliary context</span></em><span class="translated-text">并允许以自然语言进行开放式输出。这使得它们对于语音任务很有吸引力，人们可能会要求提供离散的标签、理由或结构化报告</span><span class="original-text">and allowing for open-ended outputs in natural language. This makes them attractive for speech tasks, where one may ask for a discrete label, a rationale, or a structured report</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib29" title="A survey on speech large language models for understanding">31</a>, <a class="ltx_ref" href="#bib.bib30" title="Audio-language models for audio-centric tasks: a survey">35</a>]</cite><span class="translated-text">。然而，ALM 在多大程度上使用通过提示提供的附加信息，而不是主要依赖于音频表示，尚未得到广泛量化。最近关于音频推理的工作强调了这一点</span><span class="original-text">. However, the extent to which ALMs use the additional information provided through the prompt, rather than relying primarily on the audio representation, has not been widely quantified. Recent work on audio reasoning highlights that</span><em class="ltx_emph ltx_font_italic" id="S2.p5.1.2"><span class="translated-text">推理</span><span class="original-text">reasoning</span></em><span class="translated-text">不应从流畅的输出中假设：</span><span class="original-text">should not be assumed from fluent outputs:</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib31" title="Incentivizing consistent, effective and scalable reasoning capability in audio llms via reasoning process rewards">16</a>]</cite><span class="translated-text">结果表明，促使音频法学硕士产生更长的思维链会降低准确性，甚至在测试时间缩放下崩溃，从而激发行为探针来测试预测如何响应可用信息的受控变化。我们通过提供可解释的解决方案来解决这一差距</span><span class="original-text">shows that prompting audio LLMs to produce longer chain-of-thought can reduce accuracy and even collapse under test-time scaling, motivating behavioural probes that test how predictions respond to controlled changes in available information. We address this gap by supplying interpretable</span><em class="ltx_emph ltx_font_italic" id="S2.p5.1.3"><span class="translated-text">概念标记</span><span class="original-text">concept tokens</span></em><span class="translated-text">以已建立的副语言描述符为基础，并通过受控的、仅令牌的干预来评估令牌的使用。</span><span class="original-text">grounded in established paralinguistic descriptors and by evaluating token use through controlled, token only interventions.</span></p>
+</div>
+<figure class="ltx_figure" id="S2.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="671" id="S2.F1.g1" src="https://arxiv.org/html/2606.07309v1/x1.png" width="955"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>IEMOCAP (4-way) concept-token distributions across emotions. For each prosodic concept (row), bubbles show the within-emotion frequency (%) of each discrete token value; bubble area is proportional to frequency. Small jitter is applied only for visual separation.</figcaption>
+</figure>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section"><span class="translated-text">三、</span><span class="original-text">III</span></span><span class="ltx_text ltx_font_smallcaps" id="S3.1.1"><span class="translated-text">方法论</span><span class="original-text">Methodology</span></span>
+</h2>
+<figure class="ltx_table" id="S3.T2">
+<figcaption class="ltx_caption ltx_centering" style="font-size:90%;"><span class="ltx_tag ltx_tag_table">TABLE II: </span>AIBO5 UAR without concept tokens (<math alttext="UAR^{-}" class="ltx_Math" display="inline" id="S3.T2.4.m1" intent=":literal"><semantics><mrow><mi>U</mi><mo lspace="0em" rspace="0em">​</mo><mi>A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi>R</mi><mo>−</mo></msup></mrow><annotation encoding="application/x-tex">UAR^{-}</annotation></semantics></math>) and with appended concept tokens (<math alttext="UAR^{+}" class="ltx_Math" display="inline" id="S3.T2.5.m2" intent=":literal"><semantics><mrow><mi>U</mi><mo lspace="0em" rspace="0em">​</mo><mi>A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi>R</mi><mo>+</mo></msup></mrow><annotation encoding="application/x-tex">UAR^{+}</annotation></semantics></math>). <math alttext="\Delta=UAR^{+}-UAR^{-}" class="ltx_Math" display="inline" id="S3.T2.6.m3" intent=":literal"><semantics><mrow><mi mathvariant="normal">Δ</mi><mo>=</mo><mrow><mrow><mi>U</mi><mo lspace="0em" rspace="0em">​</mo><mi>A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi>R</mi><mo>+</mo></msup></mrow><mo>−</mo><mrow><mi>U</mi><mo lspace="0em" rspace="0em">​</mo><mi>A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi>R</mi><mo>−</mo></msup></mrow></mrow></mrow><annotation encoding="application/x-tex">\Delta=UAR^{+}-UAR^{-}</annotation></semantics></math>.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T2.12">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T2.12.7.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_tt" id="S3.T2.12.7.1.1" rowspan="2" style="padding:0.25pt 4.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.12.7.1.1.1" style="font-size:90%;">Model</span></th>
+<td class="ltx_td ltx_align_center ltx_border_tt" colspan="3" id="S3.T2.12.7.1.2" style="padding:0.25pt 4.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.12.7.1.2.1" style="font-size:90%;">dev</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" colspan="3" id="S3.T2.12.7.1.3" style="padding:0.25pt 4.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.12.7.1.3.1" style="font-size:90%;">test</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.12.6">
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.7.1.1" style="padding:0.25pt 4.0pt;"><math alttext="UAR^{-}" class="ltx_Math" display="inline" id="S3.T2.7.1.1.m1" intent=":literal"><semantics><mrow><mi mathsize="0.900em">U</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.900em">A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi mathsize="0.900em">R</mi><mo mathsize="0.900em">−</mo></msup></mrow><annotation encoding="application/x-tex">UAR^{-}</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.8.2.2" style="padding:0.25pt 4.0pt;"><math alttext="UAR^{+}" class="ltx_Math" display="inline" id="S3.T2.8.2.2.m1" intent=":literal"><semantics><mrow><mi mathsize="0.900em">U</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.900em">A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi mathsize="0.900em">R</mi><mo mathsize="0.900em">+</mo></msup></mrow><annotation encoding="application/x-tex">UAR^{+}</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.9.3.3" style="padding:0.25pt 4.0pt;"><math alttext="\Delta" class="ltx_Math" display="inline" id="S3.T2.9.3.3.m1" intent=":literal"><semantics><mi mathsize="0.900em" mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.10.4.4" style="padding:0.25pt 4.0pt;"><math alttext="UAR^{-}" class="ltx_Math" display="inline" id="S3.T2.10.4.4.m1" intent=":literal"><semantics><mrow><mi mathsize="0.900em">U</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.900em">A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi mathsize="0.900em">R</mi><mo mathsize="0.900em">−</mo></msup></mrow><annotation encoding="application/x-tex">UAR^{-}</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.11.5.5" style="padding:0.25pt 4.0pt;"><math alttext="UAR^{+}" class="ltx_Math" display="inline" id="S3.T2.11.5.5.m1" intent=":literal"><semantics><mrow><mi mathsize="0.900em">U</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.900em">A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi mathsize="0.900em">R</mi><mo mathsize="0.900em">+</mo></msup></mrow><annotation encoding="application/x-tex">UAR^{+}</annotation></semantics></math></td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_t" id="S3.T2.12.6.6" style="padding:0.25pt 4.0pt;"><math alttext="\Delta" class="ltx_Math" display="inline" id="S3.T2.12.6.6.m1" intent=":literal"><semantics><mi mathsize="0.900em" mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.12.8.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" colspan="7" id="S3.T2.12.8.2.1" style="padding:0.25pt 4.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.12.8.2.1.1" style="font-size:90%;">Zero-shot ALMs</span></th>
+</tr>
+<tr class="ltx_tr" id="S3.T2.12.9.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.12.9.3.1" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.9.3.1.1" style="font-size:90%;">qw2-audio</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.9.3.2" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.9.3.2.1" style="font-size:90%;">.209</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.9.3.3" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.9.3.3.1" style="font-size:90%;">.240</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.9.3.4" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.9.3.4.1" style="font-size:90%;--ltx-fg-color:#008000;">+.031</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.9.3.5" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.9.3.5.1" style="font-size:90%;">.206</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.9.3.6" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.9.3.6.1" style="font-size:90%;">.234</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S3.T2.12.9.3.7" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.9.3.7.1" style="font-size:90%;--ltx-fg-color:#008000;">+.028</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.12.10.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.12.10.4.1" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.10.4.1.1" style="font-size:90%;">qw-omni</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.10.4.2" style="padding:0.25pt 4.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.12.10.4.2.1" style="font-size:90%;">.262</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.10.4.3" style="padding:0.25pt 4.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.12.10.4.3.1" style="font-size:90%;">.279</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.10.4.4" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.10.4.4.1" style="font-size:90%;--ltx-fg-color:#008000;">+.017</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.10.4.5" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.10.4.5.1" style="font-size:90%;">.230</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.10.4.6" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.10.4.6.1" style="font-size:90%;">.240</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S3.T2.12.10.4.7" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.10.4.7.1" style="font-size:90%;--ltx-fg-color:#008000;">+.010</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.12.11.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.12.11.5.1" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.11.5.1.1" style="font-size:90%;">AF3</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.11.5.2" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.11.5.2.1" style="font-size:90%;">.259</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.11.5.3" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.11.5.3.1" style="font-size:90%;">.268</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.11.5.4" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.11.5.4.1" style="font-size:90%;--ltx-fg-color:#008000;">+.009</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.11.5.5" style="padding:0.25pt 4.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.12.11.5.5.1" style="font-size:90%;">.253</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.11.5.6" style="padding:0.25pt 4.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.12.11.5.6.1" style="font-size:90%;">.269</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S3.T2.12.11.5.7" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.11.5.7.1" style="font-size:90%;--ltx-fg-color:#008000;">+.016</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.12.12.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" colspan="7" id="S3.T2.12.12.6.1" style="padding:0.25pt 4.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T2.12.12.6.1.1" style="font-size:90%;">Fine-tuned ALMs</span></th>
+</tr>
+<tr class="ltx_tr" id="S3.T2.12.13.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.12.13.7.1" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.13.7.1.1" style="font-size:90%;">ft-qw-omni</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.13.7.2" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.13.7.2.1" style="font-size:90%;">.260</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.13.7.3" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.13.7.3.1" style="font-size:90%;">.263</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.13.7.4" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.13.7.4.1" style="font-size:90%;--ltx-fg-color:#008000;">+.003</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.13.7.5" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.13.7.5.1" style="font-size:90%;">–</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.12.13.7.6" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.13.7.6.1" style="font-size:90%;">–</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S3.T2.12.13.7.7" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.13.7.7.1" style="font-size:90%;">–</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.12.14.8">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S3.T2.12.14.8.1" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.14.8.1.1" style="font-size:90%;">ft-AF3</span></th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.12.14.8.2" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.14.8.2.1" style="font-size:90%;">.248</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.12.14.8.3" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.14.8.3.1" style="font-size:90%;">.268</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.12.14.8.4" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.14.8.4.1" style="font-size:90%;--ltx-fg-color:#008000;">+.020</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.12.14.8.5" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.14.8.5.1" style="font-size:90%;">–</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.12.14.8.6" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.14.8.6.1" style="font-size:90%;">–</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_center ltx_border_bb" id="S3.T2.12.14.8.7" style="padding:0.25pt 4.0pt;"><span class="ltx_text" id="S3.T2.12.14.8.7.1" style="font-size:90%;">–</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="ltx_text ltx_font_bold" id="S3.p1.1.1"><span class="translated-text">数据集</span><span class="original-text">Datasets</span></span><span class="translated-text">。我们对两个既定的语音情感识别基准进行评估，这两个基准在语言、说话者人口统计和录音条件方面存在显着差异。</span><span class="original-text">. We evaluate on two established speech emotion recognition benchmarks that differ markedly in language, speaker demographics, and recording conditions.</span></p>
+</div>
+<div class="ltx_para" id="S3.p2">
+<p class="ltx_p" id="S3.p2.1"><span class="ltx_text ltx_font_bold ltx_framed ltx_framed_underline" id="S3.p2.1.1"><span class="translated-text">FAU-Aibo (AIBO5)。</span><span class="original-text">FAU-Aibo (AIBO5).</span></span><span class="translated-text">FAU-Aibo 情感语料库是德国儿童自发言语（6-10 岁）的数据集，记录在自然的人机交互环境中</span><span class="original-text">The FAU-Aibo Emotion Corpus is a German dataset of spontaneous children’s speech (ages 6–10 years) recorded in a naturalistic human–robot interaction setting</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib18" title="Releasing a thoroughly annotated and processed spontaneous emotional database: the FAU aibo emotion corpus">6</a>]</cite><span class="translated-text">。它还用作 INTERSPEECH 2009 情感挑战赛的数据集</span><span class="original-text">. It also served as the dataset for the INTERSPEECH 2009 Emotion Challenge</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib19" title="The interspeech 2009 emotion challenge">34</a>]</cite><span class="translated-text">。按照惯例，我们使用从原始细粒度注释到五个类的标准映射（</span><span class="original-text">. Following common practice, we use the standard mapping from the original fine-grained annotations to five classes (</span><span class="ltx_text ltx_font_italic" id="S3.p2.1.2"><span class="translated-text">生气</span><span class="original-text">angry</span></span>, <span class="ltx_text ltx_font_italic" id="S3.p2.1.3"><span class="translated-text">强调的</span><span class="original-text">emphatic</span></span>, <span class="ltx_text ltx_font_italic" id="S3.p2.1.4"><span class="translated-text">中立的</span><span class="original-text">neutral</span></span>, <span class="ltx_text ltx_font_italic" id="S3.p2.1.5"><span class="translated-text">积极的</span><span class="original-text">positive</span></span>, <span class="ltx_text ltx_font_italic" id="S3.p2.1.6"><span class="translated-text">休息</span><span class="original-text">rest</span></span><span class="translated-text">）。 We report results on the official development split for broad model sweeps and rapid prompt/token ablations, and reserve the official test split for the final comparison of the strongest ALM backbones.</span><span class="original-text">). We report results on the official development split for broad model sweeps and rapid prompt/token ablations, and reserve the official test split for the final comparison of the strongest ALM backbones.</span></p>
+</div>
+<div class="ltx_para" id="S3.p3">
+<p class="ltx_p" id="S3.p3.1"><span class="ltx_text ltx_font_bold ltx_framed ltx_framed_underline" id="S3.p3.1.1"><span class="translated-text">IEMOCAP（4 路）。</span><span class="original-text">IEMOCAP (4-way).</span></span><span class="translated-text">IEMOCAP 是一个英语语料库，包含有脚本和即兴演讲的表演二元互动</span><span class="original-text">IEMOCAP is an English corpus of acted dyadic interactions with scripted and improvised speech</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib17" title="IEMOCAP: interactive emotional dyadic motion capture database">8</a>]</cite><span class="translated-text">。为了与之前的工作保持一致并确保每个班级有足够的支持，我们采用了广泛使用的 4 路设置（</span><span class="original-text">. To align with prior work and to ensure sufficient support per class, we adopt the widely used 4-way setup (</span><span class="ltx_text ltx_font_italic" id="S3.p3.1.2"><span class="translated-text">生气</span><span class="original-text">angry</span></span>, <span class="ltx_text ltx_font_italic" id="S3.p3.1.3"><span class="translated-text">高兴+兴奋</span><span class="original-text">happy+excited</span></span>, <span class="ltx_text ltx_font_italic" id="S3.p3.1.4"><span class="translated-text">中立的</span><span class="original-text">neutral</span></span>, <span class="ltx_text ltx_font_italic" id="S3.p3.1.5"><span class="translated-text">悲伤</span><span class="original-text">sad</span></span><span class="translated-text">），其中</span><span class="original-text">), where</span><span class="ltx_text ltx_font_italic" id="S3.p3.1.6"><span class="translated-text">兴奋</span><span class="original-text">excited</span></span><span class="translated-text">被合并到</span><span class="original-text">is merged into</span><span class="ltx_text ltx_font_italic" id="S3.p3.1.7"><span class="translated-text">快乐</span><span class="original-text">happy</span></span><span class="translated-text">其余类别将被丢弃</span><span class="original-text">and the remaining categories are discarded</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib20" title="Designing and evaluating speech emotion recognition systems: a reality check case study with iemocap">4</a>]</cite><span class="translated-text">。这总共产生 5,531 个话语。除非另有说明，我们使用标准的基于会话的协议（会话 1-4 用于训练，会话 5 用于测试）以避免扬声器泄漏。</span><span class="original-text">. This yields 5,531 utterances in total. Unless otherwise stated, we use the standard session-based protocol (Sessions 1–4 for training and Session 5 for testing) to avoid speaker leakage.</span><a class="ltx_ref" href="#S2.F1" title="In II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">Figure</span>˜<span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">可视化此数据集的映射概念标记的每类分布。我们还将其他标准数据集（例如 MSP-Podcast）从我们的评估中排除，因为它们是所考虑的某些 ALM 的训练数据的一部分，这会混淆泛化。</span><span class="original-text">visualises the per-class distributions of the mapped concept tokens for this dataset. We also exclude other standard datasets, such as MSP-Podcast, from our evaluation as they are part of the training data for some of the ALMs considered, which would confound generalisation.</span></p>
+</div>
+<figure class="ltx_table" id="S3.T3">
+<figcaption class="ltx_caption ltx_centering" style="font-size:90%;"><span class="ltx_tag ltx_tag_table">TABLE III: </span>IEMOCAP (full) UAR with/without appended concept tokens. Contrastive zero-shot references are reproduced from <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib11" title="SmoothCLAP: soft-target enhanced contrastive language-audio pretraining for affective computing">25</a>]</cite>.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T3.3">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T3.3.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S3.T3.3.3.4" style="padding:0.25pt 5.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.3.3.4.1" style="font-size:90%;">Model</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.1.1.1" style="padding:0.25pt 5.0pt;"><math alttext="UAR^{-}" class="ltx_Math" display="inline" id="S3.T3.1.1.1.m1" intent=":literal"><semantics><mrow><mi mathsize="0.900em">U</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.900em">A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi mathsize="0.900em">R</mi><mo mathsize="0.900em">−</mo></msup></mrow><annotation encoding="application/x-tex">UAR^{-}</annotation></semantics></math></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.2.2.2" style="padding:0.25pt 5.0pt;"><math alttext="UAR^{+}" class="ltx_Math" display="inline" id="S3.T3.2.2.2.m1" intent=":literal"><semantics><mrow><mi mathsize="0.900em">U</mi><mo lspace="0em" rspace="0em">​</mo><mi mathsize="0.900em">A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi mathsize="0.900em">R</mi><mo mathsize="0.900em">+</mo></msup></mrow><annotation encoding="application/x-tex">UAR^{+}</annotation></semantics></math></th>
+<th class="ltx_td ltx_nopad_r ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.3.3.3" style="padding:0.25pt 5.0pt;"><math alttext="\Delta" class="ltx_Math" display="inline" id="S3.T3.3.3.3.m1" intent=":literal"><semantics><mi mathsize="0.900em" mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math></th>
+</tr>
+<tr class="ltx_tr" id="S3.T3.3.4.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" colspan="4" id="S3.T3.3.4.1.1" style="padding:0.25pt 5.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.3.4.1.1.1" style="font-size:90%;">Audio language models</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T3.3.5.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T3.3.5.1.1" style="padding:0.25pt 5.0pt;"><span class="ltx_text" id="S3.T3.3.5.1.1.1" style="font-size:90%;">AF3</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T3.3.5.1.2" style="padding:0.25pt 5.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.3.5.1.2.1" style="font-size:90%;">.754</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.3.5.1.3" style="padding:0.25pt 5.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.3.5.1.3.1" style="font-size:90%;">.776</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S3.T3.3.5.1.4" style="padding:0.25pt 5.0pt;"><span class="ltx_text" id="S3.T3.3.5.1.4.1" style="font-size:90%;--ltx-fg-color:#008000;">+.022</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.3.6.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T3.3.6.2.1" style="padding:0.25pt 5.0pt;"><span class="ltx_text" id="S3.T3.3.6.2.1.1" style="font-size:90%;">qw-omni</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T3.3.6.2.2" style="padding:0.25pt 5.0pt;"><span class="ltx_text" id="S3.T3.3.6.2.2.1" style="font-size:90%;">.541</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.3.6.2.3" style="padding:0.25pt 5.0pt;"><span class="ltx_text" id="S3.T3.3.6.2.3.1" style="font-size:90%;">.582</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_center" id="S3.T3.3.6.2.4" style="padding:0.25pt 5.0pt;"><span class="ltx_text" id="S3.T3.3.6.2.4.1" style="font-size:90%;--ltx-fg-color:#008000;">+.041</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.3.7.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" colspan="4" id="S3.T3.3.7.3.1" style="padding:0.25pt 5.0pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.3.7.3.1.1" style="font-size:90%;">Zero-shot contrastive baselines (no tokens)</span></th>
+</tr>
+<tr class="ltx_tr" id="S3.T3.3.8.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T3.3.8.4.1" style="padding:0.25pt 5.0pt;"><span class="ltx_text" id="S3.T3.3.8.4.1.1" style="font-size:90%;">CLAP</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T3.3.8.4.2" style="padding:0.25pt 5.0pt;"><span class="ltx_text" id="S3.T3.3.8.4.2.1" style="font-size:90%;">.353</span></td>
+<td class="ltx_td" id="S3.T3.3.8.4.3" style="padding:0.25pt 5.0pt;"></td>
+<td class="ltx_td" id="S3.T3.3.8.4.4" style="padding:0.25pt 5.0pt;"></td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.3.9.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T3.3.9.5.1" style="padding:0.25pt 5.0pt;"><span class="ltx_text" id="S3.T3.3.9.5.1.1" style="font-size:90%;">Pengi</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T3.3.9.5.2" style="padding:0.25pt 5.0pt;"><span class="ltx_text" id="S3.T3.3.9.5.2.1" style="font-size:90%;">.345</span></td>
+<td class="ltx_td" id="S3.T3.3.9.5.3" style="padding:0.25pt 5.0pt;"></td>
+<td class="ltx_td" id="S3.T3.3.9.5.4" style="padding:0.25pt 5.0pt;"></td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.3.10.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T3.3.10.6.1" style="padding:0.25pt 5.0pt;"><span class="ltx_text" id="S3.T3.3.10.6.1.1" style="font-size:90%;">ParaCLAP</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T3.3.10.6.2" style="padding:0.25pt 5.0pt;"><span class="ltx_text" id="S3.T3.3.10.6.2.1" style="font-size:90%;">.600</span></td>
+<td class="ltx_td" id="S3.T3.3.10.6.3" style="padding:0.25pt 5.0pt;"></td>
+<td class="ltx_td" id="S3.T3.3.10.6.4" style="padding:0.25pt 5.0pt;"></td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.3.11.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S3.T3.3.11.7.1" style="padding:0.25pt 5.0pt;"><span class="ltx_text" id="S3.T3.3.11.7.1.1" style="font-size:90%;">SmoothCLAP</span></th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.3.11.7.2" style="padding:0.25pt 5.0pt;"><span class="ltx_text" id="S3.T3.3.11.7.2.1" style="font-size:90%;">.606</span></td>
+<td class="ltx_td ltx_border_bb" id="S3.T3.3.11.7.3" style="padding:0.25pt 5.0pt;"></td>
+<td class="ltx_td ltx_border_bb" id="S3.T3.3.11.7.4" style="padding:0.25pt 5.0pt;"></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S3.p4">
+<p class="ltx_p" id="S3.p4.5"><span class="ltx_text ltx_font_bold" id="S3.p4.5.1"><span class="translated-text">评估协议。</span><span class="original-text">Evaluation protocol.</span></span><span class="translated-text">所有数据集均使用 UAR 进行评估，以解决类别不平衡问题。我们报道</span><span class="original-text">All datasets are evaluated using UAR to account for class imbalance. We report</span><math alttext="UAR^{-}" class="ltx_Math" display="inline" id="S3.p4.1.m1" intent=":literal"><semantics><mrow><mi>U</mi><mo lspace="0em" rspace="0em">​</mo><mi>A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi>R</mi><mo>−</mo></msup></mrow><annotation encoding="application/x-tex">UAR^{-}</annotation></semantics></math><span class="translated-text">对于纯音频提示（无附加概念标记）和</span><span class="original-text">for the audio-only prompt (no appended concept tokens) and</span><math alttext="UAR^{+}" class="ltx_Math" display="inline" id="S3.p4.2.m2" intent=":literal"><semantics><mrow><mi>U</mi><mo lspace="0em" rspace="0em">​</mo><mi>A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi>R</mi><mo>+</mo></msup></mrow><annotation encoding="application/x-tex">UAR^{+}</annotation></semantics></math><span class="translated-text">对于音频+概念标记提示；</span><span class="original-text">for the audio+concept-tokens prompt;</span><math alttext="\Delta=UAR^{+}-UAR^{-}" class="ltx_Math" display="inline" id="S3.p4.3.m3" intent=":literal"><semantics><mrow><mi mathvariant="normal">Δ</mi><mo>=</mo><mrow><mrow><mi>U</mi><mo lspace="0em" rspace="0em">​</mo><mi>A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi>R</mi><mo>+</mo></msup></mrow><mo>−</mo><mrow><mi>U</mi><mo lspace="0em" rspace="0em">​</mo><mi>A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi>R</mi><mo>−</mo></msup></mrow></mrow></mrow><annotation encoding="application/x-tex">\Delta=UAR^{+}-UAR^{-}</annotation></semantics></math><span class="translated-text">。在 AIBO5 上，我们首先对开发集运行多模型扫描，以表征提示和令牌增强下的 ALM 行为。然后，我们报告基本主干（qw-omni 和 AF3）的测试性能。在 IEMOCAP 上，我们报告了 qw-omni 和 AF3 的 UAR，并对最可靠的骨干网 AF3 进行了扩展干预分析，以探究附加概念令牌的受控扰动下的信息可信度。对于所有 IEMOCAP 比较，我们报告来自说话者聚类引导程序的 95% 置信区间（</span><span class="original-text">. On AIBO5, we first run a multi-model sweep on the development set to characterise ALM behaviour under prompting and token augmentation. We then report test performance for the base backbones (qw-omni and AF3). On IEMOCAP, we report UAR for both qw-omni and AF3, and conduct extended intervention analyses on AF3, the most reliable backbone, to probe information faithfulness under controlled perturbations of the appended concept tokens. For all IEMOCAP comparisons, we report 95% confidence intervals from a speaker-clustered bootstrap (</span><math alttext="10" class="ltx_Math" display="inline" id="S3.p4.4.m4" intent=":literal"><semantics><mn>10</mn><annotation encoding="application/x-tex">10</annotation></semantics></math><span class="translated-text">扬声器、</span><span class="original-text">speakers,</span><math alttext="10^{4}" class="ltx_Math" display="inline" id="S3.p4.5.m5" intent=":literal"><semantics><msup><mn>10</mn><mn>4</mn></msup><annotation encoding="application/x-tex">10^{4}</annotation></semantics></math><span class="translated-text">重新采样）并使用精确的 McNemar 测试来测试每个话语的正确性。</span><span class="original-text">resamples) and test paired differences with an exact McNemar test on per-utterance correctness.</span></p>
+</div>
+<div class="ltx_para" id="S3.p5">
+<p class="ltx_p" id="S3.p5.1"><span class="ltx_text ltx_font_bold" id="S3.p5.1.1"><span class="translated-text">概念代币来自</span><span class="original-text">Concept Tokens from</span><em class="ltx_emph ltx_font_italic" id="S3.p5.1.1.1"><span class="translated-text">电子GeMAPS</span><span class="original-text">eGeMAPS</span></em>.</span> We map continuous <em class="ltx_emph ltx_font_italic" id="S3.p5.1.2"><span class="translated-text">电子GeMAPS</span><span class="original-text">eGeMAPS</span></em> descriptors into a set of categorical <em class="ltx_emph ltx_font_italic" id="S3.p5.1.3"><span class="translated-text">概念标记</span><span class="original-text">concept tokens</span></em><span class="translated-text">可以作为结构化辅助提示附加到 ALM 提示中。
+分组遵循以下标准语义定义</span><span class="original-text">that can be appended to ALM prompts as structured auxiliary cues.
+The grouping follows the standard semantic definitions of the</span><em class="ltx_emph ltx_font_italic" id="S3.p5.1.4"><span class="translated-text">电子GeMAPS</span><span class="original-text">eGeMAPS</span></em><span class="translated-text">描述符（如所示</span><span class="original-text">descriptors (as shown in</span><a class="ltx_ref" href="#S1.T1" title="In I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">Table</span>˜<span class="ltx_text ltx_ref_tag">I</span></a><span class="translated-text">）。
+For each utterance,</span><span class="original-text">).
+For each utterance,</span><em class="ltx_emph ltx_font_italic" id="S3.p5.1.5"><em class="ltx_emph ltx_font_upright" id="S3.p5.1.5.1"><span class="translated-text">电子GeMAPS</span><span class="original-text">eGeMAPS</span></em>v02</em> LLDs are extracted with <em class="ltx_emph ltx_font_italic" id="S3.p5.1.6"><span class="translated-text">开放微笑</span><span class="original-text">openSMILE</span></em> and summarised with a file-level mean vector.
+We then apply robust standardisation
+and compute the scalar concept scores <span class="ltx_text ltx_font_italic" id="S3.p5.1.7"><span class="translated-text">能源</span><span class="original-text">ENERGY</span></span>, <span class="ltx_text ltx_font_italic" id="S3.p5.1.8"><span class="translated-text">推介</span><span class="original-text">PITCH</span></span>, <span class="ltx_text ltx_font_italic" id="S3.p5.1.9">BRIGHTNESS</span>, <span class="ltx_text ltx_font_italic" id="S3.p5.1.10"><span class="translated-text">动态</span><span class="original-text">DYNAMICS</span></span><span class="translated-text">, 和</span><span class="original-text">, and</span><span class="ltx_text ltx_font_italic" id="S3.p5.1.11"><span class="translated-text">共振峰</span><span class="original-text">FORMANTS</span></span> by averaging the corresponding standardised <em class="ltx_emph ltx_font_italic" id="S3.p5.1.12"><span class="translated-text">电子GeMAPS</span><span class="original-text">eGeMAPS</span></em><span class="translated-text">尺寸列于</span><span class="original-text">dimensions listed in</span><a class="ltx_ref" href="#S1.T1" title="In I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">Table</span>˜<span class="ltx_text ltx_ref_tag">I</span></a>.</p>
+</div>
+<div class="ltx_para" id="S3.p6">
+<p class="ltx_p" id="S3.p6.1"><span class="translated-text">我们使用跨样本固定的数据集级箱边缘将每个标量得分离散为五个分位数箱。在 IEMOCAP 上，</span><span class="original-text">We discretise each scalar score into five quantile bins using dataset-level bin edges that are fixed across samples. On IEMOCAP,</span><span class="ltx_text ltx_font_italic" id="S3.p6.1.1"><span class="translated-text">推介</span><span class="original-text">PITCH</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_italic" id="S3.p6.1.2"><span class="translated-text">共振峰</span><span class="original-text">FORMANTS</span></span><span class="translated-text">使用特定性别的箱边缘，因为成年男性和女性的音高和共振峰分布有很大差异。由于 FAU-Aibo 包含青春期前的儿童，因此我们不会在此数据集上应用特定性别的分箱。
+We additionally derive a categorical</span><span class="original-text">use gender-specific bin edges, because adult male and female pitch and formant distributions differ substantially. Because FAU-Aibo contains pre-puberty children, we do not apply gender-specific binning on this dataset.
+We additionally derive a categorical</span><span class="ltx_text ltx_font_italic" id="S3.p6.1.3"><span class="translated-text">语音质量</span><span class="original-text">VOICE_QUALITY</span></span><span class="translated-text">来自抖动/闪烁/HNR 的标记和谐波关系线索（</span><span class="original-text">token from jitter/shimmer/HNR and harmonic-relations cues (</span><a class="ltx_ref" href="#S1.T1" title="In I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">Table</span>˜<span class="ltx_text ltx_ref_tag">I</span></a><span class="translated-text">）。
+最后，这六个分类标签被序列化为 ALM 友好的标记字符串。</span><span class="original-text">).
+Finally, the six categorical labels are serialised into an ALM-friendly token string.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="730" id="S3.F2.g1" src="https://arxiv.org/html/2606.07309v1/x2.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Row-normalised confusion matrices (rows=GT, cols=Pred) under tokens’ interventions on AF3. Rows sum to 1; cells with value <math alttext="&lt;0.01" class="ltx_Math" display="inline" id="S3.F2.2.m1" intent=":literal"><semantics><mrow><mi></mi><mo>&lt;</mo><mn>0.01</mn></mrow><annotation encoding="application/x-tex">&lt;0.01</annotation></semantics></math> are not annotated. Correct (aligned tokens) yields the best UAR, while shuffle, conflict, and full corruption reduce performance and shift errors (notably toward N).</figcaption>
+</figure>
+<div class="ltx_para" id="S3.p7">
+<p class="ltx_p" id="S3.p7.1"><span class="ltx_text ltx_font_bold" id="S3.p7.1.1"><span class="translated-text">音频语言模型。</span><span class="original-text">Audio Language Models.</span></span><span class="translated-text">我们评估遵循指令的自回归 ALM，这些 ALM 以音频编码器生成的音频嵌入为条件来调节 LLM。我们包括三个开源 ALM 系列： Qwen2-Audio</span><span class="original-text">We evaluate instruction-following, autoregressive ALMs that condition an LLM on audio embeddings produced by an audio encoder. We include three open-source ALM families: Qwen2-Audio</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib34" title="Qwen2-audio: improving audio understanding in large language models">42</a>]</cite><span class="translated-text">、Qwen2.5-Omni</span><span class="original-text">, Qwen2.5-Omni</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="Qwen2.5-omni technical report">40</a>]</cite>, and Audio Flamingo 3 (AF3) <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="Audio flamingo 3: advancing audio intelligence with fully open large audio language models">18</a>]</cite><span class="translated-text">，加上 Omni 的两个适应任务（微调）的变体</span><span class="original-text">, plus two task-adapted (fine-tuned) variants of Omni</span><span class="ltx_note ltx_role_footnote" id="footnote1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span>https://huggingface.co/mispeech/midashenglm-7b-0804-fp32</span></span></span><span class="translated-text">和AF3</span><span class="original-text">and AF3</span><span class="ltx_note ltx_role_footnote" id="footnote2"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_tag ltx_tag_note">2</span><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://huggingface.co/nvidia/audio-flamingo-3#think-mode-reasoning-with-peft-adapter-af-think" title="">https://huggingface.co/nvidia/audio-flamingo-3#think-mode-reasoning-with-peft-adapter-af-think</a></span></span></span><span class="translated-text">。为了隔离显式概念标记的影响，我们使用两种提示格式：</span><span class="original-text">. To isolate the effect of explicit concept tokens, we use two prompt formats:</span><em class="ltx_emph ltx_font_italic" id="S3.p7.1.2"><span class="translated-text">仅音频</span><span class="original-text">audio-only</span></em><span class="translated-text">和</span><span class="original-text">and</span><em class="ltx_emph ltx_font_italic" id="S3.p7.1.3">audio+concept tokens</em><span class="translated-text">，其中附加六个分类标记作为结构化辅助线索。我们还报告了 IEMOCAP 上的音频文本预训练基线（CLAP、ParaCLAP、SmoothCLAP）作为非生成参考点</span><span class="original-text">, where six categorical tokens are appended as structured auxiliary cues. We additionally report audio–text pretraining baselines (CLAP, ParaCLAP, SmoothCLAP) on IEMOCAP as non-generative reference points</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib9" title="CLAP: learning audio concepts from natural language supervision">13</a>, <a class="ltx_ref" href="#bib.bib10" title="ParaCLAP: towards a general language-audio model for computational paralinguistic tasks">24</a>, <a class="ltx_ref" href="#bib.bib11" title="SmoothCLAP: soft-target enhanced contrastive language-audio pretraining for affective computing">25</a>]</cite><span class="translated-text">。 Pengi is an autoregressive model</span><span class="original-text">. Pengi is an autoregressive model</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib12" title="Pengi: an audio language model for audio tasks">11</a>]</cite><span class="translated-text">;然而，由于它不是为遵循指令而设计的，之前的工作通过将其生成的文本映射到最接近的情感标签来使其适应零样本 SER</span><span class="original-text">; however, since it is not designed for instruction following, prior work adapts it to zero-shot SER by mapping its generated text to the closest emotion label</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib11" title="SmoothCLAP: soft-target enhanced contrastive language-audio pretraining for affective computing">25</a>]</cite><span class="translated-text">。因此，我们将 Pengi 作为参考基线，并且不将其包含在我们基于干预的测试中。</span><span class="original-text">. Hence, we treat Pengi as a reference baseline and do not include it in our intervention-based tests.</span></p>
+</div>
+<div class="ltx_para" id="S3.p8">
+<p class="ltx_p" id="S3.p8.4"><span class="ltx_text ltx_font_bold" id="S3.p8.4.1">Token Interventions.</span>
+We continue with <span class="ltx_text ltx_font_bold" id="S3.p8.4.2">AF3</span><span class="translated-text">因为它在两个数据集上都实现了更高的标记增强性能：在 AIBO5 测试中</span><span class="original-text">since it achieves higher token-augmented performance on both datasets: on AIBO5 test</span><math alttext="UAR^{+}=.269" class="ltx_Math" display="inline" id="S3.p8.1.m1" intent=":literal"><semantics><mrow><mrow><mi>U</mi><mo lspace="0em" rspace="0em">​</mo><mi>A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi>R</mi><mo>+</mo></msup></mrow><mo>=</mo><mn>.269</mn></mrow><annotation encoding="application/x-tex">UAR^{+}=.269</annotation></semantics></math> vs <math alttext=".240" class="ltx_Math" display="inline" id="S3.p8.2.m2" intent=":literal"><semantics><mn>.240</mn><annotation encoding="application/x-tex">.240</annotation></semantics></math> (qw-omni), and on IEMOCAP <math alttext="UAR^{+}=.776" class="ltx_Math" display="inline" id="S3.p8.3.m3" intent=":literal"><semantics><mrow><mrow><mi>U</mi><mo lspace="0em" rspace="0em">​</mo><mi>A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi>R</mi><mo>+</mo></msup></mrow><mo>=</mo><mn>.776</mn></mrow><annotation encoding="application/x-tex">UAR^{+}=.776</annotation></semantics></math> vs <math alttext=".582" class="ltx_Math" display="inline" id="S3.p8.4.m4" intent=":literal"><semantics><mn>.582</mn><annotation encoding="application/x-tex">.582</annotation></semantics></math><span class="translated-text">，使其成为后续分析最强大的整体支柱。</span><span class="original-text">, making it the strongest overall backbone for follow-up analyses.</span></p>
+</div>
+<div class="ltx_para" id="S3.p9">
+<p class="ltx_p" id="S3.p9.1"><span class="translated-text">接下来，我们通过应用修改令牌的仅令牌干预来测试概念令牌是否可显着影响预测</span><span class="original-text">Next, we test whether concept tokens measurably influence predictions by applying token-only interventions that modify token</span><em class="ltx_emph ltx_font_italic" id="S3.p9.1.1"><span class="translated-text">对准</span><span class="original-text">alignment</span></em><span class="translated-text">和</span><span class="original-text">and</span><em class="ltx_emph ltx_font_italic" id="S3.p9.1.2"><span class="translated-text">品质</span><span class="original-text">quality</span></em>.</p>
+</div>
+<div class="ltx_para" id="S3.p10">
+<p class="ltx_p" id="S3.p10.4"><span class="translated-text">让</span><span class="original-text">Let</span><math alttext="x_{i}" class="ltx_Math" display="inline" id="S3.p10.1.m1" intent=":literal"><semantics><msub><mi>x</mi><mi>i</mi></msub><annotation encoding="application/x-tex">x_{i}</annotation></semantics></math> denote an utterance with ground-truth emotion <math alttext="y_{i}" class="ltx_Math" display="inline" id="S3.p10.2.m2" intent=":literal"><semantics><msub><mi>y</mi><mi>i</mi></msub><annotation encoding="application/x-tex">y_{i}</annotation></semantics></math><span class="translated-text">，并让</span><span class="original-text">, and let</span><math alttext="\mathbf{c}_{i}" class="ltx_Math" display="inline" id="S3.p10.3.m3" intent=":literal"><semantics><msub><mi>𝐜</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\mathbf{c}_{i}</annotation></semantics></math><span class="translated-text">是其相关的概念标记序列（源自</span><span class="original-text">be its associated concept-token sequence (derived from</span><em class="ltx_emph ltx_font_italic" id="S3.p10.4.1"><span class="translated-text">电子GeMAPS</span><span class="original-text">eGeMAPS</span></em><span class="translated-text">）。对于每个话语，我们构建扰动的标记序列</span><span class="original-text">). For each utterance, we construct perturbed token sequences</span><math alttext="\tilde{\mathbf{c}}_{i}" class="ltx_Math" display="inline" id="S3.p10.4.m4" intent=":literal"><semantics><msub><mover accent="true"><mi>𝐜</mi><mo>~</mo></mover><mi>i</mi></msub><annotation encoding="application/x-tex">\tilde{\mathbf{c}}_{i}</annotation></semantics></math><span class="translated-text">并运行相同的模型/提示模板，测量 UAR 和混淆模式的变化。</span><span class="original-text">and run the same model/prompt template, measuring changes in UAR and confusion patterns.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="378" id="S3.F3.g1" src="https://arxiv.org/html/2606.07309v1/x3.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Token corruption curve on AF3: UAR as a function of token corruption probability <math alttext="p" class="ltx_Math" display="inline" id="S3.F3.7.m1" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math> (mean <math alttext="\pm" class="ltx_Math" display="inline" id="S3.F3.8.m2" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math> 95% CI across seeds). Performance degrades monotonically as token quality decreases (Spearman <math alttext="\rho\!=\!-.90" class="ltx_Math" display="inline" id="S3.F3.9.m3" intent=":literal"><semantics><mrow><mi>ρ</mi><mo lspace="0.108em" rspace="0.108em">=</mo><mrow><mo>−</mo><mn>.90</mn></mrow></mrow><annotation encoding="application/x-tex">\rho\!=\!-.90</annotation></semantics></math>, <math alttext="p\!&lt;\!10^{-4}" class="ltx_Math" display="inline" id="S3.F3.10.m4" intent=":literal"><semantics><mrow><mi>p</mi><mo lspace="0.108em" rspace="0.108em">&lt;</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">p\!&lt;\!10^{-4}</annotation></semantics></math> across the <math alttext="5\times 5" class="ltx_Math" display="inline" id="S3.F3.11.m5" intent=":literal"><semantics><mrow><mn>5</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">5\times 5</annotation></semantics></math> <math alttext="p" class="ltx_Math" display="inline" id="S3.F3.12.m6" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>/seed runs), with the correct-tokens baseline shown as a reference.</figcaption>
+</figure>
+<div class="ltx_para" id="S3.p11">
+<p class="ltx_p" id="S3.p11.1"><span class="ltx_text ltx_font_bold" id="S3.p11.1.1">Correct (aligned concept tokens).</span><span class="translated-text">我们为每个话语附加原始标记，即</span><span class="original-text">We append the original tokens for each utterance, i.e.,</span><math alttext="\tilde{\mathbf{c}}_{i}=\mathbf{c}_{i}" class="ltx_Math" display="inline" id="S3.p11.1.m1" intent=":literal"><semantics><mrow><msub><mover accent="true"><mi>𝐜</mi><mo>~</mo></mover><mi>i</mi></msub><mo>=</mo><msub><mi>𝐜</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">\tilde{\mathbf{c}}_{i}=\mathbf{c}_{i}</annotation></semantics></math><span class="translated-text">。此条件表示预期的令牌对齐设置。</span><span class="original-text">. This condition represents the intended, token-aligned setting.</span></p>
+</div>
+<div class="ltx_para" id="S3.p12">
+<p class="ltx_p" id="S3.p12.2"><span class="ltx_text ltx_font_bold" id="S3.p12.2.1"><span class="translated-text">随机播放（未对齐的概念标记，保留分布）。</span><span class="original-text">Shuffle (misaligned concept tokens, distribution preserved).</span></span><span class="translated-text">我们在评估分割内的话语中随机重新分配令牌序列：</span><span class="original-text">We randomly reassign token sequences across utterances within the evaluation split:</span><math alttext="\tilde{\mathbf{c}}_{i}=\mathbf{c}_{\pi(i)}" class="ltx_Math" display="inline" id="S3.p12.1.m1" intent=":literal"><semantics><mrow><msub><mover accent="true"><mi>𝐜</mi><mo>~</mo></mover><mi>i</mi></msub><mo>=</mo><msub><mi>𝐜</mi><mrow><mi>π</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>i</mi><mo stretchy="false">)</mo></mrow></mrow></msub></mrow><annotation encoding="application/x-tex">\tilde{\mathbf{c}}_{i}=\mathbf{c}_{\pi(i)}</annotation></semantics></math> for a random permutation <math alttext="\pi" class="ltx_Math" display="inline" id="S3.p12.2.m2" intent=":literal"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math><span class="translated-text">。这保留了标记的边际分布，但破坏了音频和概念标记之间的样本级别对齐。我们重复多个种子并报告平均值（以及适用的置信区间）。</span><span class="original-text">. This preserves the marginal distribution of tokens but breaks the sample-level alignment between audio and concept tokens. We repeat over multiple seeds and report the mean (and confidence intervals where applicable).</span></p>
+</div>
+<div class="ltx_para" id="S3.p13">
+<p class="ltx_p" id="S3.p13.1"><span class="ltx_text ltx_font_bold" id="S3.p13.1.1"><span class="translated-text">冲突（矛盾的概念标记）。</span><span class="original-text">Conflict (contradictory concept tokens).</span></span><span class="translated-text">我们通过反转每个声学特征的序数箱（例如，VERY_LOW 到 VERY_HIGH、LOW 到 HIGH、MID 到 MID）来构建系统地与原始标记相矛盾的标记。
+因此，我们用相反的类别替换每个概念并将其附加为</span><span class="original-text">We construct tokens that systematically contradict the original ones by inverting the ordinal bins for each acoustic feature (e.g., VERY_LOW to VERY_HIGH, LOW to HIGH, MID to MID).
+Thus, we replace each concept by its opposite category and append it as</span><math alttext="\tilde{\mathbf{c}}_{i}" class="ltx_Math" display="inline" id="S3.p13.1.m1" intent=":literal"><semantics><msub><mover accent="true"><mi>𝐜</mi><mo>~</mo></mover><mi>i</mi></msub><annotation encoding="application/x-tex">\tilde{\mathbf{c}}_{i}</annotation></semantics></math><span class="translated-text">。这与 Shuffle 不同，Shuffle 保留了分割中的边缘分布，但打破了样本级别的对齐，而不强制矛盾。</span><span class="original-text">. This differs from Shuffle, which preserves marginal distributions across the split but breaks sample-level alignment without enforcing contradiction.</span></p>
+</div>
+<div class="ltx_para" id="S3.p14">
+<p class="ltx_p" id="S3.p14.6"><span class="ltx_text ltx_font_bold" id="S3.p14.1.1"><span class="translated-text">腐败（</span><span class="original-text">Corrupt(</span><math alttext="p" class="ltx_Math" display="inline" id="S3.p14.1.1.m1" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math><span class="translated-text">）（分级令牌损坏）。</span><span class="original-text">) (graded token corruption).</span></span><span class="translated-text">为了探究对辅助线索的敏感性，我们用概率破坏概念标记</span><span class="original-text">To probe sensitivity to the auxiliary cues, we corrupt concept tokens with probability</span><math alttext="p\in[0,1]" class="ltx_Math" display="inline" id="S3.p14.2.m1" intent=":literal"><semantics><mrow><mi>p</mi><mo>∈</mo><mrow><mo stretchy="false">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false">]</mo></mrow></mrow><annotation encoding="application/x-tex">p\in[0,1]</annotation></semantics></math><span class="translated-text">。对于每个令牌位置，概率</span><span class="original-text">. For each token position, with probability</span><math alttext="1-p" class="ltx_Math" display="inline" id="S3.p14.3.m2" intent=":literal"><semantics><mrow><mn>1</mn><mo>−</mo><mi>p</mi></mrow><annotation encoding="application/x-tex">1-p</annotation></semantics></math><span class="translated-text">我们保留原始令牌并有概率</span><span class="original-text">we keep the original token and with probability</span><math alttext="p" class="ltx_Math" display="inline" id="S3.p14.4.m3" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math><span class="translated-text">我们用来自相同令牌词汇表的随机采样令牌替换它。变化</span><span class="original-text">we replace it with a randomly sampled token from the same token vocabulary. Varying</span><math alttext="p" class="ltx_Math" display="inline" id="S3.p14.5.m4" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math><span class="translated-text">产生一个</span><span class="original-text">yields an</span><em class="ltx_emph ltx_font_italic" id="S3.p14.6.2"><span class="translated-text">腐败曲线</span><span class="original-text">corruption curve</span></em><span class="translated-text">：如果模型依赖于概念标记，则性能应单调下降，如下所示</span><span class="original-text">: if the model relies on the concept tokens, performance should degrade monotonically as</span><math alttext="p" class="ltx_Math" display="inline" id="S3.p14.6.m5" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math><span class="translated-text">增加。</span><span class="original-text">increases.</span></p>
+</div>
+<div class="ltx_para" id="S3.p15">
+<p class="ltx_p" id="S3.p15.1"><span class="translated-text">在所有干预中，音频输入保持恒定；仅修改附加的标记。这隔离了结构化线索对模型决策过程的贡献。</span><span class="original-text">Across all interventions, the audio input is held constant; only the appended tokens are modified. This isolates the contribution of structured cues to the model’s decision process.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span class="ltx_text ltx_font_smallcaps" id="S4.1.1"><span class="translated-text">结果</span><span class="original-text">Results</span></span>
+</h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.6"><a class="ltx_ref" href="#S3.T2" title="In III Methodology ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">Tables</span>˜<span class="ltx_text ltx_ref_tag">II</span></a><span class="translated-text">和</span><span class="original-text">and</span><a class="ltx_ref" href="#S3.T3" title="Table III ‣ III Methodology ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">III</span></a><span class="translated-text">报告 UAR，不带附加概念标记（</span><span class="original-text">report UAR without appended concept tokens (</span><math alttext="UAR^{-}" class="ltx_Math" display="inline" id="S4.p1.1.m1" intent=":literal"><semantics><mrow><mi>U</mi><mo lspace="0em" rspace="0em">​</mo><mi>A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi>R</mi><mo>−</mo></msup></mrow><annotation encoding="application/x-tex">UAR^{-}</annotation></semantics></math><span class="translated-text">）和概念标记（</span><span class="original-text">) and with concept tokens (</span><math alttext="UAR^{+}" class="ltx_Math" display="inline" id="S4.p1.2.m2" intent=":literal"><semantics><mrow><mi>U</mi><mo lspace="0em" rspace="0em">​</mo><mi>A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi>R</mi><mo>+</mo></msup></mrow><annotation encoding="application/x-tex">UAR^{+}</annotation></semantics></math><span class="translated-text">）。
+在 AIBO5（开发）上，代币增强会在所有评估的 ALM 中带来一致的收益； qw-omni 获得了最强的整体开发性能（</span><span class="original-text">).
+On AIBO5 (dev), token augmentation causes consistent gains across all evaluated ALMs; qw-omni attains the strongest overall dev performance (</span><math alttext="UAR^{+}=.279" class="ltx_Math" display="inline" id="S4.p1.3.m3" intent=":literal"><semantics><mrow><mrow><mi>U</mi><mo lspace="0em" rspace="0em">​</mo><mi>A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi>R</mi><mo>+</mo></msup></mrow><mo>=</mo><mn>.279</mn></mrow><annotation encoding="application/x-tex">UAR^{+}=.279</annotation></semantics></math><span class="translated-text">），并且 AF3 跨分割的可靠性得到提高。
+在 AIBO5（测试）和 IEMOCAP（4 路）上，概念代币再次改进了 qw-omni 和 AF3 的 UAR，其中 AF3 取得了最佳的整体 IEMOCAP 结果（</span><span class="original-text">), and AF3 improves reliably across splits.
+On AIBO5 (test) and IEMOCAP (4-way), concept tokens again improve UAR for both qw-omni and AF3, with AF3 achieving the best overall IEMOCAP result (</span><math alttext="UAR^{+}=.776" class="ltx_Math" display="inline" id="S4.p1.4.m4" intent=":literal"><semantics><mrow><mrow><mi>U</mi><mo lspace="0em" rspace="0em">​</mo><mi>A</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi>R</mi><mo>+</mo></msup></mrow><mo>=</mo><mn>.776</mn></mrow><annotation encoding="application/x-tex">UAR^{+}=.776</annotation></semantics></math><span class="translated-text">）；在 IEMOCAP 上，两种代币收益都很显着（</span><span class="original-text">); on IEMOCAP, both token gains are significant (</span><math alttext="p\!&lt;\!10^{-5}" class="ltx_Math" display="inline" id="S4.p1.5.m5" intent=":literal"><semantics><mrow><mi>p</mi><mo lspace="0.108em" rspace="0.108em">&lt;</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>5</mn></mrow></msup></mrow><annotation encoding="application/x-tex">p\!&lt;\!10^{-5}</annotation></semantics></math><span class="translated-text">，引导 CI 开启</span><span class="original-text">, with bootstrap CIs on</span><math alttext="\Delta" class="ltx_Math" display="inline" id="S4.p1.6.m6" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math><span class="translated-text">不包括零）。</span><span class="original-text">excluding zero).</span></p>
+</div>
+<div class="ltx_para" id="S4.p2">
+<p class="ltx_p" id="S4.p2.11"><span class="translated-text">接下来我们分析 AF3 在受控的、仅令牌干预下的令牌敏感性。对齐的标记明显优于每个扰动、冲突（</span><span class="original-text">We next analyse token sensitivity on AF3 under controlled, token-only interventions. Aligned tokens significantly outperform every perturbation, Conflict (</span><math alttext="\Delta" class="ltx_Math" display="inline" id="S4.p2.1.m1" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math><span class="translated-text">阿拉伯联合酋长国</span><span class="original-text">UAR</span><math alttext="=+.018" class="ltx_Math" display="inline" id="S4.p2.2.m2" intent=":literal"><semantics><mrow><mi></mi><mo>=</mo><mrow><mo>+</mo><mn>.018</mn></mrow></mrow><annotation encoding="application/x-tex">=+.018</annotation></semantics></math>, <math alttext="95\%\,\mathrm{CI}\,[.011,.025]" class="ltx_Math" display="inline" id="S4.p2.3.m3" intent=":literal"><semantics><mrow><mrow><mn>95</mn><mo>%</mo></mrow><mo lspace="0.170em" rspace="0em">​</mo><mi>CI</mi><mo lspace="0.170em" rspace="0em">​</mo><mrow><mo stretchy="false">[</mo><mn>.011</mn><mo>,</mo><mn>.025</mn><mo stretchy="false">]</mo></mrow></mrow><annotation encoding="application/x-tex">95\%\,\mathrm{CI}\,[.011,.025]</annotation></semantics></math>, <math alttext="p\!=\!4\times 10^{-7}" class="ltx_Math" display="inline" id="S4.p2.4.m4" intent=":literal"><semantics><mrow><mi>p</mi><mo lspace="0.108em" rspace="0.108em">=</mo><mrow><mn>4</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>7</mn></mrow></msup></mrow></mrow><annotation encoding="application/x-tex">p\!=\!4\times 10^{-7}</annotation></semantics></math><span class="translated-text">）、随机播放和完全腐败（两者</span><span class="original-text">), Shuffle, and full Corruption (both</span><math alttext="p\!&lt;\!10^{-4}" class="ltx_Math" display="inline" id="S4.p2.5.m5" intent=":literal"><semantics><mrow><mi>p</mi><mo lspace="0.108em" rspace="0.108em">&lt;</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">p\!&lt;\!10^{-4}</annotation></semantics></math><span class="translated-text">），并且 UAR 随着腐败的增加而单调退化（Spearman</span><span class="original-text">), and UAR degrades monotonically as corruption increases (Spearman</span><math alttext="\rho\!=\!-.90" class="ltx_Math" display="inline" id="S4.p2.6.m6" intent=":literal"><semantics><mrow><mi>ρ</mi><mo lspace="0.108em" rspace="0.108em">=</mo><mrow><mo>−</mo><mn>.90</mn></mrow></mrow><annotation encoding="application/x-tex">\rho\!=\!-.90</annotation></semantics></math>, <math alttext="p\!&lt;\!10^{-4}" class="ltx_Math" display="inline" id="S4.p2.7.m7" intent=":literal"><semantics><mrow><mi>p</mi><mo lspace="0.108em" rspace="0.108em">&lt;</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">p\!&lt;\!10^{-4}</annotation></semantics></math>; <a class="ltx_ref" href="#S3.F3" title="In III Methodology ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">Figure</span>˜<span class="ltx_text ltx_ref_tag">3</span></a>). <a class="ltx_ref" href="#S3.F2" title="In III Methodology ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">Figure</span>˜<span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">结果表明，相对于对齐的标记，扰动会适度增加中性混乱，这与特定类别线索的减弱相一致。
+至关重要的是，扰动条件仍然接近并略高于纯音频基线：冲突、洗牌和腐败都略微优于它（冲突</span><span class="original-text">shows that perturbations modestly increase Neutral confusions relative to aligned tokens, consistent with a weakening of class-specific cues.
+Crucially, the perturbed conditions remain close to, and slightly above, the audio-only baseline: Conflict, Shuffle, and Corruption all outperform it marginally (Conflict</span><math alttext=".758" class="ltx_Math" display="inline" id="S4.p2.8.m8" intent=":literal"><semantics><mn>.758</mn><annotation encoding="application/x-tex">.758</annotation></semantics></math><span class="translated-text">与</span><span class="original-text">vs.</span><math alttext=".754" class="ltx_Math" display="inline" id="S4.p2.9.m9" intent=":literal"><semantics><mn>.754</mn><annotation encoding="application/x-tex">.754</annotation></semantics></math>, <math alttext="p\!=\!.014" class="ltx_Math" display="inline" id="S4.p2.10.m10" intent=":literal"><semantics><mrow><mi>p</mi><mo lspace="0.108em" rspace="0.108em">=</mo><mn>.014</mn></mrow><annotation encoding="application/x-tex">p\!=\!.014</annotation></semantics></math><span class="translated-text">;霍尔姆校正</span><span class="original-text">; Holm-corrected</span><math alttext="p\!&lt;\!.05" class="ltx_Math" display="inline" id="S4.p2.11.m11" intent=":literal"><semantics><mrow><mi>p</mi><mo lspace="0.108em" rspace="0.108em">&lt;</mo><mn>.05</mn></mrow><annotation encoding="application/x-tex">p\!&lt;\!.05</annotation></semantics></math><span class="translated-text">）。这表明一个小</span><span class="original-text">). This suggests a small</span><em class="ltx_emph ltx_font_italic" id="S4.p2.11.1"><span class="translated-text">事先格式化</span><span class="original-text">format prior</span></em><span class="translated-text">：结构化代币块本身提供了一些好处，与代币内容是否正确无关。然而，这种效果比对齐令牌的收益要小得多。事实上，矛盾的标记不会使性能低于基线，这表明 AF3 并不是简单地遵循符号提示通道，而是将其与音频集成在一起。</span><span class="original-text">: the structured token block itself provides some benefit, independent of whether the token content is correct. However, this effect is much smaller than the gain from aligned tokens. The fact that contradictory tokens do not drive performance below the baseline indicates that AF3 does not simply follow the symbolic cue channel, but integrates it with the audio.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span class="ltx_text ltx_font_smallcaps" id="S5.1.1"><span class="translated-text">结论</span><span class="original-text">Conclusion</span></span>
+</h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">最近关于潜在空间推理的工作认为，将 LLM“思维”限制于语言标记可能不是最理想的，并且当模型直接以连续表示形式运行而不是产生详细的标记链时，可以出现更具表现力的推理</span><span class="original-text">Recent work on latent-space reasoning argues that constraining LLM “thinking” to language tokens can be suboptimal, and that more expressive reasoning can emerge when models operate directly in continuous representations rather than producing verbose token chains</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="Training large language models to reason in a continuous latent space">19</a>]</cite><span class="translated-text">。这种观点对于 SER 来说尤其自然：情感特征本质上是连续的（韵律、语音质量、频谱形状），并且现代 ALM 已经通过音频编码器将语音作为连续嵌入来摄取。</span><span class="original-text">. This perspective is particularly natural for SER: affective features are intrinsically continuous (prosody, voice quality, spectral shape), and modern ALMs already ingest speech as continuous embeddings via an audio encoder.</span></p>
+</div>
+<div class="ltx_para" id="S5.p2">
+<p class="ltx_p" id="S5.p2.1"><span class="translated-text">我们的结果支持了这一观点。保持音频固定并且仅扰动概念标记隔离了语言通道的贡献。
+我们观察到两个属性：（i）</span><span class="original-text">Our results support this view. Holding audio fixed and perturbing only concept tokens isolates the contribution of the language channel.
+We observe two properties: (i)</span><em class="ltx_emph ltx_font_italic" id="S5.p2.1.1"><span class="translated-text">令牌敏感度：</span><span class="original-text">token sensitivity:</span></em><span class="translated-text">对齐的概念标记可以提高 SER，并且逐渐破坏它们会产生单调降级； (二)</span><span class="original-text">aligned concept tokens improve SER, and progressively corrupting them yields a monotonic degradation; and (ii)</span><em class="ltx_emph ltx_font_italic" id="S5.p2.1.2"><span class="translated-text">强大的后备：</span><span class="original-text">robust fallback:</span></em><span class="translated-text">预测不会在误导性线索下崩溃。即使是矛盾的代币也略高于无代币基线（</span><span class="original-text">predictions do not collapse under misleading cues. Even contradictory tokens stay marginally above the no-token baseline (</span><math alttext="p\!&lt;\!.05" class="ltx_Math" display="inline" id="S5.p2.1.m1" intent=":literal"><semantics><mrow><mi>p</mi><mo lspace="0.108em" rspace="0.108em">&lt;</mo><mn>.05</mn></mrow><annotation encoding="application/x-tex">p\!&lt;\!.05</annotation></semantics></math><span class="translated-text">），表明模型将符号提示通道与音频集成在一起，而不是简单地跟随它，而错误则转向中性。
+这与 ALM 可用的音频信号和其他信息路径的依赖一致，例如其强大的语音转录能力和语言标记的使用，而不是纯粹的声音提示。</span><span class="original-text">), indicating that the model integrates the symbolic cue channel with the audio rather than simply following it, while errors shift toward Neutral.
+This is consistent with reliance on the audio signal and other information pathways available to ALMs, such as their strong speech transcription capability and use of linguistic markers, rather than purely acoustic cueing.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib22">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Adebayo, J. Gilmer, M. Muelly, I. Goodfellow, M. Hardt, and B. Kim</span><span class="ltx_text ltx_bib_year"> (2018)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Sanity checks for saliency maps</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Advances in Neural Information Processing Systems</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. no pagination</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p3.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib23">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Akman, Q. Sun, and B. W. Schuller</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Improving audio explanations using audio language models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Signal Processing Letters</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p3.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib38">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Akman, Q. Sun, and B. W. Schuller</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Improving audio explanations using audio language models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Signal Processing Letters</span> <span class="ltx_text ltx_bib_volume">32</span> (<span class="ltx_text ltx_bib_number"></span>), <span class="ltx_text ltx_bib_pages"> pp. 741–745</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1109/LSP.2025.3532218" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib20">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">N. Antoniou, A. Katsamanis, T. Giannakopoulos, and S. Narayanan</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Designing and evaluating speech emotion recognition systems: a reality check case study with iemocap</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">ICASSP 2023-2023 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 1–5</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.p3.1" title="III Methodology ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§III</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib6">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Baevski, Y. Zhou, A. Mohamed, and M. Auli</span><span class="ltx_text ltx_bib_year"> (2020)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Wav2vec 2.0: a framework for self-supervised learning of speech representations</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Advances in Neural Information Processing Systems</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 12449–12460</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib18">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Batliner, S. Steidl, and E. Nöth</span><span class="ltx_text ltx_bib_year"> (2008)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Releasing a thoroughly annotated and processed spontaneous emotional database: the FAU aibo emotion corpus</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of LREC</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. no pagination</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.p2.1" title="III Methodology ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§III</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib45">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D. Bhattacharya, A. Kulkarni, and S. Ganapathy</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Benchmarking and confidence evaluation of lalms for temporal reasoning</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Interspeech 2025</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 2068–2072</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.21437/Interspeech.2025-1228" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://www.isca-archive.org/interspeech_2025/bhattacharya25b_interspeech.html" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib17">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">C. Busso, M. Bulut, C. Lee, A. Kazemzadeh, E. Mower, S. Kim, J. N. Chang, S. Lee, and S. S. Narayanan</span><span class="ltx_text ltx_bib_year"> (2008)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">IEMOCAP: interactive emotional dyadic motion capture database</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Language Resources and Evaluation</span> <span class="ltx_text ltx_bib_volume">42</span> (<span class="ltx_text ltx_bib_number">4</span>), <span class="ltx_text ltx_bib_pages"> pp. 335–359</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.p3.1" title="III Methodology ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§III</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib8">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Chen, C. Wang, Z. Chen, Y. Wu, S. Liu, Z. Chen, J. Li, N. Kanda, T. Yoshioka, X. Xiao, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">WavLM: large-scale self-supervised pre-training for full stack speech processing</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Journal of Selected Topics in Signal Processing</span> <span class="ltx_text ltx_bib_volume">16</span> (<span class="ltx_text ltx_bib_number">6</span>), <span class="ltx_text ltx_bib_pages"> pp. 1505–1518</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib33">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">X. Chen, W. Hu, Z. Yu, L. Xu, Z. Wang, J. Wu, Y. Ding, M. Wu, S. Wen, Y. Zhang, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Audio-reasoner: improving reasoning capability in large audio language models</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">arXiv preprintAccepted by EMNLP 2025</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2503.02318</span>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.48550/arXiv.2503.02318" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2503.02318" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib12">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Deshmukh, B. Elizalde, R. Singh, and H. Wang</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Pengi: an audio language model for audio tasks</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Advances in Neural Information Processing Systems</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. no pagination</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.p7.1" title="III Methodology ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§III</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib26">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. DeYoung, S. Jain, N. F. Rajani, E. Lehman, C. Xiong, and B. C. Wallace</span><span class="ltx_text ltx_bib_year"> (2020)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">ERASER: a benchmark to evaluate rationalized NLP models</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of ACL</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. no pagination</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p3.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib9">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">B. Elizalde, S. Deshmukh, M. Al Ismail, and H. Wang</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">CLAP: learning audio concepts from natural language supervision</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of ICASSP</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_place">Rhodes, Greece</span>, <span class="ltx_text ltx_bib_pages"> pp. 1–5</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>,
+<a class="ltx_ref" href="#S3.p7.1" title="III Methodology ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§III</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib3">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">F. Eyben, K. R. Scherer, B. W. Schuller, J. Sundberg, E. André, C. Busso, L. Y. Devillers, J. Epps, P. Laukka, S. S. Narayanan, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2016)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">The geneva minimalistic acoustic parameter set (gemaps) for voice research and affective computing</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Transactions on Affective Computing</span> <span class="ltx_text ltx_bib_volume">7</span> (<span class="ltx_text ltx_bib_number">2</span>), <span class="ltx_text ltx_bib_pages"> pp. 190–202</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S1.p4.1" title="I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib1">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">F. Eyben, M. Wöllmer, and B. W. Schuller</span><span class="ltx_text ltx_bib_year"> (2010)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">OpenSMILE: the munich versatile and fast open-source audio feature extractor</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 18th ACM International Conference on Multimedia</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_place">Firenze, Italy</span>, <span class="ltx_text ltx_bib_pages"> pp. 1459–1462</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib31">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Fan, R. Ren, J. Li, R. Pandey, P. G. Shivakumar, I. Bulyko, A. Gandhe, G. Liu, and Y. Gu</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Incentivizing consistent, effective and scalable reasoning capability in audio llms via reasoning process rewards</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2510.20867</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p5.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib36">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Gao, Z. Yu, S. Geng, X. Han, Z. Wu, J. Li, S. Li, S. Cao, J. Wu, X. Hu, Z. Chen, J. Wang, K. Chen, F. Huang, and J. Zhou</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">ECHO: towards advanced audio comprehension via audio-interleaved reasoning</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">arXiv preprintAccepted by ICLR 2026</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2602.11909</span>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.48550/arXiv.2602.11909" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2602.11909" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib14">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Goel, S. Ghosh, J. Kim, S. Kumar, Z. Kong, S. G. Lee, C. H. Yang, R. Duraiswami, D. Manocha, R. Valle, and B. Catanzaro</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Audio flamingo 3: advancing audio intelligence with fully open large audio language models</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">arXiv preprint</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2507.08128</span></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>,
+<a class="ltx_ref" href="#S3.p7.1" title="III Methodology ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§III</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib2">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Hao, S. Sukhbaatar, D. Su, X. Li, Z. Hu, J. Weston, and Y. Tian</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Training large language models to reason in a continuous latent space</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2412.06769</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S5.p1.1" title="V Conclusion ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§V</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib7">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">W. Hsu, B. Bolte, Y. H. Tsai, K. Lakhotia, R. Salakhutdinov, and A. Mohamed</span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">HuBERT: self-supervised speech representation learning by masked prediction of hidden units</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE/ACM Transactions on Audio, Speech, and Language Processing</span> <span class="ltx_text ltx_bib_volume">29</span>, <span class="ltx_text ltx_bib_pages"> pp. 3451–3460</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib27">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Jacovi and Y. Goldberg</span><span class="ltx_text ltx_bib_year"> (2020)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Towards faithfully interpretable NLP systems: how should we define and evaluate faithfulness?</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of ACL</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. no pagination</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p3.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib25">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">L. Jain, P. Mousavi, M. Ravanelli, and C. Subakan</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Investigating faithfulness in large audio language models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2509.22363</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p3.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib21">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Jain and B. C. Wallace</span><span class="ltx_text ltx_bib_year"> (2019)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Attention is not explanation</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of NAACL</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. no pagination</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p3.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib10">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">X. Jing, A. Triantafyllopoulos, and B. Schuller</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">ParaCLAP: towards a general language-audio model for computational paralinguistic tasks</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of INTERSPEECH</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_place">Kos Island, Greece</span>, <span class="ltx_text ltx_bib_pages"> pp. no pagination</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>,
+<a class="ltx_ref" href="#S3.p7.1" title="III Methodology ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§III</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib11">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">X. Jing, J. Wang, A. Triantafyllopoulos, M. Gerczuk, S. Amiriparian, J. Luo, and B. Schuller</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">SmoothCLAP: soft-target enhanced contrastive language-audio pretraining for affective computing</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">arXiv preprint</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2601.12591</span></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>,
+<a class="ltx_ref" href="#S3.T3" title="In III Methodology ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">TABLE III</span></a>,
+<a class="ltx_ref" href="#S3.p7.1" title="III Methodology ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§III</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib46">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">W. Kang, J. Jia, C. Wu, W. Zhou, E. Lakomkin, Y. Gaur, L. Sari, S. Kim, K. Li, J. Mahadeokar, and O. Kalinli</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Frozen large language models can perceive paralinguistic aspects of speech</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Interspeech 2025</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 4323–4327</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.21437/Interspeech.2025-166" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://www.isca-archive.org/interspeech_2025/kang25_interspeech.html" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib42">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">C. Kuan, W. Huang, and H. Lee</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Understanding sounds, missing the questions: the challenge of object hallucination in large audio-language models</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Interspeech 2024</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 4144–4148</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.21437/Interspeech.2024-1076" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://www.isca-archive.org/interspeech_2024/kuan24_interspeech.html" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib43">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">C. Kuan and H. Lee</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Teaching audio-aware large language models what does not hear: mitigating hallucinations through synthesized negative samples</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Interspeech 2025</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 2073–2077</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.21437/Interspeech.2025-324" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://www.isca-archive.org/interspeech_2025/kuan25_interspeech.html" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib41">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">H. Liu, Y. Wang, Z. Cheng, R. Wu, Q. Gu, Y. Wang, and Y. Wang</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">VocalBench: benchmarking the vocal conversational abilities for speech interaction models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2505.15727</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2505.15727" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib37">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Nfissi, W. Bouachir, N. Bouguila, and B. Mishara</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Unveiling hidden factors: explainable ai for feature boosting in speech emotion recognition: n. alaa et al.</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Applied Intelligence</span> <span class="ltx_text ltx_bib_volume">54</span> (<span class="ltx_text ltx_bib_number">11</span>), <span class="ltx_text ltx_bib_pages"> pp. 7046–7069</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib29">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Peng, Y. Wang, B. Li, Y. Guo, H. Wang, Y. Fang, Y. Xi, H. Li, X. Li, K. Zhang, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A survey on speech large language models for understanding</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Journal of Selected Topics in Signal Processing</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p5.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_book" id="bib.bib4">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[32]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">B. Schuller and A. Batliner</span><span class="ltx_text ltx_bib_year"> (2014)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Computational paralinguistics: emotion, affect and personality in speech and language processing</span>.
+</span>
+<span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">Wiley</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib16">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[33]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">B. Schuller, A. Mallol-Ragolta, A. P. Almansa, I. Tsangko, M. M. Amin, A. Semertzidou, L. Christ, and S. Amiriparian</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Affective computing has changed: the foundation model disruption</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">npj Artificial Intelligence</span> <span class="ltx_text ltx_bib_volume">2</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 16</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib19">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[34]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">B. Schuller, S. Steidl, and A. Batliner</span><span class="ltx_text ltx_bib_year"> (2009)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">The interspeech 2009 emotion challenge</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of INTERSPEECH</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_place">Brighton, United Kingdom</span>, <span class="ltx_text ltx_bib_pages"> pp. no pagination</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>,
+<a class="ltx_ref" href="#S3.p2.1" title="III Methodology ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§III</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib30">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[35]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Su, J. Bai, Q. Xu, K. Xu, and Y. Dou</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Audio-language models for audio-centric tasks: a survey</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2501.15177</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p5.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib24">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[36]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">The European Parliament</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Amendments adopted by the European Parliament on 14 June 2023 on the proposal for a regulation of the European Parliament and of the Council on laying down harmonised rules on artificial intelligence (Artificial Intelligence Act) and amending certain Union legislative acts (COM(2021)0206 – C9-0146/2021 – 2021/0106(COD))</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://www.europarl.europa.eu/doceo/document/TA-9-2023-0236_EN.html" title="">https://www.europarl.europa.eu/doceo/document/TA-9-2023-0236_EN.html</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib15">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[37]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Triantafyllopoulos, I. Tsangko, A. Gebhard, A. Mesaros, T. Virtanen, and B. W. Schuller</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Computer audition: from task-specific machine learning to foundation models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Proceedings of the IEEE</span> <span class="ltx_text ltx_bib_volume">113</span> (<span class="ltx_text ltx_bib_number">4</span>), <span class="ltx_text ltx_bib_pages"> pp. 317–343</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.1109/JPROC.2025.3593952" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib5">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[38]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Wagner, A. Triantafyllopoulos, H. Wierstorf, M. Schmitt, F. Burkhardt, F. Eyben, and B. W. Schuller</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Dawn of the transformer era in speech emotion recognition: closing the valence gap</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Transactions on Pattern Analysis and Machine Intelligence</span> <span class="ltx_text ltx_bib_volume">45</span> (<span class="ltx_text ltx_bib_number">2</span>), <span class="ltx_text ltx_bib_pages"> pp. 10745–10759</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib39">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[39]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">B. Wang, X. Zou, G. Lin, S. Sun, Z. Liu, W. Zhang, Z. Liu, A. Aw, and N. F. Chen</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">AudioBench: a universal benchmark for audio large language models</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 2025 Conference of the Nations of the Americas Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_place">Albuquerque, New Mexico</span>, <span class="ltx_text ltx_bib_pages"> pp. 4297–4316</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.18653/v1/2025.naacl-long.218" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://aclanthology.org/2025.naacl-long.218/" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib13">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[40]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Xu, Z. Guo, J. He, H. Hu, T. He, S. Bai, K. Chen, J. Wang, Y. Fan, K. Dang, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Qwen2.5-omni technical report</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">arXiv preprint</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2503.20215</span></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S3.p7.1" title="III Methodology ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§III</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib35">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[41]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Xu <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Qwen3-omni technical report</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">arXiv preprint</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2509.17765</span>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.48550/arXiv.2509.17765" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2509.17765" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib34">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[42]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Xu, H. Zhou, J. Wu, J. Wang, P. Zhu, H. Zhang, S. Bai, J. Lin, Z. Yu, K. Dang, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Qwen2-audio: improving audio understanding in large language models</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">arXiv preprint</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2407.10759</span>,
+<a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.48550/arXiv.2407.10759" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2407.10759" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>,
+<a class="ltx_ref" href="#S3.p7.1" title="III Methodology ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§III</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib44">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[43]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">C. Yang, N. Ho, Y. Piao, and H. Lee</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">SAKURA: on the multi-hop reasoning of large audio-language models based on speech and audio information</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Interspeech 2025</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 1788–1792</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.21437/Interspeech.2025-839" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://www.isca-archive.org/interspeech_2025/yang25g_interspeech.html" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib40">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[44]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Q. Yang, J. Xu, W. Liu, Y. Chu, Z. Jiang, X. Zhou, Y. Leng, Y. Lv, Z. Zhao, C. Zhou, and J. Zhou</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">AIR-bench: benchmarking large audio-language models via generative comprehension</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 62nd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_place">Bangkok, Thailand</span>, <span class="ltx_text ltx_bib_pages"> pp. 1979–1998</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.18653/v1/2024.acl-long.109" title="">Document</a>,
+<a class="ltx_ref ltx_bib_external" href="https://aclanthology.org/2024.acl-long.109/" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib28">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[45]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">X. Zhao, B. Schuller, and B. Sisman</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Discovering and causally validating emotion-sensitive neurons in large audio-language models</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">arXiv preprint</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2601.03115</span></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p3.1" title="II Related Work ‣ Acoustic Cue Alignment in Audio Language Models for Speech Emotion Recognition"><span class="ltx_text ltx_ref_tag">§II</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2606.07309v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div aria-hidden="true" id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
