@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">当大型语言模型在医疗保健领域失败时：评估提示变化的敏感性</span><span class="original-text">When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 6 月 5 日星期五 12:56:50 生成 http://dlmf.nist.gov/LaTeXML/。</span><span class="original-text">Generated on Fri Jun  5 12:56:50 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2606.07237" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2606.07237" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2606.07237v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2606.07237v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Related Work</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS1" title="In 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.1 </span>Prompt Sensitivity in General LLMs</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS2" title="In 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.2 </span>Prompt Sensitivity in Healthcare LLMs</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Problem Statement and Methodology</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S3.SS1" title="In 3 Problem Statement and Methodology ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Sensitivity Analysis Framework</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection">
+<a class="ltx_ref" href="#S3.SS1.SSS1" title="In 3.1 Sensitivity Analysis Framework ‣ 3 Problem Statement and Methodology ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1.1 </span>Prompt Generation Strategy</span></a>
+<ol class="ltx_toclist ltx_toclist_subsubsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS1.SSS1.Px1" title="In 3.1.1 Prompt Generation Strategy ‣ 3.1 Sensitivity Analysis Framework ‣ 3 Problem Statement and Methodology ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title">Lexical Variations</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS1.SSS1.Px2" title="In 3.1.1 Prompt Generation Strategy ‣ 3.1 Sensitivity Analysis Framework ‣ 3 Problem Statement and Methodology ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title">Syntactic Variations</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS2" title="In 3 Problem Statement and Methodology ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Evaluation Metrics</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Results and Discussions</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In 4 Results and Discussions ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>Dataset and Experimental Setup</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS2" title="In 4 Results and Discussions ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2 </span>Results on Prompt Sensitivity Analysis</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS3" title="In 4 Results and Discussions ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3 </span>Discussions</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS4" title="In 4 Results and Discussions ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.4 </span>Challenges and Future Directions</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S5" title="In When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Limitations</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S6" title="In When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6 </span>Conclusions</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S7" title="In When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">7 </span>Acknowledgments</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2606.07237v1 [cs.CL] 2026 年 6 月 5 日</span><span class="original-text">arXiv:2606.07237v1 [cs.CL] 05 Jun 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_fleqn">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">当大型语言模型在医疗保健领域失败时：评估提示变化的敏感性</span><span class="original-text">When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+<span class="ltx_text ltx_font_bold" id="id1.1.1">Mahdi Alkaeed<sup class="ltx_sup" id="id1.1.1.1"><span class="ltx_text ltx_font_medium ltx_font_italic" id="id1.1.1.1.1">1,∗</span></sup></span>, 
+<br class="ltx_break"/><sup class="ltx_sup" id="id4.4.id1"><span class="ltx_text ltx_font_italic" id="id4.4.id1.1" style="font-size:90%;">1</span></sup><span class="ltx_text" id="id3.3.2" style="font-size:90%;">Department of Computer Science and Engineering, Doha, Qatar 
+<br class="ltx_break"/><sup class="ltx_sup" id="id3.3.2.1"><span class="ltx_text ltx_font_italic" id="id3.3.2.1.1">∗</span></sup>Corresponding author email: <span class="ltx_text ltx_font_typewriter" id="id3.3.2.2">ma1805365@qu.edu.qa</span>
+</span>
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">大型语言模型 (LLM) 在医疗保健领域越来越多地用于临床问答、诊断支持和报告摘要等任务。尽管前景广阔，但这些模型仍然对词汇和句法上的细微提示扰动高度敏感，这在安全关键的临床应用中构成了严重风险。在本研究中，我们使用 MedMCQA 基准进行系统敏感性分析，以评估通用（例如 GPT-3.5、Llama3）和医学特定 LLM（例如 ClinicalBERT、BioLlama3、BioBERT）的稳健性。我们将扰动分为自然扰动和对抗性扰动，并检查它们对临床推理任务中模型一致性、准确性和可靠性的影响。我们的研究结果表明，医学法学硕士本质上并不安全。即使措辞上的微小变化也可能改变临床建议，而有针对性的对抗性提示可能会引发有害的输出。在医疗保健等高风险环境中，这种不可预测性是不可接受的——临床医生无法可靠地信任因改写输入或稍加改写而产生幻觉药物而改变诊断的模型。虽然模型往往对简单的词汇替换或释义表现出弹性，但它们经常在句法重新排序或误导性上下文提示下崩溃。这种脆弱性在通用法学硕士和特定领域法学硕士中都很明显。值得注意的是，对抗性操作可能会导致临床上危险的结果，例如推荐不正确的剂量或忽略关键发现。</span><span class="original-text">Large Language Models (LLMs) are increasingly used in healthcare for tasks such as clinical question answering, diagnosis support, and report summarization. Despite their promise, these models remain highly sensitive to subtle prompt perturbations, both lexical and syntactic, posing serious risks in safety-critical clinical applications. In this study, we conduct a systematic sensitivity analysis to evaluate the robustness of both general-purpose (e.g., GPT-3.5, Llama3) and medical-specific LLMs (e.g., ClinicalBERT, BioLlama3, BioBERT) using the MedMCQA benchmark. We categorize perturbations into natural and adversarial types and examine their effect on model consistency, accuracy, and reliability in clinical reasoning tasks. Our findings reveal that medical LLMs are not intrinsically safe. Even minor variations in phrasing can alter clinical advice, and targeted adversarial prompts can provoke harmful outputs. In high-stakes settings like healthcare, such unpredictability is unacceptable-models that change diagnoses due to reworded inputs or hallucinate medications when slightly rephrased cannot be reliably trusted by clinicians. While models tend to show resilience to simple lexical substitutions or paraphrasing, they often break down under syntactic reordering or misleading contextual cues. This fragility is evident across both general-purpose and domain-specific LLMs. Notably, adversarial manipulations can lead to clinically dangerous outputs, such as recommending incorrect dosages or omitting critical findings.</span></p>
+</div>
+<div class="ltx_classification">
+<h6 class="ltx_title ltx_title_classification"><span class="translated-text">关键词：</span><span class="original-text">keywords:</span></h6><span class="translated-text">大型语言模型、医疗保健人工智能、提示扰动、词汇和句法扰动、对抗鲁棒性、法学硕士敏感性分析、法学硕士可靠性。</span><span class="original-text">Large Language Models, Healthcare AI, Prompt Perturbations, Lexical and Syntactic Perturbations, Adversarial Robustness, LLM Sensitivity Analysis, LLM Reliability.</span></div>
+<section class="ltx_section ltx_indent_first" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">大型语言模型 (LLM) 越来越多地应用于医疗保健应用，包括临床问答和诊断支持</span><span class="original-text">Large Language Models (LLMs) are increasingly being leveraged in healthcare applications, including clinical question answering and diagnostic support</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="Generative ai in medicine and healthcare: promises, opportunities and challenges">21</a>]</cite><span class="translated-text">。尽管做出了承诺，但这些模型对微小的即时变化表现出敏感性，并且仍然容易受到对抗性操纵的影响</span><span class="original-text">. Despite their promise, these models exhibit sensitivity to minor prompt variations and remain vulnerable to adversarial manipulations</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib136" title="Survey of vulnerabilities in large language models revealed by adversarial attacks">16</a>, <a class="ltx_ref" href="#bib.bib11" title="Efficient multi-prompt evaluation of llms">12</a>]</cite><span class="translated-text">。在这项研究中，我们系统地对提示扰动进行分类，重点关注词汇和句法变化，并检查它们对关键临床任务中通用模型（例如 GPT-3.5、Llama3）和医学特定模型（例如 ClinicalBert、BioLlama3、BioBert）的影响。我们进一步区分对抗性漏洞和自然鲁棒性，定义为良性输入变化下的稳定性。为了支持这些分析，我们提供了总结比较结果的综合表格，并强调了部署可靠且值得信赖的医疗人工智能系统的关键挑战</span><span class="original-text">. In this study, we systematically categorize prompt perturbations, focusing on lexical and syntactic changes, and examine their impact on both general-purpose models (e.g., GPT-3.5, Llama3) and medical-specific models (e.g., ClinicalBert, BioLlama3, BioBert) across critical clinical tasks. We further differentiate between adversarial vulnerabilities and natural robustness, defined as stability under benign input variations. To support these analyses, we provide comprehensive tables summarizing comparative findings and highlight key challenges in deploying reliable and trustworthy medical AI systems</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib16" title="What is the limitation of multimodal llms? a deeper look into multimodal llms through prompt probing">13</a>]</cite><span class="translated-text">。具体来说，表</span><span class="original-text">. Specifically, Table</span><a class="ltx_ref" href="#S1.T1" title="Table 1 ‣ 1 Introduction ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">整合了跨医疗保健和相关领域的法学硕士稳健性的证据，详细介绍了评估的模型、扰动或攻击的类型及其观察到的效果。</span><span class="original-text">consolidates evidence on LLM robustness across healthcare and related domains, detailing the evaluated models, types of perturbations or attacks, and their observed effects.</span></p>
+</div>
+<figure class="ltx_table" id="S1.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S1.T1.5.1.1" style="font-size:90%;">Table 1</span>: </span><span class="ltx_text" id="S1.T1.6.2" style="font-size:90%;">Summary of key findings on LLM robustness in medical and related tasks, with a focus on lexical and syntactic prompt perturbations. Each row lists the study, evaluated models, task/domain, type of perturbation, and observed effect.</span></figcaption>
+<table class="ltx_tabular ltx_centering ltx_align_middle" id="S1.T1.3">
+<tr class="ltx_tr" id="S1.T1.3.4" style="--ltx-bg-color:#C8E6FF;">
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_l ltx_border_r ltx_border_tt" id="S1.T1.3.4.1">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.4.1.1" style="--ltx-bg-color:#C8E6FF;">
+<span class="ltx_p" id="S1.T1.3.4.1.1.1" style="width:79.7pt;"><span class="ltx_text ltx_font_bold" id="S1.T1.3.4.1.1.1.1" style="font-size:70%;">Study &amp; Ref.</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_tt" id="S1.T1.3.4.2">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.4.2.1" style="--ltx-bg-color:#C8E6FF;">
+<span class="ltx_p" id="S1.T1.3.4.2.1.1" style="width:71.1pt;"><span class="ltx_text ltx_font_bold" id="S1.T1.3.4.2.1.1.1" style="font-size:70%;">Model(s)</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_tt" id="S1.T1.3.4.3">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.4.3.1" style="--ltx-bg-color:#C8E6FF;">
+<span class="ltx_p" id="S1.T1.3.4.3.1.1" style="width:71.1pt;"><span class="ltx_text ltx_font_bold" id="S1.T1.3.4.3.1.1.1" style="font-size:70%;">Task / Domain</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_tt" id="S1.T1.3.4.4">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.4.4.1" style="--ltx-bg-color:#C8E6FF;">
+<span class="ltx_p" id="S1.T1.3.4.4.1.1" style="width:85.4pt;"><span class="ltx_text ltx_font_bold" id="S1.T1.3.4.4.1.1.1" style="font-size:70%;">Perturbation Type</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_tt" id="S1.T1.3.4.5">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.4.5.1" style="--ltx-bg-color:#C8E6FF;">
+<span class="ltx_p" id="S1.T1.3.4.5.1.1" style="width:150.8pt;"><span class="ltx_text ltx_font_bold" id="S1.T1.3.4.5.1.1.1" style="font-size:70%;">Effect / Findings</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S1.T1.1.1">
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_l ltx_border_r ltx_border_t" id="S1.T1.1.1.2">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.1.1.2.1">
+<span class="ltx_p" id="S1.T1.1.1.2.1.1" style="width:79.7pt;"><span class="ltx_text" id="S1.T1.1.1.2.1.1.1" style="font-size:70%;">Guan et al. </span><cite class="ltx_cite ltx_citemacro_cite"><span class="ltx_text" id="S1.T1.1.1.2.1.1.2.1" style="font-size:70%;">[</span><a class="ltx_ref" href="#bib.bib120" title="The order effect: investigating prompt sensitivity in closed-source llms">6</a><span class="ltx_text" id="S1.T1.1.1.2.1.1.3.2" style="font-size:70%;">]</span></cite></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.1.1.3">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.1.1.3.1">
+<span class="ltx_p" id="S1.T1.1.1.3.1.1" style="width:71.1pt;"><span class="ltx_text" id="S1.T1.1.1.3.1.1.1" style="font-size:70%;">GPT-4, GPT-4 mini, DeepSeek</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.1.1.4">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.1.1.4.1">
+<span class="ltx_p" id="S1.T1.1.1.4.1.1" style="width:71.1pt;"><span class="ltx_text" id="S1.T1.1.1.4.1.1.1" style="font-size:70%;">General &amp; Medical QA (e.g., MedMCQA)</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.1.1.5">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.1.1.5.1">
+<span class="ltx_p" id="S1.T1.1.1.5.1.1" style="width:85.4pt;"><span class="ltx_text" id="S1.T1.1.1.5.1.1.1" style="font-size:70%;">Lexical reordering (syntactic)</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.1.1.1">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.1.1.1.1">
+<span class="ltx_p" id="S1.T1.1.1.1.1.1" style="width:150.8pt;"><span class="ltx_text" id="S1.T1.1.1.1.1.1.1" style="font-size:70%;">Accuracy decreased slightly (</span><math alttext="\sim-2.8\%" class="ltx_Math" display="inline" id="S1.T1.1.1.1.1.1.m1" intent=":literal"><semantics><mrow><mi></mi><mo mathsize="0.700em">∼</mo><mrow><mo mathsize="0.700em">−</mo><mrow><mn mathsize="0.700em">2.8</mn><mo mathsize="0.700em">%</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">\sim-2.8\%</annotation></semantics></math><span class="ltx_text" id="S1.T1.1.1.1.1.1.2" style="font-size:70%;"> for GPT-4) when the order of answer choices changed. Shows sensitivity to phrasing variations.</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S1.T1.3.5">
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_l ltx_border_r ltx_border_t" id="S1.T1.3.5.1">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.5.1.1">
+<span class="ltx_p" id="S1.T1.3.5.1.1.1" style="width:79.7pt;"><span class="ltx_text" id="S1.T1.3.5.1.1.1.1" style="font-size:70%;">Bolton et al. (RAmBLA) </span><cite class="ltx_cite ltx_citemacro_cite"><span class="ltx_text" id="S1.T1.3.5.1.1.1.2.1" style="font-size:70%;">[</span><a class="ltx_ref" href="#bib.bib119" title="RAmBLA: a framework for evaluating the reliability of llms as assistants in the biomedical domain">2</a><span class="ltx_text" id="S1.T1.3.5.1.1.1.3.2" style="font-size:70%;">]</span></cite></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.3.5.2">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.5.2.1">
+<span class="ltx_p" id="S1.T1.3.5.2.1.1" style="width:71.1pt;"><span class="ltx_text" id="S1.T1.3.5.2.1.1.1" style="font-size:70%;">GPT-4, GPT-3.5, LLaMA2-7B, Mistral</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.3.5.3">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.5.3.1">
+<span class="ltx_p" id="S1.T1.3.5.3.1.1" style="width:71.1pt;"><span class="ltx_text" id="S1.T1.3.5.3.1.1.1" style="font-size:70%;">Clinical QA (PMQA-L)</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.3.5.4">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.5.4.1">
+<span class="ltx_p" id="S1.T1.3.5.4.1.1" style="width:85.4pt;"><span class="ltx_text" id="S1.T1.3.5.4.1.1.1" style="font-size:70%;">Paraphrasing (lexical), minor word changes (syntactic)</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.3.5.5">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.5.5.1">
+<span class="ltx_p" id="S1.T1.3.5.5.1.1" style="width:150.8pt;"><span class="ltx_text" id="S1.T1.3.5.5.1.1.1" style="font-size:70%;">Most models retained performance, but small F1 drops observed, indicating partial stability under benign lexical variations.</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S1.T1.3.3">
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_l ltx_border_r ltx_border_t" id="S1.T1.3.3.3">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.3.3.1">
+<span class="ltx_p" id="S1.T1.3.3.3.1.1" style="width:79.7pt;"><span class="ltx_text" id="S1.T1.3.3.3.1.1.1" style="font-size:70%;">Bolton et al. (RAmBLA) </span><cite class="ltx_cite ltx_citemacro_cite"><span class="ltx_text" id="S1.T1.3.3.3.1.1.2.1" style="font-size:70%;">[</span><a class="ltx_ref" href="#bib.bib119" title="RAmBLA: a framework for evaluating the reliability of llms as assistants in the biomedical domain">2</a><span class="ltx_text" id="S1.T1.3.3.3.1.1.3.2" style="font-size:70%;">]</span></cite></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.3.3.4">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.3.4.1">
+<span class="ltx_p" id="S1.T1.3.3.4.1.1" style="width:71.1pt;"><span class="ltx_text" id="S1.T1.3.3.4.1.1.1" style="font-size:70%;">LLaMA2-7B, Mistral</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.3.3.5">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.3.5.1">
+<span class="ltx_p" id="S1.T1.3.3.5.1.1" style="width:71.1pt;"><span class="ltx_text" id="S1.T1.3.3.5.1.1.1" style="font-size:70%;">Clinical QA (PMQA-L)</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.3.3.6">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.3.6.1">
+<span class="ltx_p" id="S1.T1.3.3.6.1.1" style="width:85.4pt;"><span class="ltx_text" id="S1.T1.3.3.6.1.1.1" style="font-size:70%;">Added distractor sentences (contextual)</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.3.3.2">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.3.2.2">
+<span class="ltx_p" id="S1.T1.3.3.2.2.2" style="width:150.8pt;"><span class="ltx_text" id="S1.T1.3.3.2.2.2.1" style="font-size:70%;">Performance drop varied by model (</span><math alttext="-20\%" class="ltx_Math" display="inline" id="S1.T1.2.2.1.1.1.m1" intent=":literal"><semantics><mrow><mo mathsize="0.700em">−</mo><mrow><mn mathsize="0.700em">20</mn><mo mathsize="0.700em">%</mo></mrow></mrow><annotation encoding="application/x-tex">-20\%</annotation></semantics></math><span class="ltx_text" id="S1.T1.3.3.2.2.2.2" style="font-size:70%;"> for LLaMA, </span><math alttext="-38\%" class="ltx_Math" display="inline" id="S1.T1.3.3.2.2.2.m2" intent=":literal"><semantics><mrow><mo mathsize="0.700em">−</mo><mrow><mn mathsize="0.700em">38</mn><mo mathsize="0.700em">%</mo></mrow></mrow><annotation encoding="application/x-tex">-38\%</annotation></semantics></math><span class="ltx_text" id="S1.T1.3.3.2.2.2.3" style="font-size:70%;"> for Mistral); GPT-4 and GPT-3.5 were more stable. Highlights difference in natural robustness.</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S1.T1.3.6">
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_l ltx_border_r ltx_border_t" id="S1.T1.3.6.1">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.6.1.1">
+<span class="ltx_p" id="S1.T1.3.6.1.1.1" style="width:79.7pt;"><span class="ltx_text" id="S1.T1.3.6.1.1.1.1" style="font-size:70%;">Ness et al. (MedFuzz) </span><cite class="ltx_cite ltx_citemacro_cite"><span class="ltx_text" id="S1.T1.3.6.1.1.1.2.1" style="font-size:70%;">[</span><a class="ltx_ref" href="#bib.bib130" title="Medfuzz: exploring the robustness of large language models in medical question answering">9</a><span class="ltx_text" id="S1.T1.3.6.1.1.1.3.2" style="font-size:70%;">]</span></cite></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.3.6.2">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.6.2.1">
+<span class="ltx_p" id="S1.T1.3.6.2.1.1" style="width:71.1pt;"><span class="ltx_text" id="S1.T1.3.6.2.1.1.1" style="font-size:70%;">GPT-4</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.3.6.3">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.6.3.1">
+<span class="ltx_p" id="S1.T1.3.6.3.1.1" style="width:71.1pt;"><span class="ltx_text" id="S1.T1.3.6.3.1.1.1" style="font-size:70%;">USMLE-style MedQA</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.3.6.4">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.6.4.1">
+<span class="ltx_p" id="S1.T1.3.6.4.1.1" style="width:85.4pt;"><span class="ltx_text" id="S1.T1.3.6.4.1.1.1" style="font-size:70%;">Lexical changes in questions</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.3.6.5">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.6.5.1">
+<span class="ltx_p" id="S1.T1.3.6.5.1.1" style="width:150.8pt;"><span class="ltx_text" id="S1.T1.3.6.5.1.1.1" style="font-size:70%;">Minor rewording sometimes caused GPT-4 to change answers, showing sensitivity to phrasing even without adversarial intent.</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S1.T1.3.7">
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_l ltx_border_r ltx_border_t" id="S1.T1.3.7.1">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.7.1.1">
+<span class="ltx_p" id="S1.T1.3.7.1.1.1" style="width:79.7pt;"><span class="ltx_text" id="S1.T1.3.7.1.1.1.1" style="font-size:70%;">Han et al. </span><cite class="ltx_cite ltx_citemacro_cite"><span class="ltx_text" id="S1.T1.3.7.1.1.1.2.1" style="font-size:70%;">[</span><a class="ltx_ref" href="#bib.bib121" title="Medical large language models are susceptible to targeted misinformation attacks">7</a><span class="ltx_text" id="S1.T1.3.7.1.1.1.3.2" style="font-size:70%;">]</span></cite></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.3.7.2">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.7.2.1">
+<span class="ltx_p" id="S1.T1.3.7.2.1.1" style="width:71.1pt;"><span class="ltx_text" id="S1.T1.3.7.2.1.1.1" style="font-size:70%;">GPT-3.5, GPT-4, T5</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.3.7.3">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.7.3.1">
+<span class="ltx_p" id="S1.T1.3.7.3.1.1" style="width:71.1pt;"><span class="ltx_text" id="S1.T1.3.7.3.1.1.1" style="font-size:70%;">Diagnostics &amp; QA</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.3.7.4">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.7.4.1">
+<span class="ltx_p" id="S1.T1.3.7.4.1.1" style="width:85.4pt;"><span class="ltx_text" id="S1.T1.3.7.4.1.1.1" style="font-size:70%;">Syntactic reordering</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_r ltx_border_t" id="S1.T1.3.7.5">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.7.5.1">
+<span class="ltx_p" id="S1.T1.3.7.5.1.1" style="width:150.8pt;"><span class="ltx_text" id="S1.T1.3.7.5.1.1.1" style="font-size:70%;">Small variations in question structure affected model outputs slightly; demonstrates limits of intrinsic robustness.</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S1.T1.3.8">
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_bb ltx_border_l ltx_border_r ltx_border_t" id="S1.T1.3.8.1">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.8.1.1">
+<span class="ltx_p" id="S1.T1.3.8.1.1.1" style="width:79.7pt;"><span class="ltx_text" id="S1.T1.3.8.1.1.1.1" style="font-size:70%;">This paper</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_bb ltx_border_r ltx_border_t" id="S1.T1.3.8.2">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.8.2.1">
+<span class="ltx_p" id="S1.T1.3.8.2.1.1" style="width:71.1pt;"><span class="ltx_text" id="S1.T1.3.8.2.1.1.1" style="font-size:70%;">GPT-3.5, Llama3, ClinicalBert, BioLlama3, BioBert</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_bb ltx_border_r ltx_border_t" id="S1.T1.3.8.3">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.8.3.1">
+<span class="ltx_p" id="S1.T1.3.8.3.1.1" style="width:71.1pt;"><span class="ltx_text" id="S1.T1.3.8.3.1.1.1" style="font-size:70%;">General &amp; Medical QA (e.g., MedMCQA)</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_bb ltx_border_r ltx_border_t" id="S1.T1.3.8.4">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.8.4.1">
+<span class="ltx_p" id="S1.T1.3.8.4.1.1" style="width:85.4pt;"><span class="ltx_text" id="S1.T1.3.8.4.1.1.1" style="font-size:70%;">Lexical and syntactic prompt perturbations</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_bb ltx_border_r ltx_border_t" id="S1.T1.3.8.5">
+<span class="ltx_inline-block ltx_align_top" id="S1.T1.3.8.5.1">
+<span class="ltx_p" id="S1.T1.3.8.5.1.1" style="width:150.8pt;"><span class="ltx_text" id="S1.T1.3.8.5.1.1.1" style="font-size:70%;">Minor prompt variations reduced accuracy and sometimes altered model advice. Medical LLMs show limited natural robustness; careful prompt design is needed to maintain clinical consistency.</span></span>
+</span>
+</td>
+</tr>
+</table>
+</figure>
+<div class="ltx_para" id="S1.p2">
+<ol class="ltx_enumerate" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item"><span class="ltx_text ltx_font_bold" id="S1.I1.i1.1.1.1">RQ1</span></span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="translated-text">词汇和句法提示扰动如何影响通用法学硕士与医学特定法学硕士在问答和诊断支持等临床任务中的性能和稳健性？</span><span class="original-text">How do lexical and syntactic prompt perturbations impact the performance and robustness of general-purpose versus medical-specific LLMs in clinical tasks such as question answering, and diagnosis support?</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item"><span class="ltx_text ltx_font_bold" id="S1.I1.i2.1.1.1">RQ2</span></span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="translated-text">确保法学硕士在医疗保健应用中的即时扰动下表现值得信赖和可靠的关键挑战是什么？</span><span class="original-text">What are the key challenges in ensuring trustworthy and reliable behavior of LLMs under prompt perturbations in healthcare applications?</span></p>
+</div>
+</li>
+</ol>
+<p class="ltx_p" id="S1.p2.1"><span class="ltx_text ltx_font_italic" id="S1.p2.1.1"><span class="translated-text">本文的贡献：</span><span class="original-text">Contributions of this Paper:</span></span></p>
+<ol class="ltx_enumerate" id="S1.I2">
+<li class="ltx_item" id="S1.I2.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span>
+<div class="ltx_para" id="S1.I2.i1.p1">
+<p class="ltx_p" id="S1.I2.i1.p1.1"><span class="translated-text">我们正式定义和分类提示扰动，重点关注词汇和句法变化，并系统地评估它们对医疗保健任务中的法学硕士表现的影响，强调自然鲁棒性，定义为良性输入变化下的稳定性。</span><span class="original-text">We formally define and categorize prompt perturbations, with a focus on lexical and syntactic variations, and systematically evaluate their impact on LLM performance in healthcare tasks, highlighting natural robustness, defined as stability under benign input variations.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I2.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span>
+<div class="ltx_para" id="S1.I2.i2.p1">
+<p class="ltx_p" id="S1.I2.i2.p1.1"><span class="translated-text">我们对临床应用中通用模型（例如 GPT-3.5、Llama3）和医学专用模型（例如 ClinicalBERT、BioLlama3、BioBERT）的 LLM 性能进行了全面的比较分析。</span><span class="original-text">We conduct a comprehensive comparative analysis of LLM performance across general-purpose models (e.g., GPT-3.5, Llama3) and medical-specific models (e.g., ClinicalBERT, BioLlama3, BioBERT) in clinical applications.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I2.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span>
+<div class="ltx_para" id="S1.I2.i3.p1">
+<p class="ltx_p" id="S1.I2.i3.p1.1"><span class="translated-text">我们确定了当前法学硕士在这些扰动下的关键漏洞和局限性，并讨论了开发更可靠、稳健和值得信赖的医疗人工智能系统的开放挑战。</span><span class="original-text">We identify critical vulnerabilities and limitations of current LLMs under these perturbations and discuss open challenges for developing more reliable, robust, and trustworthy medical AI systems.</span></p>
+</div>
+</li>
+</ol>
+</div>
+</section>
+<section class="ltx_section ltx_indent_first" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="translated-text">即时灵敏度是指模型在输入发生微小变化时的输出变化</span><span class="original-text">Prompt sensitivity refers to a model’s output variation under small changes to its input</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib40" title="ProSA: assessing and understanding the prompt sensitivity of llms">22</a>]</cite><span class="translated-text">。扰动可以在语言上进行分类：词汇扰动改变单个标记（例如，同义词替换、拼写错误、否定）；句法扰动
+改变词序或句子结构（例如，主动语态改为被动语态，反之亦然，重新排序子句）。这些类别广泛用于稳健性评估（参见例如
+RUPBench分类法</span><span class="original-text">. Perturbations can be classified linguistically: lexical perturbations alter individual tokens (e.g., synonym substitution, typos, negations); syntactic perturbations
+change word order or sentence structure (e.g., active to passive voice or vice versa, reordering clauses). These categories are widely used in robustness evaluation (see e.g., the
+RUPBench taxonomy</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib20" title="Rupbench: benchmarking reasoning under perturbations for robustness evaluation in large language models">17</a>]</cite><span class="translated-text">）。
+。在实践中，词汇扰动测试模型对表面形式噪声和句法对结构变化的容忍度。在医疗环境中，及时的敏感性至关重要：改变患者病史中的几个单词不应显着改变正确的诊断或重要的安全建议。即使很小的对抗性变化（例如，微妙的错误信息或隐藏的提示）也可能导致有害的输出。</span><span class="original-text">).
+. In practice, lexical perturbations test the model’s tolerance to surface form noise and syntactic to structural variation. In medical settings, prompt sensitivity is critical: changing a few words in a patient’s history should not dramatically alter a correct diagnosis or critical safety advice. Even small adversarial changes (e.g., subtle misinformation or hidden prompts) can lead to harmful output.</span></p>
+</div>
+<figure class="ltx_table" id="S2.T2">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S2.T2.2.1.1" style="font-size:90%;">Table 2</span>: </span><span class="ltx_text" id="S2.T2.3.2" style="font-size:90%;">Examples of benign lexical and syntactic perturbations in clinical contexts.</span></figcaption>
+<table class="ltx_tabular ltx_centering ltx_align_middle" id="S2.T2.4">
+<tr class="ltx_tr" id="S2.T2.4.1">
+<td class="ltx_td ltx_align_left ltx_border_tt" id="S2.T2.4.1.1"><span class="ltx_text ltx_font_bold" id="S2.T2.4.1.1.1" style="font-size:70%;">Perturbation Type</span></td>
+<td class="ltx_td ltx_align_justify ltx_border_tt" id="S2.T2.4.1.2">
+<span class="ltx_inline-block ltx_align_top" id="S2.T2.4.1.2.1">
+<span class="ltx_p" id="S2.T2.4.1.2.1.1"><span class="ltx_text ltx_font_bold" id="S2.T2.4.1.2.1.1.1" style="font-size:70%;">Original vs. Perturbed String</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_tt" id="S2.T2.4.1.3">
+<span class="ltx_inline-block ltx_align_top" id="S2.T2.4.1.3.1">
+<span class="ltx_p" id="S2.T2.4.1.3.1.1"><span class="ltx_text ltx_font_bold" id="S2.T2.4.1.3.1.1.1" style="font-size:70%;">Semantic Impact</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.4.2">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S2.T2.4.2.1"><span class="ltx_text ltx_font_bold" id="S2.T2.4.2.1.1" style="font-size:70%;">Lexical (Benign)</span></td>
+<td class="ltx_td ltx_align_justify ltx_border_t" id="S2.T2.4.2.2">
+<span class="ltx_inline-block ltx_align_top" id="S2.T2.4.2.2.1">
+<span class="ltx_p" id="S2.T2.4.2.2.1.1"><span class="ltx_text" id="S2.T2.4.2.2.1.1.1" style="font-size:70%;">O: “The patient has diabetes.” </span>
+<br class="ltx_break"/><span class="ltx_text" id="S2.T2.4.2.2.1.1.2" style="font-size:70%;">P: “The patient has </span><span class="ltx_text ltx_font_bold" id="S2.T2.4.2.2.1.1.3" style="font-size:70%;">diabetees</span><span class="ltx_text" id="S2.T2.4.2.2.1.1.4" style="font-size:70%;">.”</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_t" id="S2.T2.4.2.3">
+<span class="ltx_inline-block ltx_align_top" id="S2.T2.4.2.3.1">
+<span class="ltx_p" id="S2.T2.4.2.3.1.1"><span class="ltx_text" id="S2.T2.4.2.3.1.1.1" style="font-size:70%;">Meaning-preserving; minor orthographic error; does not alter clinical interpretation.</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.4.3">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S2.T2.4.3.1"><span class="ltx_text ltx_font_bold" id="S2.T2.4.3.1.1" style="font-size:70%;">Lexical (Benign)</span></td>
+<td class="ltx_td ltx_align_justify ltx_border_t" id="S2.T2.4.3.2">
+<span class="ltx_inline-block ltx_align_top" id="S2.T2.4.3.2.1">
+<span class="ltx_p" id="S2.T2.4.3.2.1.1"><span class="ltx_text" id="S2.T2.4.3.2.1.1.1" style="font-size:70%;">O: “Administer 5 mg of amlodipine daily.” </span>
+<br class="ltx_break"/><span class="ltx_text" id="S2.T2.4.3.2.1.1.2" style="font-size:70%;">P: “Administer </span><span class="ltx_text ltx_font_bold" id="S2.T2.4.3.2.1.1.3" style="font-size:70%;">five</span><span class="ltx_text" id="S2.T2.4.3.2.1.1.4" style="font-size:70%;"> mg of amlodipine daily.”</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_t" id="S2.T2.4.3.3">
+<span class="ltx_inline-block ltx_align_top" id="S2.T2.4.3.3.1">
+<span class="ltx_p" id="S2.T2.4.3.3.1.1"><span class="ltx_text" id="S2.T2.4.3.3.1.1.1" style="font-size:70%;">Preserves meaning; numeric expression converted to word form; no clinical consequence.</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.4.4">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S2.T2.4.4.1"><span class="ltx_text ltx_font_bold" id="S2.T2.4.4.1.1" style="font-size:70%;">Syntactic (Benign)</span></td>
+<td class="ltx_td ltx_align_justify ltx_border_t" id="S2.T2.4.4.2">
+<span class="ltx_inline-block ltx_align_top" id="S2.T2.4.4.2.1">
+<span class="ltx_p" id="S2.T2.4.4.2.1.1"><span class="ltx_text" id="S2.T2.4.4.2.1.1.1" style="font-size:70%;">O: “The nurse administered the drug.” </span>
+<br class="ltx_break"/><span class="ltx_text" id="S2.T2.4.4.2.1.1.2" style="font-size:70%;">P: “It was the nurse who administered the drug.”</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_t" id="S2.T2.4.4.3">
+<span class="ltx_inline-block ltx_align_top" id="S2.T2.4.4.3.1">
+<span class="ltx_p" id="S2.T2.4.4.3.1.1"><span class="ltx_text" id="S2.T2.4.4.3.1.1.1" style="font-size:70%;">Meaning-preserving; clefting shifts sentence focus without affecting clinical content.</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.4.5">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S2.T2.4.5.1"><span class="ltx_text ltx_font_bold" id="S2.T2.4.5.1.1" style="font-size:70%;">Syntactic (Benign)</span></td>
+<td class="ltx_td ltx_align_justify ltx_border_t" id="S2.T2.4.5.2">
+<span class="ltx_inline-block ltx_align_top" id="S2.T2.4.5.2.1">
+<span class="ltx_p" id="S2.T2.4.5.2.1.1"><span class="ltx_text" id="S2.T2.4.5.2.1.1.1" style="font-size:70%;">O: “Patient reports no chest pain or shortness of breath.” </span>
+<br class="ltx_break"/><span class="ltx_text" id="S2.T2.4.5.2.1.1.2" style="font-size:70%;">P: “No chest pain or shortness of breath is reported by the patient.”</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_t" id="S2.T2.4.5.3">
+<span class="ltx_inline-block ltx_align_top" id="S2.T2.4.5.3.1">
+<span class="ltx_p" id="S2.T2.4.5.3.1.1"><span class="ltx_text" id="S2.T2.4.5.3.1.1.1" style="font-size:70%;">Preserves clinical meaning; syntactic reordering for stylistic variation; content unchanged.</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S2.T2.4.6">
+<td class="ltx_td ltx_align_left ltx_border_bb ltx_border_t" id="S2.T2.4.6.1"><span class="ltx_text ltx_font_bold" id="S2.T2.4.6.1.1" style="font-size:70%;">Lexical + Syntactic (Benign)</span></td>
+<td class="ltx_td ltx_align_justify ltx_border_bb ltx_border_t" id="S2.T2.4.6.2">
+<span class="ltx_inline-block ltx_align_top" id="S2.T2.4.6.2.1">
+<span class="ltx_p" id="S2.T2.4.6.2.1.1"><span class="ltx_text" id="S2.T2.4.6.2.1.1.1" style="font-size:70%;">O: “The physician recommends starting insulin therapy immediately.” </span>
+<br class="ltx_break"/><span class="ltx_text" id="S2.T2.4.6.2.1.1.2" style="font-size:70%;">P: “Immediately, the physician recommends initiating insulin therapy.”</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_bb ltx_border_t" id="S2.T2.4.6.3">
+<span class="ltx_inline-block ltx_align_top" id="S2.T2.4.6.3.1">
+<span class="ltx_p" id="S2.T2.4.6.3.1.1"><span class="ltx_text" id="S2.T2.4.6.3.1.1.1" style="font-size:70%;">Minor lexical substitution and syntactic shift; meaning preserved; natural language variation.</span></span>
+</span>
+</td>
+</tr>
+</table>
+</figure>
+<section class="ltx_subsection ltx_indent_first" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span><span class="translated-text">一般法学硕士的敏感性</span><span class="original-text">Prompt Sensitivity in General LLMs</span></h3>
+<div class="ltx_para" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.1"><span class="translated-text">为了系统地量化即时改写对法学硕士的影响，Errica 等人。</span><span class="original-text">To systematically quantify the effects of prompt rephrasings on LLMs, Errica et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib15" title="What did i do wrong? quantifying llms’ sensitivity and consistency to prompt engineering">5</a>]</cite><span class="translated-text">引入了两个指标：敏感性和一致性。此外，作者对多个数据集和通用 LLM（包括 GPT-4o、GPT-3.5、LLaMA-3 和 Mixtral）进行了实证评估。他们的结果表明，敏感性和一致性提供了超越准确性的补充见解，揭示了模型的弱点，并帮助开发人员识别“困难”样本和有问题的类。同样，萨利纳斯等人。</span><span class="original-text">introduced two metrics, sensitivity and consistency. Furthermore, the authors conducted an empirical evaluation on multiple datasets and general-purpose LLMs, including GPT-4o, GPT-3.5, LLaMA-3, and Mixtral. Their results demonstrate that sensitivity and consistency offer complementary insights beyond accuracy, revealing model weaknesses and helping developers identify “hard” samples and problematic classes. Similarly, Salinas et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib118" title="The butterfly effect of altering prompts: how small changes and jailbreaks affect large language model performance">14</a>]</cite><span class="translated-text">系统地分析了输出格式、词汇扰动和越狱指令等微小的提示变化如何影响 11 个分类任务中的 LLM 行为。他们的结果表明，即使是微小的修改，例如包含空格或礼貌用语，也可能导致模型预测和整体准确性的语法变化。在</span><span class="original-text">systematically analyzed how minor prompt variations such as output formatting, lexical perturbations, and jailbreak instructions can impact LLM behavior across 11 classification tasks. Their results demonstrate that even trivial modifications, like the inclusion of whitespace or polite expressions, can lead to syntactic shifts in model predictions and overall accuracy. In</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib40" title="ProSA: assessing and understanding the prompt sensitivity of llms">22</a>]</cite><span class="translated-text">，作者提出了一种名为 PromptSensiScore (PSS) 的新颖指标，它量化了对于同一输入实例，LLM 响应在不同语法等效提示之间的差异程度。他们的结果表明，较大的法学硕士相对而言更稳健，而少量提示可以提高稳健性。此外，他们还表明解码信心与即时稳定性相关。在一项类似的研究中，曹等人。</span><span class="original-text">, the authors presented a novel metric called PromptSensiScore (PSS), which quantifies how much LLM responses vary across different syntactically equivalent prompts for the same input instance. Their results revealed that larger LLMs are comparatively more robust, and few-shot prompting can improve robustness. In addition, they showed that decoding confidence correlates with prompt stability. In a similar study, Cao et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib116" title="On the worst prompt performance of large language models">3</a>]</cite><span class="translated-text">提出了一个新的基准，即 RobustAlpacaEval，旨在通过评估句法等效提示变体的 LLM 性能来评估实例级别的提示敏感性。他们使用各种开源法学硕士（例如 Llama、Mistral 和 Gemma 系列）的研究结果表明，即使是高性能模型在最坏情况提示下也会表现出严重退化，而这通常是不可预测的。斯克拉等人。</span><span class="original-text">presented a new benchmark, namely RobustAlpacaEval, designed to assess prompt sensitivity at the instance level by evaluating LLM performance across syntactically equivalent prompt variants. Their findings using various open-source LLMs (e.g., Llama, Mistral, and Gemma families) reveal that even high-performing models exhibit substantial degradation under worst-case prompts, which are often unpredictable. Sclar et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib102" title="Quantifying language models’ sensitivity to spurious features in prompt design or: how i learned to start worrying about prompt formatting">15</a>]</cite><span class="translated-text">研究了释义和格式变化如何影响多个模型的输出一致性。佩泽什克普尔等人。</span><span class="original-text">studied how paraphrasing and format changes affect output consistency across multiple models. Pezeshkpour et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib42" title="Large language models sensitivity to the order of options in multiple-choice questions">11</a>]</cite><span class="translated-text">证明法学硕士受到多项选择设置中选项顺序的影响。佩泽什克普尔等人。</span><span class="original-text">demonstrated that LLMs are influenced by the order of options in multiple-choice settings. Pezeshkpour et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib42" title="Large language models sensitivity to the order of options in multiple-choice questions">11</a>]</cite><span class="translated-text">证明多项选择设置中选项的顺序可以影响法学硕士的反应。</span><span class="original-text">demonstrated that the order of options in multiple-choice settings can influence the responses of LLMs.</span></p>
+</div>
+<figure class="ltx_figure" id="S2.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="333" id="S2.F1.g1" src="https://arxiv.org/html/2606.07237v1/Pipeline.jpg" width="592"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S2.F1.2.1.1" style="font-size:90%;">Figure 1</span>: </span><span class="ltx_text" id="S2.F1.3.2" style="font-size:90%;">This methodological pipeline outlines a comprehensive robustness evaluation framework for assessing the sensitivity and stability of healthcare LLMs using the MedMCQA benchmark, supported by advanced NLP tools (e.g., BioSyn, scispaCy) and biomedical metrics (e.g., BERTScore, USE) to quantify model resilience to input variations.</span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span><span class="translated-text">医疗保健法学硕士的及时敏感性</span><span class="original-text">Prompt Sensitivity in Healthcare LLMs</span></h3>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.1"><span class="translated-text">最近的研究越来越强调医疗保健法学硕士对关键医疗信息敏感度的重要性</span><span class="original-text">Recent research has increasingly highlighted the importance of healthcare LLMs sensitivity to key medical information</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib128" title="LLM sensitivity evaluation framework for clinical diagnosis">18</a>]</cite><span class="translated-text">。内斯等人。</span><span class="original-text">. Ness et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib130" title="Medfuzz: exploring the robustness of large language models in medical question answering">9</a>]</cite><span class="translated-text">引入 MedFuzz 来测试医疗保健 LLM 的稳健性，揭示微小的扰动可能会误导具有高基准分数的模型。这凸显了一个关键问题，此类漏洞可能会导致临床错误。莫拉迪等人。</span><span class="original-text">introduced MedFuzz to test healthcare LLM robustness, revealing that minor perturbations could mislead models with high benchmark scores. This highlighted a critical concern, such vulnerabilities could lead to clinical errors. Moradi et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib131" title="Improving the robustness and accuracy of biomedical language models through adversarial training">8</a>]</cite><span class="translated-text">探索生物医学 NLP 模型（包括 BioBERT 和 SciBERT）对对抗性攻击的脆弱性，即使输入轻微修改，性能也会显着下降</span><span class="original-text">explore the vulnerability of biomedical NLP models, including BioBERT and SciBERT, to adversarial attacks, showing a significant drop in performance with even slight input modifications</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib131" title="Improving the robustness and accuracy of biomedical language models through adversarial training">8</a>]</cite><span class="translated-text">。塞瓦略斯等人</span><span class="original-text">. Ceballos et.al</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib133" title="Open (clinical) llms are sensitive to instruction phrasings">4</a>]</cite><span class="translated-text">调查医疗保健法学硕士如何表现出脆弱性，措辞变化会影响绩效和公平性。比德等人。</span><span class="original-text">investigate how healthcare LLMs show fragility, with phrasing variations impacting performance and fairness. Beede et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib54" title="A human-centered evaluation of a deep learning system deployed in clinics for the detection of diabetic retinopathy">1</a>]</cite><span class="translated-text">表明不同的症状措辞（例如，“剧烈胸痛”与“胸部不适”）可能会导致相互矛盾的诊断。派斯等人。</span><span class="original-text">illustrated that varying symptom phrasing (e.g., “sharp chest pain” vs. “chest discomfort”) can result in conflicting diagnoses. Pais et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib55" title="Large language models for preventing medication direction errors in online pharmacies">10</a>]</cite><span class="translated-text">报道称，药物名称中的微小拼写错误可能会导致处方错误或错过药物相互作用。张等人。</span><span class="original-text">reported that minor spelling errors in drug names can lead to prescribing mistakes or missed drug interactions. Zhang et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib56" title="Shifting machine learning for healthcare from development to deployment and from models to data">20</a>]</cite><span class="translated-text">强调了推广到现实世界临床术语的困难，其中微小的词汇变化可能导致模型对疾病严重程度进行错误分类。同样，Yan 等人。</span><span class="original-text">highlighted the difficulty in generalizing to real-world clinical terminology, where small lexical variations can cause models to misclassify disease severity. Similarly, Yan et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib128" title="LLM sensitivity evaluation framework for clinical diagnosis">18</a>]</cite><span class="translated-text">进行了一项以临床为重点的评估，证明模型常常无法优先考虑关键的诊断线索，例如患者年龄和症状描述，而这些因素对于准确的临床推理至关重要。詹等人。</span><span class="original-text">conducted a clinically focused evaluation that demonstrated how models often fail to prioritize critical diagnostic cues such as patient age and symptom descriptions, elements that are essential for accurate clinical reasoning. Zhan et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib62" title="Unveiling the lexical sensitivity of llms: combinatorial optimization for prompt enhancement">19</a>]</cite><span class="translated-text">提出 COPLE 框架表明，在面临即时扰动时，改进词汇选择可以增强输出的一致性。
+桌子</span><span class="original-text">proposed that the COPLE framework suggests that refining lexical choices can enhance output consistency when faced with prompt perturbations.
+The Table</span><a class="ltx_ref" href="#S2.T2" title="Table 2 ‣ 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">列举了各种“良性”扰动，包括词汇拼写错误、数字到单词的转换以及语法重新排序（如劈裂和被动语态转换）。每个例子都表明，尽管语言或拼写有变化，但潜在的临床意义和命题内容仍然被严格保留。这些变化作为测试模型稳定性的基线，确保微小的风格或意外变化不会无意中改变预期的临床解释或推理结果。</span><span class="original-text">enumerates various ”benign” perturbations, including lexical typos, numeric-to-word conversions, and syntactic reordering like clefting and passive voice shifts. Each example demonstrates that despite linguistic or orthographic variations, the underlying clinical meaning and propositional content remain strictly preserved. These variations serve as a baseline for testing model stability, ensuring that minor stylistic or accidental changes do not inadvertently alter the intended clinical interpretation or reasoning outcome.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section ltx_indent_first" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">问题陈述和方法论</span><span class="original-text">Problem Statement and Methodology</span></h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.10"><span class="translated-text">临床案例</span><span class="original-text">A clinical case</span><math alttext="C" class="ltx_Math" display="inline" id="S3.p1.1.m1" intent=":literal"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math><span class="translated-text">来自 MedMCQA 数据集以患者提示开始</span><span class="original-text">from the MedMCQA dataset begins with a patient prompt</span><math alttext="P" class="ltx_Math" display="inline" id="S3.p1.2.m2" intent=":literal"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math><span class="translated-text">，由医疗保健法学硕士处理以产生输出</span><span class="original-text">, which is processed by a healthcare LLM to produce an output</span><math alttext="R=f_{\text{LLM}}(P)" class="ltx_Math" display="inline" id="S3.p1.3.m3" intent=":literal"><semantics><mrow><mi>R</mi><mo>=</mo><mrow><msub><mi>f</mi><mtext>LLM</mtext></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>P</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">R=f_{\text{LLM}}(P)</annotation></semantics></math><span class="translated-text">。现在，考虑一个较小的词汇变化，例如用同义词“呼吸困难”替换“呼吸急促”，从而导致输入略有改变</span><span class="original-text">. Now, consider a minor lexical variation, such as replacing “shortness of breath” with its synonym “dyspnea,” resulting in a slightly altered input</span><math alttext="P^{\prime}" class="ltx_Math" display="inline" id="S3.p1.4.m4" intent=":literal"><semantics><msup><mi>P</mi><mo>′</mo></msup><annotation encoding="application/x-tex">P^{\prime}</annotation></semantics></math><span class="translated-text">, 其中</span><span class="original-text">, where</span><math alttext="P^{\prime}\approx P" class="ltx_Math" display="inline" id="S3.p1.5.m5" intent=":literal"><semantics><mrow><msup><mi>P</mi><mo>′</mo></msup><mo>≈</mo><mi>P</mi></mrow><annotation encoding="application/x-tex">P^{\prime}\approx P</annotation></semantics></math><span class="translated-text">。尽管等效，但这种更改可能会导致模型产生不同的输出</span><span class="original-text">. Althoughically equivalent, this change may lead the model to produce a different output</span><math alttext="R^{\prime}=f_{\text{LLM}}(P^{\prime})" class="ltx_Math" display="inline" id="S3.p1.6.m6" intent=":literal"><semantics><mrow><msup><mi>R</mi><mo>′</mo></msup><mo>=</mo><mrow><msub><mi>f</mi><mtext>LLM</mtext></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msup><mi>P</mi><mo>′</mo></msup><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">R^{\prime}=f_{\text{LLM}}(P^{\prime})</annotation></semantics></math><span class="translated-text">。理想情况下，模型应以类似方式处理两个输入：</span><span class="original-text">. Ideally, the model should treat both inputs similarly:</span><math alttext="P^{\prime}\approx P\quad\Rightarrow\quad R^{\prime}\approx R" class="ltx_Math" display="inline" id="S3.p1.7.m7" intent=":literal"><semantics><mrow><mrow><msup><mi>P</mi><mo>′</mo></msup><mo>≈</mo><mrow><mi>P</mi><mspace style="width:1em;" width="1em"></mspace><mo stretchy="false">⇒</mo></mrow></mrow><mspace style="width:1em;" width="1em"></mspace><mrow><msup><mi>R</mi><mo>′</mo></msup><mo>≈</mo><mi>R</mi></mrow></mrow><annotation encoding="application/x-tex">P^{\prime}\approx P\quad\Rightarrow\quad R^{\prime}\approx R</annotation></semantics></math><span class="translated-text">然而，在实践中，即使是很小的扰动</span><span class="original-text">However, in practice, even a small perturbation</span><math alttext="\delta P=P^{\prime}-P" class="ltx_Math" display="inline" id="S3.p1.8.m8" intent=":literal"><semantics><mrow><mrow><mi>δ</mi><mo lspace="0em" rspace="0em">​</mo><mi>P</mi></mrow><mo>=</mo><mrow><msup><mi>P</mi><mo>′</mo></msup><mo>−</mo><mi>P</mi></mrow></mrow><annotation encoding="application/x-tex">\delta P=P^{\prime}-P</annotation></semantics></math><span class="translated-text">可能会导致显着的输出变化</span><span class="original-text">can cause a significant output shift</span><math alttext="\Delta R=R^{\prime}-R" class="ltx_Math" display="inline" id="S3.p1.9.m9" intent=":literal"><semantics><mrow><mrow><mi mathvariant="normal">Δ</mi><mo lspace="0em" rspace="0em">​</mo><mi>R</mi></mrow><mo>=</mo><mrow><msup><mi>R</mi><mo>′</mo></msup><mo>−</mo><mi>R</mi></mrow></mrow><annotation encoding="application/x-tex">\Delta R=R^{\prime}-R</annotation></semantics></math><span class="translated-text">，这样：</span><span class="original-text">, such that:</span><math alttext="\delta P\text{ small}\quad\nRightarrow\quad\Delta R\text{ small}" class="ltx_Math" display="inline" id="S3.p1.10.m10" intent=":literal"><semantics><mrow><mrow><mi>δ</mi><mo lspace="0em" rspace="0em">​</mo><mi>P</mi><mo lspace="0em" rspace="0em">​</mo><mtext> small</mtext></mrow><mspace style="width:1em;" width="1em"></mspace><mo stretchy="false">⇏</mo><mspace style="width:1em;" width="1em"></mspace><mrow><mi mathvariant="normal">Δ</mi><mo lspace="0em" rspace="0em">​</mo><mi>R</mi><mo lspace="0em" rspace="0em">​</mo><mtext> small</mtext></mrow></mrow><annotation encoding="application/x-tex">\delta P\text{ small}\quad\nRightarrow\quad\Delta R\text{ small}</annotation></semantics></math><span class="translated-text">。这种不一致揭示了医疗保健领域的法学硕士可能对微小的语言变化敏感，从而导致诊断变异的严重弱点。</span><span class="original-text">. This inconsistency reveals the critical vulnerability that LLMs in healthcare can be sensitive to minor linguistic changes, leading to diagnostic variability.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="334" id="S3.F2.g1" src="https://arxiv.org/html/2606.07237v1/Comparison_misinformation.jpg" width="592"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F2.2.1.1" style="font-size:90%;">Figure 2</span>: </span><span class="ltx_text" id="S3.F2.3.2" style="font-size:90%;">Comparison of accurate and misinformation-attacked medical advice for acute limb ischemia.
+Lexical and syntactic alterations distort critical details, leading to dangerous clinical decisions.
+Highlighted risks demonstrate the impact of misinformation on patient outcomes.</span></figcaption>
+</figure>
+<section class="ltx_subsection ltx_indent_first" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">敏感性分析框架</span><span class="original-text">Sensitivity Analysis Framework</span></h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.3"><span class="translated-text">拟议的框架从原始的医疗提示开始</span><span class="original-text">The proposed framework begins with an original medical prompt</span><math alttext="P" class="ltx_Math" display="inline" id="S3.SS1.p1.1.m1" intent=":literal"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math><span class="translated-text">并通过标记级替换生成多个词汇变体。候选人不安的提示</span><span class="original-text">and generates multiple lexical variants through token-level substitutions. The candidate perturbed prompts</span><math alttext="P^{\prime}_{1},P^{\prime}_{2},\dots,P^{\prime}_{N}" class="ltx_Math" display="inline" id="S3.SS1.p1.2.m2" intent=":literal"><semantics><mrow><msubsup><mi>P</mi><mn>1</mn><mo>′</mo></msubsup><mo>,</mo><msubsup><mi>P</mi><mn>2</mn><mo>′</mo></msubsup><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msubsup><mi>P</mi><mi>N</mi><mo>′</mo></msubsup></mrow><annotation encoding="application/x-tex">P^{\prime}_{1},P^{\prime}_{2},\dots,P^{\prime}_{N}</annotation></semantics></math><span class="translated-text">然后使用 BioSyn 进行验证以确保医学等效性。使用通用句子编码器 (USE) 将每个提示（原始提示和扰动提示）编码为高维句子嵌入。计算原始嵌入和每个扰动嵌入之间的余弦相似度分数，以量化句法接近度。根据这些分数，受扰动提示的前 K 个子集在语法上最符合</span><span class="original-text">are then validated using BioSyn to ensure medical equivalence. Each prompt (original and perturbed) is encoded into a high-dimensional sentence embedding using the Universal Sentence Encoder (USE). Cosine similarity scores are computed between the original and each perturbed embedding to quantify syntactic closeness. Based on these scores, a top-K subset of perturbed prompts most syntactically aligned with</span><math alttext="P" class="ltx_Math" display="inline" id="S3.SS1.p1.3.m3" intent=":literal"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math><span class="translated-text">被选择进行进一步评估。然后将这些选定的提示传递给目标医疗保健 LLM（例如 GPT-3.5、LLaMA3、ClinicalBert、BioLLama3 和 BioBert），并记录模型的输出。使用基于准确性的指标将每个响应与真实情况进行比较。如图</span><span class="original-text">is selected for further evaluation. These selected prompts are then passed to a target healthcare LLM (e.g., GPT-3.5, LLaMA3, ClinicalBert, BioLLama3, and BioBert), and the model’s outputs are recorded. Each response is compared against ground truth using accuracy-based metrics. As shown in Figure</span><a class="ltx_ref" href="#S2.F1" title="Figure 1 ‣ 2.1 Prompt Sensitivity in General LLMs ‣ 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+</div>
+<section class="ltx_subsubsection ltx_indent_first" id="S3.SS1.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.1.1 </span><span class="translated-text">即时生成策略</span><span class="original-text">Prompt Generation Strategy</span></h4>
+<div class="ltx_para" id="S3.SS1.SSS1.p1">
+<p class="ltx_p" id="S3.SS1.SSS1.p1.1"><span class="translated-text">评估医疗保健法学硕士的稳健性需要接触各种能够捕捉现实世界临床多样性的提示。医学法学硕士通常可以容忍简单的词汇变化。在一项研究 (RAMBLA 2024) 中，GPT-4 和 GPT-3.5 维持
+当单个单词拼写错误或被同义词替换时，QA 准确性接近基线 [5]。该工作中所有评估的模型都“对拼写错误具有鲁棒性”——例如，即使有 3 个字符级别，GPT-4 的答案 F1 仍保持 0.84
+突变</span><span class="original-text">Evaluating the robustness of healthcare LLMs necessitates exposure to a wide variety of prompts that capture real-world clinical diversity. Medical LLMs generally tolerate simple lexical variations. In one study (RAmBLA 2024), GPT-4 and GPT-3.5 maintained
+near-baseline QA accuracy when single words were misspelled or replaced by synonyms [5]. All evaluated models in that work were “robust to spelling errors”-e.g., GPT-4’s answer F1 remained 0.84 even with 3 character-level
+mutations</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib119" title="RAmBLA: a framework for evaluating the reliability of llms as assistants in the biomedical domain">2</a>]</cite><span class="translated-text">。同样，保留意义的同义词交换或否定通常对输出准确性影响不大。这表明基础模型有一些内置的词汇
+灵活性，可能是由于子词建模和对噪声文本的预训练。在本研究中，我们利用 MedMCQA 数据集，充分利用其对医学专业和病症的广泛覆盖。</span><span class="original-text">. Similarly, meaning-preserving synonym swaps or negations often had little effect on output accuracy. This suggests that foundation models have some built-in lexical
+flexibility, likely due to subword modeling and pretraining on noisy text. In this study, we utilize the MedMCQA dataset, taking advantage of its extensive coverage across medical specialties and conditions.</span></p>
+</div>
+<section class="ltx_paragraph ltx_indentfirst" id="S3.SS1.SSS1.Px1">
+<h5 class="ltx_title ltx_runin ltx_font_bold ltx_title_paragraph"><span class="translated-text">词汇变化</span><span class="original-text">Lexical Variations</span></h5>
+<div class="ltx_para" id="S3.SS1.SSS1.Px1.p1">
+<p class="ltx_p" id="S3.SS1.SSS1.Px1.p1.1"><span class="translated-text">扰动过程涉及四个关键阶段：(i) 识别提示中的医学术语，(ii) 使用 BioSyn 将术语替换为临床上准确的同义词，(iii) 通过词嵌入和余弦相似性度量评估句法等效性，以及 (iv) 生成保持上下文和诊断一致性的扰动提示。算法</span><span class="original-text">The perturbation process involves four key stages: (i) identifying medical terms in the prompt, (ii) replacing terms with clinically accurate synonyms using BioSyn, (iii) evaluating syntactic equivalence through word embeddings and cosine similarity measures, and (iv) generating perturbed prompts that maintain contextual and diagnostic consistency. Algorithm</span><a class="ltx_ref" href="#alg1" title="Algorithm 1 ‣ Lexical Variations ‣ 3.1.1 Prompt Generation Strategy ‣ 3.1 Sensitivity Analysis Framework ‣ 3 Problem Statement and Methodology ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">详细说明了完整的扰动过程。为了量化词汇变化的影响，我们测量：(i) 使用 Sentence-BERT 嵌入的原始提示和扰动提示之间的句法相似性，(ii) 扰动提示之间模型响应的一致性，以及 (iii) 生成的有关基准地面实况答案的输出的临床可靠性。图（</span><span class="original-text">details the complete perturbation procedure. To quantify the effects of lexical variations, we measure: (i) syntactic similarity between original and perturbed prompts using Sentence-BERT embeddings, (ii) consistency of model responses across perturbed prompts, and (iii) the clinical reliability of generated outputs concerning benchmarked ground-truth answers. Figure(</span><a class="ltx_ref" href="#S3.F2" title="Figure 2 ‣ 3 Problem Statement and Methodology ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">, b) 使用来自 MedMCQA 的临床样本逐步说明了该过程。该过程首先使用精选的生物医学词典和预训练的语言模型（例如 BioBERT 和 SciBERT）识别原始提示中的医学相关术语。然后使用 BioSyn 检索每个术语的候选同义词，BioSyn 结合了词汇和句法相似性度量。为了保持临床准确性，我们通过向量嵌入（例如，带有 spaCy 的 Word2Vec）应用同义词边缘化，并根据余弦相似度分数选择排名靠前的替换项。例如，“发烧”等术语可能会被“pyrexia”取代，而“auscultation”会变成“听诊器”。</span><span class="original-text">, b) illustrates this process step-by-step using a clinical sample from MedMCQA. The procedure begins by identifying medically relevant terms in the original prompt with curated biomedical lexicons and pretrained language models such as BioBERT and SciBERT. Candidate synonyms for each term are then retrieved using BioSyn, which combines lexical and syntactic similarity measures. To maintain clinical accuracy, we apply synonym marginalization through vector embeddings (e.g., Word2Vec with spaCy) and select the top-ranked replacements based on cosine similarity scores. For example, terms like “fever” may be replaced by “pyrexia,” while “auscultation” becomes “stethoscope.”.</span></p>
+</div>
+<figure class="ltx_float ltx_float_algorithm ltx_framed ltx_framed_top" id="alg1">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_float"><span class="ltx_text ltx_font_bold" id="alg1.2.1.1">Algorithm 1</span> </span> Lexical Perturbation using BioSyn &amp; Cosine Similarity</figcaption>
+<div class="ltx_listing ltx_listing" id="alg1.3">
+<div class="ltx_listingline" id="alg1.l1">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l1.1.1.1" style="font-size:80%;">1:</span></span><span class="ltx_text" id="alg1.l1.2" style="font-size:80%;">  </span><span class="ltx_text ltx_font_bold" id="alg1.l1.3" style="font-size:80%;">Input:</span><span class="ltx_text" id="alg1.l1.4" style="font-size:80%;"> Clinical prompt </span><math alttext="P=\{t_{1},t_{2},\dots,t_{n}\}" class="ltx_Math" display="inline" id="alg1.l1.m1" intent=":literal"><semantics><mrow><mi mathsize="0.800em">P</mi><mo mathsize="0.800em">=</mo><mrow><mo maxsize="0.800em" minsize="0.800em">{</mo><msub><mi mathsize="0.800em">t</mi><mn mathsize="0.800em">1</mn></msub><mo mathsize="0.800em">,</mo><msub><mi mathsize="0.800em">t</mi><mn mathsize="0.800em">2</mn></msub><mo mathsize="0.800em">,</mo><mi mathsize="0.800em" mathvariant="normal">…</mi><mo mathsize="0.800em">,</mo><msub><mi mathsize="0.800em">t</mi><mi mathsize="0.800em">n</mi></msub><mo maxsize="0.800em" minsize="0.800em">}</mo></mrow></mrow><annotation encoding="application/x-tex">P=\{t_{1},t_{2},\dots,t_{n}\}</annotation></semantics></math><span class="ltx_text" id="alg1.l1.5" style="font-size:80%;">
+</span>
+</div>
+<div class="ltx_listingline" id="alg1.l2">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l2.1.1.1" style="font-size:80%;">2:</span></span><span class="ltx_text" id="alg1.l2.2" style="font-size:80%;">  </span><span class="ltx_text ltx_font_bold" id="alg1.l2.3" style="font-size:80%;">Output:</span><span class="ltx_text" id="alg1.l2.4" style="font-size:80%;"> Lexically perturbed prompt </span><math alttext="P^{\prime}" class="ltx_Math" display="inline" id="alg1.l2.m1" intent=":literal"><semantics><msup><mi mathsize="0.800em">P</mi><mo mathsize="0.800em">′</mo></msup><annotation encoding="application/x-tex">P^{\prime}</annotation></semantics></math><span class="ltx_text" id="alg1.l2.5" style="font-size:80%;">
+</span>
+</div>
+<div class="ltx_listingline" id="alg1.l3">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l3.1.1.1" style="font-size:80%;">3:</span></span><span class="ltx_text" id="alg1.l3.2" style="font-size:80%;">  </span><span class="ltx_text ltx_font_bold" id="alg1.l3.3" style="font-size:80%;">for</span><span class="ltx_text" id="alg1.l3.4" style="font-size:80%;"> each medical term </span><math alttext="t_{i}\in P" class="ltx_Math" display="inline" id="alg1.l3.m1" intent=":literal"><semantics><mrow><msub><mi mathsize="0.800em">t</mi><mi mathsize="0.800em">i</mi></msub><mo mathsize="0.800em">∈</mo><mi mathsize="0.800em">P</mi></mrow><annotation encoding="application/x-tex">t_{i}\in P</annotation></semantics></math><span class="ltx_text" id="alg1.l3.5" style="font-size:80%;"> </span><span class="ltx_text ltx_font_bold" id="alg1.l3.6" style="font-size:80%;">do</span><span class="ltx_text" id="alg1.l3.7" style="font-size:80%;">
+</span>
+</div>
+<div class="ltx_listingline" id="alg1.l4">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l4.1.1.1" style="font-size:80%;">4:</span></span><span class="ltx_text" id="alg1.l4.2" style="font-size:80%;">   Retrieve candidate synonyms </span><math alttext="S_{i}" class="ltx_Math" display="inline" id="alg1.l4.m1" intent=":literal"><semantics><msub><mi mathsize="0.800em">S</mi><mi mathsize="0.800em">i</mi></msub><annotation encoding="application/x-tex">S_{i}</annotation></semantics></math><span class="ltx_text" id="alg1.l4.3" style="font-size:80%;"> using BioSyn.
+</span>
+</div>
+<div class="ltx_listingline" id="alg1.l5">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l5.1.1.1" style="font-size:80%;">5:</span></span><span class="ltx_text" id="alg1.l5.2" style="font-size:80%;">   </span><span class="ltx_text ltx_font_bold" id="alg1.l5.3" style="font-size:80%;">for</span><span class="ltx_text" id="alg1.l5.4" style="font-size:80%;"> each synonym </span><math alttext="s_{j}\in S_{i}" class="ltx_Math" display="inline" id="alg1.l5.m1" intent=":literal"><semantics><mrow><msub><mi mathsize="0.800em">s</mi><mi mathsize="0.800em">j</mi></msub><mo mathsize="0.800em">∈</mo><msub><mi mathsize="0.800em">S</mi><mi mathsize="0.800em">i</mi></msub></mrow><annotation encoding="application/x-tex">s_{j}\in S_{i}</annotation></semantics></math><span class="ltx_text" id="alg1.l5.5" style="font-size:80%;"> </span><span class="ltx_text ltx_font_bold" id="alg1.l5.6" style="font-size:80%;">do</span><span class="ltx_text" id="alg1.l5.7" style="font-size:80%;">
+</span>
+</div>
+<div class="ltx_listingline" id="alg1.l6">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l6.1.1.1" style="font-size:80%;">6:</span></span><span class="ltx_text" id="alg1.l6.2" style="font-size:80%;">    Compute cosine similarity </span><math alttext="\text{Sim}(t_{i},s_{j})" class="ltx_Math" display="inline" id="alg1.l6.m1" intent=":literal"><semantics><mrow><mtext mathsize="0.800em">Sim</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><msub><mi mathsize="0.800em">t</mi><mi mathsize="0.800em">i</mi></msub><mo mathsize="0.800em">,</mo><msub><mi mathsize="0.800em">s</mi><mi mathsize="0.800em">j</mi></msub><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{Sim}(t_{i},s_{j})</annotation></semantics></math><span class="ltx_text" id="alg1.l6.3" style="font-size:80%;">.
+</span>
+</div>
+<div class="ltx_listingline" id="alg1.l7">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l7.1.1.1" style="font-size:80%;">7:</span></span><span class="ltx_text" id="alg1.l7.2" style="font-size:80%;">   </span><span class="ltx_text ltx_font_bold" id="alg1.l7.3" style="font-size:80%;">end</span><span class="ltx_text" id="alg1.l7.4" style="font-size:80%;"> </span><span class="ltx_text ltx_font_bold" id="alg1.l7.5" style="font-size:80%;">for</span>
+</div>
+<div class="ltx_listingline" id="alg1.l8">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l8.1.1.1" style="font-size:80%;">8:</span></span><span class="ltx_text" id="alg1.l8.2" style="font-size:80%;">   Select best synonym </span><math alttext="B(t_{i})=\arg\max_{s_{j}\in S_{i}}\text{Sim}(t_{i},s_{j})" class="ltx_Math" display="inline" id="alg1.l8.m1" intent=":literal"><semantics><mrow><mrow><mi mathsize="0.800em">B</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><msub><mi mathsize="0.800em">t</mi><mi mathsize="0.800em">i</mi></msub><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><mo mathsize="0.800em">=</mo><mrow><mrow><mi mathsize="0.800em">arg</mi><mo lspace="0.167em">⁡</mo><mrow><msub><mi mathsize="0.800em">max</mi><mrow><msub><mi mathsize="0.800em">s</mi><mi mathsize="0.800em">j</mi></msub><mo mathsize="0.800em">∈</mo><msub><mi mathsize="0.800em">S</mi><mi mathsize="0.800em">i</mi></msub></mrow></msub><mo lspace="0.167em">⁡</mo><mtext mathsize="0.800em">Sim</mtext></mrow></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><msub><mi mathsize="0.800em">t</mi><mi mathsize="0.800em">i</mi></msub><mo mathsize="0.800em">,</mo><msub><mi mathsize="0.800em">s</mi><mi mathsize="0.800em">j</mi></msub><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">B(t_{i})=\arg\max_{s_{j}\in S_{i}}\text{Sim}(t_{i},s_{j})</annotation></semantics></math><span class="ltx_text" id="alg1.l8.3" style="font-size:80%;">.
+</span>
+</div>
+<div class="ltx_listingline" id="alg1.l9">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l9.1.1.1" style="font-size:80%;">9:</span></span><span class="ltx_text" id="alg1.l9.2" style="font-size:80%;">   Replace </span><math alttext="t_{i}" class="ltx_Math" display="inline" id="alg1.l9.m1" intent=":literal"><semantics><msub><mi mathsize="0.800em">t</mi><mi mathsize="0.800em">i</mi></msub><annotation encoding="application/x-tex">t_{i}</annotation></semantics></math><span class="ltx_text" id="alg1.l9.3" style="font-size:80%;"> with </span><math alttext="B(t_{i})" class="ltx_Math" display="inline" id="alg1.l9.m2" intent=":literal"><semantics><mrow><mi mathsize="0.800em">B</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><msub><mi mathsize="0.800em">t</mi><mi mathsize="0.800em">i</mi></msub><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">B(t_{i})</annotation></semantics></math><span class="ltx_text" id="alg1.l9.4" style="font-size:80%;"> in </span><math alttext="P" class="ltx_Math" display="inline" id="alg1.l9.m3" intent=":literal"><semantics><mi mathsize="0.800em">P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math><span class="ltx_text" id="alg1.l9.5" style="font-size:80%;">.
+</span>
+</div>
+<div class="ltx_listingline" id="alg1.l10">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l10.1.1.1" style="font-size:80%;">10:</span></span><span class="ltx_text" id="alg1.l10.2" style="font-size:80%;">  </span><span class="ltx_text ltx_font_bold" id="alg1.l10.3" style="font-size:80%;">end</span><span class="ltx_text" id="alg1.l10.4" style="font-size:80%;"> </span><span class="ltx_text ltx_font_bold" id="alg1.l10.5" style="font-size:80%;">for</span>
+</div>
+<div class="ltx_listingline" id="alg1.l11">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l11.1.1.1" style="font-size:80%;">11:</span></span><span class="ltx_text" id="alg1.l11.2" style="font-size:80%;">  </span><span class="ltx_text ltx_font_bold" id="alg1.l11.3" style="font-size:80%;">return</span><span class="ltx_text" id="alg1.l11.4" style="font-size:80%;"> </span><math alttext="P^{\prime}" class="ltx_Math" display="inline" id="alg1.l11.m1" intent=":literal"><semantics><msup><mi mathsize="0.800em">P</mi><mo mathsize="0.800em">′</mo></msup><annotation encoding="application/x-tex">P^{\prime}</annotation></semantics></math><span class="ltx_text" id="alg1.l11.5" style="font-size:80%;">
+</span>
+</div>
+</div>
+</figure>
+</section>
+<section class="ltx_paragraph ltx_indentfirst" id="S3.SS1.SSS1.Px2">
+<h5 class="ltx_title ltx_runin ltx_font_bold ltx_title_paragraph"><span class="translated-text">句法变化</span><span class="original-text">Syntactic Variations</span></h5>
+<div class="ltx_para" id="S3.SS1.SSS1.Px2.p1">
+<p class="ltx_p" id="S3.SS1.SSS1.Px2.p1.1"><span class="translated-text">相比之下，改变输入结构可以显着影响结果。例如，简单地交换语义相同的答案选项的顺序会导致 GPT-4 改变其响应并导致可测量的准确性下降。在订单效应研究中</span><span class="original-text">By contrast, altering input structure can noticeably impact results. For example, simply swapping the order of semantically identical answer options caused GPT-4 to change its responses and incur a measurable accuracy drop. In the Order Effect study</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib120" title="The order effect: investigating prompt sensitivity in closed-source llms">6</a>]</cite><span class="translated-text">，洗牌输入导致任务性能下降。当选项重新排序时，GPT-4 在释义任务上的准确性下降了约 2-3%</span><span class="original-text">, shuffling inputs led to performance declines across tasks. GPT-4’s accuracy on a paraphrasing task dropped by about 2–3% when choices were reordered</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib120" title="The order effect: investigating prompt sensitivity in closed-source llms">6</a>]</cite><span class="translated-text">。少量提示仅部分缓解了这种影响：虽然添加示例稍微缩小了差距，但没有模型完全消除对输入顺序的敏感性</span><span class="original-text">. Few-shot prompts mitigated this effect only partially: while adding examples reduced the gap slightly, no model fully eliminated sensitivity to input order</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib120" title="The order effect: investigating prompt sensitivity in closed-source llms">6</a>]</cite><span class="translated-text">。这表明即使是高级法学硕士仍然依赖于提示格式。在临床环境中，持续的顺序敏感性令人担忧：例如，重新表述症状列表或重新排序历史元素可能会无意中翻转预测。
+句法扰动旨在修改临床提示的结构和措辞，同时保持其整体医学一致性和诊断意图。该过程首先确定提示中的关键临床概念，并探索上下文相关的改写或替换。与针对孤立术语替换的词汇扰动不同，句法扰动可能涉及句子结构的变化或概念上相似短语的替换。使用上下文词嵌入（例如 BioBERT）、余弦相似性评分以及 BioSyn 和 UMLS Metathesaurus 等生物医学资源来验证句法一致性。生成语法保留提示的算法在算法中概述</span><span class="original-text">. This indicates that even advanced LLMs remain dependent on prompt formatting. In the clinical context, persisting order-sensitivity is worrisome: for instance, rephrasing a symptom list or reordering history elements might unintentionally flip a prediction.
+Syntactic perturbations aim to modify the structure and phrasing of clinical prompts while preserving their overall medical coherence and diagnostic intent. This process begins by identifying key clinical concepts within the prompt and exploring contextually relevant rephrasings or substitutions. Unlike lexical perturbations, which target isolated term replacements, syntactic perturbations may involve changes in sentence structure or the substitution of conceptually similar phrases. Syntactic consistency is validated using contextual word embeddings (e.g., BioBERT), cosine similarity scoring, and biomedical resources such as BioSyn and the UMLS Metathesaurus. The algorithm for generating syntactic ally preserved prompts is outlined in Algorithm</span><a class="ltx_ref" href="#alg2" title="Algorithm 2 ‣ Syntactic Variations ‣ 3.1.1 Prompt Generation Strategy ‣ 3.1 Sensitivity Analysis Framework ‣ 3 Problem Statement and Methodology ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">，示例如图（</span><span class="original-text">, and an example is illustrated in Figure(</span><a class="ltx_ref" href="#S3.F2" title="Figure 2 ‣ 3 Problem Statement and Methodology ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">，c）。</span><span class="original-text">, c).</span></p>
+</div>
+<figure class="ltx_float ltx_float_algorithm ltx_framed ltx_framed_top" id="alg2">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_float"><span class="ltx_text ltx_font_bold" id="alg2.2.1.1">Algorithm 2</span> </span> Syntactic Perturbation using Contextual Embeddings</figcaption>
+<div class="ltx_listing ltx_listing" id="alg2.3">
+<div class="ltx_listingline" id="alg2.l1">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg2.l1.1.1.1" style="font-size:80%;">1:</span></span><span class="ltx_text" id="alg2.l1.2" style="font-size:80%;">  </span><span class="ltx_text ltx_font_bold" id="alg2.l1.3" style="font-size:80%;">Input:</span><span class="ltx_text" id="alg2.l1.4" style="font-size:80%;"> Clinical prompt </span><math alttext="P=\{t_{1},t_{2},\dots,t_{n}\}" class="ltx_Math" display="inline" id="alg2.l1.m1" intent=":literal"><semantics><mrow><mi mathsize="0.800em">P</mi><mo mathsize="0.800em">=</mo><mrow><mo maxsize="0.800em" minsize="0.800em">{</mo><msub><mi mathsize="0.800em">t</mi><mn mathsize="0.800em">1</mn></msub><mo mathsize="0.800em">,</mo><msub><mi mathsize="0.800em">t</mi><mn mathsize="0.800em">2</mn></msub><mo mathsize="0.800em">,</mo><mi mathsize="0.800em" mathvariant="normal">…</mi><mo mathsize="0.800em">,</mo><msub><mi mathsize="0.800em">t</mi><mi mathsize="0.800em">n</mi></msub><mo maxsize="0.800em" minsize="0.800em">}</mo></mrow></mrow><annotation encoding="application/x-tex">P=\{t_{1},t_{2},\dots,t_{n}\}</annotation></semantics></math><span class="ltx_text" id="alg2.l1.5" style="font-size:80%;">
+</span>
+</div>
+<div class="ltx_listingline" id="alg2.l2">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg2.l2.1.1.1" style="font-size:80%;">2:</span></span><span class="ltx_text" id="alg2.l2.2" style="font-size:80%;">  </span><span class="ltx_text ltx_font_bold" id="alg2.l2.3" style="font-size:80%;">Output:</span><span class="ltx_text" id="alg2.l2.4" style="font-size:80%;"> syntactic ally perturbed prompt </span><math alttext="P^{\prime}" class="ltx_Math" display="inline" id="alg2.l2.m1" intent=":literal"><semantics><msup><mi mathsize="0.800em">P</mi><mo mathsize="0.800em">′</mo></msup><annotation encoding="application/x-tex">P^{\prime}</annotation></semantics></math><span class="ltx_text" id="alg2.l2.5" style="font-size:80%;">
+</span>
+</div>
+<div class="ltx_listingline" id="alg2.l3">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg2.l3.1.1.1" style="font-size:80%;">3:</span></span><span class="ltx_text" id="alg2.l3.2" style="font-size:80%;">  Identify key medical concepts and inter-term relationships in </span><math alttext="P" class="ltx_Math" display="inline" id="alg2.l3.m1" intent=":literal"><semantics><mi mathsize="0.800em">P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math><span class="ltx_text" id="alg2.l3.3" style="font-size:80%;">.
+</span>
+</div>
+<div class="ltx_listingline" id="alg2.l4">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg2.l4.1.1.1" style="font-size:80%;">4:</span></span><span class="ltx_text" id="alg2.l4.2" style="font-size:80%;">  </span><span class="ltx_text ltx_font_bold" id="alg2.l4.3" style="font-size:80%;">for</span><span class="ltx_text" id="alg2.l4.4" style="font-size:80%;"> each term </span><math alttext="t_{i}\in P" class="ltx_Math" display="inline" id="alg2.l4.m1" intent=":literal"><semantics><mrow><msub><mi mathsize="0.800em">t</mi><mi mathsize="0.800em">i</mi></msub><mo mathsize="0.800em">∈</mo><mi mathsize="0.800em">P</mi></mrow><annotation encoding="application/x-tex">t_{i}\in P</annotation></semantics></math><span class="ltx_text" id="alg2.l4.5" style="font-size:80%;"> </span><span class="ltx_text ltx_font_bold" id="alg2.l4.6" style="font-size:80%;">do</span><span class="ltx_text" id="alg2.l4.7" style="font-size:80%;">
+</span>
+</div>
+<div class="ltx_listingline" id="alg2.l5">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg2.l5.1.1.1" style="font-size:80%;">5:</span></span><span class="ltx_text" id="alg2.l5.2" style="font-size:80%;">   Retrieve syntactic ally related terms </span><math alttext="S_{i}" class="ltx_Math" display="inline" id="alg2.l5.m1" intent=":literal"><semantics><msub><mi mathsize="0.800em">S</mi><mi mathsize="0.800em">i</mi></msub><annotation encoding="application/x-tex">S_{i}</annotation></semantics></math><span class="ltx_text" id="alg2.l5.3" style="font-size:80%;"> using contextual embeddings and BioSyn.
+</span>
+</div>
+<div class="ltx_listingline" id="alg2.l6">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg2.l6.1.1.1" style="font-size:80%;">6:</span></span><span class="ltx_text" id="alg2.l6.2" style="font-size:80%;">   </span><span class="ltx_text ltx_font_bold" id="alg2.l6.3" style="font-size:80%;">for</span><span class="ltx_text" id="alg2.l6.4" style="font-size:80%;"> each term </span><math alttext="s_{j}\in S_{i}" class="ltx_Math" display="inline" id="alg2.l6.m1" intent=":literal"><semantics><mrow><msub><mi mathsize="0.800em">s</mi><mi mathsize="0.800em">j</mi></msub><mo mathsize="0.800em">∈</mo><msub><mi mathsize="0.800em">S</mi><mi mathsize="0.800em">i</mi></msub></mrow><annotation encoding="application/x-tex">s_{j}\in S_{i}</annotation></semantics></math><span class="ltx_text" id="alg2.l6.5" style="font-size:80%;"> </span><span class="ltx_text ltx_font_bold" id="alg2.l6.6" style="font-size:80%;">do</span><span class="ltx_text" id="alg2.l6.7" style="font-size:80%;">
+</span>
+</div>
+<div class="ltx_listingline" id="alg2.l7">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg2.l7.1.1.1" style="font-size:80%;">7:</span></span><span class="ltx_text" id="alg2.l7.2" style="font-size:80%;">    Compute context-aware similarity </span><math alttext="\text{Sim}(t_{i},s_{j})" class="ltx_Math" display="inline" id="alg2.l7.m1" intent=":literal"><semantics><mrow><mtext mathsize="0.800em">Sim</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><msub><mi mathsize="0.800em">t</mi><mi mathsize="0.800em">i</mi></msub><mo mathsize="0.800em">,</mo><msub><mi mathsize="0.800em">s</mi><mi mathsize="0.800em">j</mi></msub><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{Sim}(t_{i},s_{j})</annotation></semantics></math><span class="ltx_text" id="alg2.l7.3" style="font-size:80%;">.
+</span>
+</div>
+<div class="ltx_listingline" id="alg2.l8">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg2.l8.1.1.1" style="font-size:80%;">8:</span></span><span class="ltx_text" id="alg2.l8.2" style="font-size:80%;">   </span><span class="ltx_text ltx_font_bold" id="alg2.l8.3" style="font-size:80%;">end</span><span class="ltx_text" id="alg2.l8.4" style="font-size:80%;"> </span><span class="ltx_text ltx_font_bold" id="alg2.l8.5" style="font-size:80%;">for</span>
+</div>
+<div class="ltx_listingline" id="alg2.l9">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg2.l9.1.1.1" style="font-size:80%;">9:</span></span><span class="ltx_text" id="alg2.l9.2" style="font-size:80%;">   Select </span><math alttext="B(t_{i})=\arg\max_{s_{j}\in S_{i}}\text{Sim}(t_{i},s_{j})" class="ltx_Math" display="inline" id="alg2.l9.m1" intent=":literal"><semantics><mrow><mrow><mi mathsize="0.800em">B</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><msub><mi mathsize="0.800em">t</mi><mi mathsize="0.800em">i</mi></msub><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><mo mathsize="0.800em">=</mo><mrow><mrow><mi mathsize="0.800em">arg</mi><mo lspace="0.167em">⁡</mo><mrow><msub><mi mathsize="0.800em">max</mi><mrow><msub><mi mathsize="0.800em">s</mi><mi mathsize="0.800em">j</mi></msub><mo mathsize="0.800em">∈</mo><msub><mi mathsize="0.800em">S</mi><mi mathsize="0.800em">i</mi></msub></mrow></msub><mo lspace="0.167em">⁡</mo><mtext mathsize="0.800em">Sim</mtext></mrow></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><msub><mi mathsize="0.800em">t</mi><mi mathsize="0.800em">i</mi></msub><mo mathsize="0.800em">,</mo><msub><mi mathsize="0.800em">s</mi><mi mathsize="0.800em">j</mi></msub><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">B(t_{i})=\arg\max_{s_{j}\in S_{i}}\text{Sim}(t_{i},s_{j})</annotation></semantics></math><span class="ltx_text" id="alg2.l9.3" style="font-size:80%;">.
+</span>
+</div>
+<div class="ltx_listingline" id="alg2.l10">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg2.l10.1.1.1" style="font-size:80%;">10:</span></span><span class="ltx_text" id="alg2.l10.2" style="font-size:80%;">   Replace </span><math alttext="t_{i}" class="ltx_Math" display="inline" id="alg2.l10.m1" intent=":literal"><semantics><msub><mi mathsize="0.800em">t</mi><mi mathsize="0.800em">i</mi></msub><annotation encoding="application/x-tex">t_{i}</annotation></semantics></math><span class="ltx_text" id="alg2.l10.3" style="font-size:80%;"> with </span><math alttext="B(t_{i})" class="ltx_Math" display="inline" id="alg2.l10.m2" intent=":literal"><semantics><mrow><mi mathsize="0.800em">B</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="0.800em" minsize="0.800em">(</mo><msub><mi mathsize="0.800em">t</mi><mi mathsize="0.800em">i</mi></msub><mo maxsize="0.800em" minsize="0.800em">)</mo></mrow></mrow><annotation encoding="application/x-tex">B(t_{i})</annotation></semantics></math><span class="ltx_text" id="alg2.l10.4" style="font-size:80%;"> in </span><math alttext="P" class="ltx_Math" display="inline" id="alg2.l10.m3" intent=":literal"><semantics><mi mathsize="0.800em">P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math><span class="ltx_text" id="alg2.l10.5" style="font-size:80%;">.
+</span>
+</div>
+<div class="ltx_listingline" id="alg2.l11">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg2.l11.1.1.1" style="font-size:80%;">11:</span></span><span class="ltx_text" id="alg2.l11.2" style="font-size:80%;">  </span><span class="ltx_text ltx_font_bold" id="alg2.l11.3" style="font-size:80%;">end</span><span class="ltx_text" id="alg2.l11.4" style="font-size:80%;"> </span><span class="ltx_text ltx_font_bold" id="alg2.l11.5" style="font-size:80%;">for</span>
+</div>
+<div class="ltx_listingline" id="alg2.l12">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg2.l12.1.1.1" style="font-size:80%;">12:</span></span><span class="ltx_text" id="alg2.l12.2" style="font-size:80%;">  Optionally rephrase sentence structure while preserving clinical validity.
+</span>
+</div>
+<div class="ltx_listingline" id="alg2.l13">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg2.l13.1.1.1" style="font-size:80%;">13:</span></span><span class="ltx_text" id="alg2.l13.2" style="font-size:80%;">  </span><span class="ltx_text ltx_font_bold" id="alg2.l13.3" style="font-size:80%;">return</span><span class="ltx_text" id="alg2.l13.4" style="font-size:80%;"> </span><math alttext="P^{\prime}" class="ltx_Math" display="inline" id="alg2.l13.m1" intent=":literal"><semantics><msup><mi mathsize="0.800em">P</mi><mo mathsize="0.800em">′</mo></msup><annotation encoding="application/x-tex">P^{\prime}</annotation></semantics></math><span class="ltx_text" id="alg2.l13.5" style="font-size:80%;">
+</span>
+</div>
+</div>
+</figure>
+<figure class="ltx_table" id="S3.T3">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S3.T3.5.1.1" style="font-size:90%;">Table 3</span>: </span><span class="ltx_text" id="S3.T3.6.2" style="font-size:90%;">Sensitivity analysis of LLMs to question phrasing: Implications for format integrity and diagnostic reliability in clinical diagnosis..</span></figcaption>
+<table class="ltx_tabular ltx_centering ltx_align_middle" id="S3.T3.3">
+<tr class="ltx_tr" id="S3.T3.3.4">
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_tt" id="S3.T3.3.4.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.3.4.1.1">
+<span class="ltx_p" id="S3.T3.3.4.1.1.1" style="width:227.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.3.4.1.1.1.1" style="font-size:70%;">Prompt and LLM Response</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_tt" id="S3.T3.3.4.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.3.4.2.1">
+<span class="ltx_p" id="S3.T3.3.4.2.1.1" style="width:85.4pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.3.4.2.1.1.1" style="font-size:70%;">Evaluation Metrics</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_tt" id="S3.T3.3.4.3">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.3.4.3.1">
+<span class="ltx_p" id="S3.T3.3.4.3.1.1" style="width:170.7pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.3.4.3.1.1.1" style="font-size:70%;">Interpretation
+(Analysis)</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.3.5">
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_t" id="S3.T3.3.5.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.3.5.1.1">
+<span class="ltx_p" id="S3.T3.3.5.1.1.1" style="width:227.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.3.5.1.1.1.1" style="font-size:70%;">Original Prompt:</span><span class="ltx_text" id="S3.T3.3.5.1.1.1.2" style="font-size:70%;"> A 72-year-old male with a history of chronic smoking and productive cough presents with increased sputum and dyspnea. Physical exam reveals wheezing and a barrel chest. </span>
+<br class="ltx_break"/><span class="ltx_text ltx_font_bold" id="S3.T3.3.5.1.1.1.3" style="font-size:70%;">Instruction:</span><span class="ltx_text" id="S3.T3.3.5.1.1.1.4" style="font-size:70%;"> Return the results in JSON format with the keys: ”answer” and ”explanation”. </span>
+<br class="ltx_break"/><span class="ltx_text ltx_font_bold" id="S3.T3.3.5.1.1.1.5" style="font-size:70%;">Question:</span><span class="ltx_text" id="S3.T3.3.5.1.1.1.6" style="font-size:70%;"> Based on the clinical presentation what is the most likely diagnosis? </span>
+<br class="ltx_break"/><span class="ltx_text ltx_font_bold" id="S3.T3.3.5.1.1.1.7" style="font-size:70%;">Options:</span><span class="ltx_text" id="S3.T3.3.5.1.1.1.8" style="font-size:70%;"> A) Pulmonary Fibrosis, B) Chronic Obstructive Pulmonary Disease (COPD), C) Pulmonary Edema, D) Lobar Pneumonia</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_t" id="S3.T3.3.5.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.3.5.2.1">
+<span class="ltx_p" id="S3.T3.3.5.2.1.1" style="width:85.4pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.3.5.2.1.1.1" style="font-size:70%;">RR:</span><span class="ltx_text" id="S3.T3.3.5.2.1.1.2" style="font-size:70%;"> Response Rate </span>
+<br class="ltx_break"/><span class="ltx_text ltx_font_bold" id="S3.T3.3.5.2.1.1.3" style="font-size:70%;">FIR:</span><span class="ltx_text" id="S3.T3.3.5.2.1.1.4" style="font-size:70%;"> Follow-up Instruction Rate </span>
+<br class="ltx_break"/><span class="ltx_text ltx_font_bold" id="S3.T3.3.5.2.1.1.5" style="font-size:70%;">BERTScore:</span><span class="ltx_text" id="S3.T3.3.5.2.1.1.6" style="font-size:70%;"> Semantic Similarity </span>
+<br class="ltx_break"/><span class="ltx_text ltx_font_bold" id="S3.T3.3.5.2.1.1.7" style="font-size:70%;">USE:</span><span class="ltx_text" id="S3.T3.3.5.2.1.1.8" style="font-size:70%;"> Universal Sentence Encoder (Embedding model)</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_t" id="S3.T3.3.5.3">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.3.5.3.1">
+<span class="ltx_p" id="S3.T3.3.5.3.1.1" style="width:170.7pt;"><span class="ltx_text" id="S3.T3.3.5.3.1.1.1" style="font-size:70%;">The baseline prompt establishes the clinical context and complex instructions. It serves as the reference point for measuring how well the model maintains its response consistency and instruction adherence.</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.3.6">
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_t" id="S3.T3.3.6.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.3.6.1.1">
+<span class="ltx_p" id="S3.T3.3.6.1.1.1" style="width:227.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.3.6.1.1.1.1" style="font-size:70%;">LLM response (Standard prompt (unperturbed)):</span><span class="ltx_text" id="S3.T3.3.6.1.1.1.2" style="font-size:70%;"> </span>
+<br class="ltx_break"/><span class="ltx_text ltx_font_typewriter" id="S3.T3.3.6.1.1.1.3" style="font-size:70%;">JSON format:{</span><span class="ltx_text" id="S3.T3.3.6.1.1.1.4" style="font-size:70%;"> </span>
+<br class="ltx_break"/><span class="ltx_text ltx_font_typewriter" id="S3.T3.3.6.1.1.1.5" style="font-size:70%;">"answer": "B) Chronic Obstructive Pulmonary Disease (COPD)",</span><span class="ltx_text" id="S3.T3.3.6.1.1.1.6" style="font-size:70%;"> </span>
+<br class="ltx_break"/><span class="ltx_text ltx_font_typewriter" id="S3.T3.3.6.1.1.1.7" style="font-size:70%;">"explanation": "The patient’s history and symptoms are consistent with COPD."}</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_t" id="S3.T3.3.6.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.3.6.2.1">
+<span class="ltx_p" id="S3.T3.3.6.2.1.1" style="width:85.4pt;"><span class="ltx_text" id="S3.T3.3.6.2.1.1.1" style="font-size:70%;">RR: ✓</span>
+<br class="ltx_break"/><span class="ltx_text" id="S3.T3.3.6.2.1.1.2" style="font-size:70%;">FIR: ✓</span>
+<br class="ltx_break"/><span class="ltx_text" id="S3.T3.3.6.2.1.1.3" style="font-size:70%;">BERTScore: 0.97 </span>
+<br class="ltx_break"/><span class="ltx_text" id="S3.T3.3.6.2.1.1.4" style="font-size:70%;">USE: 0.98</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_t" id="S3.T3.3.6.3">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.3.6.3.1">
+<span class="ltx_p" id="S3.T3.3.6.3.1.1" style="width:170.7pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.3.6.3.1.1.1" style="font-size:70%;">Optimal Performance:</span><span class="ltx_text" id="S3.T3.3.6.3.1.1.2" style="font-size:70%;"> The model demonstrates high-fidelity reasoning and perfect instruction following. Both the medical diagnosis (RR) and the JSON formatting (FIR) are handled correctly.</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.1">
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_t" id="S3.T3.1.1.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.1.2.1">
+<span class="ltx_p" id="S3.T3.1.1.2.1.1" style="width:227.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.1.1.2.1.1.1" style="font-size:70%;">LLM response (Lexical perturbed prompt):</span><span class="ltx_text" id="S3.T3.1.1.2.1.1.2" style="font-size:70%;"> </span>
+<br class="ltx_break"/><span class="ltx_text ltx_font_typewriter" id="S3.T3.1.1.2.1.1.3" style="font-size:70%;">JSON format:{</span><span class="ltx_text" id="S3.T3.1.1.2.1.1.4" style="font-size:70%;"> </span>
+<br class="ltx_break"/><span class="ltx_text ltx_font_bold" id="S3.T3.1.1.2.1.1.5" style="font-size:70%;">”My answer is” :</span><span class="ltx_text" id="S3.T3.1.1.2.1.1.6" style="font-size:70%;"> ”B) Chronic Obstructive Pulmonary Disease (COPD)”, </span>
+<br class="ltx_break"/><span class="ltx_text ltx_font_bold" id="S3.T3.1.1.2.1.1.7" style="font-size:70%;">”In this status” :</span><span class="ltx_text" id="S3.T3.1.1.2.1.1.8" style="font-size:70%;"> ”Given the patient’s known history of COPD…”}</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_t" id="S3.T3.1.1.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.1.1.1">
+<span class="ltx_p" id="S3.T3.1.1.1.1.1" style="width:85.4pt;"><span class="ltx_text" id="S3.T3.1.1.1.1.1.1" style="font-size:70%;">RR: ✓</span>
+<br class="ltx_break"/><span class="ltx_text" id="S3.T3.1.1.1.1.1.2" style="font-size:70%;">FIR: </span><math alttext="\times" class="ltx_Math" display="inline" id="S3.T3.1.1.1.1.1.m1" intent=":literal"><semantics><mo mathsize="0.700em">×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math><span class="ltx_text" id="S3.T3.1.1.1.1.1.3" style="font-size:70%;"> </span>
+<br class="ltx_break"/><span class="ltx_text" id="S3.T3.1.1.1.1.1.4" style="font-size:70%;">BERTScore: 0.75 </span>
+<br class="ltx_break"/><span class="ltx_text" id="S3.T3.1.1.1.1.1.5" style="font-size:70%;">USE: 0.85</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_t" id="S3.T3.1.1.3">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.1.3.1">
+<span class="ltx_p" id="S3.T3.1.1.3.1.1" style="width:170.7pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.1.1.3.1.1.1" style="font-size:70%;">Instruction Drift:</span><span class="ltx_text" id="S3.T3.1.1.3.1.1.2" style="font-size:70%;"> While the model’s clinical logic remains sound (correct diagnosis), changing the prompt’s vocabulary causes a failure in following the specific follow-up instructions (FIR). The model fails the formatting constraint despite the correct answer.</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.3.3">
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_bb ltx_border_t" id="S3.T3.3.3.3">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.3.3.3.1">
+<span class="ltx_p" id="S3.T3.3.3.3.1.1" style="width:227.6pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.3.3.3.1.1.1" style="font-size:70%;">LLM response (Syntactic perturbed prompt):</span><span class="ltx_text" id="S3.T3.3.3.3.1.1.2" style="font-size:70%;"> </span>
+<br class="ltx_break"/><span class="ltx_text ltx_font_typewriter" id="S3.T3.3.3.3.1.1.3" style="font-size:70%;">JSON format: {</span><span class="ltx_text" id="S3.T3.3.3.3.1.1.4" style="font-size:70%;"> </span>
+<br class="ltx_break"/><span class="ltx_text ltx_font_bold" id="S3.T3.3.3.3.1.1.5" style="font-size:70%;">”The right choice is” :</span><span class="ltx_text" id="S3.T3.3.3.3.1.1.6" style="font-size:70%;"> ”C) Pulmonary Edema”, </span>
+<br class="ltx_break"/><span class="ltx_text ltx_font_bold" id="S3.T3.3.3.3.1.1.7" style="font-size:70%;">”The clinical presentation,”</span><span class="ltx_text" id="S3.T3.3.3.3.1.1.8" style="font-size:70%;"> including a history of ….}</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_bb ltx_border_t" id="S3.T3.3.3.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.3.3.2.2">
+<span class="ltx_p" id="S3.T3.3.3.2.2.2" style="width:85.4pt;"><span class="ltx_text" id="S3.T3.3.3.2.2.2.1" style="font-size:70%;">RR: </span><math alttext="\times" class="ltx_Math" display="inline" id="S3.T3.2.2.1.1.1.m1" intent=":literal"><semantics><mo mathsize="0.700em">×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math><span class="ltx_text" id="S3.T3.3.3.2.2.2.2" style="font-size:70%;"> </span>
+<br class="ltx_break"/><span class="ltx_text" id="S3.T3.3.3.2.2.2.3" style="font-size:70%;">FIR: </span><math alttext="\times" class="ltx_Math" display="inline" id="S3.T3.3.3.2.2.2.m2" intent=":literal"><semantics><mo mathsize="0.700em">×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math><span class="ltx_text" id="S3.T3.3.3.2.2.2.4" style="font-size:70%;"> </span>
+<br class="ltx_break"/><span class="ltx_text" id="S3.T3.3.3.2.2.2.5" style="font-size:70%;">BERTScore: 0.67 </span>
+<br class="ltx_break"/><span class="ltx_text" id="S3.T3.3.3.2.2.2.6" style="font-size:70%;">USE: 0.62</span></span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_bb ltx_border_t" id="S3.T3.3.3.4">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.3.3.4.1">
+<span class="ltx_p" id="S3.T3.3.3.4.1.1" style="width:170.7pt;"><span class="ltx_text ltx_font_bold" id="S3.T3.3.3.4.1.1.1" style="font-size:70%;">Structural Misinterpretation:</span><span class="ltx_text" id="S3.T3.3.3.4.1.1.2" style="font-size:70%;"> Reordering the sentence structure (syntactic perturbation) disrupts the model’s attention mechanism. It misweights clinical signs (like ”increased sputum”) as ”Pulmonary Edema” instead of ”COPD,” leading to a **False Answer (RR Failure)** and (FIR Failure).</span></span>
+</span>
+</td>
+</tr>
+</table>
+</figure>
+</section>
+</section>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span><span class="translated-text">评估指标</span><span class="original-text">Evaluation Metrics</span></h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.2"><span class="translated-text">本研究使用一系列指标评估医疗保健法学硕士的表现，包括 BERTScore、通用句子编码器 (USE)、响应率 (RR) 和后续指令率 (FIR)。 BERTcore 衡量模型响应与真实值之间的句法相似性，分数越高表明稳定性越高。 USE 是 Google 开发的句子嵌入模型，可将文本编码为高维向量。它捕获整个句子的句法含义，而不仅仅是单个单词，并衡量模型的响应与基本事实在句法上的相似程度，帮助评估医疗保健法学硕士在提示变化的情况下保留临床意义的程度。而 RR 指标量化了模型生成的有效响应的比例，计算公式为</span><span class="original-text">This study evaluates the performance of healthcare LLMs using a range of metrics, including BERTScore, Universal Sentence Encoder (USE), Response Rate (RR), and Follow-up Instruction Rate (FIR). BERTScore measures the syntactic similarity between the model’s response and a ground truth, with higher scores indicating more stability. The USE is a sentence embedding model developed by Google that encodes text into high-dimensional vectors. It captures the syntactic meaning of entire sentences rather than just individual words, and measures how syntactically similar a model’s response is to a ground truth, helping assess how well the healthcare LLM preserves clinical meaning despite variations in prompts. While the RR metric quantifies the proportion of valid responses generated by the model, calculated as</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.Ex1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_left_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_left"><math alttext="\text{RR}=\frac{\#\text{valid\_responses}}{N}" class="ltx_Math" display="block" id="S3.Ex1.m1" intent=":literal"><semantics><mrow><mtext>RR</mtext><mo>=</mo><mfrac><mrow><mi mathvariant="normal">#</mi><mo lspace="0em" rspace="0em">​</mo><mtext>valid_responses</mtext></mrow><mi>N</mi></mfrac></mrow><annotation encoding="application/x-tex">\text{RR}=\frac{\#\text{valid\_responses}}{N}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_left_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="N" class="ltx_Math" display="inline" id="S3.SS2.p1.1.m1" intent=":literal"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math><span class="translated-text">表示生成的响应总数。 FIR 衡量模型在这些有效响应中遵循给定指令的程度，计算公式为</span><span class="original-text">denotes the total number of responses generated. The FIR measures the extent to which the model adheres to the given instructions within those valid responses, calculated as</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.Ex2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_left_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_left"><math alttext="\text{FIR}=\frac{\#\text{followed\_instructions}}{\#\text{valid\_responses}}." class="ltx_Math" display="block" id="S3.Ex2.m1" intent=":literal"><semantics><mrow><mrow><mtext>FIR</mtext><mo>=</mo><mfrac><mrow><mi mathvariant="normal">#</mi><mo lspace="0em" rspace="0em">​</mo><mtext>followed_instructions</mtext></mrow><mrow><mi mathvariant="normal">#</mi><mo lspace="0em" rspace="0em">​</mo><mtext>valid_responses</mtext></mrow></mfrac></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\text{FIR}=\frac{\#\text{followed\_instructions}}{\#\text{valid\_responses}}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_left_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS2.p1.3"><span class="translated-text">模型反应并不总是临床有效，因为正确性可能会有所不同。为了评估稳定性，我们定义了以下阈值：0.9 到 1.0 之间的分数表示</span><span class="original-text">Model responses are not always clinically valid, as correctness may vary. To assess stability, we define the following thresholds: scores between 0.9 and 1.0 indicate</span><span class="ltx_text ltx_font_italic" id="S3.SS2.p1.3.1"><span class="translated-text">非常稳定</span><span class="original-text">Very Stable</span></span><span class="translated-text">、0.7 和 0.9</span><span class="original-text">, 0.7 and 0.9</span><span class="ltx_text ltx_font_italic" id="S3.SS2.p1.3.2"><span class="translated-text">中等稳定</span><span class="original-text">Moderately Stable</span></span><span class="translated-text">、0.5 和 0.7</span><span class="original-text">, 0.5 and 0.7</span><span class="ltx_text ltx_font_italic" id="S3.SS2.p1.3.3"><span class="translated-text">轻度敏感度</span><span class="original-text">Mild Sensitivity</span></span><span class="translated-text">，且低于0.5</span><span class="original-text">, and below 0.5</span><span class="ltx_text ltx_font_italic" id="S3.SS2.p1.3.4"><span class="translated-text">高灵敏度</span><span class="original-text">High Sensitivity</span></span>.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section ltx_indent_first" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">结果与讨论</span><span class="original-text">Results and Discussions</span></h2>
+<section class="ltx_subsection ltx_indent_first" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span><span class="translated-text">数据集和实验设置</span><span class="original-text">Dataset and Experimental Setup</span></h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.1"><span class="translated-text">MedMCQA 数据集是一个大规模的多项选择题回答基准，包含超过 194,000 个精心策划的问题，涵盖与医学教育和临床推理相关的各个医学专业，用于支持我们的分析。我们评估了五个模型针对即时扰动的稳健性。这些模型是 GPT-3.5、LLaMA3、ClinicalBERT、BioLLaMA3 和 BioBERT。每个模型都在三种条件下进行了测试。首先，干净的提示，然后是词汇扰动（单词级别的变化）和句法扰动（含义级别的改写）。对于每种扰动类型，从 MedMCQA 数据集中随机选择 1,00 个样本。使用 BERTScore 和 USE 分数等指标进行性能评估，以评估生成的响应之间的语法相似性。其他评估指标包括临床正确性的 RR、FIR 和 EV。模型推理是使用 Hugging Face Transformers 和 Datasets 库进行的，根据模型使用 PyTorch 或 TensorFlow。此外，我们利用 Ollama 来促进 LLaMA3 和 BioLLaMA3 等开源 LLM 的本地部署和测试。对于生物医学文本处理，我们采用了 scispaCy，这是一个基于 spaCy 构建的科学 NLP 库，针对科学和生物医学环境进行了优化。对于同义词解析和实体匹配，BioSyn 与 BioBERT 结合用于嵌入临床术语。所有模型均以其预训练形式使用，无需使用默认超参数进行微调。</span><span class="original-text">The MedMCQA dataset, a large-scale, multiple-choice question answering benchmark with over 194,000 meticulously curated questions covering various medical specialties relevant to medical education and clinical reasoning, was employed to support our analysis. We evaluated the robustness of five models against prompt perturbations.These models are GPT-3.5, LLaMA3, ClinicalBERT, BioLLaMA3, and BioBERT. Each model was tested under three conditions. First, clean prompts, then lexical perturbations (word-level changes), and syntactic perturbations (meaning-level rephrasings). For each perturbation type, 1,00 samples were randomly selected from the MedMCQA dataset. Performance evaluation was conducted using metrics such as BERTScore and USE score to assess syntactic similarity between generated responses. Additional evaluation metrics included RR, FIR, and EV for clinical correctness. Model inference was carried out using the Hugging Face Transformers and Datasets libraries, utilizing either PyTorch or TensorFlow, depending on the model. In addition, we utilize Ollama to facilitate local deployment and testing of open-source LLMs such as LLaMA3 and BioLLaMA3. For biomedical text processing, we employed scispaCy, a scientific NLP library built on spaCy, optimized for scientific and biomedical contexts. For synonym resolution and entity matching, BioSyn, in combination with BioBERT, was used to embed clinical terms. All models were used in their pretrained form without fine-tuning with default hyperparameters.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T4">
+<figcaption class="ltx_caption ltx_centering" style="font-size:70%;"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S4.T4.4.1.1" style="font-size:129%;">Table 4</span>: </span><span class="ltx_text" id="S4.T4.5.2" style="font-size:129%;">LLM performance on MedMCQA dataset under unperturbed, lexical, and syntactic perturbations (100 trials).</span></figcaption>
+<table class="ltx_tabular ltx_centering ltx_align_middle" id="S4.T4.6">
+<tr class="ltx_tr" id="S4.T4.6.1">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T4.6.1.1"><span class="ltx_text ltx_font_bold" id="S4.T4.6.1.1.1" style="font-size:70%;">Perturbation Type</span></td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T4.6.1.2"><span class="ltx_text ltx_font_bold" id="S4.T4.6.1.2.1" style="font-size:70%;">Metrics</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.1.3"><span class="ltx_text ltx_font_bold" id="S4.T4.6.1.3.1" style="font-size:70%;">GPT-3.5</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.1.4"><span class="ltx_text ltx_font_bold" id="S4.T4.6.1.4.1" style="font-size:70%;">Llama3</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.1.5"><span class="ltx_text ltx_font_bold" id="S4.T4.6.1.5.1" style="font-size:70%;">ClinicalBert</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.1.6"><span class="ltx_text ltx_font_bold" id="S4.T4.6.1.6.1" style="font-size:70%;">BioLlama3</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.1.7"><span class="ltx_text ltx_font_bold" id="S4.T4.6.1.7.1" style="font-size:70%;">BioBert</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.2">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T4.6.2.1" rowspan="4"><span class="ltx_text" id="S4.T4.6.2.1.1" style="font-size:70%;">Standard (unperturbed)</span></td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T4.6.2.2"><span class="ltx_text" id="S4.T4.6.2.2.1" style="font-size:70%;">BERTtScore</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.2.3"><span class="ltx_text" id="S4.T4.6.2.3.1" style="font-size:70%;">92.14</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.2.4"><span class="ltx_text" id="S4.T4.6.2.4.1" style="font-size:70%;">94.23</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.2.5"><span class="ltx_text" id="S4.T4.6.2.5.1" style="font-size:70%;">91.15</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.2.6"><span class="ltx_text ltx_font_bold" id="S4.T4.6.2.6.1" style="font-size:70%;">95.94</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.2.7"><span class="ltx_text" id="S4.T4.6.2.7.1" style="font-size:70%;">89.12</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.3">
+<td class="ltx_td ltx_align_left" id="S4.T4.6.3.1"><span class="ltx_text" id="S4.T4.6.3.1.1" style="font-size:70%;">USE score</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.3.2"><span class="ltx_text" id="S4.T4.6.3.2.1" style="font-size:70%;">91.87</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.3.3"><span class="ltx_text ltx_font_bold" id="S4.T4.6.3.3.1" style="font-size:70%;">93.03</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.3.4"><span class="ltx_text" id="S4.T4.6.3.4.1" style="font-size:70%;">88.21</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.3.5"><span class="ltx_text" id="S4.T4.6.3.5.1" style="font-size:70%;">93.22</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.3.6"><span class="ltx_text" id="S4.T4.6.3.6.1" style="font-size:70%;">87.11</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.4">
+<td class="ltx_td ltx_align_left" id="S4.T4.6.4.1"><span class="ltx_text" id="S4.T4.6.4.1.1" style="font-size:70%;">RR</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.4.2"><span class="ltx_text" id="S4.T4.6.4.2.1" style="font-size:70%;">99.23</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.4.3"><span class="ltx_text ltx_font_bold" id="S4.T4.6.4.3.1" style="font-size:70%;">99.43</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.4.4"><span class="ltx_text" id="S4.T4.6.4.4.1" style="font-size:70%;">99.04</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.4.5"><span class="ltx_text" id="S4.T4.6.4.5.1" style="font-size:70%;">99.12</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.4.6"><span class="ltx_text" id="S4.T4.6.4.6.1" style="font-size:70%;">98.11</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.5">
+<td class="ltx_td ltx_align_left" id="S4.T4.6.5.1"><span class="ltx_text" id="S4.T4.6.5.1.1" style="font-size:70%;">FIR</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.5.2"><span class="ltx_text" id="S4.T4.6.5.2.1" style="font-size:70%;">98.94</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.5.3"><span class="ltx_text" id="S4.T4.6.5.3.1" style="font-size:70%;">99.01</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.5.4"><span class="ltx_text" id="S4.T4.6.5.4.1" style="font-size:70%;">97.45</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.5.5"><span class="ltx_text ltx_font_bold" id="S4.T4.6.5.5.1" style="font-size:70%;">99.30</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.5.6"><span class="ltx_text" id="S4.T4.6.5.6.1" style="font-size:70%;">97.50</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.6">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T4.6.6.1" rowspan="4"><span class="ltx_text" id="S4.T4.6.6.1.1" style="font-size:70%;">Lexical</span></td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T4.6.6.2"><span class="ltx_text" id="S4.T4.6.6.2.1" style="font-size:70%;">BERTScore</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.6.3"><span class="ltx_text" id="S4.T4.6.6.3.1" style="font-size:70%;">89.11</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.6.4"><span class="ltx_text" id="S4.T4.6.6.4.1" style="font-size:70%;">90.45</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.6.5"><span class="ltx_text" id="S4.T4.6.6.5.1" style="font-size:70%;">88.90</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.6.6"><span class="ltx_text" id="S4.T4.6.6.6.1" style="font-size:70%;">93.33</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.6.7"><span class="ltx_text" id="S4.T4.6.6.7.1" style="font-size:70%;">86.10</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.7">
+<td class="ltx_td ltx_align_left" id="S4.T4.6.7.1"><span class="ltx_text" id="S4.T4.6.7.1.1" style="font-size:70%;">USE score</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.7.2"><span class="ltx_text" id="S4.T4.6.7.2.1" style="font-size:70%;">88.07</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.7.3"><span class="ltx_text" id="S4.T4.6.7.3.1" style="font-size:70%;">90.01</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.7.4"><span class="ltx_text" id="S4.T4.6.7.4.1" style="font-size:70%;">84.56</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.7.5"><span class="ltx_text" id="S4.T4.6.7.5.1" style="font-size:70%;">89.23</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.7.6"><span class="ltx_text" id="S4.T4.6.7.6.1" style="font-size:70%;">82.02</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.8">
+<td class="ltx_td ltx_align_left" id="S4.T4.6.8.1"><span class="ltx_text" id="S4.T4.6.8.1.1" style="font-size:70%;">RR</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.8.2"><span class="ltx_text" id="S4.T4.6.8.2.1" style="font-size:70%;">96.12</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.8.3"><span class="ltx_text" id="S4.T4.6.8.3.1" style="font-size:70%;">96.23</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.8.4"><span class="ltx_text" id="S4.T4.6.8.4.1" style="font-size:70%;">96.28</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.8.5"><span class="ltx_text" id="S4.T4.6.8.5.1" style="font-size:70%;">96.10</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.8.6"><span class="ltx_text" id="S4.T4.6.8.6.1" style="font-size:70%;">95.67</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.9">
+<td class="ltx_td ltx_align_left" id="S4.T4.6.9.1"><span class="ltx_text" id="S4.T4.6.9.1.1" style="font-size:70%;">FIR</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.9.2"><span class="ltx_text" id="S4.T4.6.9.2.1" style="font-size:70%;">95.12</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.9.3"><span class="ltx_text" id="S4.T4.6.9.3.1" style="font-size:70%;">96.43</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.9.4"><span class="ltx_text" id="S4.T4.6.9.4.1" style="font-size:70%;">95.01</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.9.5"><span class="ltx_text" id="S4.T4.6.9.5.1" style="font-size:70%;">96.71</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.9.6"><span class="ltx_text" id="S4.T4.6.9.6.1" style="font-size:70%;">94.91</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.10">
+<td class="ltx_td ltx_align_left ltx_border_b ltx_border_t" id="S4.T4.6.10.1" rowspan="5"><span class="ltx_text" id="S4.T4.6.10.1.1" style="font-size:70%;">syntactic</span></td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T4.6.10.2"><span class="ltx_text" id="S4.T4.6.10.2.1" style="font-size:70%;">BERTScore</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.10.3"><span class="ltx_text" id="S4.T4.6.10.3.1" style="font-size:70%;">87.22</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.10.4"><span class="ltx_text" id="S4.T4.6.10.4.1" style="font-size:70%;">89.89</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.10.5"><span class="ltx_text" id="S4.T4.6.10.5.1" style="font-size:70%;">86.13</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.10.6"><span class="ltx_text" id="S4.T4.6.10.6.1" style="font-size:70%;">90.52</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.10.7"><span class="ltx_text" id="S4.T4.6.10.7.1" style="font-size:70%;">83.72</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.11">
+<td class="ltx_td ltx_align_left" id="S4.T4.6.11.1"><span class="ltx_text" id="S4.T4.6.11.1.1" style="font-size:70%;">USE score</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.11.2"><span class="ltx_text" id="S4.T4.6.11.2.1" style="font-size:70%;">89.61</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.11.3"><span class="ltx_text" id="S4.T4.6.11.3.1" style="font-size:70%;">90.21</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.11.4"><span class="ltx_text" id="S4.T4.6.11.4.1" style="font-size:70%;">83.71</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.11.5"><span class="ltx_text" id="S4.T4.6.11.5.1" style="font-size:70%;">85.19</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.11.6"><span class="ltx_text" id="S4.T4.6.11.6.1" style="font-size:70%;">79.11</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.12">
+<td class="ltx_td ltx_align_left" id="S4.T4.6.12.1"><span class="ltx_text" id="S4.T4.6.12.1.1" style="font-size:70%;">RR</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.12.2"><span class="ltx_text" id="S4.T4.6.12.2.1" style="font-size:70%;">94.20</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.12.3"><span class="ltx_text" id="S4.T4.6.12.3.1" style="font-size:70%;">94.81</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.12.4"><span class="ltx_text" id="S4.T4.6.12.4.1" style="font-size:70%;">93.23</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.12.5"><span class="ltx_text" id="S4.T4.6.12.5.1" style="font-size:70%;">93.30</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.12.6"><span class="ltx_text" id="S4.T4.6.12.6.1" style="font-size:70%;">93.43</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.13">
+<td class="ltx_td ltx_align_left ltx_border_b" id="S4.T4.6.13.1"><span class="ltx_text" id="S4.T4.6.13.1.1" style="font-size:70%;">FIR</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S4.T4.6.13.2"><span class="ltx_text" id="S4.T4.6.13.2.1" style="font-size:70%;">93.32</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S4.T4.6.13.3"><span class="ltx_text" id="S4.T4.6.13.3.1" style="font-size:70%;">94.53</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S4.T4.6.13.4"><span class="ltx_text" id="S4.T4.6.13.4.1" style="font-size:70%;">92.91</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S4.T4.6.13.5"><span class="ltx_text" id="S4.T4.6.13.5.1" style="font-size:70%;">95.31</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S4.T4.6.13.6"><span class="ltx_text" id="S4.T4.6.13.6.1" style="font-size:70%;">90.13</span></td>
+</tr>
+</table>
+</figure>
+<figure class="ltx_figure" id="S4.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="161" id="S4.F3.g1" src="https://arxiv.org/html/2606.07237v1/Comparisions.png" width="592"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F3.2.1.1" style="font-size:90%;">Figure 3</span>: </span><span class="ltx_text" id="S4.F3.3.2" style="font-size:90%;">Performance of models across perturbation types. Heatmap shows scores for all metrics for each model and study, with ‘N’ indicating metrics not used. Models are labeled with their type (General-Purpose or Adapted Domain) and study source.</span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span><span class="translated-text">即时敏感性分析结果</span><span class="original-text">Results on Prompt Sensitivity Analysis</span></h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.1"><span class="translated-text">我们的研究结果强调了三个核心领域：法学硕士对提示变化的敏感性、对抗性干扰提示下可识别的失败模式，以及阈值策略在高风险医疗决策中增强模型可靠性的潜力。桌子</span><span class="original-text">Our findings highlight three core areas: the sensitivity of LLMs to prompt variation, identifiable failure patterns under adversarial perturbed prompts, and the potential of thresholding strategies to enhance model reliability in high-stakes medical decision-making. The table</span><a class="ltx_ref" href="#S3.T3" title="Table 3 ‣ Syntactic Variations ‣ 3.1.1 Prompt Generation Strategy ‣ 3.1 Sensitivity Analysis Framework ‣ 3 Problem Statement and Methodology ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">提供对即时扰动如何影响法学硕士保持医学推理准确性和结构格式完整性的能力的精细评估。虽然该模型在标准条件下实现了近乎完美的对齐，但词汇变化会引发“指令漂移”，导致模型优先考虑自然语言流而不是特定的 JSON 格式约束 (FIR)。最关键的是，句法重新排序会导致系统全面崩溃，模型会误解临床特征，导致错误诊断（RR 失败）。这些结果表明，虽然法学硕士具有临床能力，但其可靠性对输入提示的结构和语言框架高度敏感。而表</span><span class="original-text">provides a granular evaluation of how prompt perturbations impact a LLM ability to maintain both medical reasoning accuracy and structural format integrity. While the model achieves near-perfect alignment under standard conditions, lexical variations trigger ”instruction drift,” causing the model to prioritize natural language flow over specific JSON formatting constraints (FIR). Most critically, syntactic reordering leads to a total systemic collapse where the model misinterprets clinical features, resulting in a false diagnosis (RR failure). These results demonstrate that while LLMs are clinically capable, their reliability is highly sensitive to the structural and linguistic framing of the input prompt. While Table</span><a class="ltx_ref" href="#S4.T4" title="Table 4 ‣ 4.1 Dataset and Experimental Setup ‣ 4 Results and Discussions ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">总结了各种 LLM 在未受干扰和受干扰条件下在 MedMCQA 数据集上的表现，平均超过 100 个样本。在标准条件下，BioLlama-3 在医学推理方面表现出色，而 GPT-4.5 等通用模型仍然具有竞争力，而特定领域模型则落后。当受到词汇和句法扰动时，BioLlama-3 表现出最高的鲁棒性，而 BioBERT 和 ClinicalBERT 等模型则表现出显着的敏感性，特别是对句法扰动。为了量化对抗性词汇扰动对 LLM 输出的影响，我们检查了 BioLlama-7b 响应的 USE 相似性得分。</span><span class="original-text">summarizes the performance of various LLMs on the MedMCQA dataset under both unperturbed and perturbed conditions, averaged over 100 samples. Under standard conditions, BioLlama-3 excels in medical reasoning, while general-purpose models, such as GPT-4.5, remain competitive, and domain-specific models lag. When subjected to lexical and syntactic perturbations, BioLlama-3 demonstrates the highest robustness, whereas models such as BioBERT and ClinicalBERT exhibit significant sensitivity, particularly to syntactic perturbations. To quantify the impact of adversarial lexical perturbations on LLM outputs, we examined the USE similarity scores for BioLlama-7b responses.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F4"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="273" id="S4.F4.g1" src="https://arxiv.org/html/2606.07237v1/BioLlama_VS_Llama2.png" width="509"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F4.2.1.1" style="font-size:90%;">Figure 4</span>: </span><span class="ltx_text" id="S4.F4.3.2" style="font-size:90%;">Average similarity scores on 100 MedMCQA prompts across increasing lexical perturbation levels, showing that BioLLaMA2-7B maintains higher robustness than LLaMA2 as prompt perturbations increase.</span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span><span class="translated-text">讨论</span><span class="original-text">Discussions</span></h3>
+<div class="ltx_para" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.1"><span class="translated-text">热图如图</span><span class="original-text">The heatmap at Figure</span><a class="ltx_ref" href="#S4.F3" title="Figure 3 ‣ 4.1 Dataset and Experimental Setup ‣ 4 Results and Discussions ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">，提供了多种模型在三种扰动类型中的性能的全面比较：标准（未扰动）、词汇和句法。每行代表一个模型和研究，包括其类型——通用（例如 GPT-3.5）或适应域（例如 BioBERT、MedLlama3）——而列对应于评估指标，例如 BERTScore、USE、RR、FIR、Accuracy 和 AUROC。单元格显示性能分数，并用“N”标记特定研究未使用的指标。从图中可以看出一些观察结果：</span><span class="original-text">, provides a comprehensive comparison of multiple models’ performance across three perturbation types: Standard (unperturbed), Lexical, and Syntactic. Each row represents a model and study, including its type—General-Purpose (e.g., GPT-3.5) or Adapted Domain (e.g., BioBERT, MedLlama3)—while columns correspond to evaluation metrics such as BERTScore, USE, RR, FIR, Accuracy, and AUROC. Cells show the performance scores, with “N” marking metrics not used by a specific study. From the figure, several observations emerge:</span></p>
+</div>
+<div class="ltx_para" id="S4.SS3.p2">
+<ul class="ltx_itemize" id="S4.I1">
+<li class="ltx_item" id="S4.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i1.p1">
+<p class="ltx_p" id="S4.I1.i1.p1.1"><span class="translated-text">我们的研究模型（GPT-3.5 和 BioBERT）在所有指标和扰动中始终表现良好，表明对词汇和句法变化的稳健性。准确度分数仍然很高，但随着扰动略有下降，反映了现实的敏感性。</span><span class="original-text">Our Study models (GPT-3.5 and BioBERT) consistently perform well across all metrics and perturbations, indicating robustness to lexical and syntactic changes. Accuracy scores remain high but decrease slightly with perturbations, reflecting realistic sensitivity.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i2.p1">
+<p class="ltx_p" id="S4.I1.i2.p1.1"><span class="translated-text">与之前的研究（Yan 等人、Ness 等人、Arroyo 等人）的比较突出了评估方法和模型类型的差异。这些研究并未报告所有指标，这在热图中用“N”表示。</span><span class="original-text">Comparison with previous studies (Yan et al., Ness et al., Arroyo et al.) highlights differences in evaluation methodology and model types. Not all metrics are reported in these studies, which is indicated by “N” in the heatmap.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i3.p1">
+<p class="ltx_p" id="S4.I1.i3.p1.1"><span class="translated-text">指标覆盖范围各不相同，表明某些模型或研究仅报告特定指标（例如 MedAlpaca 的 AUROC），限制了直接比较。</span><span class="original-text">Metric coverage varies, showing that some models or studies only report specific metrics (e.g., AUROC for MedAlpaca), limiting direct comparisons.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i4.p1">
+<p class="ltx_p" id="S4.I1.i4.p1.1"><span class="translated-text">扰动的影响是可见的：词汇和句法扰动通常会稍微降低分数，这展示了如何量化模型的稳健性。</span><span class="original-text">Perturbation impact is visible: Lexical and Syntactic perturbations generally reduce scores slightly, demonstrating how model robustness can be quantified.</span></p>
+</div>
+</li>
+</ul>
+<p class="ltx_p" id="S4.SS3.p2.1"><span class="translated-text">莫罗弗，图</span><span class="original-text">Morover, Figure</span><a class="ltx_ref" href="#S4.F4" title="Figure 4 ‣ 4.2 Results on Prompt Sensitivity Analysis ‣ 4 Results and Discussions ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">显示了 LLaMA2 与 BioLLaMA2-7B 在词汇扰动提示上的鲁棒性评估。此图呈现。 100 个 MedMCQA 提示中模型预测与真实答案之间的平均相似度得分，受到 10 个级别的词汇扰动。</span><span class="original-text">shows the robustness Evaluation of LLaMA2 vs. BioLLaMA2-7B on Lexically Perturbed Prompts. This figure presents. The average similarity scores between model predictions and ground truth answers across 100 MedMCQA prompts, subjected to 10 levels of lexical perturbation.</span></p>
+</div>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S4.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.4 </span><span class="translated-text">挑战和未来方向</span><span class="original-text">Challenges and Future Directions</span></h3>
+<div class="ltx_para" id="S4.SS4.p1">
+<p class="ltx_p" id="S4.SS4.p1.1"><span class="translated-text">为了使这些比较更加公平和严格，未来的工作应致力于：</span><span class="original-text">To make these comparisons more fair and rigorous, future work should aim to:</span></p>
+<ul class="ltx_itemize" id="S4.I2">
+<li class="ltx_item" id="S4.I2.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i1.p1">
+<p class="ltx_p" id="S4.I2.i1.p1.1"><span class="translated-text">标准化研究中使用的指标、模型和数据集。</span><span class="original-text">Standardize the metrics, models, and datasets used across studies.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I2.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i2.p1">
+<p class="ltx_p" id="S4.I2.i2.p1.1"><span class="translated-text">在相同的扰动类型和实验条件下评估模型。</span><span class="original-text">Evaluate models under the same perturbation types and experimental conditions.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I2.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i3.p1">
+<p class="ltx_p" id="S4.I2.i3.p1.1"><span class="translated-text">将分析扩展到其他临床数据集和新的领域适应模型。</span><span class="original-text">Extend the analysis to additional clinical datasets and new domain-adapted models.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I2.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i4.p1">
+<p class="ltx_p" id="S4.I2.i4.p1.1"><span class="translated-text">综合稳健性评估：目前的基准主要评估干净数据的准确性，缺乏针对医疗提示的标准化稳健性测试。 MedFuzz 和 RAMBLA 等框架通过引入受控扰动来解决这个问题。未来的努力应该扩大这些基准，以涵盖更多的临床任务和多语言环境</span><span class="original-text">Comprehensive robustness evaluation: Current benchmarks mainly assess accuracy on clean data, lacking standardized robustness tests for medical prompts. Frameworks like MedFuzz and RAmBLA address this by introducing controlled perturbations. Future efforts should broaden these benchmarks to cover more clinical tasks and multilingual contexts</span></p>
+</div>
+</li>
+</ul>
+<p class="ltx_p" id="S4.SS4.p1.2"><span class="translated-text">这些努力将实现直接、公平的基准测试，提高临床法学硕士评估的可解释性和可重复性。</span><span class="original-text">Such efforts will enable direct, equitable benchmarking, improving the interpretability and reproducibility of clinical LLM evaluation.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section ltx_indent_first" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span><span class="translated-text">局限性</span><span class="original-text">Limitations</span></h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">这项研究的一个主要限制是它依赖于传统的基于嵌入的相似性度量，例如余弦相似性。尽管这些指标很常用，但它们常常难以捕捉在临床环境中至关重要的微妙语义细微差别。例如，否定、时间限定词和疾病分期可以极大地改变陈述的临床意义，但可能不会反映在相似性分数中。因此，仅用这些指标评估的模型可能看起来很稳健，即使它们误解了临床上重要的细节。这强调了对更复杂的评估方法的需求，这些方法可以有效地捕获医疗保健应用中的这些细粒度的语义区别。</span><span class="original-text">A major limitation of this study is its reliance on traditional embedding-based similarity metrics, such as cosine similarity. Although these metrics are commonly used, they often struggle to capture subtle semantic nuances that are critical in clinical contexts. For instance, negation, temporal qualifiers, and disease staging can drastically alter the clinical meaning of a statement, yet may not be reflected in similarity scores. Consequently, models assessed solely with these metrics may appear robust, even when they misinterpret clinically important details. This underscores the need for more sophisticated evaluation methods that can effectively capture these fine-grained semantic distinctions in healthcare applications.</span></p>
+</div>
+</section>
+<section class="ltx_section ltx_indent_first" id="S6">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span><span class="translated-text">结论</span><span class="original-text">Conclusions</span></h2>
+<div class="ltx_para" id="S6.p1">
+<p class="ltx_p" id="S6.p1.1"><span class="translated-text">医学法学硕士本质上并不安全，因为微小的措辞变化可能会产生有害的结果。临床医生面临着不可靠的诊断、不正确的药物推荐或错过关键发现的风险，这凸显了在现实世界的医疗保健应用中迫切需要解决模型的稳健性、可靠性和安全性。尽管法学硕士在医疗保健领域具有巨大潜力，但其在扰动下的稳健性仍不确定。我们的研究表明，词汇和句法扰动会降低 GPT-3.5（通用）和 BioBERT（适应域）的性能，准确率从未扰动环境中的 98-99% 略微下降到句法变化下的 94-95%。其他指标，包括 BERTScore、USE、RR 和 FIR，在这些扰动下也显示出小幅下降。这些发现强调，即使是最先进的法学硕士也对输入短语的细微变化敏感，这强化了系统稳健性评估的必要性。未来的工作应优先考虑对抗性的鲁棒性和准确性，并开发可证明具有弹性或至少是透明限制的模型和接口，以建立安全临床部署所需的信任。</span><span class="original-text">Medical LLMs are not inherently safe, as minor phrasing changes can produce harmful outputs. Clinicians face risks from unreliable diagnoses, incorrect drug recommendations, or missed critical findings, highlighting the urgent need to address model robustness, reliability, and safety in real-world healthcare applications. While LLMs offer significant potential for healthcare, their robustness under perturbations remains uncertain. Our study shows that lexical and syntactic perturbations reduce the performance of both GPT-3.5 (General-Purpose) and BioBERT (Adapted Domain), with accuracy decreasing slightly from 98–99% in the unperturbed setting to 94–95% under syntactic changes. Other metrics, including BERTScore, USE, RR, and FIR, also show minor declines under these perturbations. These findings emphasize that even state-of-the-art LLMs are sensitive to subtle changes in input phrasing, reinforcing the need for systematic robustness evaluation. Future work should prioritize adversarial robustness alongside accuracy and develop models and interfaces that are provably resilient or, at minimum, transparently limited, to build the trust required for safe clinical deployment.</span></p>
+</div>
+</section>
+<section class="ltx_section ltx_indent_first" id="S7">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">7 </span><span class="translated-text">致谢</span><span class="original-text">Acknowledgments</span></h2>
+<div class="ltx_para" id="S7.p1">
+<p class="ltx_p" id="S7.p1.1"><span class="translated-text">作者感谢卡塔尔大学高影响力内部拨款 (QUHI-CENG23/24-127) 的支持。本文中的陈述仅由作者负责。</span><span class="original-text">The authors want to acknowledge support from the Qatar University High Impact Internal Grant (QUHI-CENG23/24-127). The statements made herein are solely the responsibility of the authors.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography" style="font-size:90%;">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib54">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">E. Beede, E. Baylor, F. Hersch, A. Iurchenko, L. Wilcox, P. Ruamviboonsuk, and L. M. Vardoulakis</span><span class="ltx_text ltx_bib_year"> (2020)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A human-centered evaluation of a deep learning system deployed in clinics for the detection of diabetic retinopathy</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 2020 CHI conference on human factors in computing systems</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 1–12</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2 Prompt Sensitivity in Healthcare LLMs ‣ 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§2.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib119">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">W. J. Bolton, R. Poyiadzi, E. R. Morrell, G. v. B. G. Bueno, and L. Goetz</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">RAmBLA: a framework for evaluating the reliability of llms as assistants in the biomedical domain</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2403.14578</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.T1.3.3.3.1.1" title="In 1 Introduction ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">Table 1</span></a>,
+<a class="ltx_ref" href="#S1.T1.3.5.1.1.1" title="In 1 Introduction ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">Table 1</span></a>,
+<a class="ltx_ref" href="#S3.SS1.SSS1.p1.1" title="3.1.1 Prompt Generation Strategy ‣ 3.1 Sensitivity Analysis Framework ‣ 3 Problem Statement and Methodology ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§3.1.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib116">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">B. Cao, D. Cai, Z. Zhang, Y. Zou, and W. Lam</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">On the worst prompt performance of large language models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Advances in Neural Information Processing Systems</span> <span class="ltx_text ltx_bib_volume">37</span>, <span class="ltx_text ltx_bib_pages"> pp. 69022–69042</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Prompt Sensitivity in General LLMs ‣ 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib133">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. M. Ceballos-Arroyo, M. Munnangi, J. Sun, K. Zhang, J. Mcinerney, B. C. Wallace, and S. Amir</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Open (clinical) llms are sensitive to instruction phrasings</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 23rd Workshop on Biomedical Natural Language Processing</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 50–71</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2 Prompt Sensitivity in Healthcare LLMs ‣ 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§2.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib15">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">F. Errica, D. Sanvito, G. Siracusano, and R. Bifulco</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">What did i do wrong? quantifying llms’ sensitivity and consistency to prompt engineering</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 2025 Conference of the Nations of the Americas Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 1543–1558</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Prompt Sensitivity in General LLMs ‣ 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib120">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">B. Guan, T. Roosta, P. Passban, and M. Rezagholizadeh</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">The order effect: investigating prompt sensitivity in closed-source llms</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2502.04134</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.T1.1.1.2.1.1" title="In 1 Introduction ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">Table 1</span></a>,
+<a class="ltx_ref" href="#S3.SS1.SSS1.Px2.p1.1" title="Syntactic Variations ‣ 3.1.1 Prompt Generation Strategy ‣ 3.1 Sensitivity Analysis Framework ‣ 3 Problem Statement and Methodology ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§3.1.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib121">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">T. Han, S. Nebelung, F. Khader, T. Wang, G. Müller-Franzes, C. Kuhl, S. Försch, J. Kleesiek, C. Haarburger, K. K. Bressem, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Medical large language models are susceptible to targeted misinformation attacks</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">NPJ digital medicine</span> <span class="ltx_text ltx_bib_volume">7</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 288</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.T1.3.7.1.1.1" title="In 1 Introduction ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">Table 1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib131">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Moradi and M. Samwald</span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Improving the robustness and accuracy of biomedical language models through adversarial training</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Journal of Biomedical Informatics</span> <span class="ltx_text ltx_bib_volume">132</span>, <span class="ltx_text ltx_bib_pages"> pp. 104114</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2 Prompt Sensitivity in Healthcare LLMs ‣ 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§2.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib130">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">R. O. Ness, K. Matton, H. Helm, S. Zhang, J. Bajwa, C. E. Priebe, and E. Horvitz</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Medfuzz: exploring the robustness of large language models in medical question answering</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2406.06573</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.T1.3.6.1.1.1" title="In 1 Introduction ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">Table 1</span></a>,
+<a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2 Prompt Sensitivity in Healthcare LLMs ‣ 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§2.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib55">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">C. Pais, J. Liu, R. Voigt, V. Gupta, E. Wade, and M. Bayati</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Large language models for preventing medication direction errors in online pharmacies</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Nature Medicine</span>, <span class="ltx_text ltx_bib_pages"> pp. 1–9</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2 Prompt Sensitivity in Healthcare LLMs ‣ 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§2.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib42">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">P. Pezeshkpour and E. Hruschka</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Large language models sensitivity to the order of options in multiple-choice questions</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Findings of the Association for Computational Linguistics: NAACL 2024</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 2006–2017</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Prompt Sensitivity in General LLMs ‣ 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib11">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">F. M. Polo, R. Xu, L. Weber, M. Silva, O. Bhardwaj, L. Choshen, A. F. de Oliveira, Y. Sun, and M. Yurochkin</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Efficient multi-prompt evaluation of llms</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Advances in Neural Information Processing Systems</span> <span class="ltx_text ltx_bib_volume">37</span>, <span class="ltx_text ltx_bib_pages"> pp. 22483–22512</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib16">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Qi, Z. Cao, J. Rao, L. Wang, J. Xiao, and X. Wang</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">What is the limitation of multimodal llms? a deeper look into multimodal llms through prompt probing</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Information Processing &amp; Management</span> <span class="ltx_text ltx_bib_volume">60</span> (<span class="ltx_text ltx_bib_number">6</span>), <span class="ltx_text ltx_bib_pages"> pp. 103510</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib118">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Salinas and F. Morstatter</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">The butterfly effect of altering prompts: how small changes and jailbreaks affect large language model performance</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Findings of the Association for Computational Linguistics: ACL 2024</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 4629–4651</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Prompt Sensitivity in General LLMs ‣ 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib102">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Sclar, Y. Choi, Y. Tsvetkov, and A. Suhr</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Quantifying language models’ sensitivity to spurious features in prompt design or: how i learned to start worrying about prompt formatting</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">International Conference on Learning Representations</span>,
+</span>
+<span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume">2024</span>, <span class="ltx_text ltx_bib_pages"> pp. 25055–25083</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Prompt Sensitivity in General LLMs ‣ 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib136">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">E. Shayegani, M. A. A. Mamun, Y. Fu, P. Zaree, Y. Dong, and N. Abu-Ghazaleh</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Survey of vulnerabilities in large language models revealed by adversarial attacks</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2310.10844</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib20">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Wang and Y. Zhao</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Rupbench: benchmarking reasoning under perturbations for robustness evaluation in large language models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2406.11020</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib128">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">C. Yan, X. Fu, Y. Xiong, T. Wang, S. C. Hui, J. Wu, and X. Liu</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">LLM sensitivity evaluation framework for clinical diagnosis</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 31st International Conference on Computational Linguistics</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 3083–3094</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2 Prompt Sensitivity in Healthcare LLMs ‣ 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§2.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib62">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">P. Zhan, Z. Xu, Q. Tan, J. Song, and R. Xie</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Unveiling the lexical sensitivity of llms: combinatorial optimization for prompt enhancement</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 5128–5154</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2 Prompt Sensitivity in Healthcare LLMs ‣ 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§2.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib56">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Zhang, L. Xing, J. Zou, and J. C. Wu</span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Shifting machine learning for healthcare from development to deployment and from models to data</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Nature Biomedical Engineering</span> <span class="ltx_text ltx_bib_volume">6</span> (<span class="ltx_text ltx_bib_number">12</span>), <span class="ltx_text ltx_bib_pages"> pp. 1330–1345</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2 Prompt Sensitivity in Healthcare LLMs ‣ 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§2.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib2">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">P. Zhang and M. N. Kamel Boulos</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Generative ai in medicine and healthcare: promises, opportunities and challenges</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Future Internet</span> <span class="ltx_text ltx_bib_volume">15</span> (<span class="ltx_text ltx_bib_number">9</span>), <span class="ltx_text ltx_bib_pages"> pp. 286</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib40">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Zhuo, S. Zhang, X. Fang, H. Duan, D. Lin, and K. Chen</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">ProSA: assessing and understanding the prompt sensitivity of llms</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Findings of the Association for Computational Linguistics: EMNLP 2024</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 1950–1976</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Prompt Sensitivity in General LLMs ‣ 2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§2.1</span></a>,
+<a class="ltx_ref" href="#S2.p1.1" title="2 Related Work ‣ When Large Language Models Fail in Healthcare: Evaluating Sensitivity to Prompt Variations"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2606.07237v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div aria-hidden="true" id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
