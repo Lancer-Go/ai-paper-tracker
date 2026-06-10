@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">迈向自主加速器设计：使用 SECDA 生成 FPGA 加速器</span><span class="original-text">Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 6 月 9 日星期二 17:07:59 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Tue Jun  9 17:07:59 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2606.11117" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2606.11117" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2606.11117v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2606.11117v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">I </span><span class="ltx_text ltx_font_smallcaps">Introduction</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">II </span><span class="ltx_text ltx_font_smallcaps">Background and Related Work</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS1" title="In II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-A</span> </span><span class="ltx_text ltx_font_italic">FPGA Accelerator Co-Design</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS2" title="In II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-B</span> </span><span class="ltx_text ltx_font_italic">DSE for FPGA Accelerators</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS3" title="In II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-C</span> </span><span class="ltx_text ltx_font_italic">LLMs for Hardware and Systems Design</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">III </span><span class="ltx_text ltx_font_smallcaps">SECDA-DSE</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In III SECDA-DSE ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-A</span> </span><span class="ltx_text ltx_font_italic">DSE Explorer</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S3.SS2" title="In III SECDA-DSE ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-B</span> </span><span class="ltx_text ltx_font_italic">LLM Stack</span></span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS1" title="In III-B LLM Stack ‣ III SECDA-DSE ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-B</span>1 </span>Retrieval-Augmented Generation</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS2" title="In III-B LLM Stack ‣ III SECDA-DSE ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-B</span>2 </span>Chain-of-Thought Prompting and Fine-Tuning</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS3" title="In III SECDA-DSE ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-C</span> </span><span class="ltx_text ltx_font_italic">Evaluation and Feedback Loop</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S4" title="In Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">IV </span><span class="ltx_text ltx_font_smallcaps">Evaluation</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S5" title="In Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">V </span><span class="ltx_text ltx_font_smallcaps">Limitations and Future Work</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S6" title="In Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">VI </span><span class="ltx_text ltx_font_smallcaps">Conclusion</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title">References</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_appendix">
+<a class="ltx_ref" href="#A1" title="In Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">A </span>Appendix</span></a>
+<ol class="ltx_toclist ltx_toclist_appendix">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#A1.SS1" title="In Appendix A Appendix ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">A-A</span> </span><span class="ltx_text ltx_font_italic">Element-wise Vector Multiplication</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#A1.SS2" title="In Appendix A Appendix ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">A-B</span> </span><span class="ltx_text ltx_font_italic">2D Convolution</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#A1.SS3" title="In Appendix A Appendix ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">A-C</span> </span><span class="ltx_text ltx_font_italic">Matrix Transpose</span></span></a></li>
+</ol>
+</li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY-NC-SA 4.0</span><span class="original-text">License: CC BY-NC-SA 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2606.11117v1 [cs.AR] 2026 年 6 月 9 日</span><span class="original-text">arXiv:2606.11117v1 [cs.AR] 09 Jun 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">走向自主加速器设计：</span><span class="original-text">Towards Autonomous Accelerator Design:</span><br class="ltx_break"/><span class="translated-text">使用 SECDA 生成 FPGA 加速器</span><span class="original-text">FPGA Accelerator Generation with SECDA</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname"><span class="ltx_text ltx_font_bold" id="id2.2.id1">Vinamra Sharma</span> <span class="ltx_text ltx_font_bold" id="id3.3.id2">Xingjian Fu</span> <span class="ltx_text ltx_font_bold" id="id4.4.id3">Jude Haris</span> <span class="ltx_text ltx_font_bold" id="id1.1.1">José Cano <math alttext="{}^{\quad}" class="ltx_Math" display="inline" id="id1.1.1.m1" intent=":literal"><semantics><msup><mi></mi><mi></mi></msup><annotation encoding="application/x-tex">{}^{\quad}</annotation></semantics></math>
+<br class="ltx_break"/></span>School of Computing Science, University of Glasgow, Scotland, UK 
+<br class="ltx_break"/><span class="ltx_text ltx_font_typewriter" id="id5.5.id4" style="font-size:80%;">{<a class="ltx_ref ltx_href" href="https://arxiv.org/html/2606.11117v1/mailto:2805343s@student.gla.ac.uk" title="">2805343s</a>, <a class="ltx_ref ltx_href" href="https://arxiv.org/html/2606.11117v1/mailto:3065487f@student.gla.ac.uk" title="">3065487f</a>}@student.gla.ac.uk<span class="ltx_text ltx_font_serif" id="id5.5.id4.1"> ,</span>{<a class="ltx_ref ltx_href" href="https://arxiv.org/html/2606.11117v1/mailto:Jude.Haris@glasgow.ac.uk" title="">jude.haris</a>, <a class="ltx_ref ltx_href" href="https://arxiv.org/html/2606.11117v1/mailto:jose.canoreyes@glasgow.ac.uk" title="">jose.canoreyes</a>,}@glasgow.ac.uk<span class="ltx_text ltx_font_serif" id="id5.5.id4.2">
+</span></span>
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">为现代人工智能工作负载设计基于 FPGA 的加速器需要探索大型且复杂的硬件设计空间，其中涉及架构参数、数据流策略和内存层次结构，使得该过程非常耗时。
+虽然 SECDA 等现有方法可以通过 SystemC 仿真和 FPGA 执行实现快速硬件-软件协同设计，但识别高效的加速器配置仍然是一个很大程度上需要手动操作的过程，需要广泛的领域知识。
+SECDA-DSE 是一个将大型语言模型 (LLM) 集成到 SECDA 生态系统中的框架，用于指导基于 FPGA 的加速器的设计空间探索 (DSE)。它将用于生成候选架构的结构化 DSE Explorer 与 LLM Stack 相结合，LLM Stack 使用检索增强生成和思维链提示执行推理引导的探索，再加上用于迭代和强化细化的反馈循环。</span><span class="original-text">Designing FPGA-based accelerators for modern artificial intelligence workloads requires exploring a large and complex hardware design space that involves architectural parameters, data flow strategies, and memory hierarchies, making the process very time consuming.
+While existing methodologies such as SECDA enable rapid hardware-software co-design through SystemC simulation and FPGA execution, identifying efficient accelerator configurations remains a largely manual process requiring extensive domain knowledge.
+SECDA-DSE is a framework that integrates Large Language Models (LLMs) into the SECDA ecosystem to guide design space exploration (DSE) of FPGA-based accelerators. It combines a structured DSE Explorer for generating candidate architectures with an LLM Stack that performs reasoning-guided exploration using retrieval-augmented generation and chain-of-thought prompting, coupled with a feedback loop for iterative and reinforced refinement.</span></p>
+<p class="ltx_p"><span class="translated-text">基于我们之前介绍 SECDA-DSE 的工作，本文通过生成三种加速器设计（包括逐元素向量乘法、2D 卷积和矩阵转置）以及在 FPGA 硬件上执行端到端执行来扩展其评估。
+结果表明，SECDA-DSE 可以生成符合 SECDA 标准的加速器设计，并在 FPGA 硬件上成功综合和执行。此外，生成的设计捕获了计算并行性和数据移动之间特定于内核的权衡，突出了法学硕士引导的探索在适应不同工作负载的架构配置方面的潜力，同时减少了探索时间和对广泛的人类专业知识的需求。</span><span class="original-text">Building on our previous work introducing SECDA-DSE, this paper extends its evaluation by generating three accelerator designs, including element-wise vector multiplication, 2D convolution, and matrix transpose, and performing end-to-end execution on FPGA hardware.
+The results show that SECDA-DSE can generate SECDA-compliant accelerator designs that are successfully synthesized and executed on FPGA hardware. Furthermore, the generated designs capture kernel-specific trade-offs between compute parallelism and data movement, highlighting the potential of LLM-guided exploration to adapt architectural configurations across diverse workloads while reducing exploration time and the need for extensive human expertise.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span class="ltx_text ltx_font_smallcaps" id="S1.1.1"><span class="translated-text">简介</span><span class="original-text">Introduction</span></span>
+</h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">为现代人工智能 (AI) 工作负载设计基于 FPGA 的加速器需要在交互的架构选择中进行选择，包括计算并行性、平铺因子、内存层次结构、数据流策略和片上资源分配。这些选择共同影响延迟、吞吐量、带宽压力和 FPGA 资源利用率，使得加速器设计空间探索既昂贵又需要专业知识密集型</span><span class="original-text">Designing FPGA-based accelerators for modern artificial intelligence (AI) workloads requires selecting among interacting architectural choices, including compute parallelism, tiling factors, memory hierarchy organization, dataflow strategies, and on-chip resource allocation. These choices jointly affect latency, throughput, bandwidth pressure, and FPGA resource utilization, making accelerator design space exploration both expensive and expertise-intensive</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="A Survey on Neural Network Hardware Accelerators">14</a>]</cite><span class="translated-text">。
+尽管与固定功能 ASIC 相比，基于 FPGA 的加速器提供了灵活性和能效，但由于存在大量架构排列和优化权衡，识别高性能加速器配置仍然是一项重大挑战。</span><span class="original-text">.
+Although FPGA-based accelerators provide flexibility and energy efficiency compared to fixed-function ASICs, identifying performant accelerator configurations remains a significant challenge due to the large number of architectural permutations and optimization trade-offs.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">现有方法，例如 SECDA</span><span class="original-text">Existing methodologies such as SECDA</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="SECDA: Efficient Hardware/Software Co-Design of FPGA-based DNN Accelerators for Edge Inference">6</a>]</cite><span class="translated-text">以及 SECDA-TFLite 等工具包</span><span class="original-text">and toolkits like SECDA-TFLite</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib4" title="SECDA-TFLite: A toolkit for efficient development of FPGA-based DNN accelerators for edge inference">7</a>]</cite><span class="translated-text">通过基于 SystemC 的仿真和 FPGA 执行实现快速硬件软件协同设计，从而显着降低与定制加速器设计相关的开发开销。它们为人工智能加速提供可重用的架构模板和自动化硬件流程。然而，探索最佳加速器配置的过程仍然需要大量的手动设计空间探索（DSE）、迭代调整以及专家驱动的硬件权衡推理。</span><span class="original-text">enable rapid hardware software co-design through SystemC-based simulation and FPGA execution, significantly reducing the development overhead associated with custom accelerator design. They provide reusable architectural templates and automated hardware flows for AI acceleration. However, the process of exploring optimal accelerator configurations still requires extensive manual design space exploration (DSE), iterative tuning, and expert-driven reasoning over hardware trade-offs.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">大型语言模型 (LLM) 的最新进展展示了跨软件工程和系统领域的推理、代码生成和结构化问题解决的强大能力</span><span class="original-text">Recent advances in Large Language Models (LLMs) have demonstrated strong capabilities in reasoning, code generation, and structured problem solving across software engineering and systems domains</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib25" title="Large Language Models for Software Engineering: A Systematic Literature Review">9</a>, <a class="ltx_ref" href="#bib.bib26" title="Large Language Models for Software Engineering: Survey and Open Problems">2</a>]</cite><span class="translated-text">。这些功能通过实现推理引导的设计细化和工作负载感知架构适应，创造了协助或自动化硬件加速器探索的机会。然而，将 LLM 应用于 FPGA 加速器 DSE 仍然相对未经探索，特别是在将 LLM 推理与结构化硬件探索流程相结合以及通过真实 FPGA 执行验证生成的加速器设计方面。</span><span class="original-text">. These capabilities create an opportunity to assist or automate hardware accelerator exploration by enabling reasoning-guided design refinement and workload-aware architectural adaptation. However, applying LLMs to FPGA accelerator DSE remains relatively unexplored, particularly in combining LLM reasoning with structured hardware exploration flows and validating generated accelerator designs through real FPGA execution.</span></p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">在我们之前的工作中</span><span class="original-text">In our previous work</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="LLM-Driven Design Space Exploration of FPGA-based Accelerators">17</a>]</cite><span class="translated-text">，我们介绍了</span><span class="original-text">, we introduced</span><span class="ltx_text ltx_font_bold" id="S1.p4.1.1">SECDA-DSE</span><span class="translated-text">，一个框架，将 LLM 引导推理集成到 FPGA 加速器 DSE 的 SECDA 生态系统中，并使用高级仿真评估单个加速器设计。
+SECDA-DSE 结合了结构化的 DSE Explorer（负责生成和评估候选硬件加速器配置）和 LLM 堆栈（使用检索增强生成 (RAG)、思想链 (CoT) 提示和参数高效微调来执行推理引导的细化）。该框架包含一个反馈驱动的评估循环，其中收集并重用模拟和硬件执行指标，以迭代地改进后续决策，如图所示</span><span class="original-text">, a framework that integrates LLM-guided reasoning into the SECDA ecosystem for FPGA accelerator DSE, and evaluated a single accelerator design using high-level simulation.
+SECDA-DSE combines a structured DSE Explorer, responsible for generating and evaluating candidate hardware accelerator configurations, with an LLM Stack that performs reasoning-guided refinement using Retrieval-Augmented Generation (RAG), Chain-of-Thought (CoT) prompting, and parameter-efficient fine-tuning. The framework incorporates a feedback-driven evaluation loop in which simulation and hardware execution metrics are collected and reused to iteratively improve subsequent decisions, as shown in Figure</span><a class="ltx_ref" href="#S3.F1" title="Figure 1 ‣ III SECDA-DSE ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">在本文中，我们提出了 SECDA-DSE，并通过生成多个加速器内核并在 FPGA 上执行端到端真实硬件执行来扩展其评估。
+具体来说，我们评估生成的加速器用于逐元素向量乘法、2D 卷积和矩阵转置。生成的设计成功在 FPGA 硬件上执行，并展示了特定于工作负载的架构特征和资源利用模式，突出了该框架无需进行大量微调即可跨不同计算工作负载调整探索决策的能力。</span><span class="original-text">In this paper, we present SECDA-DSE and extend its evaluation by generating multiple accelerator kernels and performing end-to-end real hardware execution on an FPGA.
+Specifically, we evaluate generated accelerators for element-wise vector multiplication, 2D-convolution, and matrix transpose. The generated designs successfully execute on FPGA hardware and exhibit workload-specific architectural characteristics and resource utilization patterns, highlighting the ability of the framework to adapt exploration decisions across different computational workloads without extensive fine-tuning.</span></p>
+</div>
+<div class="ltx_para" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1"><span class="translated-text">本文做出以下贡献：</span><span class="original-text">This paper makes the following contributions:</span></p>
+</div>
+<div class="ltx_para" id="S1.p7">
+<ul class="ltx_itemize" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="translated-text">我们推出了 SECDA-DSE，这是一种用于 FPGA 加速器 DSE 的法学硕士指导框架，它结合了结构化探索、RAG、CoT 提示、微调和迭代硬件评估。</span><span class="original-text">We present SECDA-DSE, an LLM-guided framework for FPGA accelerator DSE that combines structured exploration, RAG, CoT prompting, fine-tuning, and iterative hardware evaluation.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="translated-text">我们将 SECDA-DSE 的评估从单一基于仿真的加速器设计扩展到通过端到端 FPGA 执行验证的多个加速器内核，包括向量乘法、卷积和转置内核。所有生成的加速器都通过了FPGA平台上的功能验证，确认了其执行的正确性。代表性执行结果显示，测量的向量乘法延迟为 154 毫秒，2D 卷积延迟为 163 毫秒，转置延迟为 238 毫秒。生成的设计还表现出不同的资源配置文件，例如矢量乘法的 DSP 利用率为 21.82%，转置的 LUT 利用率为 8.85%。</span><span class="original-text">We extend the evaluation of SECDA-DSE from a single simulation-based accelerator design to multiple accelerator kernels validated through end-to-end FPGA execution, including vector multiplication, convolution, and transpose kernels. All generated accelerators passed functional validation on the FPGA platform, confirming their execution correctness. Representative execution results show measured latencies of 154 ms for vector multiplication, 163 ms for 2D convolution, and 238 ms for transpose. The generated designs also exhibit different resource profiles, such as 21.82% DSP utilization for vector multiplication and 8.85% LUT utilization for transpose.</span></p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span class="ltx_text ltx_font_smallcaps" id="S2.1.1"><span class="translated-text">背景及相关工作</span><span class="original-text">Background and Related Work</span></span>
+</h2>
+<section class="ltx_subsection" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S2.SS1.5.1.1"><span class="translated-text">Ⅱ-A</span><span class="original-text">II-A</span></span> </span><span class="ltx_text ltx_font_italic" id="S2.SS1.6.2"><span class="translated-text">FPGA 加速器协同设计</span><span class="original-text">FPGA Accelerator Co-Design</span></span>
+</h3>
+<div class="ltx_para" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.1"><span class="translated-text">基于 FPGA 的加速器由于其灵活性、可重配置性以及跨不同应用提供节能计算的能力，已成为部署现代 AI 工作负载的日益重要的平台</span><span class="original-text">FPGA-based accelerators have become an increasingly important platform for deploying modern AI workloads due to their flexibility, reconfigurability, and ability to provide energy-efficient computation across diverse applications</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib27" title="FPGA-based Acceleration for Convolutional Neural Networks: A Comprehensive Review">11</a>]</cite><span class="translated-text">。然而，开发定制 FPGA 加速器仍然是一个复杂的过程，涉及软硬件协同设计、硬件验证、高级综合 (HLS) 和迭代性能优化</span><span class="original-text">. However, developing custom FPGA accelerators remains a complex process involving hardware-software co-design, hardware verification, high-level synthesis (HLS), and iterative performance optimization</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib29" title="DLAS: A Conceptual Model for Across-Stack Deep Learning Acceleration">5</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.SS1.p2">
+<p class="ltx_p" id="S2.SS1.p2.1"><span class="translated-text">为了缩短加速器设计过程，SECDA 方法</span><span class="original-text">To shorten this accelerator design process, the SECDA methodology</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="SECDA: Efficient Hardware/Software Co-Design of FPGA-based DNN Accelerators for Edge Inference">6</a>]</cite><span class="translated-text">旨在通过使用基于 SystemC 的仿真和 FPGA 执行流程实现快速硬件-软件协同设计来简化加速器开发。
+SECDA-TFLite</span><span class="original-text">was introduced to simplify accelerator development by enabling rapid hardware-software co-design using SystemC-based simulation and FPGA execution flows.
+The SECDA-TFLite</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib4" title="SECDA-TFLite: A toolkit for efficient development of FPGA-based DNN accelerators for edge inference">7</a>]</cite><span class="translated-text">该工具包通过使用可重用的架构模板和自动化硬件生成流程实现基于 TensorFlow Lite 的 AI 加速器开发和部署，进一步扩展了该生态系统。最近，SECDA-LLM</span><span class="original-text">toolkit further extended this ecosystem by enabling TensorFlow Lite-based AI accelerator development and deployment using reusable architectural templates and automated hardware generation flows. More recently, SECDA-LLM</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib5" title="Designing Efficient LLM Accelerators for Edge Devices">8</a>]</cite><span class="translated-text">探索了 SECDA 生态系统中大型语言模型 (LLM) 的集成，以协助加速器开发工作流程。</span><span class="original-text">explored the integration of Large Language Models (LLMs) within the SECDA ecosystem to assist accelerator development workflows.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS1.p3">
+<p class="ltx_p" id="S2.SS1.p3.1"><span class="translated-text">虽然这些框架显着降低了开发开销并提高了 FPGA 加速器设计的可访问性，但加速器配置和硬件优化策略的探索仍然在很大程度上依赖于手动 DSE，需要专业知识来推理架构和硬件限制。</span><span class="original-text">While these frameworks significantly reduce development overhead and improve accessibility of FPGA accelerator design, the exploration of accelerator configurations and hardware optimization strategies still largely depends on manual DSE, requiring expert knowledge to reason over architectural and hardware constraints.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S2.SS2.5.1.1"><span class="translated-text">Ⅱ-B</span><span class="original-text">II-B</span></span> </span><span class="ltx_text ltx_font_italic" id="S2.SS2.6.2"><span class="translated-text">用于 FPGA 加速器的 DSE</span><span class="original-text">DSE for FPGA Accelerators</span></span>
+</h3>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.1"><span class="translated-text">DSE 是一种广泛使用的方法，用于在工作负载和特定于设备的限制下识别高效的硬件配置。现有的 FPGA DSE 方法通常依赖于详尽的参数扫描、启发式搜索方法、贝叶斯优化或遗传算法等技术来探索架构参数空间</span><span class="original-text">DSE is a widely used approach for identifying efficient hardware configurations under workload and device-specific constraints. Existing DSE methodologies for FPGAs commonly rely on exhaustive parameter sweeps, heuristic search methods, bayesian optimization, or techniques such as genetic algorithms to explore architectural parameter spaces</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="A Survey on Design Space Exploration Approaches for Approximate Computing Systems">16</a>, <a class="ltx_ref" href="#bib.bib7" title="Machine Learning for FPGA Electronic Design Automation">1</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p2">
+<p class="ltx_p" id="S2.SS2.p2.1"><span class="translated-text">这些方法已经证明了它们在优化延迟、吞吐量、功耗和资源利用率等指标方面的有效性。然而，传统的 DSE 方法主要在结构化参数空间上运行，并且通常缺乏对工作负载行为、架构模式或实现权衡进行语义推理的能力。此外，随着加速器复杂性的增加，由于设计排列和硬件评估周期数量不断增加，详尽的探索在计算上变得昂贵</span><span class="original-text">These approaches have proven their effectiveness in optimizing metrics such as latency, throughput, power consumption, and resource utilization. However, traditional DSE methods primarily operate over structured parameter spaces and often lack the ability to reason semantically about workload behavior, architectural patterns, or implementation trade-offs. Also, as the complexity of the accelerator increases, exhaustive exploration becomes computationally expensive due to the growing number of design permutations and hardware evaluation cycles</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib28" title="Hardware Acceleration for Neural Networks: A Comprehensive Survey">20</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p3">
+<p class="ltx_p" id="S2.SS2.p3.1">SECDA-DSE <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="LLM-Driven Design Space Exploration of FPGA-based Accelerators">17</a>]</cite><span class="translated-text">提供了一种通过 LLM 引导的推理层增强结构化参数探索的方法，该推理层可以使用先前的硬件知识、检索到的设计上下文和评估反馈来完善加速器配置。</span><span class="original-text">provides an approach in which structured parameter exploration is augmented with an LLM-guided reasoning layer that can use prior hardware knowledge, retrieved design context, and evaluation feedback to refine accelerator configurations.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S2.SS3.5.1.1"><span class="translated-text">Ⅱ-C</span><span class="original-text">II-C</span></span> </span><span class="ltx_text ltx_font_italic" id="S2.SS3.6.2"><span class="translated-text">硬件和系统设计法学硕士</span><span class="original-text">LLMs for Hardware and Systems Design</span></span>
+</h3>
+<div class="ltx_para" id="S2.SS3.p1">
+<p class="ltx_p" id="S2.SS3.p1.1"><span class="translated-text">法学硕士的最新进展促使他们将其用作结合了代码生成、工具交互和结构化决策的工程任务的助手。
+这些功能激发了人们对将法学硕士应用于硬件和系统设计工作流程的兴趣，包括 RTL 生成、HLS 辅助、编译器优化和架构探索</span><span class="original-text">Recent advances in LLMs have motivated their use as assistants for engineering tasks that combine code generation, tool interaction, and structured decision making.
+These capabilities have motivated growing interest in applying LLMs to hardware and system design workflows, including RTL generation, HLS assistance, compiler optimization, and architecture exploration</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="Are LLMs Any Good for High-Level Synthesis?">13</a>, <a class="ltx_ref" href="#bib.bib9" title="iDSE: Navigating Design Space Exploration in High-Level Synthesis Using LLMs">12</a>, <a class="ltx_ref" href="#bib.bib10" title="LUMINA: LLM-Guided GPU Architecture Exploration via Bottleneck Analysis">22</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.SS3.p2">
+<p class="ltx_p" id="S2.SS3.p2.1"><span class="translated-text">最近的几项工作探索了使用法学硕士来生成硬件描述或协助加速器开发</span><span class="original-text">Several recent works have explored the use of LLMs for generating hardware descriptions or assisting accelerator development</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib11" title="GPT4AIGChip: Towards Next-Generation AI Accelerator Design Automation via Large Language Models">4</a>, <a class="ltx_ref" href="#bib.bib12" title="LLM-AID: Leveraging Large Language Models for Rapid Domain-Specific Accelerator Development">3</a>, <a class="ltx_ref" href="#bib.bib13" title="SA-DS: A Dataset for Large Language Model-Driven AI Accelerator Design Generation">18</a>]</cite><span class="translated-text">。 RAG 和 CoT 提示等方法还可以提高复杂工程任务的推理质量和上下文理解。同时，参数高效的微调技术，例如低秩适应（LoRA）</span><span class="original-text">. Approaches such as RAG and CoT prompting also improve reasoning quality and contextual understanding for complex engineering tasks. In parallel, parameter-efficient fine-tuning techniques such as Low-Rank Adaptation (LoRA)</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="LoRA: Low-Rank Adaptation of Large Language Models">10</a>]</cite><span class="translated-text">无需完整的模型重新训练即可实现法学硕士的适应。</span><span class="original-text">enable adaptation of LLMs without requiring full model retraining.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS3.p3">
+<p class="ltx_p" id="S2.SS3.p3.1"><span class="translated-text">尽管取得了这些进步，现有的工作主要集中在独立的代码生成任务或独立的硬件综合辅助上。有限的工作探索了将 LLM 引导推理集成到结构化 FPGA DSE 工作流程中，其中包含基于检索的上下文、迭代评估反馈和实际硬件执行。</span><span class="original-text">Despite these advances, existing work largely focuses on isolated code generation tasks or standalone hardware synthesis assistance. Limited work has explored the integration of LLM-guided reasoning within structured FPGA DSE workflows that incorporate a retrieval-based context, iterative evaluation feedback, and real hardware execution.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS3.p4">
+<p class="ltx_p" id="S2.SS3.p4.1"><span class="translated-text">相比之下，SECDA-DSE 在统一的加速器协同设计框架内集成了结构化设计探索、扎根检索推理、评估反馈和硬件感知细化。通过将基于 SECDA 的硬件评估与法学硕士指导推理相结合，SECDA-DSE 迈向自适应和自动化加速器设计工作流程。</span><span class="original-text">In contrast, SECDA-DSE integrates structured design exploration, grounded retrieval reasoning, evaluation feedback, and hardware-aware refinement within a unified accelerator co-design framework. By combining SECDA-based hardware evaluation with LLM-guided reasoning, SECDA-DSE move towards adaptive and automated accelerator design workflows.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section"><span class="translated-text">三、</span><span class="original-text">III</span></span><span class="ltx_text ltx_font_smallcaps" id="S3.1.1">SECDA-DSE</span>
+</h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="translated-text">SECDA-DSE 通过引入 LLM 指导的加速器 DSE 框架扩展了 SECDA 生态系统。该框架将结构化 DSE 与推理引导的细化相结合，以迭代方式生成、评估和改进目标工作负载和 FPGA 平台的加速器配置。</span><span class="original-text">SECDA-DSE extends the SECDA ecosystem by introducing an LLM-guided framework for accelerator DSE. The framework combines a structured DSE with reasoning-guided refinement to iteratively generate, evaluate, and improve accelerator configurations for target workloads and FPGA platforms.</span></p>
+</div>
+<div class="ltx_para" id="S3.p2">
+<p class="ltx_p" id="S3.p2.1"><span class="translated-text">SECDA-DSE工作流程如图所示</span><span class="original-text">The SECDA-DSE workflow is shown in Figure</span><a class="ltx_ref" href="#S3.F1" title="Figure 1 ‣ III SECDA-DSE ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">。其输入为： (i) 目标工作负载（例如 CNN、DNN）； (ii) 目标 FPGA 器件； (iii) 约束或指导架构探索的架构指令，例如平铺参数、计算并行性和内存层次结构组织。根据这些输入，SECDA-DSE 生成 SECDA 本机加速器设计，通过仿真和硬件执行流程对其进行评估，并存储生成的硬件数据点以供未来的细化迭代。</span><span class="original-text">. It takes as input: (i) a target workload (e.g., CNNs, DNNs); (ii) a target FPGA device; and (iii) architectural directives that constrain or guide architecture exploration, such as tiling parameters, compute parallelism, and memory hierarchy organization. Based on these inputs, SECDA-DSE generates SECDA native accelerator designs, evaluates them through simulation and hardware execution flows, and stores the resulting hardware datapoints for future refinement iterations.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="398" id="S3.F1.g1" src="https://arxiv.org/html/2606.11117v1/img/SECDA-DSE.png" width="568"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>SECDA-DSE workflow showing the interaction between the DSE Explorer, LLM Stack, and Evaluation Module.</figcaption>
+</figure>
+<div class="ltx_para" id="S3.p3">
+<p class="ltx_p" id="S3.p3.1"><span class="translated-text">与不受约束的硬件生成方法不同，SECDA-DSE 使用模板约束的加速器生成在 SECDA 生态系统中运行。
+虽然 Constrained 限制了对符合 SECDA 的架构模式的探索，但它能够可靠地生成可综合和可执行的加速器，同时仍然允许 LLM Stack 探索包含计算并行性、内存组织和数据流配置的大型设计空间。
+此外，该框架通过推理早期迭代中发现的错误来迭代地完善生成的设计。</span><span class="original-text">Unlike unconstrained hardware generation approaches, SECDA-DSE operates within the SECDA ecosystem using template-constrained accelerator generation.
+While constrained limits exploration to SECDA-compliant architectural patterns, it enables the reliable generation of synthesizable and executable accelerators while still allowing the LLM Stack to explore a large design space encompassing compute parallelism, memory organization, and dataflow configurations.
+Furthermore, the framework iteratively refines generated designs by reasoning about errors identified in earlier iterations.</span></p>
+</div>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS1.5.1.1"><span class="translated-text">Ⅲ-A</span><span class="original-text">III-A</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS1.6.2"><span class="translated-text">DSE 探索者</span><span class="original-text">DSE Explorer</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">DSE Explorer 负责加速器设计空间的结构化探索。其主要作用是在工作负载和 FPGA 特定约束下生成候选加速器配置。</span><span class="original-text">The DSE Explorer is responsible for structured exploration of the accelerator design space. Its primary role is to generate candidate accelerator configurations under workload and FPGA-specific constraints.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p2">
+<p class="ltx_p" id="S3.SS1.p2.1"><span class="translated-text">DSE Explorer 通过生成架构参数的排列来运行，包括计算单元尺寸、平铺策略、缓冲区分配和数据流配置。这些参数集被实例化到符合 SECDA 标准的加速器模板中，从而能够与现有 SECDA 仿真和 FPGA 执行流程集成。
+每个生成的加速器配置都会生成一个单独的设计运行，其中包含加速器描述、生成的源文件、HLS 输出和 FPGA 执行工件。使用基于 SECDA 的仿真和下游综合流程来评估最终的硬件设计，以收集性能指标，包括执行延迟、资源利用率和数据移动成本。</span><span class="original-text">The DSE Explorer operates by generating permutations of architectural parameters, including compute unit dimensions, tiling strategies, buffer allocations, and dataflow configurations. These parameter sets are instantiated into SECDA-compliant accelerator templates, enabling integration with existing SECDA simulation and FPGA execution flows.
+Each generated accelerator configuration produces an individual design run consisting of the accelerator description, generated source files, HLS outputs, and FPGA execution artifacts. The resulting hardware design is evaluated using SECDA-based simulation and downstream synthesis flows to collect performance metrics including execution latency, resource utilization, and data movement costs.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p3">
+<p class="ltx_p" id="S3.SS1.p3.1"><span class="translated-text">这些评估输出存储为硬件数据点，稍后重新用于微调 LLM 堆栈并指导后续的细化迭代。通过将结构化参数探索与评估驱动的反馈相结合，DSE Explorer 使 SECDA-DSE 能够比详尽的探索方法更有效地导航大型加速器设计空间。</span><span class="original-text">These evaluation outputs are stored as hardware datapoints that are later re-used to fine-tune the LLM Stack and guide subsequent refinement iterations. By combining structured parameter exploration with evaluation-driven feedback, the DSE Explorer enables SECDA-DSE to navigate large accelerator design spaces more efficiently than exhaustive exploration approaches.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS2.5.1.1"><span class="translated-text">Ⅲ-B</span><span class="original-text">III-B</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS2.6.2"><span class="translated-text">法学硕士堆栈</span><span class="original-text">LLM Stack</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">LLM Stack 充当 SECDA-DSE 内的推理和编排层。它的作用是分析生成的加速器配置，推理硬件权衡，并指导跨迭代的探索细化。
+它结合了 RAG、CoT 提示和参数高效的微调，以提供工作负载感知的加速器设计生成。图</span><span class="original-text">The LLM Stack acts as the reasoning and orchestration layer within SECDA-DSE. Its role is to analyze the generated accelerator configurations, reason about hardware trade-offs, and guide exploration refinement across iterations.
+It incorporates RAG, CoT prompting, and parameter-efficient fine-tuning to provide workload-aware accelerator design generation. Figure</span><a class="ltx_ref" href="#S3.F2" title="Figure 2 ‣ III-B LLM Stack ‣ III SECDA-DSE ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">提供了完整的 LLM 堆栈以及组件之间和跨模块之间的交互的高级概述。</span><span class="original-text">provides a high-level overview of the complete LLM Stack and interaction between components and across the modules.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="337" id="S3.F2.g1" src="https://arxiv.org/html/2606.11117v1/img/LLM_STACK.png" width="568"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Overview of LLM Stack Architecture.</figcaption>
+</figure>
+<section class="ltx_subsubsection" id="S3.SS2.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S3.SS2.SSS1.5.1.1"><span class="translated-text">Ⅲ-B</span><span class="original-text">III-B</span></span>1 </span><span class="translated-text">检索增强生成</span><span class="original-text">Retrieval-Augmented Generation</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS1.p1">
+<p class="ltx_p" id="S3.SS2.SSS1.p1.1"><span class="translated-text">RAG 模块使 LLM Stack 能够从矢量化 SECDA 知识库中检索上下文信息，该知识库由 SECDA-TFLite 源代码、架构模板、API 级上下文和先前评估的硬件数据点组成。
+RAG 模块不会在每次迭代期间公开完整的 SECDA 代码库或完整的硬件日志，而是仅检索与当前探索步骤相关的最相关的代码片段和硬件摘要。我们采用基于图的检索方法来有效地识别相关代码上下文，使用代码注释上的模糊匹配来指导跨图节点的导航。与标准最近邻检索方法相比，该方法减少了检索开销，同时提高了生成过程中的上下文相关性。</span><span class="original-text">The RAG module enables the LLM Stack to retrieve contextual information from a vectorized SECDA knowledge-base consisting of SECDA-TFLite source code, architectural templates, API-level context, and previously evaluated hardware datapoints.
+Rather than exposing the complete SECDA codebase or full hardware logs during each iteration, the RAG module retrieves only the most relevant code fragments and hardware summaries associated with the current exploration step. We employ a graph-based retrieval approach to efficiently identify relevant code context, using fuzzy matching on code comments to guide navigation across graph nodes. This method reduced retrieval overhead compared to standard nearest-neighbor retrieval approaches while improving contextual relevance during generation.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS1.p2">
+<p class="ltx_p" id="S3.SS2.SSS1.p2.1"><span class="translated-text">这种基于检索的方法使 SECDA-DSE 能够维持可管理的上下文大小，同时仍然提供足够的架构上下文以供细化。在推荐新的设计配置之前，检索到的信息包括工作负载特征、先前的加速器配置、硬件利用率摘要和评估结果。</span><span class="original-text">This retrieval-based approach enables SECDA-DSE to maintain manageable context sizes while still providing sufficient architectural context for refinement. The retrieved information includes workload characteristics, prior accelerator configurations, hardware utilization summaries, and evaluation outcomes, before recommending new design configurations.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS2.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S3.SS2.SSS2.5.1.1"><span class="translated-text">Ⅲ-B</span><span class="original-text">III-B</span></span>2 </span><span class="translated-text">思路链提示与微调</span><span class="original-text">Chain-of-Thought Prompting and Fine-Tuning</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS2.p1">
+<p class="ltx_p" id="S3.SS2.SSS2.p1.1"><span class="translated-text">SECDA-DSE 采用 CoT 提示来鼓励加速器探索期间的结构化多步骤推理。 CoT 提示使 LLM Stack 能够在生成候选架构细化之前推理工作负载行为、硬件约束、内存组织和计算并行性。</span><span class="original-text">SECDA-DSE employs CoT prompting to encourage structured multi-step reasoning during accelerator exploration. CoT prompts enable the LLM Stack to reason about workload behavior, hardware constraints, memory organization, and compute parallelism before generating candidate architectural refinements.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS2.p2">
+<p class="ltx_p" id="S3.SS2.SSS2.p2.1"><span class="translated-text">对于模型自适应，SECDA-DSE 使用 LoRA 进行参数高效微调</span><span class="original-text">For model adaptation, SECDA-DSE uses parameter-efficient fine-tuning with LoRA</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="LoRA: Low-Rank Adaptation of Large Language Models">10</a>]</cite><span class="translated-text">。微调数据集是使用之前探索的加速器配置及其通过 DSE-Explorer 生成的相关硬件评估结果构建的，并通过人机交互来确保正确性。</span><span class="original-text">. The fine-tuning dataset is built using previously explored accelerator configurations and their associated hardware evaluation outcomes generated via DSE-Explorer, with a human-in-the-loop for ensuring correctness.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS2.p3">
+<p class="ltx_p" id="S3.SS2.SSS2.p3.1"><span class="translated-text">每个硬件数据点由工作负载和 FPGA 上下文、生成的架构配置、仿真和执行成功状态、执行延迟和资源利用率指标组成。这些数据点使 LLM 堆栈能够迭代地适应生成可行、性能感知和目标设备感知的配置。</span><span class="original-text">Each hardware datapoint consists of workload and FPGA context, generated architectural configuration, simulation and execution success status, execution latency, and resource utilization metrics. These datapoints enable the LLM Stack to iteratively adapt toward generating configurations that are feasible, performance-aware, and target-device-aware.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS3.5.1.1"><span class="translated-text">Ⅲ-C</span><span class="original-text">III-C</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS3.6.2"><span class="translated-text">评估和反馈循环</span><span class="original-text">Evaluation and Feedback Loop</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.1"><span class="translated-text">评估模块负责验证生成的加速器设计并收集用于迭代细化的反馈。该工作流程从基于 SECDA 的 SystemC 仿真开始，以验证功能正确性并收集早期性能估计。然后，生成的加速器设计将通过 HLS，一旦成功，将通过 FPGA 执行流程。
+收集的评估指标包括执行延迟、FPGA 资源利用率、DMA 传输特性、数据移动成本和硬件执行验证。这些结果存储在 SECDA-DSE 硬件数据点数据库中，并在后续探索迭代中重复使用。</span><span class="original-text">The Evaluation Module is responsible for validating generated accelerator designs and collecting feedback used for iterative refinement. The workflow begins with a SECDA-based SystemC simulation to verify functional correctness and collect early-stage performance estimates. Generated accelerator designs are then passed through HLS and once succeed go through FPGA execution flows.
+The collected evaluation metrics include execution latency, FPGA resource utilization, DMA transfer characteristics, data movement costs, and hardware execution validation. These results are stored within the SECDA-DSE hardware datapoint database and reused during subsequent exploration iterations.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.p2">
+<p class="ltx_p" id="S3.SS3.p2.1"><span class="translated-text">为了减少无效的加速器建议，SECDA-DSE 使用 SECDA 本机架构模板和设备感知参数范围来限制生成，而不是依赖于不受约束的自由形式硬件生成。仿真失败、违反资源限制或下游综合流程失败的候选设计将被拒绝并记录为负数据点，这些数据点再次作为负强化反馈给法学硕士进行推理和纠正。</span><span class="original-text">To reduce invalid accelerator proposals, SECDA-DSE constrains generation using SECDA native architectural templates and device-aware parameter ranges rather than relying on unconstrained free-form hardware generation. Candidate designs that fail simulation, violate resource constraints, or fail downstream synthesis flows are rejected and logged as negative datapoints, which are again fed back as a negative reinforcement to the LLM to reason and correct.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.p3">
+<p class="ltx_p" id="S3.SS3.p3.1"><span class="translated-text">DSE Explorer、LLM Stack 和评估模块之间的迭代交互使 SECDA-DSE 能够反复完善加速器探索决策，同时利用跨工作负载和 FPGA 平台的先前硬件评估知识。</span><span class="original-text">The iterative interaction between the DSE Explorer, LLM Stack, and Evaluation Module enables SECDA-DSE to repeatedly refine accelerator exploration decisions while leveraging prior hardware evaluation knowledge across workloads and FPGA platforms.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span class="ltx_text ltx_font_smallcaps" id="S4.1.1"><span class="translated-text">评价</span><span class="original-text">Evaluation</span></span>
+</h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">为了扩展 SECDA-DSE 的评估，我们生成并评估了三个加速器工作负载：逐元素向量乘法、2D 卷积和矩阵转置。这些工作负载被有意选择来代表不同的加速器执行特征，包括算术密集型计算、面向卷积的空间计算和内存移动主导的执行模式。附录中提供了用于生成这些加速器设计的提示。</span><span class="original-text">To extend the evaluation of SECDA-DSE, we generated and evaluated three accelerator workloads: element-wise vector multiplication, 2D convolution, and matrix transpose. These workloads were intentionally selected to represent different accelerator execution characteristics, including arithmetic intensive computation, convolution-oriented spatial compute, and memory movement dominated execution patterns. The prompts used for generating these accelerator designs are provided in the Appendix.</span></p>
+</div>
+<div class="ltx_para" id="S4.p2">
+<p class="ltx_p" id="S4.p2.1"><span class="translated-text">SECDA-DSE 工作流程从用户提供的自然语言加速器规范开始。该提示通过 LLM 堆栈进行处理，其中 RAG 模块从矢量化知识库中检索相关的 SECDA 实现上下文、架构模板以及之前收集的硬件数据点。然后，检索到的上下文与 CoT 提示相结合，生成结构化加速器生成提示，并通过 SECDA 特定的架构指导进行丰富。</span><span class="original-text">The SECDA-DSE workflow begins with a natural language accelerator specification provided by the user. This prompt is processed through the LLM Stack, where the RAG module retrieves the relevant SECDA implementation context, architectural templates, and previously collected hardware datapoints from the vectorized knowledge-base. The retrieved context is then combined with CoT prompting to generate a structured accelerator generation prompt enriched with SECDA-specific architectural guidance.</span></p>
+</div>
+<div class="ltx_para" id="S4.p3">
+<p class="ltx_p" id="S4.p3.1"><span class="translated-text">使用这种丰富的上下文，SECDA-DSE 生成本机 SystemC 加速器设计以及所需的 SECDA 集成文件。在当前的实施中，生成的设计使用 SECDA 工具包通过人机交互评估工作流程。生成的加速器首先使用 HLS 进行验证，然后通过下游逻辑综合和 FPGA 执行流程对成功通过 HLS 的设计进行评估。</span><span class="original-text">Using this enriched context, SECDA-DSE generates native SystemC accelerator designs together with the required SECDA integration files. In the current implementation, the generated designs are passed through a human-in-the-loop evaluation workflow using the SECDA toolkit. The generated accelerators are first validated using HLS, and the designs that successfully pass HLS are then evaluated through downstream logic synthesis and FPGA execution flows.</span></p>
+</div>
+<div class="ltx_para" id="S4.p4">
+<p class="ltx_p" id="S4.p4.1"><span class="translated-text">使用 Vivado HLS 2019.2 进行评估</span><span class="original-text">The evaluation was performed using Vivado HLS 2019.2</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib24" title="Vivado high-level synthesis">19</a>]</cite><span class="translated-text">针对 Xilinx Zynq-7000 FPGA 平台（</span><span class="original-text">targeting a Xilinx Zynq-7000 FPGA platform (</span><span class="ltx_text ltx_font_typewriter" id="S4.p4.1.1">xc7z020-clg400-1</span><span class="translated-text">）。 LLM Stack 使用 TinyLlama</span><span class="original-text">). The LLM Stack used TinyLlama</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib16" title="TinyLlama: An Open-Source Small Language Model">21</a>]</cite><span class="translated-text">，通过Ollama本地部署的轻量级1.1B参数模型</span><span class="original-text">, a lightweight 1.1B parameter model deployed locally through Ollama</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib17" title="Ollama: run large language models locally">15</a>]</cite><span class="translated-text">。最初，LLM 仅使用矩阵加法和矩阵乘法加速器工作负载生成的硬件数据点进行微调。</span><span class="original-text">. Initially, the LLM was only fine-tuned using hardware datapoints generated from matrix addition and matrix multiplication accelerator workloads.</span></p>
+</div>
+<div class="ltx_para" id="S4.p5">
+<p class="ltx_p" id="S4.p5.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S4.T1" title="TABLE I ‣ IV Evaluation ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">I</span></a><span class="translated-text">总结了生成的工作负载的硬件执行和 FPGA 使用特征。本次评估的主要目标是通过完整的硬件生成工作流程（包括 HLS、逻辑综合和 FPGA 执行）跨多个加速器工作负载验证 SECDA-DSE。通过对 FPGA 生成的输出与基于 CPU 的软件实现生成的参考结果进行逐元素比较，验证生成的加速器设计的正确性。
+在此阶段，重点是端到端硬件执行，而不是生成完全优化的加速器实现。正如第 5 节中更详细讨论的</span><span class="original-text">summarizes the hardware execution and FPGA utilization characteristics for the generated workloads. The primary objective of this evaluation was to validate SECDA-DSE across multiple accelerator workloads through the complete hardware generation workflow, including HLS, logic synthesis, and FPGA execution. The correctness of the generated accelerator designs is validated by performing an element-wise comparison between the outputs produced by the FPGA and reference results generated by a CPU-based software implementation.
+At this stage, the focus is on end-to-end hardware execution rather than producing fully optimized accelerator implementations. As discussed in more detail in Section</span><a class="ltx_ref" href="#S5" title="V Limitations and Future Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">V</span></a><span class="translated-text">，SECDA-DSE 的后续迭代将重点关注性能优化的加速器设计。</span><span class="original-text">, subsequent iterations of SECDA-DSE will focus on performance-optimized accelerator designs.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T1">
+<figcaption class="ltx_caption ltx_centering" style="font-size:70%;"><span class="ltx_tag ltx_tag_table">TABLE I: </span>FPGA execution and resource utilization comparison for generated accelerator designs.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T1.3">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T1.3.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" id="S4.T1.3.1.1.1" style="padding:0.4pt 3.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.3.1.1.1.1" style="font-size:70%;">Metric</span></th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.1.1.2" style="padding:0.4pt 3.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.3.1.1.2.1" style="font-size:70%;">2D Conv</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.1.1.3" style="padding:0.4pt 3.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.3.1.1.3.1" style="font-size:70%;">VMUL</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.1.1.4" style="padding:0.4pt 3.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.3.1.1.4.1" style="font-size:70%;">Transpose</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.2.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_tt" id="S4.T1.3.2.2.1" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.2.2.1.1" style="font-size:70%;">Validation</span></th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_tt" id="S4.T1.3.2.2.2" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.2.2.2.1" style="font-size:70%;">PASSED</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_tt" id="S4.T1.3.2.2.3" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.2.2.3.1" style="font-size:70%;">PASSED</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_tt" id="S4.T1.3.2.2.4" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.2.2.4.1" style="font-size:70%;">PASSED</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.3.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" id="S4.T1.3.3.3.1" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.3.3.1.1" style="font-size:70%;">Latency (ms)</span></th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.3.3.2" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.3.3.2.1" style="font-size:70%;">163</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.3.3.3" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.3.3.3.1" style="font-size:70%;">135</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.3.3.4" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.3.3.4.1" style="font-size:70%;">238</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.4.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" id="S4.T1.3.4.4.1" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.4.4.1.1" style="font-size:70%;">HWC cycles (1/2/3)</span></th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.4.4.2" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.4.4.2.1" style="font-size:70%;">1251/76/1250</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.4.4.3" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.4.4.3.1" style="font-size:70%;">52/26/51</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.4.4.4" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.4.4.4.1" style="font-size:70%;">393/311/387</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.5.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_tt" id="S4.T1.3.5.5.1" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.5.5.1.1" style="font-size:70%;">DMA recv size (bytes)</span></th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_tt" id="S4.T1.3.5.5.2" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.5.5.2.1" style="font-size:70%;">256</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_tt" id="S4.T1.3.5.5.3" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.5.5.3.1" style="font-size:70%;">64</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_tt" id="S4.T1.3.5.5.4" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.5.5.4.1" style="font-size:70%;">512</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.6.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" id="S4.T1.3.6.6.1" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.6.6.1.1" style="font-size:70%;">DMA send size (bytes)</span></th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.6.6.2" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.6.6.2.1" style="font-size:70%;">268</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.6.6.3" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.6.6.3.1" style="font-size:70%;">136</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.6.6.4" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.6.6.4.1" style="font-size:70%;">524</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.7.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" id="S4.T1.3.7.7.1" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.7.7.1.1" style="font-size:70%;">DMA recv speed (MB/s)</span></th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.7.7.2" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.7.7.2.1" style="font-size:70%;">17.07</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.7.7.3" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.7.7.3.1" style="font-size:70%;">4.57</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.7.7.4" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.7.7.4.1" style="font-size:70%;">13.47</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.8.8">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" id="S4.T1.3.8.8.1" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.8.8.1.1" style="font-size:70%;">DMA send speed (MB/s)</span></th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.8.8.2" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.8.8.2.1" style="font-size:70%;">38.29</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.8.8.3" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.8.8.3.1" style="font-size:70%;">19.43</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.8.8.4" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.8.8.4.1" style="font-size:70%;">30.82</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.9.9">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" id="S4.T1.3.9.9.1" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.9.9.1.1" style="font-size:70%;">DMA recv wait (ms)</span></th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.9.9.2" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.9.9.2.1" style="font-size:70%;">15</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.9.9.3" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.9.9.3.1" style="font-size:70%;">14</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.9.9.4" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.9.9.4.1" style="font-size:70%;">38</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.10.10">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" id="S4.T1.3.10.10.1" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.10.10.1.1" style="font-size:70%;">DMA send wait (ms)</span></th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.10.10.2" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.10.10.2.1" style="font-size:70%;">7</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.10.10.3" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.10.10.3.1" style="font-size:70%;">7</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.10.10.4" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.10.10.4.1" style="font-size:70%;">17</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.11.11">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_tt" id="S4.T1.3.11.11.1" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.11.11.1.1" style="font-size:70%;">BRAM utilization (%)</span></th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_tt" id="S4.T1.3.11.11.2" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.11.11.2.1" style="font-size:70%;">2.50</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_tt" id="S4.T1.3.11.11.3" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.11.11.3.1" style="font-size:70%;">3.57</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_tt" id="S4.T1.3.11.11.4" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.11.11.4.1" style="font-size:70%;">2.86</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.12.12">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" id="S4.T1.3.12.12.1" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.12.12.1.1" style="font-size:70%;">DSP utilization (%)</span></th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.12.12.2" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.12.12.2.1" style="font-size:70%;">1.36</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.12.12.3" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.12.12.3.1" style="font-size:70%;">21.82</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.12.12.4" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.12.12.4.1" style="font-size:70%;">5.45</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.13.13">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_l ltx_border_r ltx_border_t" id="S4.T1.3.13.13.1" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.13.13.1.1" style="font-size:70%;">LUT utilization (%)</span></th>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.13.13.2" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.13.13.2.1" style="font-size:70%;">6.64</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.13.13.3" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.13.13.3.1" style="font-size:70%;">8.23</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T1.3.13.13.4" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.13.13.4.1" style="font-size:70%;">8.85</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.14.14">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_l ltx_border_r ltx_border_t" id="S4.T1.3.14.14.1" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.14.14.1.1" style="font-size:70%;">FF utilization (%)</span></th>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t" id="S4.T1.3.14.14.2" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.14.14.2.1" style="font-size:70%;">4.30</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t" id="S4.T1.3.14.14.3" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.14.14.3.1" style="font-size:70%;">6.02</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r ltx_border_t" id="S4.T1.3.14.14.4" style="padding:0.4pt 3.0pt;"><span class="ltx_text" id="S4.T1.3.14.14.4.1" style="font-size:70%;">5.84</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S4.p6">
+<p class="ltx_p" id="S4.p6.4"><span class="translated-text">尽管是根据自然语言规范生成的，但生成的加速器设计是可执行的，无需手动修改生成的加速器逻辑。生成的工作负载根据工作负载的计算结构表现出不同的硬件特征。例如，向量乘法工作负载强调算术执行和并行计算行为，从而提高 DSP 利用率（</span><span class="original-text">Despite being generated from natural language specifications, the produced accelerator designs were executable without requiring manual modification of the generated accelerator logic. The generated workloads exhibited distinct hardware characteristics depending on the computational structure of the workload. For example, vector multiplication workload emphasized arithmetic execution and parallel compute behavior, resulting in higher DSP utilization (</span><math alttext="21.82\%" class="ltx_Math" display="inline" id="S4.p6.1.m1" intent=":literal"><semantics><mrow><mn>21.82</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">21.82\%</annotation></semantics></math><span class="translated-text">）与卷积（</span><span class="original-text">) compared to the convolution (</span><math alttext="1.36\%" class="ltx_Math" display="inline" id="S4.p6.2.m2" intent=":literal"><semantics><mrow><mn>1.36</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">1.36\%</annotation></semantics></math><span class="translated-text">) 并转置 (</span><span class="original-text">) and transpose (</span><math alttext="5.45\%" class="ltx_Math" display="inline" id="S4.p6.3.m3" intent=":literal"><semantics><mrow><mn>5.45</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">5.45\%</annotation></semantics></math><span class="translated-text">）加速器。虽然转置工作负载表现出更多内存移动主导的执行模式，但 DMA 传输大小增加且 FPGA 逻辑利用率更高（</span><span class="original-text">) accelerators. While the transpose workload demonstrated a more memory movement dominated execution pattern with increased DMA transfer sizes and higher FPGA logic utilization (</span><math alttext="8.85\%" class="ltx_Math" display="inline" id="S4.p6.4.m4" intent=":literal"><semantics><mrow><mn>8.85</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">8.85\%</annotation></semantics></math><span class="translated-text">LUT 的使用）。</span><span class="original-text">LUT usage).</span></p>
+</div>
+<div class="ltx_para" id="S4.p7">
+<p class="ltx_p" id="S4.p7.5"><span class="translated-text">使用硬件计数器 (HWC) 周期和 DMA 分析指标，SECDA-DSE 可以识别生成的加速器设计中的瓶颈，并在迭代细化过程中使用此信息。 HWC1 测量数据加载等待周期，HWC2 捕获计算时间，HWC3 记录回写周期。
+2D 卷积加速器表现出显着更高的循环计数（</span><span class="original-text">Using hardware counter (HWC) cycles and DMA profiling metrics, SECDA-DSE identifies bottlenecks within generated accelerator designs and uses this information during iterative refinement. HWC1 measures data loading wait cycles, HWC2 captures computation time, and HWC3 records write-back cycles.
+The 2D convolution accelerator demonstrated substantially higher cycle counts (</span><math alttext="1251/76/1250" class="ltx_Math" display="inline" id="S4.p7.1.m1" intent=":literal"><semantics><mrow><mn>1251</mn><mo>/</mo><mn>76</mn><mo>/</mo><mn>1250</mn></mrow><annotation encoding="application/x-tex">1251/76/1250</annotation></semantics></math><span class="translated-text">）与向量乘法（</span><span class="original-text">) compared to the vector multiplication (</span><math alttext="52/26/51" class="ltx_Math" display="inline" id="S4.p7.2.m2" intent=":literal"><semantics><mrow><mn>52</mn><mo>/</mo><mn>26</mn><mo>/</mo><mn>51</mn></mrow><annotation encoding="application/x-tex">52/26/51</annotation></semantics></math><span class="translated-text">）由于缓冲和数据重用复杂性增加，而转置加速器表现出中等执行复杂性（</span><span class="original-text">) due to the increased buffering and data reuse complexity, while the transpose accelerator showed intermediate execution complexity (</span><math alttext="393/311/387" class="ltx_Math" display="inline" id="S4.p7.3.m3" intent=":literal"><semantics><mrow><mn>393</mn><mo>/</mo><mn>311</mn><mo>/</mo><mn>387</mn></mrow><annotation encoding="application/x-tex">393/311/387</annotation></semantics></math><span class="translated-text">）因为运行时矩阵重组开销。
+同样，转置工作负载需要最大的 DMA 传输（</span><span class="original-text">) because of runtime matrix reorganization overheads.
+Similarly, the transpose workload required the largest DMA transfers (</span><math alttext="512" class="ltx_Math" display="inline" id="S4.p7.4.m4" intent=":literal"><semantics><mn>512</mn><annotation encoding="application/x-tex">512</annotation></semantics></math><span class="translated-text">接收字节和</span><span class="original-text">receive bytes and</span><math alttext="524" class="ltx_Math" display="inline" id="S4.p7.5.m5" intent=":literal"><semantics><mn>524</mn><annotation encoding="application/x-tex">524</annotation></semantics></math><span class="translated-text">发送字节），反映了其以内存为中心的执行模式，而向量乘法则强调较小传输的算术吞吐量。这些分析指标存储为硬件数据点，并由 LLM Stack 在后续细化迭代期间重用。</span><span class="original-text">send bytes), reflecting its memory-centric execution pattern, whereas vector multiplication emphasized arithmetic throughput with smaller transfers. These profiling metrics are stored as hardware datapoints and reused by the LLM Stack during subsequent refinement iterations.</span></p>
+</div>
+<div class="ltx_para" id="S4.p8">
+<p class="ltx_p" id="S4.p8.1"><span class="translated-text">SECDA-DSE 使用相对较小的 1.1B 参数模型生成这些加速器设计，仅具有有限的初始微调数据点。尽管训练设置受到限制，该框架仍成功生成了跨多种工作负载类型的 FPGA 可执行加速器设计，同时保持了 SECDA 兼容性和有效的 FPGA 执行流程。</span><span class="original-text">SECDA-DSE generated these accelerator designs using a relatively small 1.1B parameter model with only limited initial fine-tuning datapoints. Despite the constrained training setup, the framework successfully generated FPGA executable accelerator designs across multiple workload types while maintaining SECDA compatibility and valid FPGA execution flows.</span></p>
+</div>
+<div class="ltx_para" id="S4.p9">
+<p class="ltx_p" id="S4.p9.1"><span class="translated-text">三个生成的加速器工作负载在迭代细化过程中也表现出不同的收敛行为。在生成有效的 FPGA 可执行设计之前，矢量乘法需要四个迭代细化周期。
+相比之下，二维卷积加速器在单个生成周期内成功生成了有效的设计。转置加速器总共需要 9 个细化周期，其中前两次迭代产生了 HLS 可综合设计，而另外的 7 次迭代需要成功完成下游逻辑综合和 FPGA 执行。在这些迭代过程中，人工干预仅限于 SECDA 验证工作流程所需的操作任务，例如传输生成的源文件、验证执行路径以及运行评估脚本以收集硬件指标。生成的加速器设计在任何阶段都没有经过手动修改。</span><span class="original-text">The three generated accelerator workloads also exhibited different convergence behaviors during iterative refinement. The vector multiplication required four iterative refinement cycles before producing a valid FPGA executable design.
+In contrast, the 2D convolution accelerator successfully generated a valid design in a single generation cycle. The transpose accelerator required nine refinement cycles overall, where the first two iterations produced an HLS synthesizable design while an additional seven iterations were required to successfully complete downstream logic synthesis and FPGA execution. Throughout these iterations, human intervention was restricted to operational tasks required by the SECDA validation workflow, such as transferring generated source files, verifying execution paths and running evaluation scripts to collect hardware metrics. The generated accelerator designs were not manually modified at any stage.</span></p>
+</div>
+<div class="ltx_para" id="S4.p10">
+<p class="ltx_p" id="S4.p10.1"><span class="translated-text">这些结果提供了早期证据，表明结合结构化 DSE、基于检索的推理和迭代硬件评估可以使自适应加速器生成工作流程能够处理不同的工作负载特征，同时减少 FPGA 加速器开发过程中传统上所需的手动工作。</span><span class="original-text">These results provide early evidence that combining structured DSE, retrieval-grounded reasoning, and iterative hardware evaluation can enable adaptive accelerator generation workflows capable of handling diverse workload characteristics while reducing the manual effort traditionally required during FPGA accelerator development.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span class="ltx_text ltx_font_smallcaps" id="S5.1.1"><span class="translated-text">局限性和未来的工作</span><span class="original-text">Limitations and Future Work</span></span>
+</h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">虽然 SECDA-DSE 在多个加速器工作负载上展示了有希望的早期结果，但该框架仍处于积极的开发阶段，目前存在一些局限性。
+主要挑战之一是，最初需要一组足够多样化的硬件数据点来有效地微调和细化 LLM 堆栈。
+此外，当前的工作流程仍然包含人机循环评估阶段，用于在 FPGA 执行之前验证生成的设计。尽管这提高了早期开发期间的可靠性，但将框架扩展到更大的工作负载覆盖范围和更广泛的探索空间将需要更高水平的自动化。
+另一个限制是当前的评估仅涵盖单个 FPGA 平台上的一小部分工作负载。尽管生成的加速器展示了工作负载感知行为和成功的 FPGA 执行，但需要对更多工作负载、架构和 FPGA 系列进行更广泛的评估，以评估 SECDA-DSE 的泛化能力。</span><span class="original-text">While SECDA-DSE demonstrates promising early-stage results across multiple accelerator workloads, the framework is still in an active development phase and currently presents some limitations.
+One of the primary challenges is that a sufficiently diverse set of hardware datapoints are initially required for effective fine-tuning and refinement of the LLM Stack.
+Furthermore, the current workflow still incorporates a human-in-the-loop evaluation stage for validating generated designs before FPGA execution. Although this improves reliability during early-stage development, scaling the framework toward larger workload coverage and broader exploration spaces will require significantly higher levels of automation.
+Another limitation is that the current evaluation covers only a small set of workloads on a single FPGA platform. Although the generated accelerators demonstrate workload-aware behavior and successful FPGA execution, broader evaluations across more workloads, architectures, and FPGA families are needed to assess the generalization capability of SECDA-DSE.</span></p>
+</div>
+<div class="ltx_para" id="S5.p2">
+<p class="ltx_p" id="S5.p2.1"><span class="translated-text">在未来的工作中，我们的目标是通过模型上下文协议（MCP）服务器将 SECDA 工具包直接集成到 SECDA-DSE 中，从而完全自动化加速器评估工作流程。这种集成将允许 LLM Stack 直接调用 SECDA 测试、模拟、HLS 和硬件执行功能，而无需手动干预，从而实现更加自主的硬件探索工作流程。
+此外，当前的评估侧重于相对较小的工作负载集和单个 FPGA 平台，作为未来的工作，我们计划将 SECDA-DSE 的评估扩展到多个参数范围、LLM 和 FPGA，以评估模型大小、架构和 FPGA 板的选择如何影响加速器生成质量和硬件探索能力。</span><span class="original-text">In future work, our goal is to fully automate the accelerator evaluation workflow by integrating the SECDA toolkit directly into SECDA-DSE through a model context protocol (MCP) server. This integration will allow the LLM Stack to directly invoke SECDA testing, simulation, HLS, and hardware execution functions without requiring manual intervention, enabling a more autonomous hardware exploration workflow.
+Additionally, the current evaluation focuses on a relatively small set of workloads and a single FPGA platform, as future work we plan to extend evaluation of SECDA-DSE across multiple parameter scales, LLMs and FPGAs to evaluate how model size, architecture and choice of the FPGA board influence accelerator generation quality and hardware exploration capability.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">VI </span><span class="ltx_text ltx_font_smallcaps" id="S6.1.1"><span class="translated-text">结论</span><span class="original-text">Conclusion</span></span>
+</h2>
+<div class="ltx_para" id="S6.p1">
+<p class="ltx_p" id="S6.p1.1"><span class="translated-text">我们提出了 SECDA-DSE，这是一个基于 SECDA 生态系统的法学硕士指导框架，用于 FPGA 加速器设计空间探索，并通过端到端 FPGA 执行扩展了其评估。 SECDA-DSE 结合了结构化 DSE、检索增强推理、思维链提示和迭代硬件评估，根据自然语言规范生成加速器设计。
+具体来说，我们生成并执行了针对 Xilinx Zynq-7000 FPGA 平台的逐元素向量乘法、2D 卷积和矩阵转置加速器。生成的设计成功地完成了 FPGA 实现流程，并展示了跨不同计算和内存访问模式的工作负载感知硬件行为。
+我们的结果提供了进一步的证据，表明将 LLM 引导推理与结构化 FPGA 设计工作流程相结合可以支持跨不同工作负载的自适应加速器生成，同时减少手动设计工作并推进更加自动化的硬件设计方法。所有生成的加速器在 FPGA 上的成功执行进一步证明了 SECDA-DSE 适应不同工作负载特征的能力。</span><span class="original-text">We presented SECDA-DSE, an LLM-guided framework for FPGA accelerator design space exploration built upon the SECDA ecosystem, and extended its evaluation through end-to-end FPGA execution. SECDA-DSE combines structured DSE, retrieval-augmented reasoning, Chain-of-Thought prompting, and iterative hardware evaluation to generate accelerator designs from natural language specifications.
+Specifically, we generated and executed element-wise vector multiplication, 2D convolution, and matrix transpose accelerators targeting a Xilinx Zynq-7000 FPGA platform. The generated designs successfully progressed through the FPGA implementation flow and demonstrated workload-aware hardware behavior across different compute and memory access patterns.
+Our results provide further evidence that combining LLM-guided reasoning with structured FPGA design workflows can support adaptive accelerator generation across diverse workloads while reducing manual design effort and advancing more automated hardware design methodologies. The successful FPGA execution of all generated accelerators further demonstrates the ability of SECDA-DSE to adapt across different workload characteristics.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="Sx1">
+<h2 class="ltx_title ltx_font_smallcaps ltx_title_section"><span class="translated-text">致谢</span><span class="original-text">Acknowledgements</span></h2>
+<div class="ltx_para" id="Sx1.p1">
+<p class="ltx_p" id="Sx1.p1.1"><span class="translated-text">所有作者衷心感谢英国研究与创新 (UKRI) 以及工程和物理科学研究委员会 (EPSRC) 为电子产品生产研究和创新 AI 中心 (APRIL) AI 中心提供的资助 [授权号 EP/Y029763/1]。</span><span class="original-text">All authors gratefully acknowledge UK Research and Innovation (UKRI) and Engineering and Physical Sciences Research Council (EPSRC) funding for the AI Hub for Productive Research and Innovation in Electronics (APRIL) AI Hub [grant number EP/Y029763/1].</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib7">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Biscontini, E. Popovici, and A. Temko</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Machine Learning for FPGA Electronic Design Automation</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Access</span> <span class="ltx_text ltx_bib_volume">12</span>, <span class="ltx_text ltx_bib_pages"> pp. 182640–182662</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="II-B DSE for FPGA Accelerators ‣ II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib26">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Fan, B. Gokkaya, M. Harman, M. Lyubarskiy, S. Sengupta, S. Yoo, and J. M. Zhang</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Large Language Models for Software Engineering: Survey and Open Problems</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2023 IEEE/ACM International Conference on Software Engineering: Future of Software Engineering (ICSE-FoSE)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 31–53</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="I Introduction ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib12">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">F. Firouzi, S. S. R. Nakkilla, C. Fu, S. Banerjee, J. Talukdar, and K. Chakrabarty</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">LLM-AID: Leveraging Large Language Models for Rapid Domain-Specific Accelerator Development</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">43rd IEEE/ACM International Conference on Computer-Aided Design</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 1–9</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.p2.1" title="II-C LLMs for Hardware and Systems Design ‣ II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib11">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Fu, Y. Zhang, Z. Yu, S. Li, Z. Ye, C. Li, C. Wan, and Y. C. Lin</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">GPT4AIGChip: Towards Next-Generation AI Accelerator Design Automation via Large Language Models</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2023 IEEE/ACM International Conference on Computer Aided Design (ICCAD)</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.p2.1" title="II-C LLMs for Hardware and Systems Design ‣ II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib29">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">P. Gibson, J. Cano, E. Crowley, A. Storkey, and M. O’boyle</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">DLAS: A Conceptual Model for Across-Stack Deep Learning Acceleration</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">ACM Transactions on Architecture and Code Optimization (TACO)</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="II-A FPGA Accelerator Co-Design ‣ II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib3">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Haris, P. Gibson, J. Cano, N. B. Agostini, and D. Kaeli</span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">SECDA: Efficient Hardware/Software Co-Design of FPGA-based DNN Accelerators for Edge Inference</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">IEEE 33rd Int. Symposium on Computer Architecture and High Performance Computing (SBAC-PAD)</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p2.1" title="II-A FPGA Accelerator Co-Design ‣ II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib4">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Haris, P. Gibson, J. Cano, N. B. Agostini, and D. Kaeli</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">SECDA-TFLite: A toolkit for efficient development of FPGA-based DNN accelerators for edge inference</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Journal of Parallel and Distributed Computing</span> <span class="ltx_text ltx_bib_volume">173</span>, <span class="ltx_text ltx_bib_pages"> pp. 140–151</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p2.1" title="II-A FPGA Accelerator Co-Design ‣ II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib5">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Haris, R. Saha, W. Hu, and J. Cano</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Designing Efficient LLM Accelerators for Edge Devices</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">arXiv:2408.00462</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p2.1" title="II-A FPGA Accelerator Co-Design ‣ II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib25">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">X. Hou, Y. Zhao, Y. Liu, Z. Yang, K. Wang, L. Li, X. Luo, D. Lo, J. Grundy, and H. Wang</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Large Language Models for Software Engineering: A Systematic Literature Review</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">ACM Transactions on Software Engineering and Methodology</span> <span class="ltx_text ltx_bib_volume">33</span> (<span class="ltx_text ltx_bib_number">8</span>), <span class="ltx_text ltx_bib_pages"> pp. 1–79</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="I Introduction ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib14">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, W. Chen, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">LoRA: Low-Rank Adaptation of Large Language Models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">ICLR</span> <span class="ltx_text ltx_bib_volume">1</span> (<span class="ltx_text ltx_bib_number">2</span>), <span class="ltx_text ltx_bib_pages"> pp. 3</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.p2.1" title="II-C LLMs for Hardware and Systems Design ‣ II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-C</span></span></a>,
+<a class="ltx_ref" href="#S3.SS2.SSS2.p2.1" title="III-B2 Chain-of-Thought Prompting and Fine-Tuning ‣ III-B LLM Stack ‣ III SECDA-DSE ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">III-B</span>2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib27">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Jiang, Y. Zhou, Y. Gong, H. Yuan, and S. Liu</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">FPGA-based Acceleration for Convolutional Neural Networks: A Comprehensive Review</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">arXiv:2505.13461</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="II-A FPGA Accelerator Co-Design ‣ II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-A</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib9">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">R. Li, J. Xiong, and X. Wang</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">iDSE: Navigating Design Space Exploration in High-Level Synthesis Using LLMs</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">arXiv:2505.22086</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.p1.1" title="II-C LLMs for Hardware and Systems Design ‣ II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib8">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Y. Liao, T. Adegbija, and R. Lysecky</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Are LLMs Any Good for High-Level Synthesis?</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 43rd IEEE/ACM International Conference on Computer-Aided Design</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 1–8</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.p1.1" title="II-C LLMs for Hardware and Systems Design ‣ II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib1">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">T. Mohaidat and K. Khalil</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A Survey on Neural Network Hardware Accelerators</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Transactions on Artificial Intelligence</span> <span class="ltx_text ltx_bib_volume">5</span> (<span class="ltx_text ltx_bib_number">8</span>), <span class="ltx_text ltx_bib_pages"> pp. 3801–3822</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib17">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Ollama</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Ollama: run large language models locally</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">[Online]. Available: https://ollama.com. Accessed: Jun. 5, 2026</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.p4.1" title="IV Evaluation ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§IV</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib6">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Saeedi, A. Piri, B. Deveautour, I. O’connor, A. Bosio, A. Savino, and S. Di Carlo</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A Survey on Design Space Exploration Approaches for Approximate Computing Systems</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Electronics</span> <span class="ltx_text ltx_bib_volume">13</span> (<span class="ltx_text ltx_bib_number">22</span>), <span class="ltx_text ltx_bib_pages"> pp. 4442</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="II-B DSE for FPGA Accelerators ‣ II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib2">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">V. Sharma, X. Fu, J. Haris, and J. Cano</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">LLM-Driven Design Space Exploration of FPGA-based Accelerators</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">arXiv:2401.12345</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p4.1" title="I Introduction ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§I</span></a>,
+<a class="ltx_ref" href="#S2.SS2.p3.1" title="II-B DSE for FPGA Accelerators ‣ II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib13">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D. Vungarala, M. Nazzal, M. Morsali, C. Zhang, A. Ghosh, A. Khreishah, and S. Angizi</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">SA-DS: A Dataset for Large Language Model-Driven AI Accelerator Design Generation</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2025 IEEE International Symposium on Circuits and Systems (ISCAS)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 1–4</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.p2.1" title="II-C LLMs for Hardware and Systems Design ‣ II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-C</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib24">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Xilinx, Inc.</span><span class="ltx_text ltx_bib_year"> (2019)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Vivado high-level synthesis</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.p4.1" title="IV Evaluation ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§IV</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib28">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">B. Xu, A. Banerjee, and S. Gupta</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Hardware Acceleration for Neural Networks: A Comprehensive Survey</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">arXiv:2512.23914</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p2.1" title="II-B DSE for FPGA Accelerators ‣ II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib16">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">P. Zhang, G. Zeng, T. Wang, and W. Lu</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">TinyLlama: An Open-Source Small Language Model</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">arXiv:2401.02385</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.p4.1" title="IV Evaluation ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§IV</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib10">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">T. Zhang, R. Ma, S. Xu, P. Cheng, and Y. Xiong</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">LUMINA: LLM-Guided GPU Architecture Exploration via Bottleneck Analysis</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">arXiv:2603.05904</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.p1.1" title="II-C LLMs for Hardware and Systems Design ‣ II Background and Related Work ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-C</span></span></a>.
+</span>
+</li>
+</ul>
+</section>
+<section class="ltx_appendix" id="A1">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录A</span><span class="original-text">Appendix A</span></span><span class="translated-text">附录</span><span class="original-text">Appendix</span></h2>
+<div class="ltx_para" id="A1.p1">
+<p class="ltx_p" id="A1.p1.1"><span class="translated-text">本附录提供了用于生成第 2 节中介绍的评估加速器工作负载的初始自然语言提示</span><span class="original-text">This appendix provides the initial natural language prompts used for generating the evaluated accelerator workloads presented in Section</span><a class="ltx_ref" href="#S4" title="IV Evaluation ‣ Towards Autonomous Accelerator Design: FPGA Accelerator Generation with SECDA"><span class="ltx_text ltx_ref_tag">IV</span></a>.</p>
+</div>
+<section class="ltx_subsection" id="A1.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="A1.SS1.5.1.1"><span class="translated-text">甲-甲</span><span class="original-text">A-A</span></span> </span><span class="ltx_text ltx_font_italic" id="A1.SS1.6.2"><span class="translated-text">逐元素向量乘法</span><span class="original-text">Element-wise Vector Multiplication</span></span>
+</h3>
+<div class="ltx_para" id="A1.SS1.p1">
+<p class="ltx_p" id="A1.SS1.p1.1"><em class="ltx_emph ltx_font_italic" id="A1.SS1.p1.1.1"><span class="translated-text">我想创建一个硬件加速器设计。加速器应该能够接受两个输入向量：X 和 Y，长度均为 L。
+加速器应该执行逐元素乘法
+运算并产生输出向量 Z。
+加速器有两个基于 AXI-Stream 的加载接口
+X 和 Y 数据存入自定义 X 和 Y 缓冲区。
+加速器还应该有一个固定的长度参数L。
+数据加载后，加速器应执行
+并行逐元素乘法并存储结果
+在计算模块内的缓冲区 Z 中。
+应使用加载模块执行加载。最后，应使用通过 AXI-Stream 接口输出的存储模块将结果写回主存储器。
+使用 SystemC 和 SECDA 创建加速器描述。计算模块应该能够并行执行 L 个操作。</span><span class="original-text">I would like to create a hardware accelerator design. The accelerator should be able to take two input vectors: X and Y, both of length L.
+The accelerator should perform an element-wise multiplication
+operation and produce an output vector Z.
+The accelerator has two AXI-Stream based interfaces for loading
+X and Y data into custom X and Y buffers.
+The accelerator should also have a fixed length parameter L.
+Once the data is loaded, the accelerator should execute the
+element-wise multiplication in parallel and store the results
+in buffer Z within the compute module.
+The loading should be performed using a load module. Finally, the results should be written back to main memory using a store module that outputs via an AXI-Stream interface.
+Create the accelerator description using SystemC and SECDA. The compute module should be capable of performing L operations in parallel.</span></em></p>
+</div>
+</section>
+<section class="ltx_subsection" id="A1.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="A1.SS2.5.1.1">A-B</span> </span><span class="ltx_text ltx_font_italic" id="A1.SS2.6.2"><span class="translated-text">2D 卷积</span><span class="original-text">2D Convolution</span></span>
+</h3>
+<div class="ltx_para" id="A1.SS2.p1">
+<p class="ltx_p" id="A1.SS2.p1.1"><em class="ltx_emph ltx_font_italic" id="A1.SS2.p1.1.1"><span class="translated-text">我想创建一个硬件加速器设计。
+加速器应该能够采用两个输入矩阵：一个用于权重，另一个用于输入。
+权重的尺寸按以下数据顺序排列：输入通道 (IC)、输出通道 (OC)、内核宽度 (KW) 和内核高度 (KH)。
+输入矩阵的尺寸按以下数据顺序排列：输入通道 (IC)、输入宽度 (IW)、输入高度 (IH)。
+输出矩阵的尺寸按以下数据顺序排列：输出通道 (OC)、输出宽度 (OW)、输出高度 (OH)。
+对于卷积运算，我们假设 padding 为 0，stride 为 1，dilation 为 1。
+因此输出宽度（OW）和输出高度（OH）可以计算如下：
+OW = IW - KW + 1
+OH = IH - KH + 1
+加速器应执行卷积运算并产生输出矩阵 Z。
+该加速器具有两个基于 AXI-Stream 的接口，用于将权重和输入加载到自定义权重和输入缓冲区中。
+所有尺寸都是固定的并定义为加速器设计中的参数。
+加载数据后，加速器应该能够并行执行 CONV 操作并将其保存在计算模块内的缓冲区 Z 中。
+加载应该使用加载模块来完成。
+最后，应在写入输出 AXI-Stream 的存储模块中将结果存储回主内存。
+使用 SystemC 和 SECDA 创建加速器描述。</span><span class="original-text">I would like to create a hardware accelerator design.
+The accelerator should be able to take two input matrix: one for weights and another for inputs.
+The weights have the dimensions in follow data order: input channels (IC), output channels (OC), kernel width (KW) and then kernel height (KH) .
+The input matrix has the dimensions in follow data order: input channels (IC), input width (IW) and then input height (IH).
+The output matrix has the dimensions in follow data order: output channels (OC), output width (OW) and then output height (OH).
+We assume padding is 0 and stride is 1 and dilation is 1 for the convolution operation.
+So the output width (OW) and output height (OH) can be calculated as follows:
+OW = IW - KW + 1
+OH = IH - KH + 1
+The accelerator should perform convolution operation and produce a output matrix Z.
+The accelerator has two AXI-Stream based interfaces for loading weights and inputs into custom weights and inputs buffers.
+All dimension are fixed and defined as parameters in the accelerator design.
+Once the data is loaded, the accelerator should be abe to execute the CONV operation in parrallel and save it in buffer Z, within the compute module.
+The loading should be done with load module.
+And finally the storing of the results back to main memory should be done in the store module which writes to an output AXI-Stream.
+Create the accelerator description using SystemC and SECDA.</span></em></p>
+</div>
+</section>
+<section class="ltx_subsection" id="A1.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="A1.SS3.5.1.1"><span class="translated-text">交流</span><span class="original-text">A-C</span></span> </span><span class="ltx_text ltx_font_italic" id="A1.SS3.6.2"><span class="translated-text">矩阵转置</span><span class="original-text">Matrix Transpose</span></span>
+</h3>
+<div class="ltx_para" id="A1.SS3.p1">
+<p class="ltx_p" id="A1.SS3.p1.1"><em class="ltx_emph ltx_font_italic" id="A1.SS3.p1.1.1"><span class="translated-text">我想创建一个硬件加速器设计。
+加速器应该能够获取维度为 (M, N) 的输入矩阵 X，将其转置为维度为 (N, M) 的输出矩阵 Z。
+其中 M、N 不是固定的，而是在运行时、在矩阵 X 加载到加速器之前作为数据提供。加速器应该能够处理 M 和 N 的任何维度，只要它们符合加速器设计的内存限制（缓冲区大小）即可。
+该加速器具有基于 AXI-Stream 的接口，用于将输入矩阵 X 加载到自定义输入缓冲区中。
+加载数据后，加速器应该能够执行转置操作并将结果保存在计算模块内的缓冲区 Z 中。
+加载应该使用加载模块来完成。
+计算模块应该能够执行转置操作。应该是
+最后，应在写入输出 AXI-Stream 的存储模块中将结果存储回主内存。
+使用 SystemC 和 SECDA 创建加速器描述。</span><span class="original-text">I would like to create a hardware accelerator design.
+The accelerator should be able to take a input matrix X of dimensions (M, N), transpose it into an output matrix Z of dimensions (N, M).
+Where M, N are not fixed and are provided as data at runtime, before matrix X is loaded into the accelerator. The accelerator should be able to handle any dimensions of M and N, as long as they fit within the memory constraints (buffer size) of the accelerator design.
+The accelerator has an AXI-Stream based interface for loading the input matrix X into a custom input buffer.
+Once the data is loaded, the accelerator should be able to execute the transpose operation and save the result in buffer Z, within the compute module.
+The loading should be done with load module.
+The Compute module should be able to perform the transpose operation. It should d
+And finally the storing of the results back to main memory should be done in the store module which writes to an output AXI-Stream..
+Create the accelerator description using SystemC and SECDA.</span></em></p>
+</div>
+</section>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2606.11117v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div aria-hidden="true" id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
