@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">走向指令即代码：了解指令文件对代理拉取请求的影响</span><span class="original-text">Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 6 月 11 日星期四 14:58:14 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Thu Jun 11 14:58:14 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css" rel="stylesheet" type="text/css"/>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<meta content="Agentic-AI,  Agentic-PRs,  Instructions-as-Code" lang="en" name="keywords"/>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2606.13449" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2606.13449" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2606.13449v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2606.13449v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_title">Abstract.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Study Design</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS1" title="In 2. Study Design ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.1 </span>Collection of Agentic-PRs</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS2" title="In 2. Study Design ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.2 </span>Collection of Instruction Files</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S3" title="In Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Results</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S4" title="In Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Implications and Conclusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY-NC-ND 4.0</span><span class="original-text">License: CC BY-NC-ND 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2606.13449v1 [cs.SE] 2026 年 6 月 11 日</span><span class="original-text">arXiv:2606.13449v1 [cs.SE] 11 Jun 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line ltx_leqno">
+<div class="ltx_para" id="p1">
+<span class="ltx_ERROR undefined" id="p1.1">\setcctype</span>
+<p class="ltx_p" id="p1.2"><span class="translated-text">通过-NC-ND</span><span class="original-text">by-nc-nd</span></p>
+</div>
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">走向指令即代码：了解指令文件对代理拉取请求的影响</span><span class="original-text">Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Ali Arabat, Mohammed Sayagh
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_text ltx_affiliation_institution" id="id1.1.id1">École de Technologie Supérieure</span><span class="ltx_text ltx_affiliation_city" id="id2.2.id2">Montréal</span><span class="ltx_text ltx_affiliation_country" id="id3.3.id3">Canada</span>
+</span>
+<span class="ltx_contact ltx_role_email"><a href="https://arxiv.org/html/2606.13449v1/mailto:ali.arabat.1@ens.etsmtl.ca,%20mohammed.sayagh@etsmtl.ca">ali.arabat.1@ens.etsmtl.ca, mohammed.sayagh@etsmtl.ca</a>
+</span></span></span>
+</div>
+<div class="ltx_dates"><span class="translated-text">（2026 年 1 月 19 日）</span><span class="original-text">(19 January 2026)</span></div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要。</span><span class="original-text">Abstract.</span></h6>
+<p class="ltx_p"><span class="translated-text">AI 代理（例如 GitHub Copilot）在不同的软件工程任务中作为队友进行协作，包括通过拉取请求（Agentic-PR）提议的代码生成。为了提高代理效率，开发人员创建指导人工智能代理的指令文件，包括如何导航项目、找到正确的组件、运行测试、尊重最佳实践等等。在本文中，我们研究了这些指令的创建与 AI 代理在创建更好的拉取请求方面的性能之间的关系，这些拉取请求具有更高的成功机会（即合并率）、解决更复杂的任务（例如代码搅动）以及需要更少的合并工作（例如合并时间）。为此，我们分析了 AIDev 数据集中 148 个项目的 15,549 个代理 PR。使用三个维度，我们比较创建说明文件之前和之后的每个项目。我们发现，为人工智能代理指定指令并不一定会带来更好的结果。通过指导文件，27.7% 的项目将合并率提高了至少 20%，而 26.35% 则降低了合并率。在更改量（例如，代码改动、修改的文件数量）和合并代理 PR 的努力（例如，合并时间和评论数量）上也可以看到相同的观察结果。从第一次探索中，我们发现设法提高合并率的项目具有更长的指令文件，并且这些文件也被很好地构造为更多数量的部分和子部分。我们的结果激发了进行研究的需要，以帮助从业者将指令文件的开发框架作为软件工程活动（又名，</span><span class="original-text">AI-agents (e.g., GitHub Copilot) collaborate as teammates in different software engineering tasks, including code generation proposed through pull requests (Agentic-PRs). For better agent efficiency, developers create instruction files that guide the AI-agents, including how to navigate the project, locate the right components, run tests, respect best practices, and more. In this paper, we investigate the relationship between the creation of these instructions and the performance of AI-agents in creating better pull requests, which have a higher chance of success (i.e., the merge rate), address more complex tasks (e.g., code churn), and require less effort to be merged (e.g., time to merge). To this end, we analyze 15,549 agentic PRs from 148 projects in the AIDev dataset. Using the three dimensions, we compare each project before and after the creation of the instruction files. We find that specifying instructions for AI-agents does not necessarily lead to better results. With the instruction files, 27.7% of the projects increased their merge rate by at least 20%, while 26.35% decreased it. The same observation is seen with the amount of changes (e.g., code churn, number of modified files) and with the efforts to merge an agentic PR (e.g., merge time and number of comments). From a first exploration, we find that projects that managed to increase their merge rate have substantially longer instruction files, which are also well structured into a higher number of sections and sub-sections. Our results motivate the need for research to assist practitioners in framing the development of instruction files as a software engineering activity (aka,</span><span class="ltx_text ltx_font_bold"><span class="translated-text">指令即代码</span><span class="original-text">Instructions-as-Code</span></span>).</p>
+</div>
+<div class="ltx_keywords"><span class="translated-text">Agentic-AI、Agentic-PR、指令即代码</span><span class="original-text">Agentic-AI, Agentic-PRs, Instructions-as-Code</span></div>
+<span class="ltx_note ltx_note_frontmatter ltx_role_journalyear" id="id1"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type"><span class="translated-text">期刊年份：</span><span class="original-text">journalyear:</span></span>2026</span></span></span><span class="ltx_note ltx_note_frontmatter ltx_role_copyright" id="id2"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type"><span class="translated-text">版权：</span><span class="original-text">copyright:</span></span>cc</span></span></span><span class="ltx_note ltx_note_frontmatter ltx_role_conference" id="id3"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type"><span class="translated-text">会议：</span><span class="original-text">conference:</span></span><span class="translated-text">第 23 届国际采矿软件存储库会议； 2026 年 4 月 13 日至 14 日；巴西里约热内卢</span><span class="original-text">23rd International Conference on Mining Software Repositories; April 13–14, 2026; Rio de Janeiro, Brazil</span></span></span></span><span class="ltx_note ltx_note_frontmatter ltx_role_booktitle" id="id4"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type"><span class="translated-text">书名：</span><span class="original-text">booktitle:</span></span><span class="translated-text">第 23 届国际采矿软件存储库会议 (MSR ’26)，2026 年 4 月 13 日至 14 日，巴西里约热内卢</span><span class="original-text">23rd International Conference on Mining Software Repositories (MSR ’26), April 13–14, 2026, Rio de Janeiro, Brazil</span></span></span></span><span class="ltx_note ltx_note_frontmatter ltx_role_doi" id="id5"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type"><span class="translated-text">土井：</span><span class="original-text">doi:</span></span>10.1145/3793302.3793601</span></span></span><span class="ltx_note ltx_note_frontmatter ltx_role_isbn" id="id6"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type"><span class="translated-text">书号：</span><span class="original-text">isbn:</span></span>979-8-4007-2474-9/2026/04</span></span></span><span class="ltx_note ltx_note_frontmatter ltx_role_ccs" id="id7"><sup class="ltx_note_mark">†</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">†</sup><span class="ltx_note_type"><span class="translated-text">抄送：</span><span class="original-text">ccs:</span></span><span class="translated-text">软件及其工程 软件开发中的协作</span><span class="original-text">Software and its engineering Collaboration in software development</span></span></span></span>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1. </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">有了法学硕士，软件工程任务发生了前所未有的转变</span><span class="original-text">With LLMs, software engineering tasks have undergone unprecedented transformation</span><cite class="ltx_cite ltx_citemacro_citep">(Hou<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib7" title="Large language models for software engineering: a systematic literature review">2024</a>)</cite><span class="translated-text">，允许自主编码代理，例如 Claude</span><span class="original-text">, allowing Autonomous coding agents such as Claude</span><cite class="ltx_cite ltx_citemacro_citep">(Anthropic, <a class="ltx_ref" href="#bib.bib12" title="The claude 3 model family: tech report">2024</a>)</cite><span class="translated-text">, 光标</span><span class="original-text">, Cursor</span><cite class="ltx_cite ltx_citemacro_citep">(Anysphere, <a class="ltx_ref" href="#bib.bib11" title="Cursor: the ai-native code editor">2024</a>)</cite><span class="translated-text">，和副驾驶</span><span class="original-text">, and Copilot</span><cite class="ltx_cite ltx_citemacro_citep">(Moradi Dakhel<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib8" title="GitHub copilot ai pair programmer: asset or liability?">2023</a>)</cite><span class="translated-text">集成到软件开发工作流程中。这些代理支持广泛的活动，包括代码生成</span><span class="original-text">to be integrated into software development workflows. These agents support a wide range of activities, including code generation</span><cite class="ltx_cite ltx_citemacro_citep">(Du<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib13" title="Evaluating large language models in class-level code generation">2024</a>)</cite><span class="translated-text">、代码审查</span><span class="original-text">, code review</span><cite class="ltx_cite ltx_citemacro_citep">(Cihan<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib15" title="Automated code review in practice">2025</a>)</cite><span class="translated-text">，和测试</span><span class="original-text">, and testing</span><cite class="ltx_cite ltx_citemacro_citep">(Liu<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib14" title="Make llm a testing expert: bringing human-like interaction to mobile gui testing via functionality-aware decisions">2024</a>)</cite><span class="translated-text">。这些工具在开发人员的日常工作中变得至关重要，因为它们能够执行复杂的、存储库范围内的任务，而这些任务超出了孤立的代码片段的范围。如今，他们作为团队成员集成到软件流程中</span><span class="original-text">. These tools have become essential in developers’ daily routines due to their ability to perform complex, repository-wide tasks that extend beyond isolated code snippets. They are nowadays integrated as teammates to software processes</span><cite class="ltx_cite ltx_citemacro_citep">(Li<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib19" title="The rise of ai teammates in software engineering (se) 3.0: how autonomous coding agents are reshaping software engineering">2025</a>)</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">为了帮助代理更好地执行任务，开发人员编写
+自定义说明文件，为代理提供特定于项目的指导和背景</span><span class="original-text">To help agents better perform their tasks, developers write
+custom instruction files, which provide agents with project-specific guidance and context</span><cite class="ltx_cite ltx_citemacro_citep">(GitHub, <a class="ltx_ref" href="#bib.bib18" title="Adding repository custom instructions for github copilot">2024</a>)</cite><span class="translated-text">。
+文件（例如 .github/copilot-instructions.md）中指定的这些说明指导编码代理在存储库中理解和操作，指定构建、测试和验证更改的基本程序，指导代理遵守特定于项目的最佳实践</span><span class="original-text">.
+These instructions specified in files (e.g., .github/copilot-instructions.md) guide coding agents in understanding and operating within a repository, specifying essential procedures for building, testing, and validating changes, instructing the agents on the project-specific best practices to respect</span><cite class="ltx_cite ltx_citemacro_citep">(GitHub, <a class="ltx_ref" href="#bib.bib18" title="Adding repository custom instructions for github copilot">2024</a>)</cite><span class="translated-text">。虽然之前的研究</span><span class="original-text">. While a prior study</span><cite class="ltx_cite ltx_citemacro_citep">(Santos<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib20" title="Decoding the configuration of ai coding agents: insights from claude code projects">2025</a>)</cite><span class="translated-text">研究了 Claude 指令文件的结构和内容，但之前没有研究过指令文件与代理 PR 性能之间的关系。</span><span class="original-text">investigated the structure and content of Claude instruction files, no prior work studied the relationship between the instruction files and the performance of agentic-PRs.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">这项工作的目标是凭经验调查添加指令文件是否与代理生成拉取请求的方式的改进相关。这种改进是在项目级别通过比较创建说明文件之前和之后的不同代理 PR 指标来衡量的。这些指标对应于代表拉取请求成功的合并率 (RQ1)、代表代理能够承担的任务复杂性的提交数量、更改大小和修改文件的数量 (RQ2)，以及代表合并代理 PR 所需工作量的讨论量和合并时间 (RQ3)。为了更好地了解设法提高合并率的项目之间的差异，我们对指令文件的详细程度进行了初步定量研究（RQ4）。我们的实证工作以这些研究问题为指导。</span><span class="original-text">The goal of this work is to empirically investigate whether the addition of instruction files is associated with an improvement in the way agents generate pull requests. This improvement is measured, at the project level, by comparing different agentic-PR metrics before and after the creation of the instruction file(s). These metrics correspond to the merge rate as a proxy for pull request success (RQ1), the number of commits, the size of the changes, and the number of modified files for the complexity of tasks agents are capable of undertaking (RQ2), and the amount of discussions and the time to merge as a proxy for the efforts required to merge agentic-PRs (RQ3). To better understand the difference between projects that managed to increase their merge rates, we conduct an initial quantitative study on the verbosity of the instruction files (RQ4). Our empirical work is guided by these research questions.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="ltx_text ltx_font_bold" id="S1.p4.1.1"><span class="translated-text">RQ1。</span><span class="original-text">RQ1.</span></span> <span class="ltx_text ltx_font_italic" id="S1.p4.1.2"><span class="translated-text">创建指令文件后，agentic-PR 的合并率如何变化？</span><span class="original-text">How does the merge rate of agentic-PRs change after the creation of instruction files?</span></span><span class="translated-text">27.7%的项目合并率提高了至少20%，26.35%的项目呈现下降趋势。</span><span class="original-text">27.7% of the projects increased their merge rate by at least 20%, while 26.35% showed a decreasing trend.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="ltx_text ltx_font_bold" id="S1.p5.1.1"><span class="translated-text">RQ2。</span><span class="original-text">RQ2.</span></span> <span class="ltx_text ltx_font_italic" id="S1.p5.1.2"><span class="translated-text">创建指令文件后，代理承担的任务复杂性如何变化？</span><span class="original-text">How does task complexity that agents undertake change after the creation of instruction files?</span></span><span class="translated-text">据统计，35.35%、10.10% 和 12.12% 的项目增加了描述长度、代码流失率和
+提交数量，而 4.04%、7.07% 和 7.07% 的指标有所下降。</span><span class="original-text">35.35%, 10.10% and 12.12% of the projects statistically increase their description length, code churn and
+number of commits, while 4.04%, 7.07%, and 7.07% have the same metrics decreased.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1"><span class="ltx_text ltx_font_bold" id="S1.p6.1.1"><span class="translated-text">RQ3。</span><span class="original-text">RQ3.</span></span> <span class="ltx_text ltx_font_italic" id="S1.p6.1.2"><span class="translated-text">创建指令文件后，合并代理 PR 的工作有何变化？</span><span class="original-text">How does the efforts to merge agentic-PRs change after the creation of instruction files?</span></span><span class="translated-text">13.13% 和 15.15% 的项目显示合并 AI 代理 PR 所需的时间和讨论在统计上分别显着增加，而 8.8% 的项目则显示这两个指标均有所减少。</span><span class="original-text">13.13% and 15.15% of projects show a statistically significant increase in the time and discussion required to merge AI-agent PRs, respectively, whereas 8.8% of the projects depict a decrease in both metrics.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p7">
+<p class="ltx_p" id="S1.p7.1"><span class="ltx_text ltx_font_bold" id="S1.p7.1.1"><span class="translated-text">RQ4。</span><span class="original-text">RQ4.</span></span> <span class="ltx_text ltx_font_italic" id="S1.p7.1.2"><span class="translated-text">指令文件的详细程度与代理 PR 的合并率之间有什么关系？</span><span class="original-text">What is the relation between the verbosity of instruction files and the merge rates of agentic-PRs?</span></span><span class="translated-text">与经历下降的项目相比，成功提高合并率的项目在字数（中位数为 976 对 569 个字）和标题计数（主要是 H3）方面要长得多。</span><span class="original-text">The projects that managed to increase their merge rate are substantially longer in words (a median of 976 vs. 569 words) and header counts, mainly H3, compared to the projects that experienced a decrease.</span></p>
+</div>
+<div class="ltx_para" id="S1.p8">
+<p class="ltx_p" id="S1.p8.1"><span class="ltx_text ltx_font_bold" id="S1.p8.1.1"><span class="translated-text">带回家的消息：</span><span class="original-text">Take-home message:</span></span><span class="translated-text">我们的结果揭示了指导开发人员编写良好指令文件的研究的必要性。事实上，定义指令文件并不总是能带来更好的结果，这凸显了这些文件内容质量的重要性。未来的研究需要为指令文件定义标准和质量指标，开发人员可以利用这些标准和质量指标来增强这些文件，从而提高人工智能代理的效率和自主性。换句话说，我们的研究结果表明将指令开发视为一项软件工程活动，我们将这个概念定义为</span><span class="original-text">Our results shed light on the need for studies that guide developers in writing good instruction files. In fact, defining the instruction files does not always lead to better results, which highlights the importance of the quality of the content of those files. Future studies are required to define standards and quality metrics for the instruction files that developers can leverage to enhance these files in a way that improves efficiency and autonomy of AI-agents. In other words, our findings suggest considering the development of instructions as a software engineering activity, the concept that we define as</span><span class="ltx_text ltx_font_bold" id="S1.p8.1.2"><span class="translated-text">指令即代码</span><span class="original-text">Instructions-as-Code</span></span>.</p>
+</div>
+<div class="ltx_para" id="S1.p9">
+<p class="ltx_p" id="S1.p9.1"><span class="translated-text">我们在复制包中提供脚本和数据</span><span class="original-text">We provide our scripts and data in the replication package</span><cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib22" title="Replication Package for: Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests">16</a>)</cite>.</p>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2. </span><span class="translated-text">研究设计</span><span class="original-text">Study Design</span></h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="translated-text">在本节中，我们将讨论如何收集代理 PR 以及我们研究项目的说明文件。</span><span class="original-text">In this section, we discuss how we collect agentic-PRs alongside the instruction files of our studied projects.</span></p>
+</div>
+<section class="ltx_subsection" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1. </span><span class="translated-text">Agentic-PR 集合</span><span class="original-text">Collection of Agentic-PRs</span></h3>
+<div class="ltx_para" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.1"><span class="translated-text">来自 AIDev 数据集</span><span class="original-text">From the AIDev dataset</span><cite class="ltx_cite ltx_citemacro_citep">(Li<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib19" title="The rise of ai teammates in software engineering (se) 3.0: how autonomous coding agents are reshaping software engineering">2025</a>)</cite><span class="translated-text">，我们选择至少 20 颗星的项目。从这些项目中，我们过滤掉了玩具项目。这些项目的名称包含以下关键字：tutorial、docs、documentation、lab、presentation、exercise、bootcamp、hackathon、task、practice、resume、template、talks、udemy、sample、notebook、cookbook、guide、note、course、example、educational、survey、dataset、academic、academia、academy、interview、lesson、my_、my-、portfolio、leetcode、neetcode、challenge、insights、github.io、blog、masterclass 和 website。
+我们确定了 4,680 个项目。对于这些项目，我们使用 GitHub GraphQL API 收集 AIDev 数据集中不包含的最新拉取请求和元数据。通过额外的元数据，我们进一步过滤掉模板、存档、分叉、提交次数少于 50 次或 PR 少于 50 次的项目。我们还利用项目描述（新元数据的一部分）来排除剩余的玩具项目。我们最终得到了 2,449 个项目和 48,944 个拉取请求的集合。</span><span class="original-text">, we select the projects with at least 20 stars. From these projects, we filter out toy ones. These are projects whose names contain the following keywords: tutorial, docs, documentation, lab, presentation, exercise, bootcamp, hackathon, assignment, practice, resume, template, talks, udemy, sample, notebook, cookbook, guide, note, course, example, educational, survey, dataset, academic, academia, academy, interview, lesson, my_, my-, portfolio, leetcode, neetcode, challenge, insights, github.io, blog, masterclass, and website.
+We identify a set of 4,680 projects. For these projects, we collect their recent pull requests and metadata that are not in the AIDev dataset using the GitHub GraphQL API. With the additional metadata, we further filter out projects that are templates, archived, forks, have fewer than 50 commits, or less than 50 PRs. We also leverage the project description (part of the new metadata) to exclude the remaining toy projects. We end with a final set of 2,449 projects and 48,944 pull requests.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS1.p2">
+<p class="ltx_p" id="S2.SS1.p2.1"><span class="translated-text">由于 AIDev 拥有截至 2025 年 7 月 30 日的数据，我们遵循 Li 等人的相同方法。</span><span class="original-text">Since the AIDev has data up to July 30th, 2025, we follow the same approach of Li et al.</span><cite class="ltx_cite ltx_citemacro_citep">(Li<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib19" title="The rise of ai teammates in software engineering (se) 3.0: how autonomous coding agents are reshaping software engineering">2025</a>)</cite><span class="translated-text">收集截至 2025 年 12 月 10 日的较新 Agentic-PR，以及我们在每个研究问题的方法中讨论的相关指标（例如提交数量）。例如，我们在 GitHub 搜索查询中指定“is:pr head:copilot/”来检索 GitHub Copilot 共同创作的 PR，这些 PR 与 Li 等人报告的 PR 相结合。</span><span class="original-text">to collect newer Agentic-PRs up to December 10, 2025, along with their relevant metrics (e.g., number of commits) discussed in the approach of each of our research questions. For example, we specify “is:pr head:copilot/” in the GitHub search query to retrieve PRs co-authored by GitHub Copilot, which are combined with those reported by Li et al.</span><cite class="ltx_cite ltx_citemacro_citep">(Li<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib19" title="The rise of ai teammates in software engineering (se) 3.0: how autonomous coding agents are reshaping software engineering">2025</a>)</cite>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2. </span><span class="translated-text">指令文件集合</span><span class="original-text">Collection of Instruction Files</span></h3>
+<figure class="ltx_table" id="S2.T1">
+<figcaption class="ltx_caption ltx_centering" style="font-size:80%;"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S2.T1.4.1.1" style="font-size:113%;">Table 1</span>. </span><span class="ltx_text" id="S2.T1.5.2" style="font-size:113%;">Agent-specific predicates used to identify instruction files across projects.</span></figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S2.T1.6">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S2.T1.6.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S2.T1.6.1.1.1"><span class="ltx_text ltx_font_bold" id="S2.T1.6.1.1.1.1" style="font-size:80%;">Agent</span></th>
+<th class="ltx_td ltx_align_justify ltx_align_top ltx_th ltx_th_column ltx_border_tt" id="S2.T1.6.1.1.2">
+<span class="ltx_inline-block ltx_align_top" id="S2.T1.6.1.1.2.1">
+<span class="ltx_p" id="S2.T1.6.1.1.2.1.1" style="width:325.2pt;"><span class="ltx_text ltx_font_bold" id="S2.T1.6.1.1.2.1.1.1" style="font-size:80%;">Predicates</span></span>
+</span>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S2.T1.6.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S2.T1.6.2.1.1" rowspan="2"><span class="ltx_text ltx_font_bold" id="S2.T1.6.2.1.1.1" style="font-size:80%;">Devin</span></th>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_t" id="S2.T1.6.2.1.2">
+<span class="ltx_inline-block ltx_align_top" id="S2.T1.6.2.1.2.1">
+<span class="ltx_p" id="S2.T1.6.2.1.2.1.1" style="width:325.2pt;"><span class="ltx_text ltx_font_typewriter" id="S2.T1.6.2.1.2.1.1.1" style="font-size:80%;">**/PULL_REQUEST_TEMPLATE/DEVIN_PR_TEMPLATE.md</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.6.3.2">
+<td class="ltx_td ltx_align_justify ltx_align_top" id="S2.T1.6.3.2.1">
+<span class="ltx_inline-block ltx_align_top" id="S2.T1.6.3.2.1.1">
+<span class="ltx_p" id="S2.T1.6.3.2.1.1.1" style="width:325.2pt;"><span class="ltx_text ltx_font_typewriter" id="S2.T1.6.3.2.1.1.1.1" style="font-size:80%;">**/PULL_REQUEST_TEMPLATE/devin_pr_template.md</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.6.4.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S2.T1.6.4.3.1"><span class="ltx_text ltx_font_bold" id="S2.T1.6.4.3.1.1" style="font-size:80%;">Cursor</span></th>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_t" id="S2.T1.6.4.3.2">
+<span class="ltx_inline-block ltx_align_top" id="S2.T1.6.4.3.2.1">
+<span class="ltx_p" id="S2.T1.6.4.3.2.1.1" style="width:325.2pt;"><span class="ltx_text ltx_font_typewriter" id="S2.T1.6.4.3.2.1.1.1" style="font-size:80%;">.cursor/*</span><span class="ltx_text" id="S2.T1.6.4.3.2.1.1.2" style="font-size:80%;">; </span><span class="ltx_text ltx_font_typewriter" id="S2.T1.6.4.3.2.1.1.3" style="font-size:80%;">.cursorrules</span><span class="ltx_text" id="S2.T1.6.4.3.2.1.1.4" style="font-size:80%;">; </span><span class="ltx_text ltx_font_typewriter" id="S2.T1.6.4.3.2.1.1.5" style="font-size:80%;">**/*.mdc</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.6.5.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S2.T1.6.5.4.1" rowspan="2"><span class="ltx_text ltx_font_bold" id="S2.T1.6.5.4.1.1" style="font-size:80%;">Copilot</span></th>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_t" id="S2.T1.6.5.4.2">
+<span class="ltx_inline-block ltx_align_top" id="S2.T1.6.5.4.2.1">
+<span class="ltx_p" id="S2.T1.6.5.4.2.1.1" style="width:325.2pt;"><span class="ltx_text ltx_font_typewriter" id="S2.T1.6.5.4.2.1.1.1" style="font-size:80%;">.github/copilot-instructions.md</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.6.6.5">
+<td class="ltx_td ltx_align_justify ltx_align_top" id="S2.T1.6.6.5.1">
+<span class="ltx_inline-block ltx_align_top" id="S2.T1.6.6.5.1.1">
+<span class="ltx_p" id="S2.T1.6.6.5.1.1.1" style="width:325.2pt;"><span class="ltx_text ltx_font_typewriter" id="S2.T1.6.6.5.1.1.1.1" style="font-size:80%;">.github/instructions/*</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.6.7.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S2.T1.6.7.6.1"><span class="ltx_text ltx_font_bold" id="S2.T1.6.7.6.1.1" style="font-size:80%;">Claude</span></th>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_t" id="S2.T1.6.7.6.2">
+<span class="ltx_inline-block ltx_align_top" id="S2.T1.6.7.6.2.1">
+<span class="ltx_p" id="S2.T1.6.7.6.2.1.1" style="width:325.2pt;"><span class="ltx_text ltx_font_typewriter" id="S2.T1.6.7.6.2.1.1.1" style="font-size:80%;">.claude/*</span><span class="ltx_text" id="S2.T1.6.7.6.2.1.1.2" style="font-size:80%;">; </span><span class="ltx_text ltx_font_typewriter" id="S2.T1.6.7.6.2.1.1.3" style="font-size:80%;">CLAUDE.md</span><span class="ltx_text" id="S2.T1.6.7.6.2.1.1.4" style="font-size:80%;">; </span><span class="ltx_text ltx_font_typewriter" id="S2.T1.6.7.6.2.1.1.5" style="font-size:80%;">.github/workflows/claude*.yml</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.6.8.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S2.T1.6.8.7.1"><span class="ltx_text ltx_font_bold" id="S2.T1.6.8.7.1.1" style="font-size:80%;">Codex</span></th>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_t" id="S2.T1.6.8.7.2">
+<span class="ltx_inline-block ltx_align_top" id="S2.T1.6.8.7.2.1">
+<span class="ltx_p" id="S2.T1.6.8.7.2.1.1" style="width:325.2pt;"><span class="ltx_text ltx_font_typewriter" id="S2.T1.6.8.7.2.1.1.1" style="font-size:80%;">**/AGENTS.override.md</span><span class="ltx_text" id="S2.T1.6.8.7.2.1.1.2" style="font-size:80%;">; </span><span class="ltx_text ltx_font_typewriter" id="S2.T1.6.8.7.2.1.1.3" style="font-size:80%;">**/TEAM_GUIDE.md</span><span class="ltx_text" id="S2.T1.6.8.7.2.1.1.4" style="font-size:80%;">; </span><span class="ltx_text ltx_font_typewriter" id="S2.T1.6.8.7.2.1.1.5" style="font-size:80%;">**/.agents.md</span></span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.6.9.8">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t" id="S2.T1.6.9.8.1"><span class="ltx_text ltx_font_bold" id="S2.T1.6.9.8.1.1" style="font-size:80%;">Common</span></th>
+<td class="ltx_td ltx_align_justify ltx_align_top ltx_border_bb ltx_border_t" id="S2.T1.6.9.8.2">
+<span class="ltx_inline-block ltx_align_top" id="S2.T1.6.9.8.2.1">
+<span class="ltx_p" id="S2.T1.6.9.8.2.1.1" style="width:325.2pt;"><span class="ltx_text ltx_font_typewriter" id="S2.T1.6.9.8.2.1.1.1" style="font-size:80%;">**/AGENTS.md</span></span>
+</span>
+</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.1"><span class="translated-text">一旦收集到 PR，我们就会检索编码代理的指令文件。特别是，我们通过 GitHub API 获取每个项目的目录树，并搜索名称与表中提供的条件匹配的文件</span><span class="original-text">Once PRs are collected, we retrieve the instruction files of the coding agents. In particular, we obtain the directory tree for each project via the GitHub API and search for files whose names match the criteria presented in Table</span><a class="ltx_ref" href="#S2.T1" title="Table 1 ‣ 2.2. Collection of Instruction Files ‣ 2. Study Design ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">。这些名称是从文档中获得的</span><span class="original-text">. These names are obtained from the documentation</span><cite class="ltx_cite ltx_citemacro_citep">(Devin.ai Documentation, <a class="ltx_ref" href="#bib.bib24" title="GitHub integration — devin docs">2025</a>; Cursor Documentation, <a class="ltx_ref" href="#bib.bib25" title="Rules — cursor docs">2025</a>; GitHub Documentation, <a class="ltx_ref" href="#bib.bib26" title="Adding repository custom instructions for github copilot">2025</a>; Anthropic / Claude Code Documentation, <a class="ltx_ref" href="#bib.bib27" title="Use claude code in vs code">2025</a>; OpenAI Developers, <a class="ltx_ref" href="#bib.bib28" title="Custom instructions with agents.md">2025</a>)</cite><span class="translated-text">。我们的研究依赖于指令文件的创建日期，因为我们比较了指令文件创建之前和之后的拉取请求。这样的创建日期是通过添加指令文件的第一次提交获得的。
+请注意，如果一个项目有多个说明文件，我们会保留所有说明文件。通过收集的说明文件，我们过滤掉没有任何说明文件的项目。为了进行稳健的比较，我们还只保留在项目说明文件创建之前至少有 5 个代理 PR 和创建后至少有 5 个代理 PR 的项目。</span><span class="original-text">. Our study relies on the creation date of instruction files, as we compare pull requests before and after the creation of the instruction files. Such a creation date is obtained via the first commit that added the instruction file.
+Note that we keep all the instruction files if a project has multiple ones. With the instruction files collected, we filter out projects that do not have any instruction files. To have a robust comparison, we also keep only projects with at least five agentic-PRs before and five ones after the creation of the project’s instruction file.</span><span class="ltx_text ltx_font_bold" id="S2.SS2.p1.1.1"><span class="translated-text">我们的最终数据集包含 148 个项目和 15,549 个 Agentic-PR。</span><span class="original-text">Our final dataset consists of 148 projects and 15,549 Agentic-PRs.</span></span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3. </span><span class="translated-text">结果</span><span class="original-text">Results</span></h2>
+<section class="ltx_subsection" id="S3.SSx1">
+<h3 class="ltx_title ltx_title_subsection"><span class="translated-text">RQ1。创建指令文件后，agentic-PR 的合并率如何变化？</span><span class="original-text">RQ1. How does the merge rate of agentic-PRs change after the creation of instruction files?</span></h3>
+<div class="ltx_para" id="S3.SSx1.p1">
+<p class="ltx_p" id="S3.SSx1.p1.1"><span class="ltx_text ltx_framed ltx_framed_underline" id="S3.SSx1.p1.1.1"><span class="translated-text">动机：</span><span class="original-text">Motivation:</span></span><span class="translated-text">该研究问题的目标是量化将指令文件添加到合并率的好处，作为衡量代理在生成已接受的拉取请求方面是否成功的衡量标准。直觉是，引导代理更有可能正确执行任务，从而产生合并的代理 PR。</span><span class="original-text">The goal of this research question is to quantify the benefit of adding instruction files to the merge rate, as a measure of agents’ success in generating accepted pull requests. The intuition is that guided agents are more likely to perform tasks correctly that result in merged agentic-PRs.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SSx1.p2">
+<p class="ltx_p" id="S3.SSx1.p2.1"><span class="ltx_text ltx_framed ltx_framed_underline" id="S3.SSx1.p2.1.1"><span class="translated-text">方法：</span><span class="original-text">Approach:</span></span><span class="translated-text">为了回答这个 RQ，我们比较每个项目在创建其指令文件之前和之后的代理 PR 的合并率。由于项目可以包含多个指令文件，因此我们执行两次比较：（1）创建第一个文件之前和之后，（2）创建第一个文件之前和创建所有（一个或多个）文件之后。
+为了进行比较，我们使用以下比率：</span><span class="original-text">To answer this RQ, we compare for each project the merge rate of agentic-PRs before and after the creation of its instruction files. Since projects can include multiple instruction files, we perform two comparisons: (1) before and after the creation of the first file and (2) before the creation of the first file and after the creation of all (one or multiple) the files.
+For comparison, we use the following ratio:</span><math alttext="\left(\frac{\text{merge\_rate\_after}-\text{merge\_rate\_before}}{\text{merge\_rate\_before}}\right)\times 100" class="ltx_Math" display="inline" id="S3.SSx1.p2.1.m1" intent=":literal"><semantics><mrow><mrow><mo>(</mo><mfrac><mrow><mtext>merge_rate_after</mtext><mo>−</mo><mtext>merge_rate_before</mtext></mrow><mtext>merge_rate_before</mtext></mfrac><mo rspace="0.055em">)</mo></mrow><mo rspace="0.222em">×</mo><mn>100</mn></mrow><annotation encoding="application/x-tex">\left(\frac{\text{merge\_rate\_after}-\text{merge\_rate\_before}}{\text{merge\_rate\_before}}\right)\times 100</annotation></semantics></math><span class="translated-text">。
+低于零的值表示合并率降低，高于零的值表示合并率增加，零表示没有变化。</span><span class="original-text">.
+A value below zero indicates a decrease in merge rate, a value above zero indicates an increase, and zero denotes no change.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="312" id="S3.F1.g1" src="https://arxiv.org/html/2606.13449v1/x1.png" width="514"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F1.2.1.1" style="font-size:90%;">Figure 1</span>. </span><span class="ltx_text" id="S3.F1.3.2" style="font-size:90%;">The # of projects across merge rate improvement intervals for PRs closed before and after the first agent file creation.</span></figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S3.SSx1.p3">
+<p class="ltx_p" id="S3.SSx1.p3.1"><span class="ltx_text ltx_framed ltx_framed_underline" id="S3.SSx1.p3.1.1"><span class="translated-text">结果：</span><span class="original-text">Results:</span></span> <span class="ltx_text ltx_font_bold" id="S3.SSx1.p3.1.2"><span class="translated-text">一些项目受益于指令文件，表现出合并率的增加，而其他项目则没有受益，反而表现出下降的趋势。</span><span class="original-text">Some projects benefit from the instruction files, exhibiting an increase in their merge rate, whereas other projects do not benefit and instead show a decreasing trend.</span></span><span class="translated-text">我们观察到 27.7% 的项目将合并率提高了至少 20%，如图所示</span><span class="original-text">We observe 27.7% of the projects increased their merge rate by at least 20%, as depicted in Figure</span><a class="ltx_ref" href="#S3.F1" title="Figure 1 ‣ RQ1. How does the merge rate of agentic-PRs change after the creation of instruction files? ‣ 3. Results ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">。
+例如，</span><span class="original-text">.
+For instance, the</span><span class="ltx_text ltx_font_italic" id="S3.SSx1.p3.1.3"><span class="translated-text">重要-Gravitas/AutoGPT</span><span class="original-text">Significant-Gravitas/AutoGPT</span></span><span class="translated-text">项目显示，第一次添加代理文件之前的合并率为 42.85%，最后添加代理文件之后的合并率为 65.30%，从而提高了 52.38%。此外，我们观察到 26.35%（148 个项目中的 39 个）的合并率下降了至少 20%。例如，</span><span class="original-text">project showed a merge rate of 42.85% before the first added agent file and 65.30% after the last added agent file, resulting in a 52.38% improvement. Furthermore, we observe that 26.35% (39 out of 148) of the studied projects experienced a decrease in merge rate of at least 20%. For example, the</span><span class="ltx_text ltx_font_italic" id="S3.SSx1.p3.1.4">Azure/adx-mon</span><span class="translated-text">项目显示第一个代理文件之前的合并率为 75%，添加相同文件后的合并率为 35.35%。只有 4.72%（148 个项目中的 7 个）在第一个代理文件前后表现出相同的合并率。</span><span class="original-text">project shows a merge rate of 75% before the first agent file and 35.35% after the same file was added. Only 4.72% (7 out of 148) of the projects exhibit the same merge rate before and after the first agent file.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="327" id="S3.F2.g1" src="https://arxiv.org/html/2606.13449v1/x2.png" width="539"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F2.2.1.1" style="font-size:90%;">Figure 2</span>. </span><span class="ltx_text" id="S3.F2.3.2" style="font-size:90%;">The # of projects across merge rate improvement intervals for PRs closed before the first agent file and after the last agent file.</span></figcaption>
+</figure>
+<div class="ltx_para" id="S3.SSx1.p4">
+<p class="ltx_p" id="S3.SSx1.p4.1"><span class="ltx_text ltx_font_bold" id="S3.SSx1.p4.1.1"><span class="translated-text">对于给定项目中的所有指令文件，将合并率提高至少 20% 的项目百分比为 31.93%</span><span class="original-text">With all the instruction files in a given project, the percentage of projects that improve their merge rate by at least 20% is 31.93%</span></span><span class="translated-text">，如图所示
+图</span><span class="original-text">, as shown
+Figure</span><a class="ltx_ref" href="#S3.F2" title="Figure 2 ‣ RQ1. How does the merge rate of agentic-PRs change after the creation of instruction files? ‣ 3. Results ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">。例如，</span><span class="original-text">. For example, the</span><span class="ltx_text ltx_font_italic" id="S3.SSx1.p4.1.2"><span class="translated-text">虚空心灵Eth/nethermind</span><span class="original-text">NethermindEth/nethermind</span></span><span class="translated-text">具有两个指令文件的存储库（以太坊执行客户端）的合并率增加了 246.15%（即，在第一个指令文件之前合并率为 20%，在添加第二个指令文件之后合并率为 69.23%）。
+同样，我们观察到 27.73% 的项目显示合并率至少下降了 20%。
+例如，</span><span class="original-text">repository (an Ethereum execution client) with two instruction files exhibits a merge rate increase of 246.15% (i.e., a merge rate of 20% before the first instruction file and 69.23% after the addition of the second one).
+Similarly, we observe that 27.73% of the projects show a decrease in merge rate by at least 20%.
+For instance, the</span><span class="ltx_text ltx_font_italic" id="S3.SSx1.p4.1.3">theopenco/llmgateway</span><span class="translated-text">项目强调合并率从 89% 下降到 66.66%。我们还观察到四个项目的合并率没有变化。</span><span class="original-text">project highlights a merge rate decrease from 89% to 66.66%. We also observe four projects with no change in merge rate.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SSx2">
+<h3 class="ltx_title ltx_title_subsection"><span class="translated-text">RQ2。创建指令文件后，代理承担的任务复杂性如何变化？</span><span class="original-text">RQ2. How does task complexity that agents undertake change after the creation of instruction files?</span></h3>
+<div class="ltx_para ltx_noindent" id="S3.SSx2.p1">
+<p class="ltx_p" id="S3.SSx2.p1.1"><span class="ltx_text ltx_framed ltx_framed_underline" id="S3.SSx2.p1.1.1"><span class="translated-text">动机：</span><span class="original-text">Motivation:</span></span><span class="translated-text">该研究问题的目标是调查通过指令文件引导模型是否与人工智能代理执行的更复杂的任务相关。</span><span class="original-text">The goal of this research question is to investigate whether guiding the models through the instruction files is associated with more complex tasks performed by AI-agents.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SSx2.p2">
+<p class="ltx_p" id="S3.SSx2.p2.1"><span class="ltx_text ltx_framed ltx_framed_underline" id="S3.SSx2.p2.1.1"><span class="translated-text">方法：</span><span class="original-text">Approach:</span></span><span class="translated-text">对于每个项目，我们进行统计（Mann-Whitney U 检验；</span><span class="original-text">For each project, we statistically (Mann-Whitney U test;</span><math alttext="\alpha" class="ltx_Math" display="inline" id="S3.SSx2.p2.1.m1" intent=":literal"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math><span class="translated-text">= 0.05 和 Cliff 的增量）根据生成的代码数量比较创建指令文件之前和之后的代理拉取请求，使用以下指标进行测量：描述长度、代码改动、文件数量以及代理 PR 中的提交数量。我们的比较考虑了第一个指令文件创建之前和之后，以及第一个文件创建之前和最后一个文件创建之前。我们报告统计上改善或降低变更复杂性的项目数量。由于我们考虑成功开发复杂的代码，因此我们仅关注此 RQ 中的合并拉取请求。我们确定了 99 个项目在创建第一个代理文件之前和之后至少有 5 个合并的 PR。同样，在创建所有（一个或多个）说明文件后，我们确定了 80 个符合相同标准的项目。</span><span class="original-text">= 0.05 and Cliff’s delta) compare agentic pull requests before and after the creation of the instructions file in terms of the quantity of produced code, measured using the following metrics: description length, code churn, number of files, and number of commits in agentic-PRs. Our comparison considers before and after the creation of the first instructions file, and before the creation of the first file and the creation of the last one. We report on the number of projects that statistically improved or reduced the complexity of their changes. Since we consider successfully developing complex code, we focus only on merged pull requests in this RQ. We identify 99 projects with at least five merged PRs both before and after the creation of the first agent file. Similarly, we identify 80 projects that meet the same criterion after the creation of all (one or more) their instruction files.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F3">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S3.F3.sf1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="665" id="S3.F3.sf1.g1" src="https://arxiv.org/html/2606.13449v1/x3.png" width="660"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F3.sf1.2.1.1" style="font-size:90%;">(a)</span> </span><span class="ltx_text" id="S3.F3.sf1.3.2" style="font-size:90%;">Before and after the first agent file.</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S3.F3.sf2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="665" id="S3.F3.sf2.g1" src="https://arxiv.org/html/2606.13449v1/x4.png" width="660"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F3.sf2.2.1.1" style="font-size:90%;">(b)</span> </span><span class="ltx_text" id="S3.F3.sf2.3.2" style="font-size:90%;">Before the first and after the last agent files.</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F3.6.3.1" style="font-size:90%;">Figure 3</span>. </span><span class="ltx_text" id="S3.F3.4.2" style="font-size:90%;">The # of stats test for agentic PR complexity metrics (a) when the first agent file is created and (b) when one of more agent files are created. <math alttext="(+)" class="ltx_Math" display="inline" id="S3.F3.3.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><mo lspace="0em" rspace="0em">+</mo><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(+)</annotation></semantics></math> indicates an increase and <math alttext="(-)" class="ltx_Math" display="inline" id="S3.F3.4.2.m2" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><mo lspace="0em" rspace="0em">−</mo><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(-)</annotation></semantics></math> indicates a decrease.</span></figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S3.SSx2.p3">
+<p class="ltx_p" id="S3.SSx2.p3.1"><span class="ltx_text ltx_framed ltx_framed_underline" id="S3.SSx2.p3.1.1"><span class="translated-text">结果：</span><span class="original-text">Results:</span></span> <span class="ltx_text ltx_font_bold" id="S3.SSx2.p3.1.2"><span class="translated-text">从统计数据来看，增加 AI 代理 PR 复杂性指标的项目数量多于降低 AI 代理 PR 复杂性指标的项目数量</span><span class="original-text">Projects that statistically increase AI-agent PR complexity metrics outnumber projects that decrease them</span></span><span class="translated-text">。 35.35%、10.10%、12.12% 和 8.08% 的项目在描述长度、代码改动、提交数量和更改文件数量方面分别显示出统计上显着的增加，效果大小从小到大不等，如图所示</span><span class="original-text">. 35.35%, 10.10%, 12.12%, and 8.08% of the projects show statistically significant increases in description length, code churn, number of commits, and number of changed files, respectively, with effect sizes ranging from small to large, as shown in Figure</span><span class="ltx_ref ltx_nolink ltx_ref_self"><span class="ltx_text ltx_ref_tag">3(a)</span></span><span class="translated-text">。例如，</span><span class="original-text">. For instance, the</span><span class="ltx_text ltx_font_italic" id="S3.SSx2.p3.1.3"><span class="translated-text">阿斯加德奥/雷霆</span><span class="original-text">asgardeo/thunder</span></span><span class="translated-text">项目显示，AI 代理 PR 的代码流失率从中位数 308 增加到 2931.5，且效应量较大。此外，我们观察到，4.04%、7.07%、7.07.08% 和 5.05% 的项目在描述长度、代码改动、提交数量和更改文件数量方面表现出统计上显着的下降，并且影响大小范围从小到大。例如，</span><span class="original-text">project shows an increase in code churn of AI-agent PRs from a median of 308 to 2931.5, with a large effect size. Furthermore, we observe that 4.04%, 7.07%, 7.07.08%, and 5.05% of the projects exhibit statistically significant decreases in the description length, code churn, number of commits, and number of changed files, and, respectively, with effect sizes ranging from small to large. For example, the</span><span class="ltx_text ltx_font_italic" id="S3.SSx2.p3.1.4"><span class="translated-text">提示符/提示符</span><span class="original-text">promptfoo/promptfoo</span></span><span class="translated-text">引入第一个代理文件后，该项目将描述长度从中位数 563 显着减少到 203。</span><span class="original-text">project significantly decreases the description length from a median of 563 to 203 after the introduction of the first agent file.</span></p>
+</div>
+<div class="ltx_para" id="S3.SSx2.p4">
+<p class="ltx_p" id="S3.SSx2.p4.1"><span class="ltx_text ltx_font_bold" id="S3.SSx2.p4.1.1"><span class="translated-text">考虑所有说明文件时，我们的结果成立，</span><span class="original-text">Our results hold when considering all the instruction files,</span></span><span class="translated-text">如图</span><span class="original-text">as shown in Figure</span><span class="ltx_ref ltx_nolink ltx_ref_self"><span class="ltx_text ltx_ref_tag">4(a)</span></span><span class="translated-text">。 5、7、27 和 9 项目在更改文件数量、代码改动、描述长度和提交数量方面表现出统计上显着的增加。对于相同的指标，我们观察到分别有 6、4、2 和 5 个项目出现下降。</span><span class="original-text">. 5, 7, 27, and 9 projects exhibit a statistically significant increase in the number of changed files, code churn, description length, and number of commits. For the same metrics, we observe a decrease for 6, 4, 2, and 5 projects, respectively.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SSx3">
+<h3 class="ltx_title ltx_title_subsection"><span class="translated-text">RQ3。创建指令文件后，合并代理 PR 的工作有何变化？</span><span class="original-text">RQ3. How does the efforts to merge agentic-PRs change after the creation of instruction files?</span></h3>
+<div class="ltx_para ltx_noindent" id="S3.SSx3.p1">
+<p class="ltx_p" id="S3.SSx3.p1.1"><span class="ltx_text ltx_framed ltx_framed_underline" id="S3.SSx3.p1.1.1"><span class="translated-text">动机：</span><span class="original-text">Motivation:</span></span><span class="translated-text">此研究问题的目的是评估指令文件的添加是否与合并拉取请求所需的工作量（通过合并时间和讨论量来衡量）相关。</span><span class="original-text">The purpose of this research question is to evaluate whether the addition of instruction files is associated with the amount of effort required (measured by the time to merge and the amount of discussions) to merge a pull request.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SSx3.p2">
+<p class="ltx_p" id="S3.SSx3.p2.1"><span class="ltx_text ltx_framed ltx_framed_underline" id="S3.SSx3.p2.1.1"><span class="translated-text">方法：</span><span class="original-text">Approach:</span></span><span class="translated-text">我们遵循与 RQ2 相同的方法，使用以下指标：评论数量和合并拉取请求的时间。在此 RQ 中，由于我们对合并 AI 代理 PR 的工作感兴趣，因此我们仅关注合并的 PR。</span><span class="original-text">We follow the same approach of RQ2 using the following metrics: number of comments and the time to merge pull requests. In this RQ, since we are interested in the effort to merge AI-agentic PRs, we focus only on merged PRs.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F4">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S3.F4.sf1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_portrait" height="616" id="S3.F4.sf1.g1" src="https://arxiv.org/html/2606.13449v1/x5.png" width="464"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F4.sf1.2.1.1" style="font-size:90%;">(a)</span> </span><span class="ltx_text" id="S3.F4.sf1.3.2" style="font-size:90%;">Before and after the first agent file.</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S3.F4.sf2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_portrait" height="620" id="S3.F4.sf2.g1" src="https://arxiv.org/html/2606.13449v1/x6.png" width="462"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F4.sf2.2.1.1" style="font-size:90%;">(b)</span> </span><span class="ltx_text" id="S3.F4.sf2.3.2" style="font-size:90%;">Before the first and after the last agent files.</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F4.2.1.1" style="font-size:90%;">Figure 4</span>. </span><span class="ltx_text" id="S3.F4.3.2" style="font-size:90%;">The # of stats test for agentic PR effort metrics (a) when the first agent file is created and (b) when one of more agent files are created.</span></figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S3.SSx3.p3">
+<p class="ltx_p" id="S3.SSx3.p3.1"><span class="ltx_text ltx_framed ltx_framed_underline" id="S3.SSx3.p3.1.1"><span class="translated-text">结果：</span><span class="original-text">Results:</span></span> <span class="ltx_text ltx_font_bold" id="S3.SSx3.p3.1.2"><span class="translated-text">13.13% 和 15.15% 的项目显示合并 AI 代理 PR 所需的时间和讨论在统计上显着增加，而 8.8% 的项目显示这两个指标均有所下降。</span><span class="original-text">13.13% and 15.15% of projects show a statistically significant increase in the time and discussion required to merge AI-agent PRs, respectively, whereas 8.8% of projects exhibit a decrease in both metrics.</span></span><span class="translated-text">图</span><span class="original-text">Figure</span><span class="ltx_ref ltx_nolink ltx_ref_self"><span class="ltx_text ltx_ref_tag">4(a)</span></span><span class="translated-text">说明了显着增加或减少合并 Agentic-PR 时间的项目数量以及添加第一个上下文文件时涉及的讨论数量。
+特别是，我们观察到，有 15 个项目在 Agentic-PR 中涉及的讨论评论数量出现统计上显着的增长，其中 10 个项目表现出较大的效应量，3 个项目表现出较小的效应量，2 个项目表现出中等的效应量。的</span><span class="original-text">illustrates the number of projects that significantly increase or decrease the time to merge Agentic-PRs and the number of discussions involved when the first context file is added.
+In particular, we observe that 15 projects show a statistically significant increase in the number of discussion comments involved in Agentic-PRs, among which 10 projects exhibit a large effect size, 3 a small effect size, and 2 a medium effect size. The</span><span class="ltx_text ltx_font_italic" id="S3.SSx3.p3.1.3"><span class="translated-text">码头/码头</span><span class="original-text">quay/quay</span></span><span class="translated-text">具有三个代理文件的项目显示讨论数量从中位数 3 增加到 7，且影响大小较大。
+相比之下，8 个项目减少了讨论规模，其中 4 个项目显示中等效应量，4 个项目显示大效应量。例如，</span><span class="original-text">project, with three agent files, shows an increase in the number of discussions from a median of 3 to 7 with a large effect size.
+In contrast, 8 projects decrease the discussion size, with 4 projects showing a medium effect size and 4 a large effect size. For instance, the</span><span class="ltx_text ltx_font_italic" id="S3.SSx3.p3.1.4"><span class="translated-text">微软/PowerToys</span><span class="original-text">microsoft/PowerToys</span></span><span class="translated-text">项目（一组用于自定义 Windows 的实用程序）将讨论评论的数量从中位数 7 减少到 2</span><span class="original-text">project (a set of utilities to customize Windows) reduced the number of discussion comments from a median of 7 to 2 when the</span><span class="ltx_text ltx_font_typewriter" id="S3.SSx3.p3.1.5"><span class="translated-text">副驾驶指令.md</span><span class="original-text">copilot-instructions.md</span></span><span class="translated-text">文件已创建。
+此外，我们观察到 13 个项目显着增加了合并代理拉取请求的时间，而 8 个项目这次减少了。例如，</span><span class="original-text">file was created.
+Furthermore, we observe that 13 projects significantly increase the time to merge agentic pull requests, while 8 projects decrease this time. For example, the</span><span class="ltx_text ltx_font_italic" id="S3.SSx3.p3.1.6">boxwise/boxtribute</span><span class="translated-text">该项目将合并时间从平均 71.51 小时大幅缩短至 22.43 小时。公关</span><span class="original-text">project significantly reduced the time to merge from a median of 71.51 hours to 22.43 hours. The PR</span><span class="ltx_note ltx_role_footnote" id="footnote1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/boxwise/boxtribute/pull/2292" title="">https://github.com/boxwise/boxtribute/pull/2292</a></span></span></span><span class="translated-text">介绍了</span><span class="original-text">that introduced the</span><span class="ltx_text ltx_font_typewriter" id="S3.SSx3.p3.1.7"><span class="translated-text">副驾驶指令.md</span><span class="original-text">copilot-instructions.md</span></span><span class="translated-text">文件显示了 Copilot 和开发人员之间的长时间讨论，以创建在 Boxtribute 代码库中工作的详细指南。这表明 Copilot 通过利用此类详细说明帮助减少了合并时间。</span><span class="original-text">file shows a long discussion between Copilot and a developer to create detailed guidance for working within the Boxtribute codebase. This suggests that Copilot helped reduce the time to merge by leveraging such detailed instructions.</span></p>
+</div>
+<div class="ltx_para" id="S3.SSx3.p4">
+<p class="ltx_p" id="S3.SSx3.p4.1"><span class="ltx_text ltx_font_bold" id="S3.SSx3.p4.1.1"><span class="translated-text">统计上，11 个项目增加了讨论大小，而 8 个项目在创建所有说明文件后增加了合并时间。</span><span class="original-text">11 projects statistically increase discussion size, while 8 projects increase merge time after the creation of all the instruction files.</span></span><span class="translated-text">如图</span><span class="original-text">As shown in Figure</span><a class="ltx_ref" href="#S3.F4.sf2" title="In Figure 4 ‣ RQ3. How does the efforts to merge agentic-PRs change after the creation of instruction files? ‣ 3. Results ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">4(b)</span></a><span class="translated-text">，我们观察到，统计上有 11 个项目增加了讨论评论数量，其中 9 个项目表现出较大的效应量，而 6 个项目减少了讨论量，其中 4 个项目在创建最后一个代理文件后表现出较大的效应量。同样，有 9 个项目在统计上显示合并时间显着增加，而只有 4 个项目显示出下降趋势。</span><span class="original-text">, we observe that 11 projects statistically increase the number of discussion comments, with 9 exhibiting a large effect size, while 6 projects decrease discussion size, among which 4 show a large effect size after the last agent file is created. Similarly, 9 projects highlight a statistically significant increase in merge time, compared to only 4 projects that show a decreasing trend.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SSx4">
+<h3 class="ltx_title ltx_title_subsection"><span class="translated-text">RQ4。指令文件的详细程度与代理 PR 的合并率之间有什么关系？</span><span class="original-text">RQ4. What is the relation between the verbosity of instruction files and the merge rates of agentic-PRs?</span></h3>
+<div class="ltx_para ltx_noindent" id="S3.SSx4.p1">
+<p class="ltx_p" id="S3.SSx4.p1.1"><span class="ltx_text ltx_framed ltx_framed_underline" id="S3.SSx4.p1.1.1"><span class="translated-text">动机：</span><span class="original-text">Motivation:</span></span><span class="translated-text">虽然我们观察到一些项目在创建说明文件后有所改善，而另一些项目则没有，但该研究问题量化了两种类型的项目在说明文件的丰富性方面是否存在差异。</span><span class="original-text">While we observe that some projects improve after the creation of instruction files while others do not, this research question quantifies whether there is a difference between the two types of projects in terms of the richness of the instruction files.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SSx4.p2">
+<p class="ltx_p" id="S3.SSx4.p2.1"><span class="ltx_text ltx_framed ltx_framed_underline" id="S3.SSx4.p2.1.1"><span class="translated-text">方法：</span><span class="original-text">Approach:</span></span><span class="translated-text">为了探索指令文件的丰富性，我们考虑两个指标，即指令文件在创建时的长度和同一文件中的节数。这些部分充当结构组织程度和所提供的代理指导深度的代理。我们比较了在创建项目的所有指令文件后合并率提高至少 20% 的项目与合并率降低至少 20% 的项目之间的长度。</span><span class="original-text">To explore the richness of the instruction files, we consider two metrics, which are the length of the instruction files at their creation time and the number of sections in the same files. These sections serve as a proxy for the degree of structural organization and the depth of agent guidance provided. We compare the length between projects that increased their merge rate by at least 20% and the projects with at least 20% merge-rate decrease after the creation of all the instruction files of their projects.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F5">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S3.F5.sf1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="390" id="S3.F5.sf1.g1" src="https://arxiv.org/html/2606.13449v1/x7.png" width="660"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F5.sf1.2.1.1" style="font-size:90%;">(a)</span> </span><span class="ltx_text" id="S3.F5.sf1.3.2" style="font-size:90%;"># of words.</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S3.F5.sf2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="390" id="S3.F5.sf2.g1" src="https://arxiv.org/html/2606.13449v1/x8.png" width="660"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F5.sf2.2.1.1" style="font-size:90%;">(b)</span> </span><span class="ltx_text" id="S3.F5.sf2.3.2" style="font-size:90%;"># of headers</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F5.4.2.1" style="font-size:90%;">Figure 5</span>. </span><span class="ltx_text" id="S3.F5.2.1" style="font-size:90%;">Characteristics of instruction files for projects with <math alttext="\geq 20" class="ltx_Math" display="inline" id="S3.F5.2.1.m1" intent=":literal"><semantics><mrow><mi></mi><mo>≥</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">\geq 20</annotation></semantics></math> merge-rate increase or decrease, measured by (a) number of words and (b) number of headers.</span></figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S3.SSx4.p3">
+<p class="ltx_p" id="S3.SSx4.p3.1"><span class="ltx_text ltx_framed ltx_framed_underline" id="S3.SSx4.p3.1.2"><span class="translated-text">结果：</span><span class="original-text">Results:</span></span>
+<span class="ltx_text ltx_font_bold" id="S3.SSx4.p3.1.1"><span class="translated-text">项目中的说明文件</span><span class="original-text">Instruction files in projects with a</span><math alttext="\geq 20\%" class="ltx_Math" display="inline" id="S3.SSx4.p3.1.1.m1" intent=":literal"><semantics><mrow><mi></mi><mo>≥</mo><mrow><mn>20</mn><mo>%</mo></mrow></mrow><annotation encoding="application/x-tex">\geq 20\%</annotation></semantics></math><span class="translated-text">从统计上看，合并率增加的时间比呈下降趋势的项目要长。</span><span class="original-text">merge-rate increase are statistically longer than those in projects with a decreasing trend.</span></span><span class="translated-text">如图</span><span class="original-text">As shown in Figure</span><a class="ltx_ref" href="#S3.F5.sf1" title="In Figure 5 ‣ RQ4. What is the relation between the verbosity of instruction files and the merge rates of agentic-PRs? ‣ 3. Results ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">5(a)</span></a><span class="translated-text">，合并率增加至少 20% 的项目的中位数为 976 个单词，几乎是合并率下降至少 20% 的项目的两倍。这样的观察得到 Mann-Whitney U 检验的支持，该检验产生具有统计显着性的 p 值为 0.0029，且效应量较小。</span><span class="original-text">, the projects whose merge rate increased by at least 20% exhibit a median of 976 words, which is nearly twice that of projects experiencing a merge-rate decrease of at least 20%. Such an observation is supported by a Mann-Whitney U test, which yields a statistically significant p-value of 0.0029 with a small effect size.</span></p>
+</div>
+<div class="ltx_para" id="S3.SSx4.p4">
+<p class="ltx_p" id="S3.SSx4.p4.1"><span class="ltx_text ltx_font_bold" id="S3.SSx4.p4.1.1"><span class="translated-text">项目具有</span><span class="original-text">Projects with a</span><math alttext="\geq 20\%" class="ltx_Math" display="inline" id="S3.SSx4.p4.1.1.m1" intent=":literal"><semantics><mrow><mi></mi><mo>≥</mo><mrow><mn>20</mn><mo>%</mo></mrow></mrow><annotation encoding="application/x-tex">\geq 20\%</annotation></semantics></math><span class="translated-text">与具有下降趋势的项目相比，合并率增加在前三个标题级别中表现出更深层次的结构。</span><span class="original-text">merge-rate increase exhibit substantially deeper structure in the first three header levels than projects with a decreasing trend.</span></span><span class="translated-text">如图所示</span><span class="original-text">As depicted in Figure</span><a class="ltx_ref" href="#S3.F5.sf2" title="In Figure 5 ‣ RQ4. What is the relation between the verbosity of instruction files and the merge rates of agentic-PRs? ‣ 3. Results ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">5(b)</span></a><span class="translated-text">，合并率增加至少 20% 的项目在其代理上下文文件中显示出较高的标头部分中位数计数，其中 H1、H2 和 H3 标头的中位数分别为 3.5、7.5 和 9。相比之下，合并率下降至少 20% 的项目显示的标头明显较少，中位数为 1 个 H1、5 个 H2 和 1 个 H3。
+Mann-Whitney U 检验对 H1、H2 和 H3 产生统计显着差异，且效应量较小。
+此外，合并率不断增加的项目往往会提供细粒度的指导，因为与 H1 和 H2 部分相比，H3 标题明显更为普遍。与此一致的是，Chatlatanagulchai 等人。</span><span class="original-text">, projects with a merge-rate increase of at least 20% show higher median counts of header sections in their agent context files, with medians of 3.5, 7.5, and 9 for H1, H2, and H3 headers, respectively. In contrast, projects experiencing a merge-rate decrease of at least 20% exhibit markedly fewer headers, with median counts of one H1, five H2, and one H3.
+The Mann-Whitney U test produces a statistically significant difference for H1, H2, and H3 with a small effect size.
+Moreover, projects with increasing merge rates tend to provide fine-grained guidance, as H3 headers are notably more prevalent compared to H1 and H2 sections. In line with this, Chatlatanagulchai et al.</span><cite class="ltx_cite ltx_citemacro_citep">(Chatlatanagulchai<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib23" title="Agent readmes: an empirical study of context files for agentic coding">2025</a>)</cite><span class="translated-text">表明 AGENTs.md、CLAUDE.md 和 copilot-instructions.md 在 H3 分段周围更加密集。</span><span class="original-text">indicated that AGENTs.md, CLAUDE.md, and copilot-instructions.md are more dense around the H3 subsection.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4. </span><span class="translated-text">影响和结论</span><span class="original-text">Implications and Conclusion</span></h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">我们的工作凭经验检验了指令文件的定义和 AI 代理拉取请求之间的关系。我们发现，虽然定义指令对于指导代理很重要，但并非所有添加指令文件的项目都会提高代理的效率。我们使用合并率、合并所需的工作量以及代理生成大量代码的能力来衡量效率。我们发现，具有更好合并率的项目是那些具有更详细的说明文件的项目，这些文件更好地构造为不同的部分和子部分。我们建议开发人员使他们的指令文件更加详细和结构良好，并对其进行改进，以充分受益于代理人工智能模型。对于研究人员来说，我们建议进一步研究如何编写指令文件，我们认为这应该成为软件工程过程的一部分。受基础设施即代码的启发，我们建议研究人员围绕指令文件的开发制定标准、质量指标和详细流程，这些文件应被视为代码（又名，</span><span class="original-text">Our work empirically examines the relationship between the definition of instruction files and AI-agent pull requests. We find that while defining instructions is important for guiding the agents, not all the projects that add the instruction files improve their agents’ efficiency. The efficiency that we measure using the merge rate, the efforts required to merge, and the ability of agents to generate a large amount of code. We find that projects with a better merge rate are those that have more elaborate instruction files, with files better structured into different sections and subsections. We recommend that developers make their instruction files more elaborate and well structured and improve them to fully benefit from agentic-AI models. For researchers, we recommend further studies on how to write instruction files, which we believe should be part of the software engineering processes. Inspired by Infrastructure as code, we suggest researchers develop standards, quality metrics, and elaborate processes around the development of instruction files, which should be considered as code (aka.,</span><span class="ltx_text ltx_font_bold" id="S4.p1.1.1"><span class="translated-text">指令即代码</span><span class="original-text">Instructions-as-code</span></span>).</p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib27">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Anthropic / Claude Code Documentation (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Use claude code in vs code</span>.
+</span>
+<span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">Claude / Anthropic</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://code.claude.com/docs/en/vs-code" title="">https://code.claude.com/docs/en/vs-code</a>Accessed: 2025-12-25</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2. Collection of Instruction Files ‣ 2. Study Design ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§2.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_report" id="bib.bib12">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Anthropic (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">The claude 3 model family: tech report</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_type">Technical report</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://shorturl.at/sdbBc" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1. Introduction ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib11">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Anysphere (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Cursor: the ai-native code editor</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://cursor.sh/" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1. Introduction ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib23">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">W. Chatlatanagulchai, H. Li, Y. Kashiwa, B. Reid, K. Thonglek, P. Leelaprute, A. Rungsawang, B. Manaskasemsak, B. Adams, A. E. Hassan, and H. Iida (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Agent readmes: an empirical study of context files for agentic coding</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2511.12884</span></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SSx4.p4.1" title="RQ4. What is the relation between the verbosity of instruction files and the merge rates of agentic-PRs? ‣ 3. Results ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§3</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib15">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">U. Cihan, V. Haratian, A. İçöz, M. K. Gül, Ö. Devran, E. F. Bayendur, B. M. Uçar, and E. Tüzün (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Automated code review in practice</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">2025 IEEE/ACM 47th International Conference on Software Engineering: Software Engineering in Practice (ICSE-SEIP)</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 425–436</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1. Introduction ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib25">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Cursor Documentation (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Rules — cursor docs</span>.
+</span>
+<span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">Cursor</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://cursor.com/docs/context/rules" title="">https://cursor.com/docs/context/rules</a>Accessed: 2025-12-25</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2. Collection of Instruction Files ‣ 2. Study Design ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§2.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib24">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Devin.ai Documentation (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">GitHub integration — devin docs</span>.
+</span>
+<span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">Devin.ai</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://docs.devin.ai/integrations/gh#search-&amp;-precedence-order" title="">https://docs.devin.ai/integrations/gh#search-&amp;-precedence-order</a>Accessed: 2025-12-25</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2. Collection of Instruction Files ‣ 2. Study Design ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§2.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib13">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">X. Du, M. Liu, K. Wang, H. Wang, J. Liu, Y. Chen, J. Feng, C. Sha, X. Peng, and Y. Lou (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Evaluating large language models in class-level code generation</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_series">ICSE ’24</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1. Introduction ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib26">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">GitHub Documentation (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Adding repository custom instructions for github copilot</span>.
+</span>
+<span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">GitHub, Inc.</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions" title="">https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions</a>Accessed: 2025-12-25</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2. Collection of Instruction Files ‣ 2. Study Design ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§2.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_website" id="bib.bib18">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">GitHub (2024)</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note">GitHub Docs</span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://shorturl.at/DRhK3" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1. Introduction ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib7">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">X. Hou, Y. Zhao, Y. Liu, Z. Yang, K. Wang, L. Li, X. Luo, D. Lo, J. Grundy, and H. Wang (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Large language models for software engineering: a systematic literature review</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">ACM Trans. Softw. Eng. Methodol.</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1. Introduction ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib19">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">H. Li, H. Zhang, and A. E. Hassan (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">The rise of ai teammates in software engineering (se) 3.0: how autonomous coding agents are reshaping software engineering</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1. Introduction ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1. Collection of Agentic-PRs ‣ 2. Study Design ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§2.1</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p2.1" title="2.1. Collection of Agentic-PRs ‣ 2. Study Design ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib14">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Z. Liu, C. Chen, J. Wang, M. Chen, B. Wu, X. Che, D. Wang, and Q. Wang (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Make llm a testing expert: bringing human-like interaction to mobile gui testing via functionality-aware decisions</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_series">ICSE ’24</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1. Introduction ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib8">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">A. Moradi Dakhel, V. Majdinasab, A. Nikanjam, F. Khomh, M. C. Desmarais, and Z. M. (. Jiang (2023)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">GitHub copilot ai pair programmer: asset or liability?</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">J. Syst. Softw.</span> <span class="ltx_text ltx_bib_volume">203</span> (<span class="ltx_text ltx_bib_number">C</span>).
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text issn ltx_bib_external">ISSN 0164-1212</span></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1. Introduction ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib28">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">OpenAI Developers (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Custom instructions with agents.md</span>.
+</span>
+<span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">OpenAI</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://developers.openai.com/codex/guides/agents-md/" title="">https://developers.openai.com/codex/guides/agents-md/</a>Accessed: 2025-12-25</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2. Collection of Instruction Files ‣ 2. Study Design ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§2.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib22">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_year"> (2025-12)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Replication Package for: Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests</span>.
+</span>
+<span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">Figshare</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref doi ltx_bib_external" href="https://dx.doi.org/10.6084/m9.figshare.30951143" title="">Document</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p9.1" title="1. Introduction ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib20">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">H. V. F. Santos, V. Costa, J. E. Montandon, and M. T. Valente (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Decoding the configuration of ai coding agents: insights from claude code projects</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1. Introduction ‣ Toward Instructions-as-Code: Understanding the Impact of Instruction Files on Agentic Pull Requests"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2606.13449v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div aria-hidden="true" id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
