@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">STAR：文本到图像 RL 训练后的时空自适应奖励分配</span><span class="original-text">STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 6 月 16 日星期二 14:27:53 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Tue Jun 16 14:27:53 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2606.17979" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2606.17979" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2606.17979v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2606.17979v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S2" title="In STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Related Work</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Method</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In 3 Method ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Attention-Guided Allocation</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS2" title="In 3 Method ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Spatially Resolved Policy Objective</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Experiments</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In 4 Experiments ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>Implementation Details</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS2" title="In 4 Experiments ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2 </span>Main Results</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S4.SS3" title="In 4 Experiments ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3 </span>Ablation Study</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS3.SSS1" title="In 4.3 Ablation Study ‣ 4 Experiments ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3.1 </span>Prompt Heatmap Construction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS3.SSS2" title="In 4.3 Ablation Study ‣ 4 Experiments ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3.2 </span>Attention Layer Selection</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS3.SSS3" title="In 4.3 Ablation Study ‣ 4 Experiments ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3.3 </span>Computational Overhead</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS4" title="In 4 Experiments ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.4 </span>Qualitative Comparison</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S5" title="In STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Conclusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title">References</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_appendix">
+<a class="ltx_ref" href="#A1" title="In STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">A </span>Text-Unit Extraction Prompts</span></a>
+<ol class="ltx_toclist ltx_toclist_appendix">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#A1.SS1" title="In Appendix A Text-Unit Extraction Prompts ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">A.1 </span>GenEval Text Units</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#A1.SS2" title="In A.1 GenEval Text Units ‣ Appendix A Text-Unit Extraction Prompts ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">A.2 </span>PickScore Text Units</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#A1.SS3" title="In A.2 PickScore Text Units ‣ A.1 GenEval Text Units ‣ Appendix A Text-Unit Extraction Prompts ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">A.3 </span>OCR Text Units</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2606.17979v1 [cs.AI] 2026 年 6 月 16 日</span><span class="original-text">arXiv:2606.17979v1 [cs.AI] 16 Jun 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line"><span class="ltx_note ltx_role_institutetext" id="id1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type"><span class="translated-text">机构文本：</span><span class="original-text">institutetext:</span></span></span></span></span>
+<h1 class="ltx_title ltx_title_document" lang="en"><span class="translated-text">STAR：文本到图像 RL 训练后的时空自适应奖励分配</span><span class="original-text">STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname" lang="en">
+Jinjie Shen
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname" lang="en"> Wei Deng
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname" lang="en"> Xian Hu
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname" lang="en"> Daiguo Zhou
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname" lang="en"> Jian Luan
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">
+</span></span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="ltx_text" lang="en"><span class="translated-text">现有的用于文本到图像生成的强化学习后训练方法通常将最终图像奖励转换为单个标量优势，并将其以相同的强度应用于整个生成轨迹。然而，文本到图像的生成自然具有时间和空间结构：不同的去噪步骤负责不同的生成阶段，而真正决定文本对齐的内容通常只出现在图像的部分中。这种粒度不匹配使得策略更新很难关注实际影响奖励的生成组件。为了解决这个问题，我们建议</span><span class="original-text">Existing RL post-training methods for text-to-image generation usually convert the final-image reward into a single scalar advantage and apply it with the same strength to the entire generative trajectory. However, text-to-image generation naturally has temporal and spatial structure: different denoising steps are responsible for different generation stages, and the content that truly determines text alignment often appears only in part of the image. This granularity mismatch makes it difficult for policy updates to focus on the generative components that actually affect the reward. To address this issue, we propose</span><span class="ltx_text ltx_font_bold"><span class="translated-text">时空自适应奖励（STAR）分配</span><span class="original-text">SpatioTemporal Adaptive Reward (STAR) Allocation</span></span><span class="translated-text">用于文本到图像扩散和流模型的 RL 后期训练。 STAR在生成模型内部使用文本图像注意力，并从提示中用户真正关心的核心内容开始。它构建了在去噪步骤和推出过程中动态变化的空间分配图，并将相同的组相对优势分配给更相关的潜在区域，几乎没有额外的计算开销。然后，STAR 通过空间解析的政策目标对这些地区实施更强有力的政策更新。我们使用 Stable Diffusion 3.5 Medium 作为基础模型，并对三个任务进行评估：GenEval、OCR 文本渲染和 PickScore。实验结果表明，STAR 在不改变外部奖励源的情况下改善了组合语义对齐、文本渲染和偏好优化，实现了</span><span class="original-text">for RL post-training of text-to-image diffusion and flow models. STAR uses text-image attention inside the generative model and starts from the core content that the user truly cares about in the prompt. It constructs spatial allocation maps that dynamically vary across denoising steps and rollouts, and allocates the same group-relative advantage to more relevant latent regions with almost no additional computational overhead. STAR then applies stronger policy updates to these regions through a spatially resolved policy objective. We use Stable Diffusion 3.5 Medium as the base model and evaluate on three tasks: GenEval, OCR text rendering, and PickScore. Experimental results show that STAR improves compositional semantic alignment, text rendering, and preference optimization without changing the external reward source, achieving</span><math alttext="\mathbf{0.9759}" class="ltx_Math" display="inline" intent=":literal"><semantics><mn class="ltx_mathvariant_bold" mathvariant="bold">0.9759</mn><annotation encoding="application/x-tex">\mathbf{0.9759}</annotation></semantics></math>, <math alttext="\mathbf{0.9757}" class="ltx_Math" display="inline" intent=":literal"><semantics><mn class="ltx_mathvariant_bold" mathvariant="bold">0.9757</mn><annotation encoding="application/x-tex">\mathbf{0.9757}</annotation></semantics></math><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="\mathbf{23.60}" class="ltx_Math" display="inline" intent=":literal"><semantics><mn class="ltx_mathvariant_bold" mathvariant="bold">23.60</mn><annotation encoding="application/x-tex">\mathbf{23.60}</annotation></semantics></math><span class="translated-text">分别在 GenEval、OCR 和 PickScore 上。</span><span class="original-text">on GenEval, OCR, and PickScore, respectively.</span></span></p>
+</div>
+<figure class="ltx_figure" id="S0.F1" lang="en"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="213" id="S0.F1.g1" src="https://arxiv.org/html/2606.17979v1/x1.png" width="660"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S0.F1.2.1.1" style="font-size:90%;">Figure 1</span>: </span><span class="ltx_text" id="S0.F1.3.2" style="font-size:90%;">Overview of STAR (SpatioTemporal Adaptive Reward Allocation). Given the same image-level group-relative advantage, STAR extracts text-image attention maps from the generative backbone and constructs timestep-specific spatial allocation maps that highlight latent regions corresponding to key prompt components. These maps route the scalar advantage into spatially resolved training signals, so policy updates selectively focus on the generative regions that determine text alignment.</span></figcaption>
+</figure>
+<section class="ltx_section" id="S1" lang="en">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">扩散模型已成为高保真文本到图像生成的主流框架</span><span class="original-text">Diffusion models have become mainstream frameworks for high-fidelity text-to-image generation</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">ho2020denoising</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">dhariwal2021diffusion</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">song2020score</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">ddim</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">rombach2022high</span>]</cite><span class="translated-text">。最近的文本到图像系统通过潜在扩散、整流流变换器和大规模提示图像训练进一步提高了分辨率和语言理解</span><span class="original-text">. Recent text-to-image systems further improve resolution and language understanding through latent diffusion, rectified-flow transformers, and large-scale prompt-image training</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">podell2023sdxl</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">drawbench</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">sd3</span>]</cite><span class="translated-text">。尽管这些模型在视觉质量方面取得了实质性进展，但复杂提示下的构图概括仍然是一个主要弱点：模型经常在对象计数、属性绑定和空间关系方面出错。由于此类错误通常只能由自动评估器在完整图像上进行判断，偏好模型</span><span class="original-text">. Although these models have made substantial progress in visual quality, compositional generalization under complex prompts remains a major weakness: models often make errors in object counting, attribute binding, and spatial relations. Since such errors can usually only be judged on the completed image by automatic evaluators, preference models</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xu2024imagereward</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">kirstain2023pick</span>]</cite><span class="translated-text">或人类反馈，强化学习式的后训练为直接优化图像级目标提供了有效的途径。</span><span class="original-text">, or human feedback, RL-style post-training provides an effective path for directly optimizing image-level objectives.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">现有的文本到图像生成的 RL 后训练的一个关键限制在于信用分配的粒度。最终的奖励通常是图像级标量，而扩散/流生成轨迹具有明确的时间和空间结构：采样跨越多个去噪/流步骤，并且每个步骤包含许多潜在的空间标记。然而，图像级别的奖励并不意味着整个图像对奖励承担同等的责任。即使对于诸如“自行车”之类的简单提示，文本对齐也主要由包含自行车本身的区域决定，而不是由天空或道路等背景区域决定。当提示进一步包含颜色、计数和空间关系时，奖励更强烈地取决于是否正确生成少量语义相关区域。这个问题在在线扩散/流强化学习后训练方法中尤其明显，包括 Flow-GRPO</span><span class="original-text">A key limitation of existing RL post-training for text-to-image generation lies in the granularity of credit assignment. The final reward is usually an image-level scalar, whereas the diffusion/flow generative trajectory has explicit temporal and spatial structure: sampling spans multiple denoising/flow steps, and each step contains many latent spatial tokens. However, an image-level reward does not mean that the entire image bears equal responsibility for the reward. Even for a simple prompt such as “a bicycle,” text alignment is mainly determined by the region containing the bicycle itself, rather than by background regions such as the sky or the road. When the prompt further contains colors, counts, and spatial relations, the reward depends more strongly on whether a small number of semantically relevant regions are generated correctly. This issue is particularly visible in online diffusion/flow RL post-training methods, including Flow-GRPO</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">liu2025flowgrpo</span>]</cite><span class="translated-text">，其中群体相对奖励仍然转换为策略优化的标量优势。现有的策略梯度训练通常将这种优势以相同的强度应用于所有时间步长和空间位置，使得很难区分主题区域和背景区域的奖励责任。</span><span class="original-text">, where a group-relative reward is still converted into a scalar advantage for policy optimization. Existing policy-gradient training usually applies this advantage with the same strength to all timesteps and spatial locations, making it difficult to distinguish the reward responsibility of subject regions from that of background regions.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">这种不匹配源于扩散和流动生成轨迹的时空结构</span><span class="original-text">This mismatch stems from the spatiotemporal structure of diffusion and flow generative trajectories</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">lipman2022flow</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">rectified_flow</span>]</cite><span class="translated-text">。不同的去噪阶段分别影响全局布局、对象形成和细节细化；在每个阶段中，只有潜在区域的子集与当前提示中的主题、属性和关系直接相关。我们在这个结构化过程中研究时空信用分配：给定相同的图像级结果反馈，我们将其分配到去噪时间</span><span class="original-text">. Different denoising stages affect global layout, object formation, and detail refinement, respectively; within each stage, only a subset of latent regions is directly related to the subjects, attributes, and relations in the current prompt. We study spatiotemporal credit assignment in this structured process: given the same image-level outcome feedback, we allocate it over denoising time</span><math alttext="\times" class="ltx_Math" display="inline" id="S1.p3.1.m1" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math><span class="translated-text">潜在空间，以便策略更新集中于真正决定文本对齐的生成组件。</span><span class="original-text">latent space so that policy updates focus on the generative components that truly determine text alignment.</span></p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">我们建议</span><span class="original-text">We propose</span><span class="ltx_text ltx_font_bold" id="S1.p4.1.1"><span class="translated-text">时空自适应奖励（STAR）分配</span><span class="original-text">SpatioTemporal Adaptive Reward (STAR) Allocation</span></span><span class="translated-text">，一个基于注意力的 T2I 扩散和流后训练框架。 STAR 使用生成模型内的文本-图像交互来构建特定于时间步长的路由图，并将其转换为潜在空间分配图。考虑到相同的标量优势，STAR 将其训练强度分布在去噪步骤和潜在区域中。与空间分辨似然比目标相结合，与关键提示成分相对应的区域会收到更强的更新，而背景和弱相关区域则保持较弱的影响。</span><span class="original-text">, a framework for attention-based T2I diffusion and flow post-training. STAR uses text-image interactions inside the generative model to construct timestep-specific routing maps and converts them into latent-space allocation maps. Given the same scalar advantage, STAR distributes its training strength across denoising steps and latent regions. Combined with a spatially resolved likelihood-ratio objective, regions corresponding to key prompt components receive stronger updates, while background and weakly related regions maintain weaker influence.</span></p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.3"><span class="translated-text">我们在组合 T2I RL 训练后实例化 STAR，并将其与相同外部奖励源下的标量分配基线进行比较。实验结果表明STAR实现了</span><span class="original-text">We instantiate STAR in compositional T2I RL post-training and compare it with scalar-allocation baselines under the same external reward source. Experimental results show that STAR achieves</span><math alttext="0.9759" class="ltx_Math" display="inline" id="S1.p5.1.m1" intent=":literal"><semantics><mn>0.9759</mn><annotation encoding="application/x-tex">0.9759</annotation></semantics></math>, <math alttext="23.60" class="ltx_Math" display="inline" id="S1.p5.2.m2" intent=":literal"><semantics><mn>23.60</mn><annotation encoding="application/x-tex">23.60</annotation></semantics></math><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="0.9757" class="ltx_Math" display="inline" id="S1.p5.3.m3" intent=":literal"><semantics><mn>0.9757</mn><annotation encoding="application/x-tex">0.9757</annotation></semantics></math><span class="translated-text">分别在 GenEval、PickScore 和 OCR 上。</span><span class="original-text">on GenEval, PickScore, and OCR, respectively.</span></p>
+</div>
+<div class="ltx_para" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1"><span class="translated-text">我们的贡献如下：</span><span class="original-text">Our contributions are as follows:</span></p>
+<ul class="ltx_itemize" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="translated-text">我们建议</span><span class="original-text">We propose</span><span class="ltx_text ltx_font_bold" id="S1.I1.i1.p1.1.1"><span class="translated-text">时空自适应奖励（STAR）分配</span><span class="original-text">SpatioTemporal Adaptive Reward (STAR) Allocation</span></span><span class="translated-text">，一种 T2I 扩散/流动 RL 训练后方法。 STAR 将图像级奖励转换为去噪时间和潜在空间上的训练信号，允许更新集中于与提示中的关键对象、属性和关系相对应的生成区域。</span><span class="original-text">, a method for T2I diffusion/flow RL post-training. STAR converts image-level rewards into training signals over denoising time and latent space, allowing updates to focus on the generative regions corresponding to key objects, attributes, and relations in the prompt.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="translated-text">我们使用模型内部的文本-图像交互来构建特定于时间步长的空间分配图，将现有的 RL 训练后目标扩展为空间解析的策略目标，并为基于注意力的 T2I 扩散/流模型提供统一的奖励路由接口。</span><span class="original-text">We use text-image interactions inside the model to construct timestep-specific spatial allocation maps, extend existing RL post-training objectives into a spatially resolved policy objective, and provide a unified reward-routing interface for attention-based T2I diffusion/flow models.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.3"><span class="translated-text">我们在 GenEval、PickScore 和 OCR 上验证 STAR，它实现了</span><span class="original-text">We validate STAR on GenEval, PickScore, and OCR, where it achieves</span><math alttext="0.9759" class="ltx_Math" display="inline" id="S1.I1.i3.p1.1.m1" intent=":literal"><semantics><mn>0.9759</mn><annotation encoding="application/x-tex">0.9759</annotation></semantics></math>, <math alttext="23.60" class="ltx_Math" display="inline" id="S1.I1.i3.p1.2.m2" intent=":literal"><semantics><mn>23.60</mn><annotation encoding="application/x-tex">23.60</annotation></semantics></math><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="0.9757" class="ltx_Math" display="inline" id="S1.I1.i3.p1.3.m3" intent=":literal"><semantics><mn>0.9757</mn><annotation encoding="application/x-tex">0.9757</annotation></semantics></math><span class="translated-text">，分别表明时空自适应奖励（STAR）分配可以同时改善构图语义对齐、偏好优化和文本渲染。</span><span class="original-text">, respectively, showing that SpatioTemporal Adaptive Reward (STAR) Allocation can simultaneously improve compositional semantic alignment, preference optimization, and text rendering.</span></p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section class="ltx_section" id="S2" lang="en">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="ltx_text ltx_font_bold" id="S2.p1.1.1"><span class="translated-text">T2I 的强化学习后训练。</span><span class="original-text">RL post-training for T2I.</span></span><span class="translated-text">近年来，遵循强化学习更广泛的政策梯度观点，直接优化下游奖励已成为改进基于扩散和基于流量的 T2I 模型的重要方向</span><span class="original-text">In recent years, directly optimizing downstream rewards has become an important direction for improving diffusion and flow-based T2I models, following the broader policy-gradient view of reinforcement learning</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">sutton1998reinforcement</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">williams1992simple</span>]</cite><span class="translated-text">。 DDPO</span><span class="original-text">. DDPO</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">ddpo</span>]</cite><span class="translated-text">将去噪过程表述为多步决策问题，并使用策略梯度方法优化扩散模型。 DPOK</span><span class="original-text">formulates the denoising process as a multi-step decision-making problem and optimizes diffusion models with policy-gradient methods. DPOK</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">fan2024reinforcement</span>]</cite><span class="translated-text">进一步将在线 RL 和 KL 正则化引入到 T2I 扩散微调中。扩散-DPO</span><span class="original-text">further introduces online RL and KL regularization into T2I diffusion fine-tuning. Diffusion-DPO</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">wallace2024diffusion</span>]</cite><span class="translated-text">建立在直接偏好优化的基础上</span><span class="original-text">builds on direct preference optimization</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">dpo</span>]</cite><span class="translated-text">，而 AlignProp</span><span class="original-text">, while AlignProp</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">prabhudesai2023aligning</span>]</cite><span class="translated-text">通过可微奖励反向传播来优化人类偏好。最近，Flow-GRPO</span><span class="original-text">optimizes human preferences through differentiable reward backpropagation. More recently, Flow-GRPO</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">liu2025flowgrpo</span>]</cite><span class="translated-text">将在线策略梯度训练扩展到流匹配模型，并通过随机采样和降噪实现高效的后训练。这些方法证明了 RL 式后训练对 T2I 模型的有效性，但它们通常将最终奖励视为应用于整个图像或整个轨迹的标量信号。 STAR 研究如何在结构化去噪轨迹内分配相同的奖励信号。</span><span class="original-text">extends online policy-gradient training to flow matching models and enables efficient post-training through stochastic sampling and denoising reduction. These methods demonstrate the effectiveness of RL-style post-training for T2I models, but they usually treat the final reward as a scalar signal applied to the whole image or the entire trajectory. STAR studies how the same reward signal should be allocated within a structured denoising trajectory.</span></p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="ltx_text ltx_font_bold" id="S2.p2.1.1"><span class="translated-text">细粒度的奖励和学分分配。</span><span class="original-text">Fine-grained rewards and credit assignment.</span></span><span class="translated-text">现有的工作已经开始认识到图像级标量奖励为扩散对齐提供了过于粗糙的反馈。密集的奖励观</span><span class="original-text">Existing work has begun to recognize that image-level scalar rewards provide overly coarse feedback for diffusion alignment. A Dense Reward View</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">yang2024dense</span>]</cite><span class="translated-text">从顺序决策的角度重新审视偏好调整，并得出强调早期去噪步骤的密集目标。乙</span><span class="original-text">revisits preference alignment from a sequential decision-making perspective and derives a dense objective that emphasizes early denoising steps. B</span><sup class="ltx_sup" id="S2.p2.1.2">2</sup><span class="translated-text">-DiffuRL 通过向后渐进训练和基于分支的采样估计中间去噪动作的贡献来解决稀疏终端奖励问题。另一项工作改善了奖励来源本身。图像奖励</span><span class="original-text">-DiffuRL addresses sparse terminal rewards by estimating the contributions of intermediate denoising actions through backward progressive training and branch-based sampling. Another line of work improves the reward source itself. ImageReward</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xu2024imagereward</span>]</cite><span class="translated-text">学习通用的 T2I 人类偏好奖励模型； ImageDoctor 还提供多方面评分和基础热图，用于诊断生成图像中的局部错误。 SpatialReward 为空间一致性构建可验证的奖励模型。这些方法强调了 T2I 训练后细粒度反馈的价值，同时留下了一个补充方向：给定现有的结果奖励，我们如何使用生成模型自己的文本图像交互来在时空结构内分配该信号？</span><span class="original-text">learns a general T2I human preference reward model; ImageDoctor further provides multi-aspect scores and grounded heatmaps for diagnosing local errors in generated images. SpatialReward builds verifiable reward modeling for spatial consistency. These methods highlight the value of fine-grained feedback in T2I post-training, while leaving a complementary direction: given an existing outcome reward, how can we use the generative model’s own text-image interactions to allocate this signal within the spatiotemporal structure?</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S3" lang="en">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">方法</span><span class="original-text">Method</span></h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="translated-text">STAR 将现有的图像级奖励重新分配给扩散/流动模型的结构化生成过程。给出提示</span><span class="original-text">STAR reallocates an existing image-level reward to the structured generative process of diffusion/flow models. Given a prompt</span><math alttext="c" class="ltx_Math" display="inline" id="S3.p1.1.m1" intent=":literal"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math><span class="translated-text">，模型生成潜在轨迹</span><span class="original-text">, the model generates a latent trajectory</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\tau=(z_{T},z_{T-1},\ldots,z_{0}),\qquad z_{t}\in\mathbb{R}^{C\times h_{t}\times w_{t}}," class="ltx_Math" display="block" id="S3.E1.m1" intent=":literal"><semantics><mrow><mrow><mrow><mi>τ</mi><mo>=</mo><mrow><mo stretchy="false">(</mo><msub><mi>z</mi><mi>T</mi></msub><mo>,</mo><msub><mi>z</mi><mrow><mi>T</mi><mo>−</mo><mn>1</mn></mrow></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>z</mi><mn>0</mn></msub><mo stretchy="false">)</mo></mrow></mrow><mo rspace="2.167em">,</mo><mrow><msub><mi>z</mi><mi>t</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>C</mi><mo lspace="0.222em" rspace="0.222em">×</mo><msub><mi>h</mi><mi>t</mi></msub><mo lspace="0.222em" rspace="0.222em">×</mo><msub><mi>w</mi><mi>t</mi></msub></mrow></msup></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\tau=(z_{T},z_{T-1},\ldots,z_{0}),\qquad z_{t}\in\mathbb{R}^{C\times h_{t}\times w_{t}},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.p1.4"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="z_{0}" class="ltx_Math" display="inline" id="S3.p1.2.m1" intent=":literal"><semantics><msub><mi>z</mi><mn>0</mn></msub><annotation encoding="application/x-tex">z_{0}</annotation></semantics></math><span class="translated-text">对应最终图像。让</span><span class="original-text">corresponds to the final image. Let</span><math alttext="\Omega_{t}=\{1,\ldots,h_{t}\}\times\{1,\ldots,w_{t}\}" class="ltx_Math" display="inline" id="S3.p1.3.m2" intent=":literal"><semantics><mrow><msub><mi mathvariant="normal">Ω</mi><mi>t</mi></msub><mo>=</mo><mrow><mrow><mo stretchy="false">{</mo><mn>1</mn><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>h</mi><mi>t</mi></msub><mo rspace="0.055em" stretchy="false">}</mo></mrow><mo rspace="0.222em">×</mo><mrow><mo stretchy="false">{</mo><mn>1</mn><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>w</mi><mi>t</mi></msub><mo stretchy="false">}</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">\Omega_{t}=\{1,\ldots,h_{t}\}\times\{1,\ldots,w_{t}\}</annotation></semantics></math><span class="translated-text">表示步骤中潜在特征图中的空间位置集</span><span class="original-text">denote the set of spatial locations in the latent feature map at step</span><math alttext="t" class="ltx_Math" display="inline" id="S3.p1.4.m3" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math><span class="translated-text">。外部奖励源仅提供最终样本的标量反馈，表示为</span><span class="original-text">. The external reward source provides scalar feedback only on the final sample, denoted as</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="R_{i}=R(z_{0}^{i},c),\qquad A_{i}=\mathcal{B}(R_{i},c)," class="ltx_Math" display="block" id="S3.E2.m1" intent=":literal"><semantics><mrow><mrow><mrow><msub><mi>R</mi><mi>i</mi></msub><mo>=</mo><mrow><mi>R</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msubsup><mi>z</mi><mn>0</mn><mi>i</mi></msubsup><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mo rspace="2.167em">,</mo><mrow><msub><mi>A</mi><mi>i</mi></msub><mo>=</mo><mrow><mi class="ltx_font_mathcaligraphic">ℬ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>R</mi><mi>i</mi></msub><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">R_{i}=R(z_{0}^{i},c),\qquad A_{i}=\mathcal{B}(R_{i},c),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.p1.9"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="i" class="ltx_Math" display="inline" id="S3.p1.5.m1" intent=":literal"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math><span class="translated-text">表示</span><span class="original-text">denotes the</span><math alttext="i" class="ltx_Math" display="inline" id="S3.p1.6.m2" intent=":literal"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math><span class="translated-text">在同一提示下进行-th rollout，并且</span><span class="original-text">-th rollout under the same prompt, and</span><math alttext="A_{i}" class="ltx_Math" display="inline" id="S3.p1.7.m3" intent=":literal"><semantics><msub><mi>A</mi><mi>i</mi></msub><annotation encoding="application/x-tex">A_{i}</annotation></semantics></math><span class="translated-text">是通过组相对标准化或基线减法获得的样本水平优势。标准 RL 风格的目标使用</span><span class="original-text">is the sample-level advantage obtained by group-relative normalization or baseline subtraction. A standard RL-style objective uses</span><math alttext="A_{i}" class="ltx_Math" display="inline" id="S3.p1.8.m4" intent=":literal"><semantics><msub><mi>A</mi><mi>i</mi></msub><annotation encoding="application/x-tex">A_{i}</annotation></semantics></math><span class="translated-text">作为轨迹级权重，如在组相关策略优化中</span><span class="original-text">as a trajectory-level weight, as in group-relative policy optimization</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">grpo</span>]</cite><span class="translated-text">;明星航线</span><span class="original-text">; STAR routes</span><math alttext="A_{i}" class="ltx_Math" display="inline" id="S3.p1.9.m5" intent=":literal"><semantics><msub><mi>A</mi><mi>i</mi></msub><annotation encoding="application/x-tex">A_{i}</annotation></semantics></math><span class="translated-text">去噪步骤和潜在区域。</span><span class="original-text">to denoising steps and latent regions.</span></p>
+</div>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">注意力引导分配</span><span class="original-text">Attention-Guided Allocation</span></h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.3"><span class="translated-text">STAR 将每个提示表示为一组与奖励相关的文本单元：</span><span class="original-text">STAR represents each prompt as a set of reward-relevant text units:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E3">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{K}(c)=\{q_{1},\ldots,q_{K}\}," class="ltx_Math" display="block" id="S3.E3.m1" intent=":literal"><semantics><mrow><mrow><mrow><mi class="ltx_font_mathcaligraphic">𝒦</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mo stretchy="false">{</mo><msub><mi>q</mi><mn>1</mn></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>q</mi><mi>K</mi></msub><mo stretchy="false">}</mo></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathcal{K}(c)=\{q_{1},\ldots,q_{K}\},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS1.p1.2"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="q_{k}" class="ltx_Math" display="inline" id="S3.SS1.p1.1.m1" intent=":literal"><semantics><msub><mi>q</mi><mi>k</mi></msub><annotation encoding="application/x-tex">q_{k}</annotation></semantics></math><span class="translated-text">表示提示中的核心组件。这些组件是最终图像需要满足的条件，包括主题、风格、属性、计数和空间关系。例如，对于提示“生成未来风格的建筑”，</span><span class="original-text">denotes a core component in the prompt. These components are the conditions that the final image needs to satisfy, including subjects, styles, attributes, counts, and spatial relations. For example, for the prompt “generate a futuristic-style building,”</span><math alttext="\mathcal{K}(c)" class="ltx_Math" display="inline" id="S3.SS1.p1.2.m2" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">𝒦</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>c</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{K}(c)</annotation></semantics></math><span class="translated-text">包含主题“建筑”和视觉风格要求“未来风格”。附录中提供了数据集特定的提取规则和文本单元提取的提示模板</span><span class="original-text">contains the subject “building” and the visual style requirement “futuristic style.” Dataset-specific extraction rules and prompt templates for text-unit extraction are provided in Appendix</span><a class="ltx_ref" href="#A1" title="Appendix A Text-Unit Extraction Prompts ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_tag">A</span></a>.</p>
+</div>
+<div class="ltx_para" id="S3.SS1.p2">
+<p class="ltx_p" id="S3.SS1.p2.3"><span class="translated-text">假设完整提示</span><span class="original-text">Suppose the full prompt</span><math alttext="c" class="ltx_Math" display="inline" id="S3.SS1.p2.1.m1" intent=":literal"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math><span class="translated-text">由文本编码器分词器转换为</span><span class="original-text">is converted by the text encoder tokenizer into</span><math alttext="L_{c}" class="ltx_Math" display="inline" id="S3.SS1.p2.2.m2" intent=":literal"><semantics><msub><mi>L</mi><mi>c</mi></msub><annotation encoding="application/x-tex">L_{c}</annotation></semantics></math><span class="translated-text">代币。每个文本单元</span><span class="original-text">tokens. Each text unit</span><math alttext="q_{k}" class="ltx_Math" display="inline" id="S3.SS1.p2.3.m3" intent=":literal"><semantics><msub><mi>q</mi><mi>k</mi></msub><annotation encoding="application/x-tex">q_{k}</annotation></semantics></math><span class="translated-text">对应多个文本标记，其标记索引表示为</span><span class="original-text">corresponds to several text tokens, whose token indices are denoted as</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E4">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{T}_{k}\subseteq\{1,\ldots,L_{c}\}." class="ltx_Math" display="block" id="S3.E4.m1" intent=":literal"><semantics><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">𝒯</mi><mi>k</mi></msub><mo>⊆</mo><mrow><mo stretchy="false">{</mo><mn>1</mn><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>L</mi><mi>c</mi></msub><mo stretchy="false">}</mo></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\mathcal{T}_{k}\subseteq\{1,\ldots,L_{c}\}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div class="ltx_para" id="S3.SS1.p3">
+<p class="ltx_p" id="S3.SS1.p3.7"><span class="translated-text">STAR 从一组选定的文本图像关注层中读取路由信号</span><span class="original-text">STAR reads routing signals from a selected set of text-image attention layers</span><math alttext="\mathcal{L}" class="ltx_Math" display="inline" id="S3.SS1.p3.1.m1" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">ℒ</mi><annotation encoding="application/x-tex">\mathcal{L}</annotation></semantics></math><span class="translated-text">。生成推出时</span><span class="original-text">. When generating rollout</span><math alttext="i" class="ltx_Math" display="inline" id="S3.SS1.p3.2.m2" intent=":literal"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math><span class="translated-text">，基于注意力的 T2I 主干在每个去噪步骤中建立图像潜在标记和文本标记之间的交互</span><span class="original-text">, attention-based T2I backbones establish interactions between image latent tokens and text tokens at each denoising step</span><math alttext="t" class="ltx_Math" display="inline" id="S3.SS1.p3.3.m3" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math><span class="translated-text">。对于任何</span><span class="original-text">. For any</span><math alttext="\ell\in\mathcal{L}" class="ltx_Math" display="inline" id="S3.SS1.p3.4.m4" intent=":literal"><semantics><mrow><mi mathvariant="normal">ℓ</mi><mo>∈</mo><mi class="ltx_font_mathcaligraphic">ℒ</mi></mrow><annotation encoding="application/x-tex">\ell\in\mathcal{L}</annotation></semantics></math><span class="translated-text">，该层提供了注意力图</span><span class="original-text">, this layer provides an attention map</span><math alttext="\alpha_{t}^{i,\ell}\in\mathbb{R}^{h_{t}\times w_{t}\times L_{c}}" class="ltx_Math" display="inline" id="S3.SS1.p3.5.m5" intent=":literal"><semantics><mrow><msubsup><mi>α</mi><mi>t</mi><mrow><mi>i</mi><mo>,</mo><mi mathvariant="normal">ℓ</mi></mrow></msubsup><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>h</mi><mi>t</mi></msub><mo lspace="0.222em" rspace="0.222em">×</mo><msub><mi>w</mi><mi>t</mi></msub><mo lspace="0.222em" rspace="0.222em">×</mo><msub><mi>L</mi><mi>c</mi></msub></mrow></msup></mrow><annotation encoding="application/x-tex">\alpha_{t}^{i,\ell}\in\mathbb{R}^{h_{t}\times w_{t}\times L_{c}}</annotation></semantics></math><span class="translated-text">;潜在位置的注意力权重</span><span class="original-text">; the attention weight from latent position</span><math alttext="u" class="ltx_Math" display="inline" id="S3.SS1.p3.6.m6" intent=":literal"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math><span class="translated-text">到文本标记</span><span class="original-text">to text token</span><math alttext="j" class="ltx_Math" display="inline" id="S3.SS1.p3.7.m7" intent=":literal"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math><span class="translated-text">表示为</span><span class="original-text">is denoted as</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E5">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\alpha_{t}^{i,\ell}(u,j)." class="ltx_Math" display="block" id="S3.E5.m1" intent=":literal"><semantics><mrow><mrow><msubsup><mi>α</mi><mi>t</mi><mrow><mi>i</mi><mo>,</mo><mi mathvariant="normal">ℓ</mi></mrow></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo>,</mo><mi>j</mi><mo stretchy="false">)</mo></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\alpha_{t}^{i,\ell}(u,j).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(5)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS1.p3.9"><span class="translated-text">这里</span><span class="original-text">Here</span><math alttext="u\in\Omega_{t}" class="ltx_Math" display="inline" id="S3.SS1.p3.8.m1" intent=":literal"><semantics><mrow><mi>u</mi><mo>∈</mo><msub><mi mathvariant="normal">Ω</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">u\in\Omega_{t}</annotation></semantics></math><span class="translated-text">是一个潜在的空间位置并且</span><span class="original-text">is a latent spatial position and</span><math alttext="j" class="ltx_Math" display="inline" id="S3.SS1.p3.9.m2" intent=":literal"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math><span class="translated-text">是文本标记索引。在联合注意力主干中（例如，Stable Diffusion 3.5、Qwen-Image），该值对应于完整注意力矩阵的图像到文本块；在交叉注意力主干（例如，Stable Diffusion XL）中，它对应于从图像查询到文本键的交叉注意力权重。 STAR 在所选层上采用最大的图像到文本注意力权重：</span><span class="original-text">is a text token index. In joint-attention backbones (e.g., Stable Diffusion 3.5, Qwen-Image), this value corresponds to the image-to-text block of the full attention matrix; in cross-attention backbones (e.g., Stable Diffusion XL), it corresponds to the cross-attention weights from image queries to text keys. STAR takes the maximum image-to-text attention weight over the selected layers:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E6">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\alpha_{t}^{i}(u,j)=\max_{\ell\in\mathcal{L}}\alpha_{t}^{i,\ell}(u,j)," class="ltx_Math" display="block" id="S3.E6.m1" intent=":literal"><semantics><mrow><mrow><mrow><msubsup><mi>α</mi><mi>t</mi><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo>,</mo><mi>j</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mrow><munder><mi>max</mi><mrow><mi mathvariant="normal">ℓ</mi><mo>∈</mo><mi class="ltx_font_mathcaligraphic">ℒ</mi></mrow></munder><mo lspace="0.167em">⁡</mo><msubsup><mi>α</mi><mi>t</mi><mrow><mi>i</mi><mo>,</mo><mi mathvariant="normal">ℓ</mi></mrow></msubsup></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo>,</mo><mi>j</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\alpha_{t}^{i}(u,j)=\max_{\ell\in\mathcal{L}}\alpha_{t}^{i,\ell}(u,j),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(6)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS1.p3.12"><span class="translated-text">它给出了特定于时间步长的文本图像路由图</span><span class="original-text">which gives the timestep-specific text-image routing map</span><math alttext="\alpha_{t}^{i}\in\mathbb{R}^{h_{t}\times w_{t}\times L_{c}}" class="ltx_Math" display="inline" id="S3.SS1.p3.10.m1" intent=":literal"><semantics><mrow><msubsup><mi>α</mi><mi>t</mi><mi>i</mi></msubsup><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>h</mi><mi>t</mi></msub><mo lspace="0.222em" rspace="0.222em">×</mo><msub><mi>w</mi><mi>t</mi></msub><mo lspace="0.222em" rspace="0.222em">×</mo><msub><mi>L</mi><mi>c</mi></msub></mrow></msup></mrow><annotation encoding="application/x-tex">\alpha_{t}^{i}\in\mathbb{R}^{h_{t}\times w_{t}\times L_{c}}</annotation></semantics></math><span class="translated-text">用于推出</span><span class="original-text">for rollout</span><math alttext="i" class="ltx_Math" display="inline" id="S3.SS1.p3.11.m2" intent=":literal"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math><span class="translated-text">在步骤</span><span class="original-text">at step</span><math alttext="t" class="ltx_Math" display="inline" id="S3.SS1.p3.12.m3" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="S3.SS1.p4">
+<p class="ltx_p" id="S3.SS1.p4.4"><span class="translated-text">接下来，STAR 提取每个文本单元出现在当前轨迹中的位置。给定令牌集</span><span class="original-text">Next, STAR extracts where each text unit appears in the current trajectory. Given the token set</span><math alttext="\mathcal{T}_{k}" class="ltx_Math" display="inline" id="S3.SS1.p4.1.m1" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">𝒯</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\mathcal{T}_{k}</annotation></semantics></math><span class="translated-text">文本单位的</span><span class="original-text">of text unit</span><math alttext="q_{k}" class="ltx_Math" display="inline" id="S3.SS1.p4.2.m2" intent=":literal"><semantics><msub><mi>q</mi><mi>k</mi></msub><annotation encoding="application/x-tex">q_{k}</annotation></semantics></math><span class="translated-text">, STAR构建其空间图</span><span class="original-text">, STAR constructs its spatial map</span><math alttext="M_{t}^{i,k}\in\mathbb{R}^{h_{t}\times w_{t}}" class="ltx_Math" display="inline" id="S3.SS1.p4.3.m3" intent=":literal"><semantics><mrow><msubsup><mi>M</mi><mi>t</mi><mrow><mi>i</mi><mo>,</mo><mi>k</mi></mrow></msubsup><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>h</mi><mi>t</mi></msub><mo lspace="0.222em" rspace="0.222em">×</mo><msub><mi>w</mi><mi>t</mi></msub></mrow></msup></mrow><annotation encoding="application/x-tex">M_{t}^{i,k}\in\mathbb{R}^{h_{t}\times w_{t}}</annotation></semantics></math><span class="translated-text">，其中潜在位置的路由强度</span><span class="original-text">, where the routing strength at latent position</span><math alttext="u" class="ltx_Math" display="inline" id="S3.SS1.p4.4.m4" intent=":literal"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math> is</p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E7">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="M_{t}^{i,k}(u)=\frac{1}{|\mathcal{T}_{k}|}\sum_{j\in\mathcal{T}_{k}}\alpha_{t}^{i}(u,j)." class="ltx_Math" display="block" id="S3.E7.m1" intent=":literal"><semantics><mrow><mrow><mrow><msubsup><mi>M</mi><mi>t</mi><mrow><mi>i</mi><mo>,</mo><mi>k</mi></mrow></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mfrac><mn>1</mn><mrow><mo stretchy="false">|</mo><msub><mi class="ltx_font_mathcaligraphic">𝒯</mi><mi>k</mi></msub><mo stretchy="false">|</mo></mrow></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><munder><mo movablelimits="false">∑</mo><mrow><mi>j</mi><mo>∈</mo><msub><mi class="ltx_font_mathcaligraphic">𝒯</mi><mi>k</mi></msub></mrow></munder><mrow><msubsup><mi>α</mi><mi>t</mi><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo>,</mo><mi>j</mi><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">M_{t}^{i,k}(u)=\frac{1}{|\mathcal{T}_{k}|}\sum_{j\in\mathcal{T}_{k}}\alpha_{t}^{i}(u,j).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(7)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS1.p4.5"><span class="translated-text">STAR 将这些关键组件聚合成轨迹时间步长特定热图</span><span class="original-text">STAR aggregates these key components into a trajectory-timestep specific heatmap</span><math alttext="H_{t}^{i}\in\mathbb{R}^{h_{t}\times w_{t}}" class="ltx_Math" display="inline" id="S3.SS1.p4.5.m1" intent=":literal"><semantics><mrow><msubsup><mi>H</mi><mi>t</mi><mi>i</mi></msubsup><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>h</mi><mi>t</mi></msub><mo lspace="0.222em" rspace="0.222em">×</mo><msub><mi>w</mi><mi>t</mi></msub></mrow></msup></mrow><annotation encoding="application/x-tex">H_{t}^{i}\in\mathbb{R}^{h_{t}\times w_{t}}</annotation></semantics></math>:</p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E8">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="H_{t}^{i}(u)=\frac{1}{K}\sum_{k=1}^{K}M_{t}^{i,k}(u)." class="ltx_Math" display="block" id="S3.E8.m1" intent=":literal"><semantics><mrow><mrow><mrow><msubsup><mi>H</mi><mi>t</mi><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mfrac><mn>1</mn><mi>K</mi></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><munderover><mo movablelimits="false">∑</mo><mrow><mi>k</mi><mo>=</mo><mn>1</mn></mrow><mi>K</mi></munderover><mrow><msubsup><mi>M</mi><mi>t</mi><mrow><mi>i</mi><mo>,</mo><mi>k</mi></mrow></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">H_{t}^{i}(u)=\frac{1}{K}\sum_{k=1}^{K}M_{t}^{i,k}(u).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(8)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS1.p4.6"><span class="translated-text">此热图指定提示相关内容最活跃的位置。为了将其转变为标准化奖励分配图，STAR 将其映射到有界系数</span><span class="original-text">This heatmap specifies where the prompt-relevant content is most active. To turn it into a normalized reward-allocation map, STAR maps it to bounded coefficients</span><math alttext="C_{t}^{i}\in\mathbb{R}^{h_{t}\times w_{t}}" class="ltx_Math" display="inline" id="S3.SS1.p4.6.m1" intent=":literal"><semantics><mrow><msubsup><mi>C</mi><mi>t</mi><mi>i</mi></msubsup><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>h</mi><mi>t</mi></msub><mo lspace="0.222em" rspace="0.222em">×</mo><msub><mi>w</mi><mi>t</mi></msub></mrow></msup></mrow><annotation encoding="application/x-tex">C_{t}^{i}\in\mathbb{R}^{h_{t}\times w_{t}}</annotation></semantics></math>:</p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E9">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="C_{t}^{i}(u)=1+(\lambda-1)\frac{H_{t}^{i}(u)-\min_{v\in\Omega_{t}}H_{t}^{i}(v)}{\max_{v\in\Omega_{t}}H_{t}^{i}(v)-\min_{v\in\Omega_{t}}H_{t}^{i}(v)+\epsilon}." class="ltx_Math" display="block" id="S3.E9.m1" intent=":literal"><semantics><mrow><mrow><mrow><msubsup><mi>C</mi><mi>t</mi><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mn>1</mn><mo>+</mo><mrow><mrow><mo stretchy="false">(</mo><mrow><mi>λ</mi><mo>−</mo><mn>1</mn></mrow><mo stretchy="false">)</mo></mrow><mo lspace="0em" rspace="0em">​</mo><mfrac><mrow><mrow><msubsup><mi>H</mi><mi>t</mi><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow></mrow><mo>−</mo><mrow><mrow><msub><mi>min</mi><mrow><mi>v</mi><mo>∈</mo><msub><mi mathvariant="normal">Ω</mi><mi>t</mi></msub></mrow></msub><mo lspace="0.167em">⁡</mo><msubsup><mi>H</mi><mi>t</mi><mi>i</mi></msubsup></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>v</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mrow><mrow><mrow><mrow><msub><mi>max</mi><mrow><mi>v</mi><mo>∈</mo><msub><mi mathvariant="normal">Ω</mi><mi>t</mi></msub></mrow></msub><mo lspace="0.167em">⁡</mo><msubsup><mi>H</mi><mi>t</mi><mi>i</mi></msubsup></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>v</mi><mo stretchy="false">)</mo></mrow></mrow><mo>−</mo><mrow><mrow><msub><mi>min</mi><mrow><mi>v</mi><mo>∈</mo><msub><mi mathvariant="normal">Ω</mi><mi>t</mi></msub></mrow></msub><mo lspace="0.167em">⁡</mo><msubsup><mi>H</mi><mi>t</mi><mi>i</mi></msubsup></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>v</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>+</mo><mi>ϵ</mi></mrow></mfrac></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">C_{t}^{i}(u)=1+(\lambda-1)\frac{H_{t}^{i}(u)-\min_{v\in\Omega_{t}}H_{t}^{i}(v)}{\max_{v\in\Omega_{t}}H_{t}^{i}(v)-\min_{v\in\Omega_{t}}H_{t}^{i}(v)+\epsilon}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(9)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS1.p4.9"><span class="translated-text">这里</span><span class="original-text">Here</span><math alttext="\lambda\geq 1" class="ltx_Math" display="inline" id="S3.SS1.p4.7.m1" intent=":literal"><semantics><mrow><mi>λ</mi><mo>≥</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\lambda\geq 1</annotation></semantics></math><span class="translated-text">控制分配强度，并且</span><span class="original-text">controls the allocation strength, and</span><math alttext="\epsilon" class="ltx_Math" display="inline" id="S3.SS1.p4.8.m2" intent=":literal"><semantics><mi>ϵ</mi><annotation encoding="application/x-tex">\epsilon</annotation></semantics></math><span class="translated-text">确保数值稳定性。较大</span><span class="original-text">ensures numerical stability. Larger</span><math alttext="C_{t}^{i}(u)" class="ltx_Math" display="inline" id="S3.SS1.p4.9.m3" intent=":literal"><semantics><mrow><msubsup><mi>C</mi><mi>t</mi><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">C_{t}^{i}(u)</annotation></semantics></math><span class="translated-text">加强提示相关区域的更新；较小但非零的系数保留了背景、组成和整体质量对最终奖励的影响。</span><span class="original-text">strengthens updates on prompt-relevant regions; smaller but nonzero coefficients preserve the influence of background, composition, and overall quality on the final reward.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span><span class="translated-text">空间分辨率的政策目标</span><span class="original-text">Spatially Resolved Policy Objective</span></h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.2"><span class="translated-text">STAR 使用分配图将样本级优势转换为空间化训练信号。对于</span><span class="original-text">STAR uses the allocation map to convert the sample-level advantage into a spatialized training signal. For the</span><math alttext="i" class="ltx_Math" display="inline" id="S3.SS2.p1.1.m1" intent=":literal"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math><span class="translated-text">第-次推出和去噪步骤</span><span class="original-text">-th rollout and denoising step</span><math alttext="t" class="ltx_Math" display="inline" id="S3.SS2.p1.2.m2" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math><span class="translated-text">，我们将空间优势图定义为</span><span class="original-text">, we define the spatial advantage map as</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E10">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="A_{t}^{i}(u)=A_{i}\,C_{t}^{i}(u),\qquad A_{t}^{i}\in\mathbb{R}^{h_{t}\times w_{t}}." class="ltx_Math" display="block" id="S3.E10.m1" intent=":literal"><semantics><mrow><mrow><mrow><mrow><msubsup><mi>A</mi><mi>t</mi><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><msub><mi>A</mi><mi>i</mi></msub><mo lspace="0em" rspace="0em">​</mo><msubsup><mi>C</mi><mi>t</mi><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mo rspace="2.167em">,</mo><mrow><msubsup><mi>A</mi><mi>t</mi><mi>i</mi></msubsup><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>h</mi><mi>t</mi></msub><mo lspace="0.222em" rspace="0.222em">×</mo><msub><mi>w</mi><mi>t</mi></msub></mrow></msup></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">A_{t}^{i}(u)=A_{i}\,C_{t}^{i}(u),\qquad A_{t}^{i}\in\mathbb{R}^{h_{t}\times w_{t}}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(10)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS2.p1.4"><span class="translated-text">该映射保留了符号</span><span class="original-text">This mapping preserves the sign of</span><math alttext="A_{i}" class="ltx_Math" display="inline" id="S3.SS2.p1.3.m1" intent=":literal"><semantics><msub><mi>A</mi><mi>i</mi></msub><annotation encoding="application/x-tex">A_{i}</annotation></semantics></math><span class="translated-text">并通过以下方式增加提示相关区域的更新幅度</span><span class="original-text">and increases the update magnitude for prompt-relevant regions through</span><math alttext="C_{t}^{i}(u)" class="ltx_Math" display="inline" id="S3.SS2.p1.4.m2" intent=":literal"><semantics><mrow><msubsup><mi>C</mi><mi>t</mi><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">C_{t}^{i}(u)</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="S3.SS2.p2">
+<p class="ltx_p" id="S3.SS2.p2.6"><span class="translated-text">策略更新作用于空间对数概率贡献。让</span><span class="original-text">The policy update acts on spatial log-probability contributions. Let</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E11">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\ell_{\theta,t}^{i}\in\mathbb{R}^{h_{t}\times w_{t}},\qquad\bar{\ell}_{\theta,t}^{i}=\frac{1}{|\Omega_{t}|}\sum_{u\in\Omega_{t}}\ell_{\theta,t}^{i}(u)," class="ltx_Math" display="block" id="S3.E11.m1" intent=":literal"><semantics><mrow><mrow><mrow><msubsup><mi mathvariant="normal">ℓ</mi><mrow><mi>θ</mi><mo>,</mo><mi>t</mi></mrow><mi>i</mi></msubsup><mo>∈</mo><msup><mi>ℝ</mi><mrow><msub><mi>h</mi><mi>t</mi></msub><mo lspace="0.222em" rspace="0.222em">×</mo><msub><mi>w</mi><mi>t</mi></msub></mrow></msup></mrow><mo rspace="2.167em">,</mo><mrow><msubsup><mover accent="true"><mi mathvariant="normal">ℓ</mi><mo>¯</mo></mover><mrow><mi>θ</mi><mo>,</mo><mi>t</mi></mrow><mi>i</mi></msubsup><mo>=</mo><mrow><mfrac><mn>1</mn><mrow><mo stretchy="false">|</mo><msub><mi mathvariant="normal">Ω</mi><mi>t</mi></msub><mo stretchy="false">|</mo></mrow></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><munder><mo movablelimits="false">∑</mo><mrow><mi>u</mi><mo>∈</mo><msub><mi mathvariant="normal">Ω</mi><mi>t</mi></msub></mrow></munder><mrow><msubsup><mi mathvariant="normal">ℓ</mi><mrow><mi>θ</mi><mo>,</mo><mi>t</mi></mrow><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\ell_{\theta,t}^{i}\in\mathbb{R}^{h_{t}\times w_{t}},\qquad\bar{\ell}_{\theta,t}^{i}=\frac{1}{|\Omega_{t}|}\sum_{u\in\Omega_{t}}\ell_{\theta,t}^{i}(u),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(11)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS2.p2.3"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\ell_{\theta,t}^{i}(u)" class="ltx_Math" display="inline" id="S3.SS2.p2.1.m1" intent=":literal"><semantics><mrow><msubsup><mi mathvariant="normal">ℓ</mi><mrow><mi>θ</mi><mo>,</mo><mi>t</mi></mrow><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\ell_{\theta,t}^{i}(u)</annotation></semantics></math><span class="translated-text">表示潜在位置的对数概率贡献</span><span class="original-text">denotes the log-probability contribution at latent position</span><math alttext="u" class="ltx_Math" display="inline" id="S3.SS2.p2.2.m2" intent=":literal"><semantics><mi>u</mi><annotation encoding="application/x-tex">u</annotation></semantics></math><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="\bar{\ell}_{\theta,t}^{i}" class="ltx_Math" display="inline" id="S3.SS2.p2.3.m3" intent=":literal"><semantics><msubsup><mover accent="true"><mi mathvariant="normal">ℓ</mi><mo>¯</mo></mover><mrow><mi>θ</mi><mo>,</mo><mi>t</mi></mrow><mi>i</mi></msubsup><annotation encoding="application/x-tex">\bar{\ell}_{\theta,t}^{i}</annotation></semantics></math><span class="translated-text">对应于标准策略梯度训练中使用的标量转移对数概率。 STAR 使用归一化空间比率：</span><span class="original-text">corresponds to the scalar transition log-probability used in standard policy-gradient training. STAR uses a normalized spatial ratio:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E12">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\rho_{\theta,t}^{i}(u)=\operatorname{sg}\!\left[\exp\!\left(\bar{\ell}_{\theta,t}^{i}-\bar{\ell}_{\mathrm{old},t}^{i}\right)\right]\frac{\exp(\ell_{\theta,t}^{i}(u))}{\operatorname{sg}\!\left[\exp(\ell_{\theta,t}^{i}(u))\right]}," class="ltx_Math" display="block" id="S3.E12.m1" intent=":literal"><semantics><mrow><mrow><mrow><msubsup><mi>ρ</mi><mrow><mi>θ</mi><mo>,</mo><mi>t</mi></mrow><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mrow><mpadded style="width:0.812em;" width="0.812em"><mi>sg</mi></mpadded><mo>⁡</mo><mrow><mo>[</mo><mrow><mpadded style="width:1.370em;" width="1.370em"><mi>exp</mi></mpadded><mo>⁡</mo><mrow><mo>(</mo><mrow><msubsup><mover accent="true"><mi mathvariant="normal">ℓ</mi><mo>¯</mo></mover><mrow><mi>θ</mi><mo>,</mo><mi>t</mi></mrow><mi>i</mi></msubsup><mo>−</mo><msubsup><mover accent="true"><mi mathvariant="normal">ℓ</mi><mo>¯</mo></mover><mrow><mi>old</mi><mo>,</mo><mi>t</mi></mrow><mi>i</mi></msubsup></mrow><mo>)</mo></mrow></mrow><mo>]</mo></mrow></mrow><mo lspace="0em" rspace="0em">​</mo><mfrac><mrow><mi>exp</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mrow><msubsup><mi mathvariant="normal">ℓ</mi><mrow><mi>θ</mi><mo>,</mo><mi>t</mi></mrow><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">)</mo></mrow></mrow><mrow><mpadded style="width:0.812em;" width="0.812em"><mi>sg</mi></mpadded><mo>⁡</mo><mrow><mo>[</mo><mrow><mi>exp</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mrow><msubsup><mi mathvariant="normal">ℓ</mi><mrow><mi>θ</mi><mo>,</mo><mi>t</mi></mrow><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">)</mo></mrow></mrow><mo>]</mo></mrow></mrow></mfrac></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\rho_{\theta,t}^{i}(u)=\operatorname{sg}\!\left[\exp\!\left(\bar{\ell}_{\theta,t}^{i}-\bar{\ell}_{\mathrm{old},t}^{i}\right)\right]\frac{\exp(\ell_{\theta,t}^{i}(u))}{\operatorname{sg}\!\left[\exp(\ell_{\theta,t}^{i}(u))\right]},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(12)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS2.p2.5"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\bar{\ell}_{\mathrm{old},t}^{i}" class="ltx_Math" display="inline" id="S3.SS2.p2.4.m1" intent=":literal"><semantics><msubsup><mover accent="true"><mi mathvariant="normal">ℓ</mi><mo>¯</mo></mover><mrow><mi>old</mi><mo>,</mo><mi>t</mi></mrow><mi>i</mi></msubsup><annotation encoding="application/x-tex">\bar{\ell}_{\mathrm{old},t}^{i}</annotation></semantics></math><span class="translated-text">是采样期间存储的推出对数概率，并且</span><span class="original-text">is the rollout log-probability stored during sampling, and</span><math alttext="\operatorname{sg}[\cdot]" class="ltx_Math" display="inline" id="S3.SS2.p2.5.m2" intent=":literal"><semantics><mrow><mi>sg</mi><mo>⁡</mo><mrow><mo stretchy="false">[</mo><mo lspace="0em" rspace="0em">⋅</mo><mo stretchy="false">]</mo></mrow></mrow><annotation encoding="application/x-tex">\operatorname{sg}[\cdot]</annotation></semantics></math><span class="translated-text">表示停止梯度。该比率保留了标量似然比的总体规模，同时在空间位置上分配梯度。</span><span class="original-text">denotes stop-gradient. This ratio preserves the overall scale of the scalar likelihood ratio while assigning gradients over spatial locations.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.p3">
+<p class="ltx_p" id="S3.SS2.p3.2"><span class="translated-text">最后，STAR 根据 PPO 式训练中使用的剪裁比率策略更新来优化剪裁的空间目标</span><span class="original-text">Finally, STAR optimizes the clipped spatial objective, following the clipped-ratio policy update used in PPO-style training</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">ppo</span>]</cite>:</p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E13">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{J}_{\mathrm{STAR}}(\theta)=\mathbb{E}\left[\frac{1}{T}\sum_{t=1}^{T}\frac{1}{|\Omega_{t}|}\sum_{u\in\Omega_{t}}\min\left(\rho_{\theta,t}^{i}(u)A_{t}^{i}(u),\operatorname{clip}(\rho_{\theta,t}^{i}(u),1-\varepsilon,1+\varepsilon)A_{t}^{i}(u)\right)\right]-\beta\mathcal{D}_{\mathrm{KL}}." class="ltx_Math" display="block" id="S3.E13.m1" intent=":literal"><semantics><mrow><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">𝒥</mi><mi>STAR</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>θ</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mrow><mi>𝔼</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo>[</mo><mrow><mfrac><mn>1</mn><mi>T</mi></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><munderover><mo movablelimits="false">∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></munderover><mrow><mfrac><mn>1</mn><mrow><mo stretchy="false">|</mo><msub><mi mathvariant="normal">Ω</mi><mi>t</mi></msub><mo stretchy="false">|</mo></mrow></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><munder><mo movablelimits="false">∑</mo><mrow><mi>u</mi><mo>∈</mo><msub><mi mathvariant="normal">Ω</mi><mi>t</mi></msub></mrow></munder><mrow><mi>min</mi><mo>⁡</mo><mrow><mo>(</mo><mrow><msubsup><mi>ρ</mi><mrow><mi>θ</mi><mo>,</mo><mi>t</mi></mrow><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow><mo lspace="0em" rspace="0em">​</mo><msubsup><mi>A</mi><mi>t</mi><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow></mrow><mo>,</mo><mrow><mrow><mi>clip</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mrow><msubsup><mi>ρ</mi><mrow><mi>θ</mi><mo>,</mo><mi>t</mi></mrow><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow></mrow><mo>,</mo><mrow><mn>1</mn><mo>−</mo><mi>ε</mi></mrow><mo>,</mo><mrow><mn>1</mn><mo>+</mo><mi>ε</mi></mrow><mo stretchy="false">)</mo></mrow></mrow><mo lspace="0em" rspace="0em">​</mo><msubsup><mi>A</mi><mi>t</mi><mi>i</mi></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>u</mi><mo stretchy="false">)</mo></mrow></mrow><mo>)</mo></mrow></mrow></mrow></mrow></mrow></mrow><mo>]</mo></mrow></mrow><mo>−</mo><mrow><mi>β</mi><mo lspace="0em" rspace="0em">​</mo><msub><mi class="ltx_font_mathcaligraphic">𝒟</mi><mi>KL</mi></msub></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\mathcal{J}_{\mathrm{STAR}}(\theta)=\mathbb{E}\left[\frac{1}{T}\sum_{t=1}^{T}\frac{1}{|\Omega_{t}|}\sum_{u\in\Omega_{t}}\min\left(\rho_{\theta,t}^{i}(u)A_{t}^{i}(u),\operatorname{clip}(\rho_{\theta,t}^{i}(u),1-\varepsilon,1+\varepsilon)A_{t}^{i}(u)\right)\right]-\beta\mathcal{D}_{\mathrm{KL}}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(13)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS2.p3.1"><span class="translated-text">这里</span><span class="original-text">Here</span><math alttext="\mathcal{D}_{\mathrm{KL}}" class="ltx_Math" display="inline" id="S3.SS2.p3.1.m1" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">𝒟</mi><mi>KL</mi></msub><annotation encoding="application/x-tex">\mathcal{D}_{\mathrm{KL}}</annotation></semantics></math><span class="translated-text">是当前策略和去噪转换上的冻结参考策略之间的 KL 正则化项，它限制了更新幅度并降低了奖励黑客的风险。</span><span class="original-text">is the KL regularization term between the current policy and the frozen reference policy over denoising transitions, which constrains the update magnitude and reduces the risk of reward hacking.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4" lang="en">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">实验</span><span class="original-text">Experiments</span></h2>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span><span class="translated-text">实施细节</span><span class="original-text">Implementation Details</span></h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p1.1.1"><span class="translated-text">评估任务。</span><span class="original-text">Evaluation tasks.</span></span><span class="translated-text">实验包括三个 T2I 后训练任务：GenEval、OCR 文本渲染和 PickScore。 GenEval 评估组合生成能力，包括对象计数、属性绑定、颜色和空间关系</span><span class="original-text">The experiments include three T2I post-training tasks: GenEval, OCR text rendering, and PickScore. GenEval evaluates compositional generation ability, including object counting, attribute binding, colors, and spatial relations</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">geneval</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">T2i-compbench</span>]</cite><span class="translated-text">;训练提示是从官方 GenEval 模板生成的，奖励是由官方基于规则的评估管道计算的。 OCR文本渲染要求模型在图像中生成指定的文本字符串，并根据渲染文本与目标文本之间的编辑距离计算奖励。 PickScore 使用学习偏好奖励模型对每个提示图像对进行评分。</span><span class="original-text">; training prompts are generated from the official GenEval templates, and rewards are computed by the official rule-based evaluation pipeline. OCR text rendering requires the model to generate a specified text string in the image, and the reward is computed from the edit distance between the rendered text and the target text. PickScore uses a learned preference reward model to score each prompt-image pair.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p2">
+<p class="ltx_p" id="S4.SS1.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p2.1.1"><span class="translated-text">基线。</span><span class="original-text">Baselines.</span></span><span class="translated-text">我们与多个代表性 T2I 基线进行比较，包括扩散模型（LDM、SD1.5、SD2.1、SD-XL</span><span class="original-text">We compare against multiple representative T2I baselines, including diffusion models (LDM, SD1.5, SD2.1, SD-XL</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">podell2023sdxl</span>]</cite><span class="translated-text">, 达勒-2</span><span class="original-text">, DALLE-2</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">ramesh2022hierarchical</span>]</cite><span class="translated-text">, 达勒-3</span><span class="original-text">, DALLE-3</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">betker2023improving</span>]</cite><span class="translated-text">），自回归模型（Show-o</span><span class="original-text">), autoregressive models (Show-o</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xie2024show</span>]</cite>, Emu3-Gen <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">wang2024emu3</span>]</cite><span class="translated-text">, 剑锋流</span><span class="original-text">, JanusFlow</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">ma2024janusflow</span>]</cite>, Janus-Pro-7B <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">chen2025janus</span>]</cite><span class="translated-text">），以及最近的扩散/流动模型（FLUX.1 Dev</span><span class="original-text">), and recent diffusion/flow models (FLUX.1 Dev</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">flux2024</span>]</cite><span class="translated-text">、SD3.5-L、SANA-1.5 4.8B</span><span class="original-text">, SD3.5-L, SANA-1.5 4.8B</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xie2025sana</span>]</cite><span class="translated-text">,SD3.5-M</span><span class="original-text">, SD3.5-M</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">sd3</span>]</cite><span class="translated-text">,SD3.5-M+Flow-GRPO</span><span class="original-text">, SD3.5-M+Flow-GRPO</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">liu2025flowgrpo</span>]</cite>).</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p3">
+<p class="ltx_p" id="S4.SS1.p3.10"><span class="ltx_text ltx_font_bold" id="S4.SS1.p3.10.1"><span class="translated-text">实验设置。</span><span class="original-text">Experimental setup.</span></span><span class="translated-text">我们基于Flow-GRPO实施STAR</span><span class="original-text">We implement STAR based on the Flow-GRPO</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">liu2025flowgrpo</span>]</cite><span class="translated-text">训练管道并使用 Stable Diffusion 3.5 Medium (SD3.5-M) 作为基础模型。训练使用 ODE-to-SDE 进行在线采样，采样步数设置为</span><span class="original-text">training pipeline and use Stable Diffusion 3.5 Medium (SD3.5-M) as the base model. Training uses ODE-to-SDE rollouts for online sampling, with the number of sampling steps set to</span><math alttext="T=10" class="ltx_Math" display="inline" id="S4.SS1.p3.1.m1" intent=":literal"><semantics><mrow><mi>T</mi><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">T=10</annotation></semantics></math><span class="translated-text">，SDE 噪声水平设置为</span><span class="original-text">, the SDE noise level set to</span><math alttext="a=0.7" class="ltx_Math" display="inline" id="S4.SS1.p3.2.m2" intent=":literal"><semantics><mrow><mi>a</mi><mo>=</mo><mn>0.7</mn></mrow><annotation encoding="application/x-tex">a=0.7</annotation></semantics></math><span class="translated-text">，并将图像分辨率设置为</span><span class="original-text">, and the image resolution set to</span><math alttext="512\times 512" class="ltx_Math" display="inline" id="S4.SS1.p3.3.m3" intent=":literal"><semantics><mrow><mn>512</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>512</mn></mrow><annotation encoding="application/x-tex">512\times 512</annotation></semantics></math><span class="translated-text">;评价用途</span><span class="original-text">; evaluation uses</span><math alttext="T=40" class="ltx_Math" display="inline" id="S4.SS1.p3.4.m4" intent=":literal"><semantics><mrow><mi>T</mi><mo>=</mo><mn>40</mn></mrow><annotation encoding="application/x-tex">T=40</annotation></semantics></math><span class="translated-text">步骤。对于每个提示，我们都会采样</span><span class="original-text">steps. For each prompt, we sample</span><math alttext="G=24" class="ltx_Math" display="inline" id="S4.SS1.p3.5.m5" intent=":literal"><semantics><mrow><mi>G</mi><mo>=</mo><mn>24</mn></mrow><annotation encoding="application/x-tex">G=24</annotation></semantics></math><span class="translated-text">图像形成一个组，并使用组相关策略梯度目标、剪裁比和 KL 正则化来更新模型。 KL系数设置为</span><span class="original-text">images to form a group, and update the model with a group-relative policy-gradient objective, clipped ratio, and KL regularization. The KL coefficient is set to</span><math alttext="\beta=0.04" class="ltx_Math" display="inline" id="S4.SS1.p3.6.m6" intent=":literal"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0.04</mn></mrow><annotation encoding="application/x-tex">\beta=0.04</annotation></semantics></math><span class="translated-text">用于 GenEval 和 OCR 文本渲染，以及</span><span class="original-text">for GenEval and OCR text rendering, and</span><math alttext="\beta=0.01" class="ltx_Math" display="inline" id="S4.SS1.p3.7.m7" intent=":literal"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0.01</mn></mrow><annotation encoding="application/x-tex">\beta=0.01</annotation></semantics></math><span class="translated-text">对于 PickScore。我们用 LoRA 训练模型</span><span class="original-text">for PickScore. We train the model with LoRA</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">hu2021lora</span>]</cite><span class="translated-text">，使用等级</span><span class="original-text">, using rank</span><math alttext="r=32" class="ltx_Math" display="inline" id="S4.SS1.p3.8.m8" intent=":literal"><semantics><mrow><mi>r</mi><mo>=</mo><mn>32</mn></mrow><annotation encoding="application/x-tex">r=32</annotation></semantics></math><span class="translated-text">和比例因子</span><span class="original-text">and scaling factor</span><math alttext="\alpha=64" class="ltx_Math" display="inline" id="S4.SS1.p3.9.m9" intent=":literal"><semantics><mrow><mi>α</mi><mo>=</mo><mn>64</mn></mrow><annotation encoding="application/x-tex">\alpha=64</annotation></semantics></math><span class="translated-text">。 STAR 在推出期间记录文本图像注意力，并使用第 3 节中的空间目标来分配群体相对优势。注意力路由使用SD3.5-M的联合注意力，从变压器块10-15中读取注意力层，并将分配强度设置为</span><span class="original-text">. STAR records text-image attention during rollout and uses the spatial objective in Section 3 to allocate group-relative advantages. Attention routing uses the joint attention of SD3.5-M, reads the attention layers from transformer blocks 10–15, and sets the allocation strength to</span><math alttext="\lambda=1.5" class="ltx_Math" display="inline" id="S4.SS1.p3.10.m10" intent=":literal"><semantics><mrow><mi>λ</mi><mo>=</mo><mn>1.5</mn></mrow><annotation encoding="application/x-tex">\lambda=1.5</annotation></semantics></math>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span><span class="translated-text">主要结果</span><span class="original-text">Main Results</span></h3>
+<figure class="ltx_table" id="S4.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S4.T1.2.1.1" style="font-size:90%;">Table 1</span>: </span><span class="ltx_text" id="S4.T1.3.2" style="font-size:90%;">GenEval results. We report the overall score and six compositional sub-tasks. Obj. denotes object, and Attr. denotes attribute. Blue indicates the best result, and green indicates the second-best result.</span></figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="S4.T1.4" style="width:345.0pt;height:148.6pt;vertical-align:-72.8pt;"><span class="ltx_transformed_inner" style="transform:translate(-108.9pt,46.9pt) scale(0.612977475831156,0.612977475831156) ;">
+<table class="ltx_tabular ltx_align_middle" id="S4.T1.4.1">
+<tr class="ltx_tr" id="S4.T1.4.1.1" style="--ltx-bg-color:#F5F0F7;">
+<td class="ltx_td ltx_align_left ltx_border_tt" id="S4.T1.4.1.1.1" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.1.1.1" style="--ltx-bg-color:#F5F0F7;">Model</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S4.T1.4.1.1.2" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.1.2.1" style="--ltx-bg-color:#F5F0F7;">Overall</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S4.T1.4.1.1.3" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.1.3.1" style="--ltx-bg-color:#F5F0F7;">Single Obj.</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S4.T1.4.1.1.4" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.1.4.1" style="--ltx-bg-color:#F5F0F7;">Two Obj.</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S4.T1.4.1.1.5" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.1.5.1" style="--ltx-bg-color:#F5F0F7;">Counting</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S4.T1.4.1.1.6" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.1.6.1" style="--ltx-bg-color:#F5F0F7;">Colors</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S4.T1.4.1.1.7" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.1.7.1" style="--ltx-bg-color:#F5F0F7;">Position</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S4.T1.4.1.1.8" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.1.8.1" style="--ltx-bg-color:#F5F0F7;">Attr. Binding</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.2" style="--ltx-bg-color:#F0F0F0;">
+<td class="ltx_td ltx_align_center ltx_border_t" colspan="8" id="S4.T1.4.1.2.1" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_italic" id="S4.T1.4.1.2.1.1" style="--ltx-fg-color:#595959;--ltx-bg-color:#F0F0F0;">Diffusion Models</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.3">
+<td class="ltx_td ltx_align_left" id="S4.T1.4.1.3.1" style="padding:0.5pt 4.5pt;">LDM</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.3.2" style="padding:0.5pt 4.5pt;">0.37</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.3.3" style="padding:0.5pt 4.5pt;">0.92</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.3.4" style="padding:0.5pt 4.5pt;">0.29</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.3.5" style="padding:0.5pt 4.5pt;">0.23</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.3.6" style="padding:0.5pt 4.5pt;">0.70</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.3.7" style="padding:0.5pt 4.5pt;">0.02</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.3.8" style="padding:0.5pt 4.5pt;">0.05</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.4">
+<td class="ltx_td ltx_align_left" id="S4.T1.4.1.4.1" style="padding:0.5pt 4.5pt;">SD1.5</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.4.2" style="padding:0.5pt 4.5pt;">0.43</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.4.3" style="padding:0.5pt 4.5pt;">0.97</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.4.4" style="padding:0.5pt 4.5pt;">0.38</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.4.5" style="padding:0.5pt 4.5pt;">0.35</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.4.6" style="padding:0.5pt 4.5pt;">0.76</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.4.7" style="padding:0.5pt 4.5pt;">0.04</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.4.8" style="padding:0.5pt 4.5pt;">0.06</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.5">
+<td class="ltx_td ltx_align_left" id="S4.T1.4.1.5.1" style="padding:0.5pt 4.5pt;">SD2.1</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.5.2" style="padding:0.5pt 4.5pt;">0.50</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.5.3" style="padding:0.5pt 4.5pt;">0.98</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.5.4" style="padding:0.5pt 4.5pt;">0.51</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.5.5" style="padding:0.5pt 4.5pt;">0.44</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.5.6" style="padding:0.5pt 4.5pt;">0.85</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.5.7" style="padding:0.5pt 4.5pt;">0.07</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.5.8" style="padding:0.5pt 4.5pt;">0.17</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.6">
+<td class="ltx_td ltx_align_left" id="S4.T1.4.1.6.1" style="padding:0.5pt 4.5pt;">SD-XL</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.6.2" style="padding:0.5pt 4.5pt;">0.55</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.6.3" style="padding:0.5pt 4.5pt;">0.98</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.6.4" style="padding:0.5pt 4.5pt;">0.74</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.6.5" style="padding:0.5pt 4.5pt;">0.39</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.6.6" style="padding:0.5pt 4.5pt;">0.85</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.6.7" style="padding:0.5pt 4.5pt;">0.15</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.6.8" style="padding:0.5pt 4.5pt;">0.23</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.7">
+<td class="ltx_td ltx_align_left" id="S4.T1.4.1.7.1" style="padding:0.5pt 4.5pt;">DALLE-2</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.7.2" style="padding:0.5pt 4.5pt;">0.52</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.7.3" style="padding:0.5pt 4.5pt;">0.94</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.7.4" style="padding:0.5pt 4.5pt;">0.66</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.7.5" style="padding:0.5pt 4.5pt;">0.49</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.7.6" style="padding:0.5pt 4.5pt;">0.77</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.7.7" style="padding:0.5pt 4.5pt;">0.10</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.7.8" style="padding:0.5pt 4.5pt;">0.19</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.8">
+<td class="ltx_td ltx_align_left" id="S4.T1.4.1.8.1" style="padding:0.5pt 4.5pt;">DALLE-3</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.8.2" style="padding:0.5pt 4.5pt;">0.67</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.8.3" style="padding:0.5pt 4.5pt;">0.96</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.8.4" style="padding:0.5pt 4.5pt;">0.87</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.8.5" style="padding:0.5pt 4.5pt;">0.47</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.8.6" style="padding:0.5pt 4.5pt;">0.83</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.8.7" style="padding:0.5pt 4.5pt;">0.43</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.8.8" style="padding:0.5pt 4.5pt;">0.45</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.9" style="--ltx-bg-color:#F0F0F0;">
+<td class="ltx_td ltx_align_center ltx_border_t" colspan="8" id="S4.T1.4.1.9.1" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_italic" id="S4.T1.4.1.9.1.1" style="--ltx-fg-color:#595959;--ltx-bg-color:#F0F0F0;">Autoregressive Models</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.10">
+<td class="ltx_td ltx_align_left" id="S4.T1.4.1.10.1" style="padding:0.5pt 4.5pt;">Show-o</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.10.2" style="padding:0.5pt 4.5pt;">0.53</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.10.3" style="padding:0.5pt 4.5pt;">0.95</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.10.4" style="padding:0.5pt 4.5pt;">0.52</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.10.5" style="padding:0.5pt 4.5pt;">0.49</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.10.6" style="padding:0.5pt 4.5pt;">0.82</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.10.7" style="padding:0.5pt 4.5pt;">0.11</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.10.8" style="padding:0.5pt 4.5pt;">0.28</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.11">
+<td class="ltx_td ltx_align_left" id="S4.T1.4.1.11.1" style="padding:0.5pt 4.5pt;">Emu3-Gen</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.11.2" style="padding:0.5pt 4.5pt;">0.54</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.11.3" style="padding:0.5pt 4.5pt;">0.98</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.11.4" style="padding:0.5pt 4.5pt;">0.71</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.11.5" style="padding:0.5pt 4.5pt;">0.34</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.11.6" style="padding:0.5pt 4.5pt;">0.81</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.11.7" style="padding:0.5pt 4.5pt;">0.17</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.11.8" style="padding:0.5pt 4.5pt;">0.21</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.12">
+<td class="ltx_td ltx_align_left" id="S4.T1.4.1.12.1" style="padding:0.5pt 4.5pt;">JanusFlow</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.12.2" style="padding:0.5pt 4.5pt;">0.63</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.12.3" style="padding:0.5pt 4.5pt;">0.97</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.12.4" style="padding:0.5pt 4.5pt;">0.59</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.12.5" style="padding:0.5pt 4.5pt;">0.45</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.12.6" style="padding:0.5pt 4.5pt;">0.83</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.12.7" style="padding:0.5pt 4.5pt;">0.53</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.12.8" style="padding:0.5pt 4.5pt;">0.42</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.13">
+<td class="ltx_td ltx_align_left" id="S4.T1.4.1.13.1" style="padding:0.5pt 4.5pt;">Janus-Pro-7B</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.13.2" style="padding:0.5pt 4.5pt;">0.80</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.13.3" style="padding:0.5pt 4.5pt;">0.99</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.13.4" style="padding:0.5pt 4.5pt;">0.89</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.13.5" style="padding:0.5pt 4.5pt;">0.59</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.13.6" style="padding:0.5pt 4.5pt;">0.90</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.13.7" style="padding:0.5pt 4.5pt;">0.79</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.13.8" style="padding:0.5pt 4.5pt;">0.66</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.14" style="--ltx-bg-color:#F0F0F0;">
+<td class="ltx_td ltx_align_center ltx_border_t" colspan="8" id="S4.T1.4.1.14.1" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_italic" id="S4.T1.4.1.14.1.1" style="--ltx-fg-color:#595959;--ltx-bg-color:#F0F0F0;">Diffusion / Flow Models</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.15">
+<td class="ltx_td ltx_align_left" id="S4.T1.4.1.15.1" style="padding:0.5pt 4.5pt;">FLUX.1 Dev</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.15.2" style="padding:0.5pt 4.5pt;">0.66</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.15.3" style="padding:0.5pt 4.5pt;">0.98</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.15.4" style="padding:0.5pt 4.5pt;">0.81</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.15.5" style="padding:0.5pt 4.5pt;">0.74</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.15.6" style="padding:0.5pt 4.5pt;">0.79</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.15.7" style="padding:0.5pt 4.5pt;">0.22</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.15.8" style="padding:0.5pt 4.5pt;">0.45</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.16">
+<td class="ltx_td ltx_align_left" id="S4.T1.4.1.16.1" style="padding:0.5pt 4.5pt;">SD3.5-L</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.16.2" style="padding:0.5pt 4.5pt;">0.71</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.16.3" style="padding:0.5pt 4.5pt;">0.98</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.16.4" style="padding:0.5pt 4.5pt;">0.89</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.16.5" style="padding:0.5pt 4.5pt;">0.73</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.16.6" style="padding:0.5pt 4.5pt;">0.83</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.16.7" style="padding:0.5pt 4.5pt;">0.34</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.16.8" style="padding:0.5pt 4.5pt;">0.47</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.17">
+<td class="ltx_td ltx_align_left" id="S4.T1.4.1.17.1" style="padding:0.5pt 4.5pt;">SANA-1.5 4.8B</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.17.2" style="padding:0.5pt 4.5pt;">0.81</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.17.3" style="padding:0.5pt 4.5pt;">0.99</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.17.4" style="padding:0.5pt 4.5pt;">0.93</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.17.5" style="padding:0.5pt 4.5pt;">0.86</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.17.6" style="padding:0.5pt 4.5pt;">0.84</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.17.7" style="padding:0.5pt 4.5pt;">0.59</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.17.8" style="padding:0.5pt 4.5pt;">0.65</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.18">
+<td class="ltx_td ltx_align_left" id="S4.T1.4.1.18.1" style="padding:0.5pt 4.5pt;">SD3.5-M</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.18.2" style="padding:0.5pt 4.5pt;">0.63</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.18.3" style="padding:0.5pt 4.5pt;">0.98</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.18.4" style="padding:0.5pt 4.5pt;">0.78</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.18.5" style="padding:0.5pt 4.5pt;">0.50</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.18.6" style="padding:0.5pt 4.5pt;">0.81</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.18.7" style="padding:0.5pt 4.5pt;">0.24</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.18.8" style="padding:0.5pt 4.5pt;">0.52</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.19">
+<td class="ltx_td ltx_align_left" id="S4.T1.4.1.19.1" style="padding:0.5pt 4.5pt;">SD3.5-M+Flow-GRPO</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.19.2" style="padding:0.5pt 4.5pt;"><span class="ltx_text" id="S4.T1.4.1.19.2.1" style="--ltx-fg-color:#228B22;">0.95</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.19.3" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.19.3.1" style="--ltx-fg-color:#003D99;">1.00</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.19.4" style="padding:0.5pt 4.5pt;"><span class="ltx_text" id="S4.T1.4.1.19.4.1" style="--ltx-fg-color:#228B22;">0.99</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.19.5" style="padding:0.5pt 4.5pt;"><span class="ltx_text" id="S4.T1.4.1.19.5.1" style="--ltx-fg-color:#228B22;">0.95</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.19.6" style="padding:0.5pt 4.5pt;"><span class="ltx_text" id="S4.T1.4.1.19.6.1" style="--ltx-fg-color:#228B22;">0.92</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.19.7" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.19.7.1" style="--ltx-fg-color:#003D99;">0.99</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.1.19.8" style="padding:0.5pt 4.5pt;"><span class="ltx_text" id="S4.T1.4.1.19.8.1" style="--ltx-fg-color:#228B22;">0.86</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.1.20" style="--ltx-bg-color:#EBEFF7;">
+<td class="ltx_td ltx_align_left ltx_border_bb ltx_border_t" id="S4.T1.4.1.20.1" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.20.1.1" style="--ltx-fg-color:#003D99;--ltx-bg-color:#EBEFF7;">SD3.5-M+Flow-GRPO+STAR</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T1.4.1.20.2" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.20.2.1" style="--ltx-fg-color:#003D99;--ltx-bg-color:#EBEFF7;">0.9759</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T1.4.1.20.3" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.20.3.1" style="--ltx-fg-color:#228B22;--ltx-bg-color:#EBEFF7;">1.00</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T1.4.1.20.4" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.20.4.1" style="--ltx-fg-color:#003D99;--ltx-bg-color:#EBEFF7;">1.00</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T1.4.1.20.5" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.20.5.1" style="--ltx-fg-color:#003D99;--ltx-bg-color:#EBEFF7;">0.98</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T1.4.1.20.6" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.20.6.1" style="--ltx-fg-color:#003D99;--ltx-bg-color:#EBEFF7;">0.96</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T1.4.1.20.7" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.20.7.1" style="--ltx-fg-color:#228B22;--ltx-bg-color:#EBEFF7;">0.98</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T1.4.1.20.8" style="padding:0.5pt 4.5pt;"><span class="ltx_text ltx_font_bold" id="S4.T1.4.1.20.8.1" style="--ltx-fg-color:#003D99;--ltx-bg-color:#EBEFF7;">0.94</span></td>
+</tr>
+</table>
+</span></div>
+</figure>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.12"><span class="ltx_text ltx_font_bold" id="S4.SS2.p1.12.1"><span class="translated-text">基因评估结果。</span><span class="original-text">GenEval results.</span></span><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ 4.2 Main Results ‣ 4 Experiments ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">展示 GenEval 上的主要结果</span><span class="original-text">presents the main results on GenEval</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">geneval</span>]</cite><span class="translated-text">。 STAR 的总体得分为</span><span class="original-text">. STAR achieves an overall score of</span><math alttext="0.9759" class="ltx_Math" display="inline" id="S4.SS2.p1.1.m1" intent=":literal"><semantics><mn>0.9759</mn><annotation encoding="application/x-tex">0.9759</annotation></semantics></math><span class="translated-text">，优于 SD3.5-M</span><span class="original-text">, outperforming SD3.5-M at</span><math alttext="0.63" class="ltx_Math" display="inline" id="S4.SS2.p1.2.m2" intent=":literal"><semantics><mn>0.63</mn><annotation encoding="application/x-tex">0.63</annotation></semantics></math><span class="translated-text">和 Flow-GRPO</span><span class="original-text">and Flow-GRPO</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">liu2025flowgrpo</span>]</cite> at <math alttext="0.95" class="ltx_Math" display="inline" id="S4.SS2.p1.3.m3" intent=":literal"><semantics><mn>0.95</mn><annotation encoding="application/x-tex">0.95</annotation></semantics></math><span class="translated-text">。这种改进主要来自于更细粒度的组合语义约束：在计数、颜色和属性绑定上，STAR 达到了</span><span class="original-text">. This improvement mainly comes from more fine-grained compositional semantic constraints: on counting, colors, and attribute binding, STAR reaches</span><math alttext="0.98" class="ltx_Math" display="inline" id="S4.SS2.p1.4.m4" intent=":literal"><semantics><mn>0.98</mn><annotation encoding="application/x-tex">0.98</annotation></semantics></math>, <math alttext="0.96" class="ltx_Math" display="inline" id="S4.SS2.p1.5.m5" intent=":literal"><semantics><mn>0.96</mn><annotation encoding="application/x-tex">0.96</annotation></semantics></math><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="0.94" class="ltx_Math" display="inline" id="S4.SS2.p1.6.m6" intent=":literal"><semantics><mn>0.94</mn><annotation encoding="application/x-tex">0.94</annotation></semantics></math><span class="translated-text">，分别明显改善</span><span class="original-text">, respectively, clearly improving over</span><math alttext="0.95" class="ltx_Math" display="inline" id="S4.SS2.p1.7.m7" intent=":literal"><semantics><mn>0.95</mn><annotation encoding="application/x-tex">0.95</annotation></semantics></math>, <math alttext="0.92" class="ltx_Math" display="inline" id="S4.SS2.p1.8.m8" intent=":literal"><semantics><mn>0.92</mn><annotation encoding="application/x-tex">0.92</annotation></semantics></math><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="0.86" class="ltx_Math" display="inline" id="S4.SS2.p1.9.m9" intent=":literal"><semantics><mn>0.86</mn><annotation encoding="application/x-tex">0.86</annotation></semantics></math><span class="translated-text">。二对象生成进一步达到</span><span class="original-text">. Two-object generation further reaches</span><math alttext="1.00" class="ltx_Math" display="inline" id="S4.SS2.p1.10.m10" intent=":literal"><semantics><mn>1.00</mn><annotation encoding="application/x-tex">1.00</annotation></semantics></math><span class="translated-text">。在单物体生成和位置这两个已经接近饱和的子任务上，STAR仍然保持着接近最优的性能，达到了</span><span class="original-text">. On single-object generation and position, two sub-tasks that are already close to saturation, STAR still maintains near-optimal performance, reaching</span><math alttext="1.00" class="ltx_Math" display="inline" id="S4.SS2.p1.11.m11" intent=":literal"><semantics><mn>1.00</mn><annotation encoding="application/x-tex">1.00</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="0.98" class="ltx_Math" display="inline" id="S4.SS2.p1.12.m12" intent=":literal"><semantics><mn>0.98</mn><annotation encoding="application/x-tex">0.98</annotation></semantics></math><span class="translated-text">，分别。</span><span class="original-text">, respectively.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p2">
+<p class="ltx_p" id="S4.SS2.p2.1"><span class="translated-text">这些结果表明STAR的收益来自于更准确的时空信用分配。通过将相同的图像级优势分配给提示相关的潜在区域，STAR 可以更有选择性地更新影响对象计数、颜色和属性绑定的生成区域，从而提高合成生成性能。</span><span class="original-text">These results show that the gains of STAR come from more accurate spatiotemporal credit assignment. By allocating the same image-level advantage to prompt-relevant latent regions, STAR can more selectively update the generative regions that affect object counts, colors, and attribute binding, thereby improving compositional generation performance.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="245" id="S4.F2.g1" src="https://arxiv.org/html/2606.17979v1/x2.png" width="607"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F2.2.1.1" style="font-size:90%;">Figure 2</span>: </span><span class="ltx_text" id="S4.F2.3.2" style="font-size:90%;">Main results on three T2I post-training benchmarks. STAR consistently improves over the Flow-GRPO baseline on compositional generation, text rendering, and preference optimization.</span></figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS2.p3">
+<p class="ltx_p" id="S4.SS2.p3.3"><span class="ltx_text ltx_font_bold" id="S4.SS2.p3.3.1"><span class="translated-text">跨基准的结果。</span><span class="original-text">Results across benchmarks.</span></span><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S4.F2" title="Figure 2 ‣ 4.2 Main Results ‣ 4 Experiments ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">进一步比较Flow-GRPO</span><span class="original-text">further compares Flow-GRPO</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">liu2025flowgrpo</span>]</cite><span class="translated-text">并对三项训练后任务进行 STAR 评价。 STAR 实现</span><span class="original-text">and STAR on the three post-training tasks. STAR achieves</span><math alttext="0.9759" class="ltx_Math" display="inline" id="S4.SS2.p3.1.m1" intent=":literal"><semantics><mn>0.9759</mn><annotation encoding="application/x-tex">0.9759</annotation></semantics></math><span class="translated-text">在 GenEval 上</span><span class="original-text">on GenEval</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">geneval</span>]</cite>, <math alttext="0.9757" class="ltx_Math" display="inline" id="S4.SS2.p3.2.m2" intent=":literal"><semantics><mn>0.9757</mn><annotation encoding="application/x-tex">0.9757</annotation></semantics></math><span class="translated-text">关于 OCR 文本渲染</span><span class="original-text">on OCR text rendering</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">textdiffuser</span>]</cite><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="23.60" class="ltx_Math" display="inline" id="S4.SS2.p3.3.m3" intent=":literal"><semantics><mn>23.60</mn><annotation encoding="application/x-tex">23.60</annotation></semantics></math><span class="translated-text">在PickScore上</span><span class="original-text">on PickScore</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">kirstain2023pick</span>]</cite><span class="translated-text">，均优于相应的 Flow-GRPO 基线。 GenEval和OCR的改进表明时空自适应奖励分配可以更有效地优化可验证的文本对齐目标； PickScore 的改进表明，这种分配方案也可以与偏好模型提供的连续奖励一起使用。总体而言，在不改变任务奖励形式的情况下，STAR将相同的样本级反馈分配给更相关的生成区域，从而在构图生成、文本渲染和偏好优化方面获得一致的增益。</span><span class="original-text">, all outperforming the corresponding Flow-GRPO baselines. The improvements on GenEval and OCR indicate that spatiotemporal adaptive reward allocation can more effectively optimize verifiable text-alignment objectives; the improvement on PickScore shows that this allocation scheme can also be used with continuous rewards provided by a preference model. Overall, without changing the form of the task reward, STAR allocates the same sample-level feedback to more relevant generative regions and thus obtains consistent gains in compositional generation, text rendering, and preference optimization.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span><span class="translated-text">消融研究</span><span class="original-text">Ablation Study</span></h3>
+<figure class="ltx_figure" id="S4.F3">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S4.F3.sf1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="505" id="S4.F3.sf1.g1" src="https://arxiv.org/html/2606.17979v1/x3.png" width="829"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F3.sf1.2.1.1" style="font-size:90%;">(a)</span> </span><span class="ltx_text" id="S4.F3.sf1.3.2" style="font-size:90%;">Prompt heatmap construction.</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S4.F3.sf2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="518" id="S4.F3.sf2.g1" src="https://arxiv.org/html/2606.17979v1/x4.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F3.sf2.2.1.1" style="font-size:90%;">(b)</span> </span><span class="ltx_text" id="S4.F3.sf2.3.2" style="font-size:90%;">Attention layer selection.</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S4.F3.sf3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="565" id="S4.F3.sf3.g1" src="https://arxiv.org/html/2606.17979v1/x5.png" width="831"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F3.sf3.2.1.1" style="font-size:90%;">(c)</span> </span><span class="ltx_text" id="S4.F3.sf3.3.2" style="font-size:90%;">Computational overhead.</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F3.2.1.1" style="font-size:90%;">Figure 3</span>: </span><span class="ltx_text" id="S4.F3.3.2" style="font-size:90%;">Ablation and efficiency analysis for STAR, covering reward routing design choices and additional training overhead.</span></figcaption>
+</figure>
+<section class="ltx_subsubsection" id="S4.SS3.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.3.1 </span><span class="translated-text">快速构建热图</span><span class="original-text">Prompt Heatmap Construction</span></h4>
+<div class="ltx_para" id="S4.SS3.SSS1.p1">
+<p class="ltx_p" id="S4.SS3.SSS1.p1.1"><span class="translated-text">我们比较了构建即时热图的两种方法。单热图变体首先将提示中多个关键组件的注意力聚合成一个热图，然后获得奖励分配系数；组件级热图变体首先分别为每个关键组件生成热图，然后对它们进行堆叠和标准化。两个实验都使用相同的 PickScore 奖励、训练设置和评估间隔。</span><span class="original-text">We compare two ways of constructing prompt heatmaps. The single-heatmap variant first aggregates the attention of multiple key components in the prompt into one heatmap and then obtains reward allocation coefficients; the component-wise heatmaps variant first generates a heatmap for each key component separately and then stacks and normalizes them. Both experiments use the same PickScore reward, training setting, and evaluation interval.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS3.SSS1.p2">
+<p class="ltx_p" id="S4.SS3.SSS1.p2.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S4.F3.sf1" title="Figure 3(a) ‣ Figure 3 ‣ 4.3 Ablation Study ‣ 4 Experiments ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_tag">3(a)</span></a><span class="translated-text">表明两个变体的训练曲线总体上非常接近，单个热图在训练后期显示出轻微的优势。这个结果表明，直接将提示中用户关心的多个组件聚合到共享热图中已经提供了稳定的路由信号。逐个组件生成热图然后堆叠它们并不会带来额外的收益并且会增加实现复杂度；因此，我们在主要实验中使用单热图构建。</span><span class="original-text">shows that the training curves of the two variants are overall very close, with the single heatmap showing a slight advantage in the later stage of training. This result indicates that directly aggregating multiple components that the user cares about in the prompt into a shared heatmap already provides a stable routing signal. Generating heatmaps component by component and then stacking them does not bring additional gains and increases implementation complexity; therefore, we use single-heatmap construction in the main experiments.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S4.SS3.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.3.2 </span><span class="translated-text">注意力层选择</span><span class="original-text">Attention Layer Selection</span></h4>
+<div class="ltx_para" id="S4.SS3.SSS2.p1">
+<p class="ltx_p" id="S4.SS3.SSS2.p1.6"><span class="translated-text">我们进一步分析了 STAR 中文本图像注意力层的选择。我们比较四种设置：前层使用变压器块</span><span class="original-text">We further analyze the choice of text-image attention layers in STAR. We compare four settings: front layers use transformer blocks</span><math alttext="0" class="ltx_Math" display="inline" id="S4.SS3.SSS2.p1.1.m1" intent=":literal"><mn>0</mn></math>–<math alttext="9" class="ltx_Math" display="inline" id="S4.SS3.SSS2.p1.2.m2" intent=":literal"><semantics><mn>9</mn><annotation encoding="application/x-tex">9</annotation></semantics></math><span class="translated-text">, STAR层使用块</span><span class="original-text">, STAR layers use blocks</span><math alttext="10" class="ltx_Math" display="inline" id="S4.SS3.SSS2.p1.3.m3" intent=":literal"><semantics><mn>10</mn><annotation encoding="application/x-tex">10</annotation></semantics></math>–<math alttext="15" class="ltx_Math" display="inline" id="S4.SS3.SSS2.p1.4.m4" intent=":literal"><semantics><mn>15</mn><annotation encoding="application/x-tex">15</annotation></semantics></math><span class="translated-text">，后面的层使用块</span><span class="original-text">, back layers use blocks</span><math alttext="16" class="ltx_Math" display="inline" id="S4.SS3.SSS2.p1.5.m5" intent=":literal"><semantics><mn>16</mn><annotation encoding="application/x-tex">16</annotation></semantics></math>–<math alttext="23" class="ltx_Math" display="inline" id="S4.SS3.SSS2.p1.6.m6" intent=":literal"><semantics><mn>23</mn><annotation encoding="application/x-tex">23</annotation></semantics></math><span class="translated-text">，并且所有层都使用所有注意力层。</span><span class="original-text">, and all layers use all attention layers.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS3.SSS2.p2">
+<p class="ltx_p" id="S4.SS3.SSS2.p2.2"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S4.F3.sf2" title="Figure 3(b) ‣ Figure 3 ‣ 4.3 Ablation Study ‣ 4 Experiments ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_tag">3(b)</span></a><span class="translated-text">表明层选择影响注意力路由的稳定性。前层和后层均带来有效改善，但后期曲线稍低；所有层在最后阶段都达到最高级别，但需要阅读更多注意力图。在大多数训练中，STAR 层仍然处于性能最佳的组中，并且总体上接近所有层，同时仅使用少量的中间块。这表明块</span><span class="original-text">shows that layer selection affects the stability of attention routing. Front layers and back layers both bring effective improvements, but their later-stage curves are slightly lower; all layers reach the highest level in the final stage, but require reading more attention maps. STAR layers remain in the best-performing group for most of training and are overall close to all layers, while using only a small number of middle blocks. This indicates that blocks</span><math alttext="10" class="ltx_Math" display="inline" id="S4.SS3.SSS2.p2.1.m1" intent=":literal"><semantics><mn>10</mn><annotation encoding="application/x-tex">10</annotation></semantics></math>–<math alttext="15" class="ltx_Math" display="inline" id="S4.SS3.SSS2.p2.2.m2" intent=":literal"><semantics><mn>15</mn><annotation encoding="application/x-tex">15</annotation></semantics></math><span class="translated-text">已经包含足够清晰的文本图像对齐信号。因此，我们在主要实验中使用这个层集，以在有效性和实现开销之间取得更好的平衡。</span><span class="original-text">already contain sufficiently clear text-image alignment signals. Therefore, we use this layer set in the main experiments to achieve a better balance between effectiveness and implementation overhead.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S4.SS3.SSS3">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.3.3 </span><span class="translated-text">计算开销</span><span class="original-text">Computational Overhead</span></h4>
+<div class="ltx_para" id="S4.SS3.SSS3.p1">
+<p class="ltx_p" id="S4.SS3.SSS3.p1.1"><span class="translated-text">我们进一步比较Flow-GRPO的训练开销</span><span class="original-text">We further compare the training overhead of Flow-GRPO</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">liu2025flowgrpo</span>]</cite><span class="translated-text">和 Flow-GRPO+STAR。 STAR 重用生成模型前向传播的文本图像注意力，仅在选定的层上执行热图聚合和优势重新缩放；它不需要训练额外的奖励模型或添加新的图像评估步骤。</span><span class="original-text">and Flow-GRPO+STAR. STAR reuses the text-image attention from the forward pass of the generative model and only performs heatmap aggregation and advantage rescaling on the selected layers; it does not require training an additional reward model or adding new image evaluation steps.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS3.SSS3.p2">
+<p class="ltx_p" id="S4.SS3.SSS3.p2.2"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S4.F3.sf3" title="Figure 3(c) ‣ Figure 3 ‣ 4.3 Ablation Study ‣ 4 Experiments ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_tag">3(c)</span></a><span class="translated-text">表明STAR引入少于</span><span class="original-text">shows that STAR introduces less than</span><math alttext="2\%" class="ltx_Math" display="inline" id="S4.SS3.SSS3.p2.1.m1" intent=":literal"><semantics><mrow><mn>2</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">2\%</annotation></semantics></math><span class="translated-text">额外的训练时间开销，并且仅增加峰值内存</span><span class="original-text">additional training time overhead, and increases peak memory by only</span><math alttext="1.56\%" class="ltx_Math" display="inline" id="S4.SS3.SSS3.p2.2.m2" intent=":literal"><semantics><mrow><mn>1.56</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">1.56\%</annotation></semantics></math><span class="translated-text">。这个结果表明STAR的主要计算仍然来自于原始的扩散/流rollout和GRPO更新；基于注意力的分配只是一个轻量级的奖励路由步骤。因此，我们可以获得更细粒度的时空信用分配，而训练成本几乎没有变化。</span><span class="original-text">. This result shows that the main computation of STAR still comes from the original diffusion/flow rollout and GRPO update; attention-based allocation is only a lightweight reward-routing step. Therefore, we can obtain more fine-grained spatiotemporal credit assignment with almost no change in training cost.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S4.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.4 </span><span class="translated-text">定性比较</span><span class="original-text">Qualitative Comparison</span></h3>
+<div class="ltx_para" id="S4.SS4.p1">
+<p class="ltx_p" id="S4.SS4.p1.1"><span class="translated-text">为了定性检查 STAR 后训练的效果，我们将原始 SD3.5-M 基础模型与在不同提示集上进行 Flow-GRPO+STAR 后训练后的 SD3.5-M 进行比较。</span><span class="original-text">To qualitatively examine the effect of post-training with STAR, we compare the original SD3.5-M base model with SD3.5-M after Flow-GRPO+STAR post-training on a diverse set of prompts.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F4">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S4.F4.1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="971" id="S4.F4.1.g1" src="https://arxiv.org/html/2606.17979v1/x6.png" width="830"/>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S4.F4.2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="971" id="S4.F4.2.g1" src="https://arxiv.org/html/2606.17979v1/x7.png" width="830"/>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F4.4.1.1" style="font-size:90%;">Figure 4</span>: </span><span class="ltx_text" id="S4.F4.5.2" style="font-size:90%;">Qualitative comparison between the original SD3.5-M and SD3.5-M after Flow-GRPO+STAR post-training. Within every prompt pair, the left image is produced by SD3.5-M and the right image by SD3.5-M+Flow-GRPO+STAR.</span></figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS4.p2">
+<p class="ltx_p" id="S4.SS4.p2.1"><span class="translated-text">如图</span><span class="original-text">As shown in Figure</span><a class="ltx_ref" href="#S4.F4" title="Figure 4 ‣ 4.4 Qualitative Comparison ‣ 4 Experiments ‣ STAR: SpatioTemporal Adaptive Reward Allocation for Text-to-Image RL Post-Training"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">，这两个模型都会生成捕获提示中主要概念的图像。在显示的示例中，Flow-GRPO+STAR 后训练改变了所请求的主题、属性和周围场景的实现方式。例如，训练后的模型以更完整的提示相关元素和更连贯的场景构图描绘了黑色方形建筑、反光不锈钢比特币标志、蓝色风车和紧凑型星舰。</span><span class="original-text">, both models generate images that capture the main concepts in the prompts. Across the displayed examples, Flow-GRPO+STAR post-training changes how the requested subjects, attributes, and surrounding scenes are realized. For example, the post-trained model depicts the black square building, reflective stainless-steel Bitcoin logo, blue windmill, and compact starship with more complete prompt-related elements and more coherent scene composition.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS4.p3">
+<p class="ltx_p" id="S4.SS4.p3.1"><span class="translated-text">这些定性结果补充了定量评估，并说明了在不同类型的提示中将 Flow-GRPO+STAR 后训练应用于 SD3.5-M 的效果。通过将奖励信号分配给提示相关的潜在区域，STAR 鼓励模型在生成过程中更好地融入文本条件。</span><span class="original-text">These qualitative results complement the quantitative evaluations and illustrate the effect of applying Flow-GRPO+STAR post-training to SD3.5-M across different types of prompts. By allocating the reward signal to prompt-relevant latent regions, STAR encourages the model to better incorporate the textual conditions during generation.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5" lang="en">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">我们建议</span><span class="original-text">We propose</span><span class="ltx_text ltx_font_bold" id="S5.p1.1.1"><span class="translated-text">时空自适应奖励（STAR）分配</span><span class="original-text">SpatioTemporal Adaptive Reward (STAR) Allocation</span></span><span class="translated-text">，一种用于 T2I 扩散和流动模型的强化学习后训练的时空自适应奖励分配方法。 STAR 从生成模型内的文本-图像交互中提取与提示相关的时空信号，并使用它们更有选择性地将图像级反馈分配到生成轨迹的关键区域，将策略更新集中在真正影响文本对齐和生成质量的部分。实验结果表明，在不改变外部奖励来源、几乎没有额外训练成本的情况下，STAR 稳定地改进了现有的 RL 后训练方法，尤其是在需要细粒度语义理解、本地内容控制和偏好对齐的场景中。总体而言，STAR 提供了一个简单、轻量且有效的界面，用于将图像级反馈分配给结构化扩散/流动轨迹。</span><span class="original-text">, a spatiotemporal adaptive reward allocation method for RL post-training of T2I diffusion and flow models. STAR extracts prompt-related spatiotemporal signals from text-image interactions inside the generative model and uses them to allocate image-level feedback more selectively to key regions of the generative trajectory, focusing policy updates on the parts that truly affect text alignment and generation quality. Experimental results show that, without changing the external reward source and with almost no additional training cost, STAR stably improves existing RL post-training methods, especially in scenarios requiring fine-grained semantic understanding, local content control, and preference alignment. Overall, STAR provides a simple, lightweight, and effective interface for allocating image-level feedback to structured diffusion/flow trajectories.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="Sx1" lang="en">
+<h2 class="ltx_title ltx_title_section"><span class="translated-text">声明</span><span class="original-text">Statements</span></h2>
+<div class="ltx_para" id="Sx1.p1">
+<p class="ltx_p" id="Sx1.p1.1"><span class="translated-text">Stable Diffusion 3.5 Medium 在 Stability AI 社区许可证下用于学术研究目的。作者确认，该模型的使用仅限于学术研究目的，并未用于任何商业活动。</span><span class="original-text">Stable Diffusion 3.5 Medium is used under the Stability AI Community License for academic research purposes. The authors confirm that the use of this model is limited to academic research purposes and has not been used for any commercial activities.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib" lang="en">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+</ul>
+</section>
+<section class="ltx_appendix" id="A1" lang="en">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录A</span><span class="original-text">Appendix A</span></span><span class="translated-text">文本单元提取提示</span><span class="original-text">Text-Unit Extraction Prompts</span></h2>
+<div class="ltx_para" id="A1.p1">
+<p class="ltx_p" id="A1.p1.1"><span class="translated-text">本附录报告了 STAR 使用的特定于任务的文本单元提取程序。这些文本单元仅用于定位相应的文本标记索引和聚合文本图像注意力图；每个任务的外部图像级奖励保持不变。</span><span class="original-text">This appendix reports the task-specific text-unit extraction procedures used by STAR. These text units are used only to locate the corresponding text-token indices and aggregate text-image attention maps; the external image-level reward for each task remains unchanged.</span></p>
+</div>
+<section class="ltx_subsection" id="A1.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">A.1 </span><span class="translated-text">GenEval 文本单元</span><span class="original-text">GenEval Text Units</span></h3>
+<div class="ltx_para" id="A1.SS1.p1">
+<p class="ltx_p" id="A1.SS1.p1.1"><span class="translated-text">对于 GenEval，STAR 不需要法学硕士来进行文本单元提取。相反，它应用确定性的焦点范围规则：删除样板图像前缀，例如“a photo of”、“an image of”或“a Painting of”，并使用剩余的短语作为单个文本单元。这与 GenEval 提示格式相匹配，其中后缀已包含要接地的对象、属性、计数和空间关系。</span><span class="original-text">For GenEval, STAR does not require an LLM for text-unit extraction. Instead, it applies a deterministic focus-span rule: remove a boilerplate image prefix such as “a photo of”, “an image of”, or “a painting of”, and use the remaining phrase as a single text unit. This matches the GenEval prompt format, where the suffix already contains the objects, attributes, counts, and spatial relations to be grounded.</span></p>
+</div>
+<div class="ltx_para" id="A1.SS1.p2">
+<code class="ltx_verbatim" id="A1.SS1.p2.1"> <span class="ltx_inline-block"><svg class="ltx_picture" height="228.27" id="A1.SS1.p2.1.pic1" overflow="visible" version="1.1" viewbox="0 0 600 228.27" width="600"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,228.27) matrix(1 0 0 -1 0 0)"><g fill="#003D99" fill-opacity="1.0" style="--ltx-fill-color:#003D99;"><path d="M 0 4.77 L 0 223.5 C 0 226.13 2.13 228.27 4.77 228.27 L 595.23 228.27 C 597.87 228.27 600 226.13 600 223.5 L 600 4.77 C 600 2.13 597.87 0 595.23 0 L 4.77 0 C 2.13 0 0 2.13 0 4.77 Z" style="stroke:none"></path></g><g fill="#F7F9FC" fill-opacity="1.0" style="--ltx-fill-color:#F7F9FC;"><path d="M 0.83 4.77 L 0.83 223.5 C 0.83 225.68 2.59 227.44 4.77 227.44 L 595.23 227.44 C 597.41 227.44 599.17 225.68 599.17 223.5 L 599.17 4.77 C 599.17 2.59 597.41 0.83 595.23 0.83 L 4.77 0.83 C 2.59 0.83 0.83 2.59 0.83 4.77 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 8.7 210.65)"><foreignobject color="#000000" height="210.86" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:42.1em;--ltx-fo-height:0.64em;--ltx-fo-depth:14.59em;" transform="matrix(1 0 0 -1 0 8.92)" width="582.59"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_inline-logical-block ltx_minipage ltx_align_bottom" id="A1.SS1.p2.1.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1" style="width:42.1em;">
+<span class="ltx_float ltx_lstlisting" id="A1.SS1.p2.1.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.tab1">
+<span class="ltx_listing ltx_lstlisting ltx_listing" id="A1.SS1.p2.1.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.tab1.1">
+</span>
+</span></span></span></span></foreignobject></g></g></svg></span>
+<section class="ltx_subsection" id="A1.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">A.2 </span>PickScore Text Units</h3>
+<div class="ltx_para" id="A1.SS2.p1">
+<p class="ltx_p" id="A1.SS2.p1.1">For PickScore, STAR uses the same deterministic focus-span rule by default. We additionally consider component-level decomposition, in which a vision-language model extracts concise semantic units describing objects, attributes, quantities, and spatial relations. The decomposition prompt is provided below.</p>
+</div>
+<div class="ltx_para" id="A1.SS2.p2">
+<code class="ltx_verbatim" id="A1.SS2.p2.1"> <span class="ltx_inline-block"><svg class="ltx_picture" height="228.27" id="A1.SS2.p2.1.pic1" overflow="visible" version="1.1" viewbox="0 0 600 228.27" width="600"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,228.27) matrix(1 0 0 -1 0 0)"><g fill="#003D99" fill-opacity="1.0" style="--ltx-fill-color:#003D99;"><path d="M 0 4.77 L 0 223.5 C 0 226.13 2.13 228.27 4.77 228.27 L 595.23 228.27 C 597.87 228.27 600 226.13 600 223.5 L 600 4.77 C 600 2.13 597.87 0 595.23 0 L 4.77 0 C 2.13 0 0 2.13 0 4.77 Z" style="stroke:none"></path></g><g fill="#F7F9FC" fill-opacity="1.0" style="--ltx-fill-color:#F7F9FC;"><path d="M 0.83 4.77 L 0.83 223.5 C 0.83 225.68 2.59 227.44 4.77 227.44 L 595.23 227.44 C 597.41 227.44 599.17 225.68 599.17 223.5 L 599.17 4.77 C 599.17 2.59 597.41 0.83 595.23 0.83 L 4.77 0.83 C 2.59 0.83 0.83 2.59 0.83 4.77 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 8.7 210.65)"><foreignobject color="#000000" height="210.86" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:42.1em;--ltx-fo-height:0.64em;--ltx-fo-depth:14.59em;" transform="matrix(1 0 0 -1 0 8.92)" width="582.59"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_inline-logical-block ltx_minipage ltx_align_bottom" id="A1.SS2.p2.1.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1" style="width:42.1em;">
+<span class="ltx_float ltx_lstlisting" id="A1.SS2.p2.1.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.tab1">
+<span class="ltx_listing ltx_lstlisting ltx_listing" id="A1.SS2.p2.1.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.tab1.1">
+</span>
+</span></span></span></span></foreignobject></g></g></svg></span>
+<section class="ltx_subsection" id="A1.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">A.3 </span>OCR Text Units</h3>
+<div class="ltx_para" id="A1.SS3.p1">
+<p class="ltx_p" id="A1.SS3.p1.1">OCR prompts contain exact quoted strings that must be rendered in the image. We therefore extract visually localizable text units in advance and associate them with the corresponding training prompts. These units include the exact rendered text, its carrier or surface, visible text attributes, and other concrete scene elements. When pre-extracted units are unavailable, STAR falls back to the deterministic focus-span rule described above. The extraction prompt is shown below.</p>
+</div>
+<div class="ltx_para" id="A1.SS3.p2">
+<code class="ltx_verbatim" id="A1.SS3.p2.1"> <span class="ltx_inline-block"><svg class="ltx_picture" height="228.27" id="A1.SS3.p2.1.pic1" overflow="visible" version="1.1" viewbox="0 0 600 228.27" width="600"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,228.27) matrix(1 0 0 -1 0 0)"><g fill="#003D99" fill-opacity="1.0" style="--ltx-fill-color:#003D99;"><path d="M 0 4.77 L 0 223.5 C 0 226.13 2.13 228.27 4.77 228.27 L 595.23 228.27 C 597.87 228.27 600 226.13 600 223.5 L 600 4.77 C 600 2.13 597.87 0 595.23 0 L 4.77 0 C 2.13 0 0 2.13 0 4.77 Z" style="stroke:none"></path></g><g fill="#F7F9FC" fill-opacity="1.0" style="--ltx-fill-color:#F7F9FC;"><path d="M 0.83 4.77 L 0.83 223.5 C 0.83 225.68 2.59 227.44 4.77 227.44 L 595.23 227.44 C 597.41 227.44 599.17 225.68 599.17 223.5 L 599.17 4.77 C 599.17 2.59 597.41 0.83 595.23 0.83 L 4.77 0.83 C 2.59 0.83 0.83 2.59 0.83 4.77 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 8.7 210.65)"><foreignobject color="#000000" height="210.86" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:42.1em;--ltx-fo-height:0.64em;--ltx-fo-depth:14.59em;" transform="matrix(1 0 0 -1 0 8.92)" width="582.59"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_inline-logical-block ltx_minipage ltx_align_bottom" id="A1.SS3.p2.1.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1" style="width:42.1em;">
+<span class="ltx_float ltx_lstlisting" id="A1.SS3.p2.1.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.tab1">
+<span class="ltx_listing ltx_lstlisting ltx_listing" id="A1.SS3.p2.1.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.tab1.1">
+</span>
+</span></span></span></span></foreignobject></g></g></svg></span></code>
+</div>
+</section></code>
+</div>
+</section></code>
+</div>
+</section>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2606.17979v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div aria-hidden="true" id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
