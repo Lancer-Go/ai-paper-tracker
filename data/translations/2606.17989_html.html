@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">首先恢复语义，生成更好的内容：改进 3D MRI 重建和交叉对比合成的潜在建模</span><span class="original-text">Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 6 月 16 日星期二 14:34:44 生成 http://dlmf.nist.gov/LaTeXML/。</span><span class="original-text">Generated on Tue Jun 16 14:34:44 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2606.17989" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2606.17989" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2606.17989v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2606.17989v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Methodology</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS1" title="In 2 Methodology ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.1 </span>Overall Framework</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS2" title="In 2 Methodology ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.2 </span>Latent Harmonization Encoder (LHE)</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS3" title="In 2 Methodology ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.3 </span>Semantic Recovery Block (SRB)</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS4" title="In 2 Methodology ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.4 </span>Anatomy-aware Frequency Loss (AFL)</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS5" title="In 2 Methodology ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.5 </span>Training Objective</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Experiments</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In 3 Experiments ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Datasets</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS2" title="In 3 Experiments ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Implementation Details</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS3" title="In 3 Experiments ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.3 </span>Reconstruction and Translation Results</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS4" title="In 3 Experiments ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.4 </span>Ablation Studies</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Conclusion</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS0.SSS1" title="In 4 Conclusion ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.0.1 </span>Acknowledgements</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS0.SSS2" title="In 4 Conclusion ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.0.2 </span><span class="ltx_ERROR undefined">\discintname</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：arXiv.org 永久非独占许可证</span><span class="original-text">License: arXiv.org perpetual non-exclusive license</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2606.17989v1 [cs.CV] 2026 年 6 月 16 日</span><span class="original-text">arXiv:2606.17989v1 [cs.CV] 16 Jun 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line"><span class="ltx_note ltx_role_institutetext" id="id1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type"><span class="translated-text">机构文本：</span><span class="original-text">institutetext:</span></span><span class="translated-text">香港科技大学（广州）</span><span class="original-text">The Hong Kong University of Science and Technology (Guangzhou)</span></span></span></span><span class="ltx_note ltx_role_institutetext" id="id2"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_note_type"><span class="translated-text">机构文本：</span><span class="original-text">institutetext:</span></span><span class="translated-text">西安交通大学</span><span class="original-text">Xi’an Jiaotong University</span></span></span></span>
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">首先恢复语义，生成更好的内容：改进 3D MRI 重建和交叉对比合成的潜在建模</span><span class="original-text">Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+Yonghao Chen<sup class="ltx_sup" id="id1.1.id1">*</sup>
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Sicheng Yang<sup class="ltx_sup" id="id2.1.id1">*</sup>
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Rui Tang
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Lei Zhu<sup class="ltx_sup" id="id3.1.id1">✉</sup>
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">多对比磁共振成像（MRI）为临床诊断提供补充信息。然而，获取所有 MRI 序列通常既耗时又昂贵。最近的生成模型执行交叉对比合成，通过从可用对比中推断不存在的对比来解决这个问题。然而，合成 3D MRI 提出了重大挑战。由于体积巨大，直接在像素空间中操作在计算上是令人望而却步的；因此，一种常见的方法是首先将 3D 体积压缩到潜在空间中，然后在该空间中训练生成模型。我们观察到现有的压缩架构面临着几个关键问题：它们未能充分保持远程解剖一致性，丢弃临床上有意义的语义，并依赖导致过度平滑重建的优化目标。最终，这些缺点损害了后续生成模型的性能。在这项工作中，我们提出了一个语义优先的潜在建模框架，用于 3D MRI 重建和交叉对比合成。具体来说，我们引入了潜在协调编码器（LHE）来捕获全局解剖依赖性，确保连贯的体积表示。为了减轻潜在压缩过程中的语义退化，我们进一步设计了一个语义恢复块（SRB），它从自我监督的语义教师中注入高级先验，从而增强了潜在空间中的对比感知可分离性。此外，我们提出了一种解剖感知频率损失（AFL）来自适应地保留与诊断相关的高频结构。对两个公共多对比 MRI 数据集的大量实验表明，重建保真度和交叉对比合成质量得到了持续改进。
+我们的代码位于</span><span class="original-text">Multi-contrast magnetic resonance imaging (MRI) provides complementary information for clinical diagnosis. However, acquiring all MRI sequences is often time-consuming and costly. Recent generative models perform cross-contrast synthesis to address this issue by inferring absent contrasts from the available ones. Nevertheless, synthesizing 3D MRI presents significant challenges. Due to the massive volume sizes, operating directly in the pixel space is computationally prohibitive; therefore, a common approach is to first compress the 3D volumes into a latent space and subsequently train generative models in that space. We observe that existing compression architectures face several critical issues: they under-preserve long-range anatomical coherence, discard clinically meaningful semantics, and rely on optimization objectives that lead to over-smoothed reconstructions. Ultimately, these shortcomings compromise the performance of subsequent generative models. In this work, we propose a semantics-first latent modeling framework for 3D MRI reconstruction and cross-contrast synthesis. Specifically, we introduce a Latent Harmonization Encoder (LHE) to capture global anatomical dependencies, ensuring coherent volumetric representations. To mitigate semantic degradation during latent compression, we further design a Semantic Recovery Block (SRB) that injects high-level priors from a self-supervised semantic teacher, enhancing contrast-aware separability in the latent space. Additionally, we propose an Anatomy-aware Frequency Loss (AFL) to adaptively preserve diagnostically relevant high-frequency structures. Extensive experiments on two public multi-contrast MRI datasets demonstrate consistent improvements in reconstruction fidelity and cross-contrast synthesis quality.
+Our code is available at</span><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/script-Yang/RSF" title="">https://github.com/script-Yang/RSF</a>.</p>
+</div>
+<span class="ltx_note ltx_role_footnotetext" id="footnotex1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type"><span class="translated-text">脚注文本：</span><span class="original-text">footnotetext:</span></span><span class="translated-text">同等贡献。</span><span class="original-text">Equal contribution.</span></span></span></span><span class="ltx_note ltx_role_footnotetext" id="footnotex2"><sup class="ltx_note_mark">✉</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">✉</sup><span class="ltx_note_type"><span class="translated-text">脚注文本：</span><span class="original-text">footnotetext:</span></span><span class="translated-text">朱雷 (leizhu@hkust-gz.edu.cn) 为通讯作者。</span><span class="original-text">Lei Zhu (leizhu@hkust-gz.edu.cn) is the corresponding author.</span></span></span></span>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">多重对比 MRI 提供了对诊断至关重要的补充信息，但获取所有序列是资源密集型的，因此需要交叉对比合成</span><span class="original-text">Multi-contrast MRI provides complementary information vital for diagnosis, but acquiring all sequences is resource-intensive, driving the need for cross-contrast synthesis</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib5" title="">5</a>, <a class="ltx_ref" href="#bib.bib17" title="">17</a>, <a class="ltx_ref" href="#bib.bib37" title="">37</a>, <a class="ltx_ref" href="#bib.bib2" title="">2</a>, <a class="ltx_ref" href="#bib.bib20" title="">20</a>]</cite><span class="translated-text">。随着临床应用的需求日益增加</span><span class="original-text">. While clinical applications increasingly demand</span><span class="ltx_text ltx_font_bold" id="S1.p1.1.1"><span class="translated-text">3D MRI 合成</span><span class="original-text">3D MRI synthesis</span></span><span class="translated-text">为了保持空间连续性，巨大的体积大小（例如，</span><span class="original-text">to preserve spatial continuity, massive volume sizes (e.g.,</span><math alttext="256\times 256\times 256" class="ltx_Math" display="inline" id="S1.p1.1.m1" intent=":literal"><semantics><mrow><mn>256</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>256</mn><mo lspace="0.222em" rspace="0.222em">×</mo><mn>256</mn></mrow><annotation encoding="application/x-tex">256\times 256\times 256</annotation></semantics></math><span class="translated-text">）使得像素空间生成在计算上难以实现</span><span class="original-text">) make pixel-space generation computationally prohibitive</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib25" title="">25</a>, <a class="ltx_ref" href="#bib.bib18" title="">18</a>]</cite><span class="translated-text">。因此，当前的方法采用分层方法：通过 VAE/VQ 模型将 3D 体积压缩到潜在空间中</span><span class="original-text">. Consequently, current methods adopt a hierarchical approach: compressing 3D volumes into a latent space via VAE/VQ models</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib19" title="">19</a>, <a class="ltx_ref" href="#bib.bib28" title="">28</a>]</cite><span class="translated-text">，然后通过 GAN 生成潜在空间</span><span class="original-text">, followed by latent-space generation via GANs</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib10" title="">10</a>]</cite><span class="translated-text">或扩散</span><span class="original-text">or Diffusion</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib25" title="">25</a>]</cite><span class="translated-text">。尽管效率很高，但将此流程应用于 3D MRI 仍面临三个主要障碍。</span><span class="original-text">. Despite its efficiency, applying this pipeline to 3D MRI presents three primary hurdles.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="ltx_text ltx_font_bold" id="S1.p2.1.1"><span class="translated-text">(1) 远距离解剖不连贯：</span><span class="original-text">(1) Long-range anatomical incoherence:</span></span><span class="translated-text">3D MRI 中的解剖结构在整个体积上表现出严格的空间连续性。然而，传统的潜在模型通常无法捕获这些远程依赖性，导致生成的体积中出现结构扭曲和脱节的解剖结构</span><span class="original-text">Anatomical structures in 3D MRI exhibit strict spatial continuity across the volume. However, conventional latent models often fail to capture these long-range dependencies, leading to structural distortions and disjointed anatomy in the generated volumes</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib27" title="">27</a>, <a class="ltx_ref" href="#bib.bib11" title="">11</a>]</cite>.
+<span class="ltx_text ltx_font_bold" id="S1.p2.1.2"><span class="translated-text">(2) 对比中的语义纠缠：</span><span class="original-text">(2) Semantic entanglement across contrasts:</span></span><span class="translated-text">不同的 MRI 协议编码不同的对比度特定语义。现有的压缩器经常纠缠这些细微差别，导致语义退化，从而损害下游生成建模</span><span class="original-text">Different MRI protocols encode distinct contrast-specific semantics. Existing compressors often entangle these nuances, causing a semantic degradation that impairs downstream generative modeling</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="">7</a>]</cite>.
+<span class="ltx_text ltx_font_bold" id="S1.p2.1.3"><span class="translated-text">(3) 逐像素目标的过度平滑：</span><span class="original-text">(3) Over-smoothing from pixel-wise objectives:</span></span><span class="translated-text">标准重建损失本质上优先考虑低频精度，产生过于平滑的表示，从而模糊了临床重要的细粒度细节，例如微妙的边界或小病变</span><span class="original-text">Standard reconstruction losses inherently prioritize low-frequency accuracy, yielding overly smooth representations that obscure clinically vital fine-grained details, such as subtle boundaries or small lesions</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib15" title="">15</a>, <a class="ltx_ref" href="#bib.bib16" title="">16</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">为了应对这些挑战，我们提出了一个以以下原则为中心的统一框架：</span><span class="original-text">To address these challenges, we propose a unified framework centered on the principle of</span><em class="ltx_emph ltx_font_italic" id="S1.p3.1.1"><span class="translated-text">首先恢复语义以实现更好的生成</span><span class="original-text">recovering semantics first to enable better generation</span></em><span class="translated-text">。我们的框架集成了三个协作组件：（1）a</span><span class="original-text">. Our framework integrates three cooperative components: (1) a</span><span class="ltx_text ltx_font_bold" id="S1.p3.1.2"><span class="translated-text">潜在协调编码器 (LHE)</span><span class="original-text">Latent Harmonization Encoder (LHE)</span></span><span class="translated-text">促进全球信息交互，以确保解剖学的一致性； (2) 一个</span><span class="original-text">that facilitates global information interaction to ensure anatomical coherence; (2) a</span><span class="ltx_text ltx_font_bold" id="S1.p3.1.3"><span class="translated-text">语义恢复块（SRB）</span><span class="original-text">Semantic Recovery Block (SRB)</span></span><span class="translated-text">利用高级自我监督先验来增强对比特定的辨别力； (3) 一个</span><span class="original-text">that leverages high-level self-supervised priors to enhance contrast-specific discriminability; and (3) an</span><span class="ltx_text ltx_font_bold" id="S1.p3.1.4"><span class="translated-text">解剖感知频率损失 (AFL)</span><span class="original-text">Anatomy-aware Frequency Loss (AFL)</span></span><span class="translated-text">自适应地增强临床相关区域的高频保真度。对两个公共数据集的大量实验表明，我们的方法在 3D MRI 重建和多重对比合成方面均实现了最先进的性能。</span><span class="original-text">that adaptively enforces high-frequency fidelity in clinically relevant regions. Extensive experiments on two public datasets demonstrate that our approach achieves state-of-the-art performance in both 3D MRI reconstruction and multi-contrast synthesis.</span></p>
+</div>
+<figure class="ltx_figure" id="S1.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="297" id="S1.F1.g1" src="https://arxiv.org/html/2606.17989v1/x1.png" width="627"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S1.F1.10.5.1" style="font-size:90%;">Figure 1</span>: </span><span class="ltx_text" id="S1.F1.8.4" style="font-size:90%;">Overview of our proposed semantics-first latent modeling framework. The model compresses 3D MRI volumes into a structured latent space using: (a) a Latent Harmonization Encoder (LHE), which captures long-range anatomical dependencies via heterogeneous encoders <math alttext="E_{\text{c}}" class="ltx_Math" display="inline" id="S1.F1.5.1.m1" intent=":literal"><semantics><msub><mi>E</mi><mtext>c</mtext></msub><annotation encoding="application/x-tex">E_{\text{c}}</annotation></semantics></math> and <math alttext="E_{\text{t}}" class="ltx_Math" display="inline" id="S1.F1.6.2.m2" intent=":literal"><semantics><msub><mi>E</mi><mtext>t</mtext></msub><annotation encoding="application/x-tex">E_{\text{t}}</annotation></semantics></math>; (b) a Semantic Recovery Block (SRB), which aligns latent features <math alttext="f_{\text{s}}" class="ltx_Math" display="inline" id="S1.F1.7.3.m3" intent=":literal"><semantics><msub><mi>f</mi><mtext>s</mtext></msub><annotation encoding="application/x-tex">f_{\text{s}}</annotation></semantics></math> with high-level priors <math alttext="f_{\text{t}}" class="ltx_Math" display="inline" id="S1.F1.8.4.m4" intent=":literal"><semantics><msub><mi>f</mi><mtext>t</mtext></msub><annotation encoding="application/x-tex">f_{\text{t}}</annotation></semantics></math> from a self-supervised teacher to restore lost semantic information and ensure contrast-aware separability; and (c) an Anatomy-aware Frequency Loss (AFL, detailed in Fig. <a class="ltx_ref" href="#S2.F4" title="Figure 4 ‣ 2.4 Anatomy-aware Frequency Loss (AFL) ‣ 2 Methodology ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_tag">4</span></a>) to mitigate the over-smoothing caused by reconstruction losses.</span></figcaption>
+</figure>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">方法论</span><span class="original-text">Methodology</span></h2>
+<section class="ltx_subsection" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span><span class="translated-text">总体框架</span><span class="original-text">Overall Framework</span></h3>
+<div class="ltx_para" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.1"><span class="translated-text">如图所示。</span><span class="original-text">As shown in Figs.</span><a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">和</span><span class="original-text">and</span><a class="ltx_ref" href="#S2.F4" title="Figure 4 ‣ 2.4 Anatomy-aware Frequency Loss (AFL) ‣ 2 Methodology ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">，我们的框架由三个协作组件组成：
+1）潜在协调编码器（LHE），捕获远程解剖依赖性；
+2）语义恢复块（SRB），它将高级语义指导重新注入到潜在表示中；和
+3) 解剖感知频率损失（AFL），它强制临床重要区域的高频一致性。</span><span class="original-text">, our framework consists of three cooperative components:
+1) a Latent Harmonization Encoder (LHE), which captures long-range anatomical dependencies;
+2) a Semantic Recovery Block (SRB), which re-injects high-level semantic guidance into the latent representation; and
+3) an Anatomy-aware Frequency Loss (AFL), which enforces high-frequency consistency in clinically important regions.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span><span class="translated-text">潜在协调编码器 (LHE)</span><span class="original-text">Latent Harmonization Encoder (LHE)</span></h3>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.3"><span class="translated-text">在 3D MRI 合成中，纯卷积编码器通常无法捕获解剖结构的长程空间相干性，从而导致不一致</span><span class="original-text">In 3D MRI synthesis, purely convolutional encoders often fail to capture the long-range spatial coherence of anatomical structures, leading to inconsistencies</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib29" title="">29</a>, <a class="ltx_ref" href="#bib.bib11" title="">11</a>]</cite><span class="translated-text">。为了解决这个问题，我们引入了上下文感知协调阶段</span><span class="original-text">. To address this, we introduce a context-aware harmonization stage</span><em class="ltx_emph ltx_font_italic" id="S2.SS2.p1.3.1"><span class="translated-text">之前</span><span class="original-text">before</span></em><span class="translated-text">潜在离散化。给定输入量</span><span class="original-text">latent discretization. Given an input volume</span><math alttext="x" class="ltx_Math" display="inline" id="S2.SS2.p1.1.m1" intent=":literal"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math><span class="translated-text">，我们提取局部卷积特征</span><span class="original-text">, we extract local convolutional features</span><math alttext="h_{\text{c}}=E_{\text{c}}(x)" class="ltx_Math" display="inline" id="S2.SS2.p1.2.m2" intent=":literal"><semantics><mrow><msub><mi>h</mi><mtext>c</mtext></msub><mo>=</mo><mrow><msub><mi>E</mi><mtext>c</mtext></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">h_{\text{c}}=E_{\text{c}}(x)</annotation></semantics></math><span class="translated-text">。为了捕获全局依赖性，我们采用并行的切片视觉变换器（ViT）</span><span class="original-text">. To capture global dependencies, we employ a parallel, slice-wise Vision Transformer (ViT)</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="">8</a>]</cite><span class="translated-text">提取上下文特征</span><span class="original-text">to extract context features</span><math alttext="h_{\text{t}}=E_{\text{t}}(x)" class="ltx_Math" display="inline" id="S2.SS2.p1.3.m3" intent=":literal"><semantics><mrow><msub><mi>h</mi><mtext>t</mtext></msub><mo>=</mo><mrow><msub><mi>E</mi><mtext>t</mtext></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">h_{\text{t}}=E_{\text{t}}(x)</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p2">
+<p class="ltx_p" id="S2.SS2.p2.4"><span class="translated-text">为了减轻两个不同路径之间的统计不匹配，我们在融合之前应用通道方式的特征对齐：</span><span class="original-text">To mitigate statistical mismatches between the two distinct pathways, we apply channel-wise feature alignment prior to fusion:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="h_{\text{t}}^{*}=\frac{h_{\text{t}}-\mu_{\text{t}}}{\sigma_{\text{t}}+\epsilon}\cdot\sigma_{\text{c}}+\mu_{\text{c}}," class="ltx_Math" display="block" id="S2.E1.m1" intent=":literal"><semantics><mrow><mrow><msubsup><mi>h</mi><mtext>t</mtext><mo>∗</mo></msubsup><mo>=</mo><mrow><mrow><mfrac><mrow><msub><mi>h</mi><mtext>t</mtext></msub><mo>−</mo><msub><mi>μ</mi><mtext>t</mtext></msub></mrow><mrow><msub><mi>σ</mi><mtext>t</mtext></msub><mo>+</mo><mi>ϵ</mi></mrow></mfrac><mo lspace="0.222em" rspace="0.222em">⋅</mo><msub><mi>σ</mi><mtext>c</mtext></msub></mrow><mo>+</mo><msub><mi>μ</mi><mtext>c</mtext></msub></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">h_{\text{t}}^{*}=\frac{h_{\text{t}}-\mu_{\text{t}}}{\sigma_{\text{t}}+\epsilon}\cdot\sigma_{\text{c}}+\mu_{\text{c}},</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS2.p2.3"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\mu" class="ltx_Math" display="inline" id="S2.SS2.p2.1.m1" intent=":literal"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="\sigma" class="ltx_Math" display="inline" id="S2.SS2.p2.2.m2" intent=":literal"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math><span class="translated-text">表示通道平均值和标准差。然后通过残差融合整合对齐的 ViT 特征：</span><span class="original-text">denote channel-wise mean and standard deviation. The aligned ViT features are then integrated via residual fusion:</span><math alttext="h=h_{\text{c}}+h_{\text{t}}^{*}" class="ltx_Math" display="inline" id="S2.SS2.p2.3.m3" intent=":literal"><semantics><mrow><mi>h</mi><mo>=</mo><mrow><msub><mi>h</mi><mtext>c</mtext></msub><mo>+</mo><msubsup><mi>h</mi><mtext>t</mtext><mo>∗</mo></msubsup></mrow></mrow><annotation encoding="application/x-tex">h=h_{\text{c}}+h_{\text{t}}^{*}</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p3">
+<p class="ltx_p" id="S2.SS2.p3.1"><span class="translated-text">最后，融合表示</span><span class="original-text">Finally, the fused representation</span><math alttext="h" class="ltx_Math" display="inline" id="S2.SS2.p3.1.m1" intent=":literal"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math><span class="translated-text">通过有限标量量化 (FSQ) 进行离散化</span><span class="original-text">is discretized via finite scalar quantization (FSQ)</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib23" title="">23</a>, <a class="ltx_ref" href="#bib.bib1" title="">1</a>]</cite><span class="translated-text">。量化这些上下文感知特征可确保离散潜在代码保留长范围的解剖关系，从而防止标准压缩中常见的结构碎片。</span><span class="original-text">. Quantizing these context-aware features ensures that the discrete latent codes retain long-range anatomical relationships, preventing the structural fragmentation often seen in standard compression.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span><span class="translated-text">语义恢复块（SRB）</span><span class="original-text">Semantic Recovery Block (SRB)</span></h3>
+<div class="ltx_para" id="S2.SS3.p1">
+<p class="ltx_p" id="S2.SS3.p1.1"><span class="translated-text">基于标准 VAE/VQ 的压缩优先考虑低级保真度而不是高级解剖语义</span><span class="original-text">Standard VAE/VQ-based compression prioritizes low-level fidelity over high-level anatomical semantics</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib28" title="">28</a>, <a class="ltx_ref" href="#bib.bib31" title="">31</a>, <a class="ltx_ref" href="#bib.bib33" title="">33</a>]</cite><span class="translated-text">。在多重对比 MRI 中，这会导致潜在的纠缠（图 1）。</span><span class="original-text">. In multi-contrast MRI, this causes latent entanglement (Fig.</span><a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ 2.3 Semantic Recovery Block (SRB) ‣ 2 Methodology ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">(a))，阻碍交叉对比对应学习。为了缓解这种情况，我们的语义恢复块（SRB）通过自我监督的教师将语义先验重新注入到潜在空间中</span><span class="original-text">(a)), impeding cross-contrast correspondence learning. To mitigate this, our Semantic Recovery Block (SRB) re-injects semantic priors into the latent space via a self-supervised teacher</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="">6</a>, <a class="ltx_ref" href="#bib.bib35" title="">35</a>, <a class="ltx_ref" href="#bib.bib30" title="">30</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.SS3.p2">
+<p class="ltx_p" id="S2.SS3.p2.3"><span class="translated-text">如图所示。</span><span class="original-text">As shown in Fig.</span><a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ 2.3 Semantic Recovery Block (SRB) ‣ 2 Methodology ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">(b)，现代自监督模型自然地提取表现出清晰聚类的特定对比特征。利用这一点，我们提供随机采样的 2D 切片</span><span class="original-text">(b), modern self-supervised models naturally extract contrast-specific features that exhibit clear clustering. Leveraging this, we feed a randomly sampled 2D slice</span><math alttext="x_{r}" class="ltx_Math" display="inline" id="S2.SS3.p2.1.m1" intent=":literal"><semantics><msub><mi>x</mi><mi>r</mi></msub><annotation encoding="application/x-tex">x_{r}</annotation></semantics></math><span class="translated-text">从输入音量</span><span class="original-text">from the input volume</span><math alttext="x" class="ltx_Math" display="inline" id="S2.SS3.p2.2.m2" intent=":literal"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math><span class="translated-text">放入冷冻的 DINO 预训练 ViT-B/16 中</span><span class="original-text">into a frozen DINO-pretrained ViT-B/16</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="">6</a>]</cite><span class="translated-text">。教师语义嵌入</span><span class="original-text">. The teacher semantic embedding</span><math alttext="f_{t}" class="ltx_Math" display="inline" id="S2.SS3.p2.3.m3" intent=":literal"><semantics><msub><mi>f</mi><mi>t</mi></msub><annotation encoding="application/x-tex">f_{t}</annotation></semantics></math><span class="translated-text">通过标准化最终层补丁令牌的全局平均池化获得：</span><span class="original-text">is obtained via global average pooling of normalized final-layer patch tokens:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="f_{\text{t}}=\text{Pool}(\text{E}_{\text{s}}(x_{\text{r}}))." class="ltx_Math" display="block" id="S2.E2.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>f</mi><mtext>t</mtext></msub><mo>=</mo><mrow><mtext>Pool</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><msub><mtext>E</mtext><mtext>s</mtext></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>x</mi><mtext>r</mtext></msub><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">)</mo></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">f_{\text{t}}=\text{Pool}(\text{E}_{\text{s}}(x_{\text{r}})).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS3.p2.6"><span class="translated-text">同时，量子化的潜伏</span><span class="original-text">Simultaneously, the quantized latent</span><math alttext="z" class="ltx_Math" display="inline" id="S2.SS3.p2.4.m1" intent=":literal"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math><span class="translated-text">通过可学习的 MLP 投影仪映射到相同的语义空间</span><span class="original-text">is mapped into the same semantic space through a learnable MLP projector</span><math alttext="P(\cdot)" class="ltx_Math" display="inline" id="S2.SS3.p2.5.m2" intent=":literal"><semantics><mrow><mi>P</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mo lspace="0em" rspace="0em">⋅</mo><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">P(\cdot)</annotation></semantics></math><span class="translated-text">产生学生向量</span><span class="original-text">to produce the student vector</span><math alttext="f_{\text{s}}" class="ltx_Math" display="inline" id="S2.SS3.p2.6.m3" intent=":literal"><semantics><msub><mi>f</mi><mtext>s</mtext></msub><annotation encoding="application/x-tex">f_{\text{s}}</annotation></semantics></math>:</p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E3">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="f_{\text{s}}=P(z)." class="ltx_Math" display="block" id="S2.E3.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>f</mi><mtext>s</mtext></msub><mo>=</mo><mrow><mi>P</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>z</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">f_{\text{s}}=P(z).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS3.p2.7"><span class="translated-text">对齐是通过语义潜在对齐损失强制执行的：</span><span class="original-text">Alignment is enforced via the semantic latent alignment loss:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E4">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{L}_{\text{srb}}=\left\|f_{\text{s}}-f_{\text{t}}\right\|_{2}^{2}." class="ltx_Math" display="block" id="S2.E4.m1" intent=":literal"><semantics><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mtext>srb</mtext></msub><mo>=</mo><msubsup><mrow><mo>‖</mo><mrow><msub><mi>f</mi><mtext>s</mtext></msub><mo>−</mo><msub><mi>f</mi><mtext>t</mtext></msub></mrow><mo>‖</mo></mrow><mn>2</mn><mn>2</mn></msubsup></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\mathcal{L}_{\text{srb}}=\left\|f_{\text{s}}-f_{\text{t}}\right\|_{2}^{2}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div class="ltx_para" id="S2.SS3.p3">
+<p class="ltx_p" id="S2.SS3.p3.1"><span class="translated-text">通过优化</span><span class="original-text">By optimizing</span><math alttext="\mathcal{L}_{\text{srb}}" class="ltx_Math" display="inline" id="S2.SS3.p3.1.m1" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mtext>srb</mtext></msub><annotation encoding="application/x-tex">\mathcal{L}_{\text{srb}}</annotation></semantics></math><span class="translated-text">，潜在嵌入实现了卓越的对比可分离性（图 2）。</span><span class="original-text">, the latent embeddings achieve superior contrast-wise separability (Fig.</span><a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ 2.3 Semantic Recovery Block (SRB) ‣ 2 Methodology ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">(c))，促进下游合成中更稳健的交叉对比关系的学习。</span><span class="original-text">(c)), facilitating the learning of more robust cross-contrast relations for downstream synthesis.</span></p>
+</div>
+<figure class="ltx_figure" id="S2.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="143" id="S2.F2.g1" src="https://arxiv.org/html/2606.17989v1/contents/Final_Triple_Comparison_TSNE.png" width="476"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S2.F2.6.3.1" style="font-size:90%;">Figure 2</span>: </span><span class="ltx_text" id="S2.F2.4.2" style="font-size:90%;">T-SNE visualization of latent representations. (a) Raw FSQ latents exhibit severe entanglement, hindering cross-contrast learning. (b) DINO teacher features <math alttext="f_{\text{t}}" class="ltx_Math" display="inline" id="S2.F2.3.1.m1" intent=":literal"><semantics><msub><mi>f</mi><mtext>t</mtext></msub><annotation encoding="application/x-tex">f_{\text{t}}</annotation></semantics></math> show distinct contrast-wise clustering. (c) Our Semantic Recovery Block (SRB) aligns student embeddings <math alttext="f_{\text{s}}" class="ltx_Math" display="inline" id="S2.F2.4.2.m2" intent=":literal"><semantics><msub><mi>f</mi><mtext>s</mtext></msub><annotation encoding="application/x-tex">f_{\text{s}}</annotation></semantics></math> with the teacher, restoring semantic separability and enhancing the generative model’s cross-contrast mapping.</span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S2.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.4 </span><span class="translated-text">解剖感知频率损失 (AFL)</span><span class="original-text">Anatomy-aware Frequency Loss (AFL)</span></h3>
+<figure class="ltx_figure" id="S2.F4">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure class="ltx_figure ltx_figure_panel ltx_minipage ltx_align_center ltx_align_middle" id="S2.F4.1" style="width:231.1pt;"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="520" id="S2.F4.1.g1" src="https://arxiv.org/html/2606.17989v1/x2.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S2.F4.1.1.1.1" style="font-size:90%;">Figure 3</span>: </span><span class="ltx_text" id="S2.F4.1.2.2" style="font-size:90%;">Illustration of the proposed Anatomy-aware Frequency Loss (AFL) mechanism.</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure class="ltx_figure ltx_figure_panel ltx_minipage ltx_align_center ltx_align_middle" id="S2.F4.2" style="width:100.0pt;"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_portrait" height="1196" id="S2.F4.2.g1" src="https://arxiv.org/html/2606.17989v1/x3.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S2.F4.2.1.1.1" style="font-size:90%;">Figure 4</span>: </span><span class="ltx_text" id="S2.F4.2.2.2" style="font-size:90%;">Latent cross-contrast synthesis.</span></figcaption>
+</figure>
+</div>
+</div>
+</figure>
+<div class="ltx_para" id="S2.SS4.p1">
+<p class="ltx_p" id="S2.SS4.p1.1"><span class="translated-text">标准体积重建目标通常采用均方误差 (MSE) 损失，它优先考虑低频分量，并且通常会导致输出过度平滑</span><span class="original-text">Standard volumetric reconstruction objectives typically employ Mean Squared Error (MSE) loss, which prioritizes low-frequency components and often results in over-smoothed outputs</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib24" title="">24</a>, <a class="ltx_ref" href="#bib.bib22" title="">22</a>]</cite><span class="translated-text">。为了保留临床诊断所必需的高频细节，我们提出了解剖感知频率损失（AFL）。如图所示</span><span class="original-text">. To preserve high-frequency details essential for clinical diagnosis, we propose the Anatomy-aware Frequency Loss (AFL). As illustrated in Fig.</span><a class="ltx_ref" href="#S2.F4" title="Figure 4 ‣ 2.4 Anatomy-aware Frequency Loss (AFL) ‣ 2 Methodology ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">，AFL 使用联合解剖-语义注意机制自适应地强制高频一致性。</span><span class="original-text">, AFL adaptively enforces high-frequency consistency using a joint anatomy-semantic attention mechanism.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS4.p2">
+<p class="ltx_p" id="S2.SS4.p2.2"><span class="translated-text">为了强调具有诊断意义的区域，我们构建了联合注意力权重</span><span class="original-text">To emphasize diagnostically meaningful regions, we construct a joint attention weight</span><math alttext="A_{j}=A_{a}\odot A_{s}" class="ltx_Math" display="inline" id="S2.SS4.p2.1.m1" intent=":literal"><semantics><mrow><msub><mi>A</mi><mi>j</mi></msub><mo>=</mo><mrow><msub><mi>A</mi><mi>a</mi></msub><mo lspace="0.222em" rspace="0.222em">⊙</mo><msub><mi>A</mi><mi>s</mi></msub></mrow></mrow><annotation encoding="application/x-tex">A_{j}=A_{a}\odot A_{s}</annotation></semantics></math><span class="translated-text">。这是从两个并行流导出的。一、解剖注意力图</span><span class="original-text">. This is derived from two parallel streams. First, the anatomical attention map</span><math alttext="A_{a}" class="ltx_Math" display="inline" id="S2.SS4.p2.2.m2" intent=":literal"><semantics><msub><mi>A</mi><mi>a</mi></msub><annotation encoding="application/x-tex">A_{a}</annotation></semantics></math><span class="translated-text">使用体积空间梯度捕获形态不连续性：</span><span class="original-text">captures morphological discontinuities using volumetric spatial gradients:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E5">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="A_{a}=\lvert\nabla_{x}x\rvert+\lvert\nabla_{y}x\rvert+\lvert\nabla_{z}x\rvert," class="ltx_Math" display="block" id="S2.E5.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>A</mi><mi>a</mi></msub><mo>=</mo><mrow><mrow><mo stretchy="false">|</mo><mrow><msub><mo rspace="0.167em">∇</mo><mi>x</mi></msub><mi>x</mi></mrow><mo stretchy="false">|</mo></mrow><mo>+</mo><mrow><mo stretchy="false">|</mo><mrow><msub><mo rspace="0.167em">∇</mo><mi>y</mi></msub><mi>x</mi></mrow><mo stretchy="false">|</mo></mrow><mo>+</mo><mrow><mo stretchy="false">|</mo><mrow><msub><mo rspace="0.167em">∇</mo><mi>z</mi></msub><mi>x</mi></mrow><mo stretchy="false">|</mo></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">A_{a}=\lvert\nabla_{x}x\rvert+\lvert\nabla_{y}x\rvert+\lvert\nabla_{z}x\rvert,</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(5)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS4.p2.7"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\nabla_{x}" class="ltx_Math" display="inline" id="S2.SS4.p2.3.m1" intent=":literal"><semantics><msub><mo>∇</mo><mi>x</mi></msub><annotation encoding="application/x-tex">\nabla_{x}</annotation></semantics></math>, <math alttext="\nabla_{y}" class="ltx_Math" display="inline" id="S2.SS4.p2.4.m2" intent=":literal"><semantics><msub><mo>∇</mo><mi>y</mi></msub><annotation encoding="application/x-tex">\nabla_{y}</annotation></semantics></math><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="\nabla_{z}" class="ltx_Math" display="inline" id="S2.SS4.p2.5.m3" intent=":literal"><semantics><msub><mo>∇</mo><mi>z</mi></msub><annotation encoding="application/x-tex">\nabla_{z}</annotation></semantics></math><span class="translated-text">表示沿三个空间轴的一阶偏导数。本质上，</span><span class="original-text">denote the first-order partial derivatives along the three spatial axes. Essentially,</span><math alttext="A_{a}" class="ltx_Math" display="inline" id="S2.SS4.p2.6.m4" intent=":literal"><semantics><msub><mi>A</mi><mi>a</mi></msub><annotation encoding="application/x-tex">A_{a}</annotation></semantics></math><span class="translated-text">充当局部边缘检测器，明确突出显示精细结构边界和微妙纹理。二、语义注意力图</span><span class="original-text">acts as a local edge detector to explicitly highlight fine structural boundaries and subtle textures. Second, the semantic attention map</span><math alttext="A_{s}" class="ltx_Math" display="inline" id="S2.SS4.p2.7.m5" intent=":literal"><semantics><msub><mi>A</mi><mi>s</mi></msub><annotation encoding="application/x-tex">A_{s}</annotation></semantics></math><span class="translated-text">通过对来自预训练教师网络的最后一层自注意力响应进行聚合和上采样，合并了高级结构相关性</span><span class="original-text">incorporates high-level structural relevance by aggregating and upsampling the final-layer self-attention responses from the pre-trained teacher network described in Section</span><a class="ltx_ref" href="#S2.SS3" title="2.3 Semantic Recovery Block (SRB) ‣ 2 Methodology ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_tag">2.3</span></a><span class="translated-text">。这提供了全局语义过滤器，确保高频保存优先考虑临床重要组织，同时抑制不相关的背景伪影。</span><span class="original-text">. This provides a global semantic filter, ensuring the high-frequency preservation prioritizes clinically significant tissues while suppressing irrelevant background artifacts.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS4.p3">
+<p class="ltx_p" id="S2.SS4.p3.1"><span class="translated-text">同时，我们隔离高频残差</span><span class="original-text">Concurrently, we isolate the high-frequency residual</span><math alttext="\mathcal{H}(x)" class="ltx_Math" display="inline" id="S2.SS4.p3.1.m1" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">ℋ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{H}(x)</annotation></semantics></math><span class="translated-text">通过减去其低通滤波表示来计算输入体积：</span><span class="original-text">of the input volume by subtracting its low-pass filtered representation:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E6">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{H}(x)=x-\mathcal{S}_{v}(x)," class="ltx_Math" display="block" id="S2.E6.m1" intent=":literal"><semantics><mrow><mrow><mrow><mi class="ltx_font_mathcaligraphic">ℋ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mi>x</mi><mo>−</mo><mrow><msub><mi class="ltx_font_mathcaligraphic">𝒮</mi><mi>v</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathcal{H}(x)=x-\mathcal{S}_{v}(x),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(6)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS4.p3.5"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\mathcal{S}_{v}(\cdot)" class="ltx_Math" display="inline" id="S2.SS4.p3.2.m1" intent=":literal"><semantics><mrow><msub><mi class="ltx_font_mathcaligraphic">𝒮</mi><mi>v</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mo lspace="0em" rspace="0em">⋅</mo><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{S}_{v}(\cdot)</annotation></semantics></math><span class="translated-text">表示局部体积平滑算子。最后，AFL 目标计算</span><span class="original-text">denotes a local volumetric smoothing operator. Finally, the AFL objective computes the</span><math alttext="L_{1}" class="ltx_Math" display="inline" id="S2.SS4.p3.3.m2" intent=":literal"><semantics><msub><mi>L</mi><mn>1</mn></msub><annotation encoding="application/x-tex">L_{1}</annotation></semantics></math><span class="translated-text">重建的注意力加权高频分量之间的距离</span><span class="original-text">distance between the attention-weighted high-frequency components of the reconstruction</span><math alttext="\hat{x}" class="ltx_Math" display="inline" id="S2.SS4.p3.4.m3" intent=":literal"><semantics><mover accent="true"><mi>x</mi><mo>^</mo></mover><annotation encoding="application/x-tex">\hat{x}</annotation></semantics></math><span class="translated-text">和目标</span><span class="original-text">and the target</span><math alttext="x" class="ltx_Math" display="inline" id="S2.SS4.p3.5.m4" intent=":literal"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>:</p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E7">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{L}_{\text{afl}}=\left\|A_{j}\odot\mathcal{H}(\hat{x})-A_{j}\odot\mathcal{H}(x)\right\|_{1}." class="ltx_Math" display="block" id="S2.E7.m1" intent=":literal"><semantics><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mtext>afl</mtext></msub><mo>=</mo><msub><mrow><mo>‖</mo><mrow><mrow><mrow><msub><mi>A</mi><mi>j</mi></msub><mo lspace="0.222em" rspace="0.222em">⊙</mo><mi class="ltx_font_mathcaligraphic">ℋ</mi></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mover accent="true"><mi>x</mi><mo>^</mo></mover><mo stretchy="false">)</mo></mrow></mrow><mo>−</mo><mrow><mrow><msub><mi>A</mi><mi>j</mi></msub><mo lspace="0.222em" rspace="0.222em">⊙</mo><mi class="ltx_font_mathcaligraphic">ℋ</mi></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>‖</mo></mrow><mn>1</mn></msub></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\mathcal{L}_{\text{afl}}=\left\|A_{j}\odot\mathcal{H}(\hat{x})-A_{j}\odot\mathcal{H}(x)\right\|_{1}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(7)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS4.p3.6"><span class="translated-text">通过将高频惩罚限制在解剖学和语义上重要的区域，AFL 有效地减轻了过度平滑，同时保持了鲁棒性。</span><span class="original-text">By restricting the high-frequency penalty specifically to anatomically and semantically significant regions, AFL effectively mitigates over-smoothing while maintaining robustness.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS5">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.5 </span><span class="translated-text">培训目标</span><span class="original-text">Training Objective</span></h3>
+<div class="ltx_para" id="S2.SS5.p1">
+<p class="ltx_p" id="S2.SS5.p1.1"><span class="translated-text">最终的训练目标是</span><span class="original-text">The final training objective is</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E8">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{L}_{\text{total}}=\mathcal{L}_{\text{rec}}+\mathcal{L}_{\text{srb}}+\mathcal{L}_{\text{afl}}." class="ltx_Math" display="block" id="S2.E8.m1" intent=":literal"><semantics><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mtext>total</mtext></msub><mo>=</mo><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mtext>rec</mtext></msub><mo>+</mo><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mtext>srb</mtext></msub><mo>+</mo><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mtext>afl</mtext></msub></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\mathcal{L}_{\text{total}}=\mathcal{L}_{\text{rec}}+\mathcal{L}_{\text{srb}}+\mathcal{L}_{\text{afl}}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(8)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div class="ltx_para" id="S2.SS5.p2">
+<p class="ltx_p" id="S2.SS5.p2.3"><span class="translated-text">在这里，</span><span class="original-text">Here,</span><math alttext="\mathcal{L}_{\text{rec}}" class="ltx_Math" display="inline" id="S2.SS5.p2.1.m1" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mtext>rec</mtext></msub><annotation encoding="application/x-tex">\mathcal{L}_{\text{rec}}</annotation></semantics></math><span class="translated-text">是与 3D FSQ 一致的基线重建损失</span><span class="original-text">is the baseline reconstruction loss consistent with 3D FSQ</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib23" title="">23</a>, <a class="ltx_ref" href="#bib.bib1" title="">1</a>]</cite><span class="translated-text">,
+同时</span><span class="original-text">,
+while</span><math alttext="\mathcal{L}_{\text{srb}}" class="ltx_Math" display="inline" id="S2.SS5.p2.2.m2" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mtext>srb</mtext></msub><annotation encoding="application/x-tex">\mathcal{L}_{\text{srb}}</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="\mathcal{L}_{\text{afl}}" class="ltx_Math" display="inline" id="S2.SS5.p2.3.m3" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mtext>afl</mtext></msub><annotation encoding="application/x-tex">\mathcal{L}_{\text{afl}}</annotation></semantics></math><span class="translated-text">旨在分别强制语义一致性并维护诊断相关的高频结构。</span><span class="original-text">are designed to enforce semantic consistency and maintain diagnostically relevant high-frequency structures, respectively.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">实验</span><span class="original-text">Experiments</span></h2>
+<figure class="ltx_table" id="S3.T1">
+<figcaption class="ltx_caption ltx_centering" style="font-size:90%;"><span class="ltx_tag ltx_tag_table">Table 1: </span>Quantitative comparison of reconstruction performance.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T1.6">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T1.6.7.1">
+<th class="ltx_td ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_t" id="S3.T1.6.7.1.1"></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" colspan="3" id="S3.T1.6.7.1.2"><span class="ltx_text" id="S3.T1.6.7.1.2.1" style="font-size:90%;">BraTS Avg</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" colspan="3" id="S3.T1.6.7.1.3"><span class="ltx_text" id="S3.T1.6.7.1.3.1" style="font-size:90%;">IXI Avg</span></th>
+</tr>
+<tr class="ltx_tr" id="S3.T1.6.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_r" id="S3.T1.6.6.7"><span class="ltx_text" id="S3.T1.6.6.7.1" style="font-size:90%;">Method</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T1.1.1.1">
+<span class="ltx_text" id="S3.T1.1.1.1.1" style="font-size:90%;">PSNR </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T1.1.1.1.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T1.2.2.2">
+<span class="ltx_text" id="S3.T1.2.2.2.1" style="font-size:90%;">SSIM </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T1.2.2.2.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r" id="S3.T1.3.3.3">
+<span class="ltx_text" id="S3.T1.3.3.3.1" style="font-size:90%;">LPIPS </span><math alttext="\downarrow" class="ltx_Math" display="inline" id="S3.T1.3.3.3.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T1.4.4.4">
+<span class="ltx_text" id="S3.T1.4.4.4.1" style="font-size:90%;">PSNR </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T1.4.4.4.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T1.5.5.5">
+<span class="ltx_text" id="S3.T1.5.5.5.1" style="font-size:90%;">SSIM </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T1.5.5.5.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T1.6.6.6">
+<span class="ltx_text" id="S3.T1.6.6.6.1" style="font-size:90%;">LPIPS </span><math alttext="\downarrow" class="ltx_Math" display="inline" id="S3.T1.6.6.6.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T1.6.8.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_t" id="S3.T1.6.8.1.1">
+<span class="ltx_text" id="S3.T1.6.8.1.1.1" style="font-size:90%;">VQVAE </span><cite class="ltx_cite ltx_citemacro_cite"><span class="ltx_text" id="S3.T1.6.8.1.1.2.1" style="font-size:90%;">[</span><a class="ltx_ref" href="#bib.bib28" title="">28</a><span class="ltx_text" id="S3.T1.6.8.1.1.3.2" style="font-size:90%;">]</span></cite>
+</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.6.8.1.2"><span class="ltx_text" id="S3.T1.6.8.1.2.1" style="font-size:90%;">27.43</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.6.8.1.3"><span class="ltx_text" id="S3.T1.6.8.1.3.1" style="font-size:90%;">0.8615</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T1.6.8.1.4"><span class="ltx_text" id="S3.T1.6.8.1.4.1" style="font-size:90%;">0.1342</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.6.8.1.5"><span class="ltx_text" id="S3.T1.6.8.1.5.1" style="font-size:90%;">28.61</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.6.8.1.6"><span class="ltx_text" id="S3.T1.6.8.1.6.1" style="font-size:90%;">0.8804</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.6.8.1.7"><span class="ltx_text" id="S3.T1.6.8.1.7.1" style="font-size:90%;">0.1128</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.6.9.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r" id="S3.T1.6.9.2.1">
+<span class="ltx_text" id="S3.T1.6.9.2.1.1" style="font-size:90%;">VQGAN </span><cite class="ltx_cite ltx_citemacro_cite"><span class="ltx_text" id="S3.T1.6.9.2.1.2.1" style="font-size:90%;">[</span><a class="ltx_ref" href="#bib.bib9" title="">9</a><span class="ltx_text" id="S3.T1.6.9.2.1.3.2" style="font-size:90%;">]</span></cite>
+</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.6.9.2.2"><span class="ltx_text" id="S3.T1.6.9.2.2.1" style="font-size:90%;">29.84</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.6.9.2.3"><span class="ltx_text" id="S3.T1.6.9.2.3.1" style="font-size:90%;">0.8953</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T1.6.9.2.4"><span class="ltx_text" id="S3.T1.6.9.2.4.1" style="font-size:90%;">0.0816</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.6.9.2.5"><span class="ltx_text" id="S3.T1.6.9.2.5.1" style="font-size:90%;">31.06</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.6.9.2.6"><span class="ltx_text" id="S3.T1.6.9.2.6.1" style="font-size:90%;">0.9127</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.6.9.2.7"><span class="ltx_text" id="S3.T1.6.9.2.7.1" style="font-size:90%;">0.0705</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.6.10.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r" id="S3.T1.6.10.3.1">
+<span class="ltx_text" id="S3.T1.6.10.3.1.1" style="font-size:90%;">FSQ </span><cite class="ltx_cite ltx_citemacro_cite"><span class="ltx_text" id="S3.T1.6.10.3.1.2.1" style="font-size:90%;">[</span><a class="ltx_ref" href="#bib.bib1" title="">1</a><span class="ltx_text" id="S3.T1.6.10.3.1.3.2" style="font-size:90%;">]</span></cite>
+</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.6.10.3.2"><span class="ltx_text" id="S3.T1.6.10.3.2.1" style="font-size:90%;">32.39</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.6.10.3.3"><span class="ltx_text" id="S3.T1.6.10.3.3.1" style="font-size:90%;">0.9244</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T1.6.10.3.4"><span class="ltx_text ltx_font_bold" id="S3.T1.6.10.3.4.1" style="font-size:90%;">0.0557</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.6.10.3.5"><span class="ltx_text" id="S3.T1.6.10.3.5.1" style="font-size:90%;">33.18</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.6.10.3.6"><span class="ltx_text" id="S3.T1.6.10.3.6.1" style="font-size:90%;">0.9305</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T1.6.10.3.7"><span class="ltx_text" id="S3.T1.6.10.3.7.1" style="font-size:90%;">0.0514</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.6.11.4" style="--ltx-bg-color:#E6E6E6;">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_r" id="S3.T1.6.11.4.1"><span class="ltx_text" id="S3.T1.6.11.4.1.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">Ours</span></th>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T1.6.11.4.2"><span class="ltx_text ltx_font_bold" id="S3.T1.6.11.4.2.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">32.80</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T1.6.11.4.3"><span class="ltx_text ltx_font_bold" id="S3.T1.6.11.4.3.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">0.9281</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S3.T1.6.11.4.4"><span class="ltx_text" id="S3.T1.6.11.4.4.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">0.0578</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T1.6.11.4.5"><span class="ltx_text ltx_font_bold" id="S3.T1.6.11.4.5.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">33.65</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T1.6.11.4.6"><span class="ltx_text ltx_font_bold" id="S3.T1.6.11.4.6.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">0.9377</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T1.6.11.4.7"><span class="ltx_text ltx_font_bold" id="S3.T1.6.11.4.7.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">0.0450</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure class="ltx_table" id="S3.T2">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S3.T2.10.1.1" style="font-size:90%;">Table 2</span>: </span><span class="ltx_text" id="S3.T2.11.2" style="font-size:90%;">Quantitative comparison on BraTS for two translation tasks.</span></figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T2.8">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T2.2.2">
+<th class="ltx_td ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_t" id="S3.T2.2.2.3"></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" colspan="3" id="S3.T2.1.1.1">
+<span class="ltx_text" id="S3.T2.1.1.1.1" style="font-size:90%;">T2 </span><math alttext="\rightarrow" class="ltx_Math" display="inline" id="S3.T2.1.1.1.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math><span class="ltx_text" id="S3.T2.1.1.1.2" style="font-size:90%;"> FLAIR</span>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" colspan="3" id="S3.T2.2.2.2">
+<span class="ltx_text" id="S3.T2.2.2.2.1" style="font-size:90%;">T1 </span><math alttext="\rightarrow" class="ltx_Math" display="inline" id="S3.T2.2.2.2.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math><span class="ltx_text" id="S3.T2.2.2.2.2" style="font-size:90%;"> T1C</span>
+</th>
+</tr>
+<tr class="ltx_tr" id="S3.T2.8.8">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_r" id="S3.T2.8.8.7"><span class="ltx_text" id="S3.T2.8.8.7.1" style="font-size:90%;">Method</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T2.3.3.1">
+<span class="ltx_text" id="S3.T2.3.3.1.1" style="font-size:90%;">PSNR </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T2.3.3.1.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T2.4.4.2">
+<span class="ltx_text" id="S3.T2.4.4.2.1" style="font-size:90%;">SSIM </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T2.4.4.2.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r" id="S3.T2.5.5.3">
+<span class="ltx_text" id="S3.T2.5.5.3.1" style="font-size:90%;">LPIPS </span><math alttext="\downarrow" class="ltx_Math" display="inline" id="S3.T2.5.5.3.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T2.6.6.4">
+<span class="ltx_text" id="S3.T2.6.6.4.1" style="font-size:90%;">PSNR </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T2.6.6.4.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T2.7.7.5">
+<span class="ltx_text" id="S3.T2.7.7.5.1" style="font-size:90%;">SSIM </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T2.7.7.5.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T2.8.8.6">
+<span class="ltx_text" id="S3.T2.8.8.6.1" style="font-size:90%;">LPIPS </span><math alttext="\downarrow" class="ltx_Math" display="inline" id="S3.T2.8.8.6.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T2.8.9.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_t" id="S3.T2.8.9.1.1">
+<span class="ltx_text" id="S3.T2.8.9.1.1.1" style="font-size:90%;">3D CycleGAN </span><cite class="ltx_cite ltx_citemacro_cite"><span class="ltx_text" id="S3.T2.8.9.1.1.2.1" style="font-size:90%;">[</span><a class="ltx_ref" href="#bib.bib36" title="">36</a><span class="ltx_text" id="S3.T2.8.9.1.1.3.2" style="font-size:90%;">]</span></cite><span class="ltx_text" id="S3.T2.8.9.1.1.4" style="font-size:90%;"> (Pixel)</span>
+</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.8.9.1.2"><span class="ltx_text" id="S3.T2.8.9.1.2.1" style="font-size:90%;">26.45</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.8.9.1.3"><span class="ltx_text" id="S3.T2.8.9.1.3.1" style="font-size:90%;">0.8751</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T2.8.9.1.4"><span class="ltx_text" id="S3.T2.8.9.1.4.1" style="font-size:90%;">0.1423</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.8.9.1.5"><span class="ltx_text" id="S3.T2.8.9.1.5.1" style="font-size:90%;">25.12</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.8.9.1.6"><span class="ltx_text" id="S3.T2.8.9.1.6.1" style="font-size:90%;">0.8224</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.8.9.1.7"><span class="ltx_text" id="S3.T2.8.9.1.7.1" style="font-size:90%;">0.1985</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.8.10.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r" id="S3.T2.8.10.2.1">
+<span class="ltx_text" id="S3.T2.8.10.2.1.1" style="font-size:90%;">Latent CycleGAN </span><cite class="ltx_cite ltx_citemacro_cite"><span class="ltx_text" id="S3.T2.8.10.2.1.2.1" style="font-size:90%;">[</span><a class="ltx_ref" href="#bib.bib36" title="">36</a><span class="ltx_text" id="S3.T2.8.10.2.1.3.2" style="font-size:90%;">]</span></cite><span class="ltx_text" id="S3.T2.8.10.2.1.4" style="font-size:90%;"> (Baseline)</span>
+</th>
+<td class="ltx_td ltx_align_center" id="S3.T2.8.10.2.2"><span class="ltx_text" id="S3.T2.8.10.2.2.1" style="font-size:90%;">26.61</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.8.10.2.3"><span class="ltx_text" id="S3.T2.8.10.2.3.1" style="font-size:90%;">0.8669</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.8.10.2.4"><span class="ltx_text" id="S3.T2.8.10.2.4.1" style="font-size:90%;">0.1342</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.8.10.2.5"><span class="ltx_text" id="S3.T2.8.10.2.5.1" style="font-size:90%;">26.93</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.8.10.2.6"><span class="ltx_text" id="S3.T2.8.10.2.6.1" style="font-size:90%;">0.8937</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.8.10.2.7"><span class="ltx_text" id="S3.T2.8.10.2.7.1" style="font-size:90%;">0.1272</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.8.11.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r" id="S3.T2.8.11.3.1">
+<span class="ltx_text" id="S3.T2.8.11.3.1.1" style="font-size:90%;">Latent Diffusion </span><cite class="ltx_cite ltx_citemacro_cite"><span class="ltx_text" id="S3.T2.8.11.3.1.2.1" style="font-size:90%;">[</span><a class="ltx_ref" href="#bib.bib25" title="">25</a><span class="ltx_text" id="S3.T2.8.11.3.1.3.2" style="font-size:90%;">]</span></cite><span class="ltx_text" id="S3.T2.8.11.3.1.4" style="font-size:90%;"> (Baseline)</span>
+</th>
+<td class="ltx_td ltx_align_center" id="S3.T2.8.11.3.2"><span class="ltx_text" id="S3.T2.8.11.3.2.1" style="font-size:90%;">25.17</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.8.11.3.3"><span class="ltx_text" id="S3.T2.8.11.3.3.1" style="font-size:90%;">0.7721</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.8.11.3.4"><span class="ltx_text" id="S3.T2.8.11.3.4.1" style="font-size:90%;">0.2276</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.8.11.3.5"><span class="ltx_text" id="S3.T2.8.11.3.5.1" style="font-size:90%;">25.44</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.8.11.3.6"><span class="ltx_text" id="S3.T2.8.11.3.6.1" style="font-size:90%;">0.7706</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.8.11.3.7"><span class="ltx_text" id="S3.T2.8.11.3.7.1" style="font-size:90%;">0.2478</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.8.12.4" style="--ltx-bg-color:#E6E6E6;">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r" id="S3.T2.8.12.4.1"><span class="ltx_text" id="S3.T2.8.12.4.1.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">Latent CycleGAN (Ours)</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T2.8.12.4.2"><span class="ltx_text ltx_font_bold" id="S3.T2.8.12.4.2.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">26.65</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.8.12.4.3"><span class="ltx_text ltx_font_bold" id="S3.T2.8.12.4.3.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">0.8769</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T2.8.12.4.4"><span class="ltx_text ltx_font_bold" id="S3.T2.8.12.4.4.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">0.1229</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.8.12.4.5"><span class="ltx_text ltx_font_bold" id="S3.T2.8.12.4.5.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">30.41</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.8.12.4.6"><span class="ltx_text ltx_font_bold" id="S3.T2.8.12.4.6.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">0.9252</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T2.8.12.4.7"><span class="ltx_text ltx_font_bold" id="S3.T2.8.12.4.7.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">0.0851</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.8.13.5" style="--ltx-bg-color:#E6E6E6;">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_r" id="S3.T2.8.13.5.1"><span class="ltx_text" id="S3.T2.8.13.5.1.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">Latent Diffusion (Ours)</span></th>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T2.8.13.5.2"><span class="ltx_text ltx_font_bold" id="S3.T2.8.13.5.2.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">27.95</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T2.8.13.5.3"><span class="ltx_text ltx_font_bold" id="S3.T2.8.13.5.3.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">0.7831</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S3.T2.8.13.5.4"><span class="ltx_text ltx_font_bold" id="S3.T2.8.13.5.4.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">0.1623</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T2.8.13.5.5"><span class="ltx_text ltx_font_bold" id="S3.T2.8.13.5.5.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">26.55</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T2.8.13.5.6"><span class="ltx_text ltx_font_bold" id="S3.T2.8.13.5.6.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">0.7789</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T2.8.13.5.7"><span class="ltx_text ltx_font_bold" id="S3.T2.8.13.5.7.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">0.1874</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">数据集</span><span class="original-text">Datasets</span></h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">我们在两个公共多对比脑部 MRI 数据集上评估我们的框架：</span><span class="original-text">We evaluate our framework on two public multi-contrast brain MRI datasets:</span><span class="ltx_text ltx_font_bold" id="S3.SS1.p1.1.1"><span class="translated-text">胸罩</span><span class="original-text">BraTS</span></span> <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib4" title="">4</a>, <a class="ltx_ref" href="#bib.bib21" title="">21</a>]</cite><span class="translated-text">[0101] ，包括T1加权（T1)、对比后T1（T1C)、自然T2加权（T2)和T2流体衰减反转恢复（FLAIR)序列；和</span><span class="original-text">, comprising T1-weighted (T1), post-contrast T1 (T1C), native T2-weighted (T2), and T2 fluid attenuated inversion recovery (FLAIR) sequences; and the</span><span class="ltx_text ltx_font_bold" id="S3.SS1.p1.1.2"><span class="translated-text">九十一</span><span class="original-text">IXI</span></span><span class="translated-text">数据集</span><span class="original-text">dataset</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="">14</a>]</cite><span class="translated-text">，包含健康的 T1、T2 和 PD 序列。对于这两个数据集，所有 3D 体积都被重新采样为统一的空间分辨率。我们使用它们各自的官方数据分割进行训练、验证和测试。</span><span class="original-text">, comprising healthy T1, T2, and PD sequences. For both datasets, all 3D volumes are resampled to a uniform spatial resolution. We use their respective official data splits for training, validation, and testing.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span><span class="translated-text">实施细节</span><span class="original-text">Implementation Details</span></h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">我们的框架分两个阶段进行训练，均在 8 个 RTX4090 GPU 上进行。对于潜在空间构建，我们采用 3D FSQ</span><span class="original-text">Our framework is trained in two stages, both conducted on 8 RTX4090 GPUs. For latent space construction, we employ 3D FSQ</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib23" title="">23</a>, <a class="ltx_ref" href="#bib.bib1" title="">1</a>]</cite><span class="translated-text">作为基线，有</span><span class="original-text">as the baseline, with</span><math alttext="E_{\text{c}}" class="ltx_Math" display="inline" id="S3.SS2.p1.1.m1" intent=":literal"><semantics><msub><mi>E</mi><mtext>c</mtext></msub><annotation encoding="application/x-tex">E_{\text{c}}</annotation></semantics></math><span class="translated-text">以及采用其结构的解码器。为了评估我们提出的框架的有效性，我们对两个主要任务进行了全面比较：3D MRI 重建和交叉对比合成。我们使用 PSNR、SSIM 和 LPIPS 来定量评估结构保真度和感知质量。</span><span class="original-text">and the decoder adopting its structure. To evaluate the effectiveness of our proposed framework, we conduct comprehensive comparisons on two primary tasks: 3D MRI reconstruction and cross-contrast synthesis. We use PSNR, SSIM, and LPIPS to quantitatively assess both structural fidelity and perceptual quality.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS2.p2">
+<p class="ltx_p" id="S3.SS2.p2.1"><span class="ltx_text ltx_font_bold" id="S3.SS2.p2.1.1"><span class="translated-text">第一阶段：3D MRI 重建。</span><span class="original-text">Stage 1: 3D MRI Reconstruction.</span></span><span class="translated-text">在第一阶段，我们使用第二节中的重建目标来优化模型。</span><span class="original-text">In the first stage, we optimize the model with the reconstruction objective in Sec.</span><a class="ltx_ref" href="#S2.SS5" title="2.5 Training Objective ‣ 2 Methodology ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_tag">2.5</span></a><span class="translated-text">学习紧凑的潜在表示。我们使用 Adam 优化器，初始学习率为</span><span class="original-text">to learn compact latent representations. We use the Adam optimizer with an initial learning rate of</span><math alttext="1\times 10^{-4}" class="ltx_Math" display="inline" id="S3.SS2.p2.1.m1" intent=":literal"><semantics><mrow><mn>1</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1\times 10^{-4}</annotation></semantics></math><span class="translated-text">总批量大小为 2，并训练模型 500 个 epoch。收敛后，负责压缩和重建的模块（即编码器/解码器和量化组件）被冻结。为了评估重建保真度，我们将结构增强的潜在空间与代表性体积压缩方法（包括 VQ-VAE）进行比较</span><span class="original-text">and a total batch size of 2, and train the model for 500 epochs. After convergence, the modules responsible for compression and reconstruction (i.e., the encoder/decoder and quantization components) are frozen. To evaluate reconstruction fidelity, we compare our structurally enhanced latent space against representative volumetric compression methods, including VQ-VAE</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib28" title="">28</a>]</cite><span class="translated-text">,VQGAN</span><span class="original-text">, VQGAN</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib9" title="">9</a>]</cite><span class="translated-text">和香草 FSQ</span><span class="original-text">, and vanilla FSQ</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="">1</a>]</cite>.</p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS2.p3">
+<p class="ltx_p" id="S3.SS2.p3.4"><span class="ltx_text ltx_font_bold" id="S3.SS2.p3.4.1"><span class="translated-text">第二阶段：潜在空间中的交叉对比合成。</span><span class="original-text">Stage 2: Cross-Contrast Synthesis in Latent Space.</span></span><span class="translated-text">在第二阶段，我们执行潜在空间转换以进行对比合成（具体来说，T1</span><span class="original-text">In the second stage, we perform latent-space translation for contrast-to-contrast synthesis (specifically, T1</span><math alttext="\rightarrow" class="ltx_Math" display="inline" id="S3.SS2.p3.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math><span class="translated-text">T1C 和 T2</span><span class="original-text">T1C and T2</span><math alttext="\rightarrow" class="ltx_Math" display="inline" id="S3.SS2.p3.2.m2" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math><span class="translated-text">FLAIR），如图所示。</span><span class="original-text">FLAIR), as illustrated in Fig.</span><a class="ltx_ref" href="#S2.F4" title="Figure 4 ‣ 2.4 Anatomy-aware Frequency Loss (AFL) ‣ 2 Methodology ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">。我们使用 Adam 优化器，初始学习率为</span><span class="original-text">. We use the Adam optimizer with an initial learning rate of</span><math alttext="1\times 10^{-4}" class="ltx_Math" display="inline" id="S3.SS2.p3.3.m3" intent=":literal"><semantics><mrow><mn>1</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1\times 10^{-4}</annotation></semantics></math><span class="translated-text">批量大小为 32，并训练翻译模型 200 个 epoch。此外，我们还聘请了</span><span class="original-text">and a batch size of 32, and train the translation model for 200 epochs. Additionally, we employ an</span><math alttext="L_{1}" class="ltx_Math" display="inline" id="S3.SS2.p3.4.m4" intent=":literal"><semantics><msub><mi>L</mi><mn>1</mn></msub><annotation encoding="application/x-tex">L_{1}</annotation></semantics></math><span class="translated-text">损失作为翻译目标。重要的是，我们现阶段的目标不是提出一种新颖的生成架构，而是证明结构良好、语义可分离的潜在空间可以显着提高现有生成模型的性能。为此，我们选择CycleGAN</span><span class="original-text">loss as the translation objective. Importantly, our goal in this stage is not to propose a novel generative architecture, but rather to demonstrate that a well-structured, semantically separable latent space can significantly boost the performance of existing generative models. To this end, we select CycleGAN</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib36" title="">36</a>]</cite><span class="translated-text">和潜在扩散模型</span><span class="original-text">and Latent Diffusion Models</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib25" title="">25</a>]</cite><span class="translated-text">作为我们的 GAN 和基于扩散的比较方法。</span><span class="original-text">as our GAN and diffusion-based comparison methods.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F6">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure class="ltx_figure ltx_figure_panel ltx_minipage ltx_align_center ltx_align_middle" id="S3.F6.1" style="width:165.6pt;"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="461" id="S3.F6.1.g1" src="https://arxiv.org/html/2606.17989v1/x4.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F6.1.1.1.1" style="font-size:90%;">Figure 5</span>: </span><span class="ltx_text" id="S3.F6.1.2.2" style="font-size:90%;">Visual comparison of 3D MRI reconstruction performance.</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure class="ltx_figure ltx_figure_panel ltx_minipage ltx_align_center ltx_align_middle" id="S3.F6.2" style="width:165.6pt;"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="461" id="S3.F6.2.g1" src="https://arxiv.org/html/2606.17989v1/x5.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F6.2.1.1.1" style="font-size:90%;">Figure 6</span>: </span><span class="ltx_text" id="S3.F6.2.2.2" style="font-size:90%;">Visual comparison of cross-contrast synthesis results.</span></figcaption>
+</figure>
+</div>
+</div>
+</figure>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span><span class="translated-text">重建和翻译结果</span><span class="original-text">Reconstruction and Translation Results</span></h3>
+<div class="ltx_para" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.2"><span class="translated-text">我们的方法在重建和交叉对比翻译任务中实现了最先进的性能。如表所示</span><span class="original-text">Our method achieves state-of-the-art performance across both reconstruction and cross-contrast translation tasks. As summarized in Table</span><a class="ltx_ref" href="#S3.T1" title="Table 1 ‣ 3 Experiments ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">，它比 BraTS 上的最强基线提高了 0.41 dB 的 PSNR，同时在 IXI 上达到了 33.65 PSNR 和最低的 LPIPS 0.0450。此外，将此空间集成到 GAN 和扩散框架中始终优于表中的现有基线</span><span class="original-text">, it improves PSNR by 0.41 dB over the strongest baseline on BraTS, alongside reaching 33.65 PSNR and the lowest LPIPS of 0.0450 on IXI. Furthermore, integrating this space into GAN and diffusion frameworks consistently outperforms existing baselines in Table</span><a class="ltx_ref" href="#S3.T2" title="Table 2 ‣ 3 Experiments ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">;值得注意的是，它使 Latent CycleGAN (T1</span><span class="original-text">; notably, it yields a PSNR increase of 3.48 dB for Latent CycleGAN (T1</span><math alttext="\rightarrow" class="ltx_Math" display="inline" id="S3.SS3.p1.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math><span class="translated-text">T1C) 和 2.78 dB 潜在扩散 (T2</span><span class="original-text">T1C) and 2.78 dB for Latent Diffusion (T2</span><math alttext="\rightarrow" class="ltx_Math" display="inline" id="S3.SS3.p1.2.m2" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math><span class="translated-text">FLAIR），证明这些收益源于语义对齐的潜在表示。定性结果如图。</span><span class="original-text">FLAIR), proving that these gains stem from the semantically aligned latent representation. Qualitative results in Fig.</span><a class="ltx_ref" href="#S3.F6" title="Figure 6 ‣ 3.2 Implementation Details ‣ 3 Experiments ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">和图。</span><span class="original-text">and Fig.</span><a class="ltx_ref" href="#S3.F6" title="Figure 6 ‣ 3.2 Implementation Details ‣ 3 Experiments ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">进一步说明我们的模型恢复细粒度细节并保持对比结构一致性的能力。</span><span class="original-text">further illustrate our model’s ability to recover fine-grained details and maintain structural consistency across contrasts.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.4 </span><span class="translated-text">消融研究</span><span class="original-text">Ablation Studies</span></h3>
+<figure class="ltx_table" id="S3.T3">
+<figcaption class="ltx_caption ltx_centering" style="font-size:90%;"><span class="ltx_tag ltx_tag_table">Table 3: </span>Ablation study of the proposed modules.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T3.16">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T3.4.4">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_t" id="S3.T3.4.4.5"><span class="ltx_text" id="S3.T3.4.4.5.1" style="font-size:90%;">LHE</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_t" id="S3.T3.4.4.6"><span class="ltx_text" id="S3.T3.4.4.6.1" style="font-size:90%;">SRB</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_t" id="S3.T3.4.4.7"><span class="ltx_text" id="S3.T3.4.4.7.1" style="font-size:90%;">AFL</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" colspan="4" id="S3.T3.1.1.1">
+<span class="ltx_text" id="S3.T3.1.1.1.1" style="font-size:90%;">PSNR </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T3.1.1.1.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.2.2.2">
+<span class="ltx_text" id="S3.T3.2.2.2.1" style="font-size:90%;">PSNR </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T3.2.2.2.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.3.3.3">
+<span class="ltx_text" id="S3.T3.3.3.3.1" style="font-size:90%;">SSIM </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T3.3.3.3.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T3.4.4.4">
+<span class="ltx_text" id="S3.T3.4.4.4.1" style="font-size:90%;">LPIPS </span><math alttext="\downarrow" class="ltx_Math" display="inline" id="S3.T3.4.4.4.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+</tr>
+<tr class="ltx_tr" id="S3.T3.16.17.1">
+<th class="ltx_td ltx_th ltx_th_column ltx_th_row" id="S3.T3.16.17.1.1"></th>
+<th class="ltx_td ltx_th ltx_th_column ltx_th_row" id="S3.T3.16.17.1.2"></th>
+<th class="ltx_td ltx_th ltx_th_column ltx_th_row ltx_border_r" id="S3.T3.16.17.1.3"></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.16.17.1.4"><span class="ltx_text" id="S3.T3.16.17.1.4.1" style="font-size:90%;">T1</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.16.17.1.5"><span class="ltx_text" id="S3.T3.16.17.1.5.1" style="font-size:90%;">T2</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.16.17.1.6"><span class="ltx_text" id="S3.T3.16.17.1.6.1" style="font-size:90%;">FLAIR</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r" id="S3.T3.16.17.1.7"><span class="ltx_text" id="S3.T3.16.17.1.7.1" style="font-size:90%;">T1C</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.16.17.1.8"><span class="ltx_text" id="S3.T3.16.17.1.8.1" style="font-size:90%;">Avg</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.16.17.1.9"><span class="ltx_text" id="S3.T3.16.17.1.9.1" style="font-size:90%;">Avg</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T3.16.17.1.10"><span class="ltx_text" id="S3.T3.16.17.1.10.1" style="font-size:90%;">Avg</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T3.7.7">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t" id="S3.T3.5.5.1"><math alttext="\times" class="ltx_Math" display="inline" id="S3.T3.5.5.1.m1" intent=":literal"><semantics><mo mathsize="0.900em">×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t" id="S3.T3.6.6.2"><math alttext="\times" class="ltx_Math" display="inline" id="S3.T3.6.6.2.m1" intent=":literal"><semantics><mo mathsize="0.900em">×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r ltx_border_t" id="S3.T3.7.7.3"><math alttext="\times" class="ltx_Math" display="inline" id="S3.T3.7.7.3.m1" intent=":literal"><semantics><mo mathsize="0.900em">×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.7.7.4"><span class="ltx_text" id="S3.T3.7.7.4.1" style="font-size:90%;">31.60</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.7.7.5"><span class="ltx_text" id="S3.T3.7.7.5.1" style="font-size:90%;">30.38</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.7.7.6"><span class="ltx_text" id="S3.T3.7.7.6.1" style="font-size:90%;">32.88</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T3.7.7.7"><span class="ltx_text" id="S3.T3.7.7.7.1" style="font-size:90%;">34.69</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.7.7.8"><span class="ltx_text" id="S3.T3.7.7.8.1" style="font-size:90%;">32.39</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.7.7.9"><span class="ltx_text" id="S3.T3.7.7.9.1" style="font-size:90%;">0.9234</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.7.7.10"><span class="ltx_text ltx_font_bold" id="S3.T3.7.7.10.1" style="font-size:90%;">0.0557</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.10.10">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S3.T3.8.8.1"><math alttext="\checkmark" class="ltx_Math" display="inline" id="S3.T3.8.8.1.m1" intent=":literal"><semantics><mi mathsize="0.900em" mathvariant="normal">✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S3.T3.9.9.2"><math alttext="\times" class="ltx_Math" display="inline" id="S3.T3.9.9.2.m1" intent=":literal"><semantics><mo mathsize="0.900em">×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r" id="S3.T3.10.10.3"><math alttext="\times" class="ltx_Math" display="inline" id="S3.T3.10.10.3.m1" intent=":literal"><semantics><mo mathsize="0.900em">×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_center" id="S3.T3.10.10.4"><span class="ltx_text" id="S3.T3.10.10.4.1" style="font-size:90%;">31.98</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.10.10.5"><span class="ltx_text" id="S3.T3.10.10.5.1" style="font-size:90%;">31.05</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.10.10.6"><span class="ltx_text" id="S3.T3.10.10.6.1" style="font-size:90%;">32.86</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.10.10.7"><span class="ltx_text" id="S3.T3.10.10.7.1" style="font-size:90%;">34.71</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.10.10.8"><span class="ltx_text" id="S3.T3.10.10.8.1" style="font-size:90%;">32.65</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.10.10.9"><span class="ltx_text" id="S3.T3.10.10.9.1" style="font-size:90%;">0.9256</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.10.10.10"><span class="ltx_text" id="S3.T3.10.10.10.1" style="font-size:90%;">0.0558</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.13.13">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S3.T3.11.11.1"><math alttext="\checkmark" class="ltx_Math" display="inline" id="S3.T3.11.11.1.m1" intent=":literal"><semantics><mi mathsize="0.900em" mathvariant="normal">✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S3.T3.12.12.2"><math alttext="\checkmark" class="ltx_Math" display="inline" id="S3.T3.12.12.2.m1" intent=":literal"><semantics><mi mathsize="0.900em" mathvariant="normal">✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_r" id="S3.T3.13.13.3"><math alttext="\times" class="ltx_Math" display="inline" id="S3.T3.13.13.3.m1" intent=":literal"><semantics><mo mathsize="0.900em">×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_center" id="S3.T3.13.13.4"><span class="ltx_text" id="S3.T3.13.13.4.1" style="font-size:90%;">31.78</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.13.13.5"><span class="ltx_text" id="S3.T3.13.13.5.1" style="font-size:90%;">30.91</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.13.13.6"><span class="ltx_text" id="S3.T3.13.13.6.1" style="font-size:90%;">32.73</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T3.13.13.7"><span class="ltx_text" id="S3.T3.13.13.7.1" style="font-size:90%;">34.45</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.13.13.8"><span class="ltx_text" id="S3.T3.13.13.8.1" style="font-size:90%;">32.47</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.13.13.9"><span class="ltx_text" id="S3.T3.13.13.9.1" style="font-size:90%;">0.9253</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T3.13.13.10"><span class="ltx_text" id="S3.T3.13.13.10.1" style="font-size:90%;">0.0563</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.16.16" style="--ltx-bg-color:#E6E6E6;">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b" id="S3.T3.14.14.1"><math alttext="\checkmark" class="ltx_Math" display="inline" id="S3.T3.14.14.1.m1" intent=":literal" style="--ltx-bg-color:#E6E6E6;"><semantics><mi mathbackground="#E6E6E6" mathsize="0.900em" mathvariant="normal" style="--ltx-bg-color:#E6E6E6;">✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b" id="S3.T3.15.15.2"><math alttext="\checkmark" class="ltx_Math" display="inline" id="S3.T3.15.15.2.m1" intent=":literal" style="--ltx-bg-color:#E6E6E6;"><semantics><mi mathbackground="#E6E6E6" mathsize="0.900em" mathvariant="normal" style="--ltx-bg-color:#E6E6E6;">✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_b ltx_border_r" id="S3.T3.16.16.3"><math alttext="\checkmark" class="ltx_Math" display="inline" id="S3.T3.16.16.3.m1" intent=":literal" style="--ltx-bg-color:#E6E6E6;"><semantics><mi mathbackground="#E6E6E6" mathsize="0.900em" mathvariant="normal" style="--ltx-bg-color:#E6E6E6;">✓</mi><annotation encoding="application/x-tex">\checkmark</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T3.16.16.4"><span class="ltx_text ltx_font_bold" id="S3.T3.16.16.4.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">32.30</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T3.16.16.5"><span class="ltx_text ltx_font_bold" id="S3.T3.16.16.5.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">31.20</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T3.16.16.6"><span class="ltx_text ltx_font_bold" id="S3.T3.16.16.6.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">33.01</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S3.T3.16.16.7"><span class="ltx_text ltx_font_bold" id="S3.T3.16.16.7.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">34.69</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T3.16.16.8"><span class="ltx_text ltx_font_bold" id="S3.T3.16.16.8.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">32.80</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T3.16.16.9"><span class="ltx_text ltx_font_bold" id="S3.T3.16.16.9.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">0.9281</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T3.16.16.10"><span class="ltx_text" id="S3.T3.16.16.10.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">0.0578</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure class="ltx_table" id="S3.T4">
+<figcaption class="ltx_caption ltx_centering" style="font-size:90%;"><span class="ltx_tag ltx_tag_table">Table 4: </span>Ablation study on semantic teachers.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T4.4">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T4.4.4">
+<th class="ltx_td ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_t" id="S3.T4.4.4.5"></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r ltx_border_t" colspan="4" id="S3.T4.1.1.1">
+<span class="ltx_text" id="S3.T4.1.1.1.1" style="font-size:90%;">PSNR </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T4.1.1.1.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T4.2.2.2">
+<span class="ltx_text" id="S3.T4.2.2.2.1" style="font-size:90%;">PSNR </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T4.2.2.2.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T4.3.3.3">
+<span class="ltx_text" id="S3.T4.3.3.3.1" style="font-size:90%;">SSIM </span><math alttext="\uparrow" class="ltx_Math" display="inline" id="S3.T4.3.3.3.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S3.T4.4.4.4">
+<span class="ltx_text" id="S3.T4.4.4.4.1" style="font-size:90%;">LPIPS </span><math alttext="\downarrow" class="ltx_Math" display="inline" id="S3.T4.4.4.4.m1" intent=":literal"><semantics><mo mathsize="0.900em" stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+</tr>
+<tr class="ltx_tr" id="S3.T4.4.5.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_r" id="S3.T4.4.5.1.1"><span class="ltx_text" id="S3.T4.4.5.1.1.1" style="font-size:90%;">Encoder</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T4.4.5.1.2"><span class="ltx_text" id="S3.T4.4.5.1.2.1" style="font-size:90%;">T1</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T4.4.5.1.3"><span class="ltx_text" id="S3.T4.4.5.1.3.1" style="font-size:90%;">T2</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T4.4.5.1.4"><span class="ltx_text" id="S3.T4.4.5.1.4.1" style="font-size:90%;">FLAIR</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r" id="S3.T4.4.5.1.5"><span class="ltx_text" id="S3.T4.4.5.1.5.1" style="font-size:90%;">T1C</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T4.4.5.1.6"><span class="ltx_text" id="S3.T4.4.5.1.6.1" style="font-size:90%;">Avg</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T4.4.5.1.7"><span class="ltx_text" id="S3.T4.4.5.1.7.1" style="font-size:90%;">Avg</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S3.T4.4.5.1.8"><span class="ltx_text" id="S3.T4.4.5.1.8.1" style="font-size:90%;">Avg</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T4.4.6.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r ltx_border_t" id="S3.T4.4.6.1.1"><span class="ltx_text" id="S3.T4.4.6.1.1.1" style="font-size:90%;">ResNet-50</span></th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T4.4.6.1.2"><span class="ltx_text" id="S3.T4.4.6.1.2.1" style="font-size:90%;">31.92</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T4.4.6.1.3"><span class="ltx_text" id="S3.T4.4.6.1.3.1" style="font-size:90%;">31.06</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T4.4.6.1.4"><span class="ltx_text" id="S3.T4.4.6.1.4.1" style="font-size:90%;">32.79</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S3.T4.4.6.1.5"><span class="ltx_text" id="S3.T4.4.6.1.5.1" style="font-size:90%;">34.47</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T4.4.6.1.6"><span class="ltx_text" id="S3.T4.4.6.1.6.1" style="font-size:90%;">32.56</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T4.4.6.1.7"><span class="ltx_text" id="S3.T4.4.6.1.7.1" style="font-size:90%;">0.9268</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T4.4.6.1.8"><span class="ltx_text" id="S3.T4.4.6.1.8.1" style="font-size:90%;">0.0594</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T4.4.7.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_r" id="S3.T4.4.7.2.1"><span class="ltx_text" id="S3.T4.4.7.2.1.1" style="font-size:90%;">MAE (ViT-B)</span></th>
+<td class="ltx_td ltx_align_center" id="S3.T4.4.7.2.2"><span class="ltx_text" id="S3.T4.4.7.2.2.1" style="font-size:90%;">31.75</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T4.4.7.2.3"><span class="ltx_text" id="S3.T4.4.7.2.3.1" style="font-size:90%;">31.00</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T4.4.7.2.4"><span class="ltx_text" id="S3.T4.4.7.2.4.1" style="font-size:90%;">32.76</span></td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S3.T4.4.7.2.5"><span class="ltx_text" id="S3.T4.4.7.2.5.1" style="font-size:90%;">34.33</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T4.4.7.2.6"><span class="ltx_text" id="S3.T4.4.7.2.6.1" style="font-size:90%;">32.46</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T4.4.7.2.7"><span class="ltx_text" id="S3.T4.4.7.2.7.1" style="font-size:90%;">0.9261</span></td>
+<td class="ltx_td ltx_align_center" id="S3.T4.4.7.2.8"><span class="ltx_text" id="S3.T4.4.7.2.8.1" style="font-size:90%;">0.0595</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T4.4.8.3" style="--ltx-bg-color:#E6E6E6;">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b ltx_border_r" id="S3.T4.4.8.3.1"><span class="ltx_text" id="S3.T4.4.8.3.1.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">DINO (ViT-B/16)</span></th>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T4.4.8.3.2"><span class="ltx_text ltx_font_bold" id="S3.T4.4.8.3.2.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">32.30</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T4.4.8.3.3"><span class="ltx_text ltx_font_bold" id="S3.T4.4.8.3.3.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">31.20</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T4.4.8.3.4"><span class="ltx_text ltx_font_bold" id="S3.T4.4.8.3.4.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">33.01</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b ltx_border_r" id="S3.T4.4.8.3.5"><span class="ltx_text ltx_font_bold" id="S3.T4.4.8.3.5.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">34.69</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T4.4.8.3.6"><span class="ltx_text ltx_font_bold" id="S3.T4.4.8.3.6.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">32.80</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T4.4.8.3.7"><span class="ltx_text ltx_font_bold" id="S3.T4.4.8.3.7.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">0.9281</span></td>
+<td class="ltx_td ltx_align_center ltx_border_b" id="S3.T4.4.8.3.8"><span class="ltx_text ltx_font_bold" id="S3.T4.4.8.3.8.1" style="font-size:90%;--ltx-bg-color:#E6E6E6;">0.0578</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para ltx_noindent" id="S3.SS4.p1">
+<p class="ltx_p" id="S3.SS4.p1.1"><span class="ltx_text ltx_font_bold" id="S3.SS4.p1.1.1"><span class="translated-text">模块分析</span><span class="original-text">Module Analysis</span></span><span class="translated-text">如表所示</span><span class="original-text">As shown in Table</span><a class="ltx_ref" href="#S3.T3" title="Table 3 ‣ 3.4 Ablation Studies ‣ 3 Experiments ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">，我们对 BraTS 的渐进消融研究根据普通 3D FSQ 基线评估 LHE、SRB 和 AFL</span><span class="original-text">, our progressive ablation study on BraTS evaluates LHE, SRB, and AFL against a vanilla 3D FSQ baseline</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="">1</a>]</cite><span class="translated-text">。添加 LHE 通过捕获长距离解剖依赖性来提高平均 PSNR（32.39 至 32.65）。引入SRB稍微牺牲了像素级重建
+改进语义组织的保真度。最后，集成 AFL 实现了 32.80 dB PSNR 和 0.9281 SSIM 的峰值性能。总的来说，这些互补模块结合起来可以产生最强的重建结果。</span><span class="original-text">. Adding LHE improves average PSNR (32.39 to 32.65) by capturing long-range anatomical dependencies. Introducing SRB slightly trades pixel-level reconstruction
+fidelity for improved semantic organization. Finally, integrating AFL achieves the peak performance of 32.80 dB PSNR and 0.9281 SSIM. Overall, these complementary modules combine to yield the strongest reconstruction results.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS4.p2">
+<p class="ltx_p" id="S3.SS4.p2.1"><span class="ltx_text ltx_font_bold" id="S3.SS4.p2.1.1"><span class="translated-text">语义教师的作用。</span><span class="original-text">Effect of Semantic Teachers.</span></span><span class="translated-text">我们采用经过 DINO 预训练的 ViT-B/16</span><span class="original-text">We adopt a DINO-pretrained ViT-B/16</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="">6</a>]</cite><span class="translated-text">作为语义老师，由于其强大的全球表征能力</span><span class="original-text">as the semantic teacher due to its strong global representation capabilities</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="">3</a>, <a class="ltx_ref" href="#bib.bib26" title="">26</a>, <a class="ltx_ref" href="#bib.bib32" title="">32</a>]</cite><span class="translated-text">。为了验证此设计选择，我们将其与预训练的 ResNet-50 进行比较</span><span class="original-text">. To validate this design choice, we compare it against pre-trained ResNet-50</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="">13</a>]</cite><span class="translated-text">和 MAE (ViT-B) 编码器</span><span class="original-text">and MAE (ViT-B) encoders</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib12" title="">12</a>]</cite><span class="translated-text">在 BraTS 数据集上的相同设置下。如表所示</span><span class="original-text">under identical settings on the BraTS dataset. As shown in Table</span><a class="ltx_ref" href="#S3.T4" title="Table 4 ‣ 3.4 Ablation Studies ‣ 3 Experiments ‣ Recover Semantics First, Generate Better: Improved Latent Modeling for 3D MRI Reconstruction and Cross-Contrast Synthesis"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">，基于 DINO 的教师取得了最佳性能，获得了最高的平均 PSNR (32.80) 和 SSIM (0.9281)，以及最低的 LPIPS (0.0578)。这些结果证实 DINO 提供了更强大且语义一致的表示。
+在未来的工作中，我们将探讨VLM/LLM是否</span><span class="original-text">, the DINO-based teacher achieves the best performance, obtaining the highest average PSNR (32.80) and SSIM (0.9281) alongside the lowest LPIPS (0.0578). These results confirm that DINO provides more robust and semantically aligned representations.
+In future work, we will explore whether VLMs/LLMs</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib34" title="">34</a>]</cite><span class="translated-text">可以提供更强的语义监督。</span><span class="original-text">can provide stronger semantic supervision.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">在本文中，我们提出了一种用于 3D MRI 重建和交叉对比合成的语义优先潜在建模框架。我们的方法在生成建模之前改进了压缩潜在变量的结构连贯性和语义组织。为此，我们引入了一个潜在协调编码器（LHE）来捕获远程解剖依赖性，一个语义恢复块（SRB）来增强对比度特定的可分离性，以及一个解剖感知频率损失（AFL）来保留诊断上重要的细节。这种设计减少了传统基于 VAE/VQ 的管道中的结构不一致和语义纠缠。对两个公共数据集的实验表明，体积压缩和潜在平移基线得到了一致的改进，并且消融确认了每个组件的贡献。</span><span class="original-text">In this paper, we propose a semantics-first latent modeling framework for 3D MRI reconstruction and cross-contrast synthesis. Our method improves the structural coherence and semantic organization of compressed latents before generative modeling. To this end, we introduce a Latent Harmonization Encoder (LHE) to capture long-range anatomical dependencies, a Semantic Recovery Block (SRB) to enhance contrast-specific separability, and an Anatomy-aware Frequency Loss (AFL) to preserve diagnostically important details. This design reduces structural inconsistency and semantic entanglement in conventional VAE/VQ-based pipelines. Experiments on two public datasets demonstrate consistent improvements over volumetric compression and latent translation baselines, with ablations confirming the contribution of each component.</span></p>
+</div>
+<div class="ltx_para" id="S4.p2">
+<span class="ltx_ERROR undefined" id="S4.p2.1"><span class="translated-text">{学分}</span><span class="original-text">{credits}</span></span>
+</div>
+<section class="ltx_subsubsection" id="S4.SS0.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.0.1 </span><span class="translated-text">致谢</span><span class="original-text">Acknowledgements</span></h4>
+<div class="ltx_para" id="S4.SS0.SSS1.p1">
+<p class="ltx_p" id="S4.SS0.SSS1.p1.1"><span class="translated-text">该工作得到了国家自然科学基金（项目号：82572383）和广东省科技厅（2024ZDZX2004）的资助。</span><span class="original-text">This work was supported by the National Natural Science Foundation of China (Project No.82572383) and the Guangdong Science and Technology Department (2024ZDZX2004).</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S4.SS0.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.0.2 </span><span class="ltx_ERROR undefined" id="S4.SS0.SSS2.1.1"><span class="translated-text">\区分名称</span><span class="original-text">\discintname</span></span>
+</h4>
+<div class="ltx_para" id="S4.SS0.SSS2.p1">
+<p class="ltx_p" id="S4.SS0.SSS2.p1.1"><span class="translated-text">作者没有需要声明与本文内容相关的竞争利益。</span><span class="original-text">The authors have no competing interests to declare that are relevant to the content of this article.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist">
+<li class="ltx_bibitem" id="bib.bib1">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+Agarwal, N., Ali, A., Bala, M., Balaji, Y., Barker, E., Cai, T., Chattopadhyay, P., Chen, Y., Cui, Y., Ding, Y., et al.: Cosmos world foundation model platform for physical ai. arXiv preprint arXiv:2501.03575 (2025)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib2">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+Arslan, F., Kabas, B., Dalmaz, O., Ozbey, M., Çukur, T.: Self-consistent recursive diffusion bridge for medical image translation. Medical Image Analysis <span class="ltx_text ltx_font_bold" id="bib.bib2.1.1">106</span>, 103747 (2025)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib3">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+Baharoon, M., Qureshi, W., Ouyang, J., Xu, Y., Aljouie, A., Peng, W.: Evaluating general purpose vision foundation models for medical image analysis: An experimental study of dinov2 on radiology benchmarks. arXiv preprint arXiv:2312.02366 (2023)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib4">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+Baid, U., Ghodasara, S., Mohan, S., Bilello, M., Calabrese, E., Colak, E., Farahani, K., Kalpathy-Cramer, J., Kitamura, F.C., Pati, S., et al.: The rsna-asnr-miccai brats 2021 benchmark on brain tumor segmentation and radiogenomic classification. arXiv preprint arXiv:2107.02314 (2021)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib5">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+Brown, R.W., Cheng, Y.C.N., Haacke, E.M., Thompson, M.R., Venkatesan, R.: Magnetic resonance imaging: physical principles and sequence design. John Wiley &amp; Sons (2014)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib6">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+Caron, M., Touvron, H., Misra, I., Jégou, H., Mairal, J., Bojanowski, P., Joulin, A.: Emerging properties in self-supervised vision transformers. In: Proceedings of the IEEE/CVF international conference on computer vision. pp. 9650–9660 (2021)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib7">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+Dalmaz, O., Yurt, M., Çukur, T.: Resvit: Residual vision transformers for multimodal medical image synthesis. IEEE Transactions on Medical Imaging <span class="ltx_text ltx_font_bold" id="bib.bib7.1.1">41</span>(10), 2598–2614 (2022)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib8">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+Dosovitskiy, A., Beyer, L., Kolesnikov, A., Weissenborn, D., Zhai, X., Unterthiner, T., Dehghani, M., Minderer, M., Heigold, G., Gelly, S., et al.: An image is worth 16x16 words: Transformers for image recognition at scale. arXiv preprint arXiv:2010.11929 (2020)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib9">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+Esser, P., Rombach, R., Ommer, B.: Taming transformers for high-resolution image synthesis. In: Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. pp. 12873–12883 (2021)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib10">
+<span class="ltx_tag ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock">
+Goodfellow, I., Pouget-Abadie, J., Mirza, M., Xu, B., Warde-Farley, D., Ozair, S., Courville, A., Bengio, Y.: Generative adversarial networks. Communications of the ACM <span class="ltx_text ltx_font_bold" id="bib.bib10.1.1">63</span>(11), 139–144 (2020)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib11">
+<span class="ltx_tag ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock">
+Hatamizadeh, A., Nath, V., Tang, Y., Yang, D., Roth, H.R., Xu, D.: Swin unetr: Swin transformers for semantic segmentation of brain tumors in mri images. In: International MICCAI brainlesion workshop. pp. 272–284. Springer (2021)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib12">
+<span class="ltx_tag ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock">
+He, K., Chen, X., Xie, S., Li, Y., Dollár, P., Girshick, R.: Masked autoencoders are scalable vision learners. In: Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. pp. 16000–16009 (2022)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib13">
+<span class="ltx_tag ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock">
+He, K., Zhang, X., Ren, S., Sun, J.: Deep residual learning for image recognition. In: Proceedings of the IEEE conference on computer vision and pattern recognition. pp. 770–778 (2016)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib14">
+<span class="ltx_tag ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock">
+Heckemann, R.A., Hajnal, J.V., Aljabar, P., Rueckert, D., Hammers, A.: Automatic anatomical brain mri segmentation combining label propagation and decision fusion. NeuroImage <span class="ltx_text ltx_font_bold" id="bib.bib14.1.1">33</span>(1), 115–126 (2006)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib15">
+<span class="ltx_tag ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock">
+Isola, P., Zhu, J.Y., Zhou, T., Efros, A.A.: Image-to-image translation with conditional adversarial networks. In: Proceedings of the IEEE conference on computer vision and pattern recognition. pp. 1125–1134 (2017)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib16">
+<span class="ltx_tag ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock">
+Jiang, L., Dai, B., Wu, W., Loy, C.C.: Focal frequency loss for image reconstruction and synthesis. In: Proceedings of the IEEE/CVF international conference on computer vision. pp. 13919–13929 (2021)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib17">
+<span class="ltx_tag ltx_tag_bibitem">[17]</span>
+<span class="ltx_bibblock">
+Kavur, A.E., Gezer, N.S., Barış, M., Aslan, S., Conze, P.H., Groza, V., Pham, D.D., Chatterjee, S., Ernst, P., Özkan, S., et al.: Chaos challenge-combined (ct-mr) healthy abdominal organ segmentation. Medical image analysis <span class="ltx_text ltx_font_bold" id="bib.bib17.1.1">69</span>, 101950 (2021)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib18">
+<span class="ltx_tag ltx_tag_bibitem">[18]</span>
+<span class="ltx_bibblock">
+Khader, F., Müller-Franzes, G., Tayebi Arasteh, S., Han, T., Haarburger, C., Schulze-Hagen, M., Schad, P., Engelhardt, S., Baeßler, B., Foersch, S., et al.: Denoising diffusion probabilistic models for 3d medical image generation. Scientific reports <span class="ltx_text ltx_font_bold" id="bib.bib18.1.1">13</span>(1),  7303 (2023)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib19">
+<span class="ltx_tag ltx_tag_bibitem">[19]</span>
+<span class="ltx_bibblock">
+Kingma, D.P., Welling, M.: Auto-encoding variational bayes. arXiv preprint arXiv:1312.6114 (2013)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib20">
+<span class="ltx_tag ltx_tag_bibitem">[20]</span>
+<span class="ltx_bibblock">
+Kui, X., Fan, Z., Ji, Z., Li, Q., Liu, C., Si, W., Zou, B.: A comprehensive survey on magnetic resonance image reconstruction. Image and Vision Computing p. 105832 (2025)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib21">
+<span class="ltx_tag ltx_tag_bibitem">[21]</span>
+<span class="ltx_bibblock">
+LaBella, D., Baid, U., Khanna, O., McBurney-Lin, S., McLean, R., Nedelec, P., Rashid, A., Tahon, N.H., Altes, T., Bhalerao, R., et al.: Analysis of the brats 2023 intracranial meningioma segmentation challenge. arXiv preprint arXiv:2405.09787 (2024)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib22">
+<span class="ltx_tag ltx_tag_bibitem">[22]</span>
+<span class="ltx_bibblock">
+Ledig, C., Theis, L., Huszár, F., Caballero, J., Cunningham, A., Acosta, A., Aitken, A., Tejani, A., Totz, J., Wang, Z., et al.: Photo-realistic single image super-resolution using a generative adversarial network. In: Proceedings of the IEEE conference on computer vision and pattern recognition. pp. 4681–4690 (2017)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib23">
+<span class="ltx_tag ltx_tag_bibitem">[23]</span>
+<span class="ltx_bibblock">
+Mentzer, F., Minnen, D., Agustsson, E., Tschannen, M.: Finite scalar quantization: Vq-vae made simple. arXiv preprint arXiv:2309.15505 (2023)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib24">
+<span class="ltx_tag ltx_tag_bibitem">[24]</span>
+<span class="ltx_bibblock">
+Nie, D., Cao, X., Gao, Y., Wang, L., Shen, D.: Estimating ct image from mri data using 3d fully convolutional networks. In: International Workshop on Deep Learning in Medical Image Analysis. pp. 170–178. Springer (2016)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib25">
+<span class="ltx_tag ltx_tag_bibitem">[25]</span>
+<span class="ltx_bibblock">
+Rombach, R., Blattmann, A., Lorenz, D., Esser, P., Ommer, B.: High-resolution image synthesis with latent diffusion models. In: Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. pp. 10684–10695 (2022)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib26">
+<span class="ltx_tag ltx_tag_bibitem">[26]</span>
+<span class="ltx_bibblock">
+Song, X., Xu, X., Yan, P.: Dino-reg: General purpose image encoder for training-free multi-modal deformable medical image registration. In: International Conference on Medical Image Computing and Computer-Assisted Intervention. pp. 608–617. Springer (2024)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib27">
+<span class="ltx_tag ltx_tag_bibitem">[27]</span>
+<span class="ltx_bibblock">
+Taleb, A., Loetzsch, W., Danz, N., Severin, J., Gaertner, T., Bergner, B., Lippert, C.: 3d self-supervised methods for medical imaging. Advances in neural information processing systems <span class="ltx_text ltx_font_bold" id="bib.bib27.1.1">33</span>, 18158–18172 (2020)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib28">
+<span class="ltx_tag ltx_tag_bibitem">[28]</span>
+<span class="ltx_bibblock">
+Van Den Oord, A., Vinyals, O., et al.: Neural discrete representation learning. Advances in neural information processing systems <span class="ltx_text ltx_font_bold" id="bib.bib28.1.1">30</span> (2017)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib29">
+<span class="ltx_tag ltx_tag_bibitem">[29]</span>
+<span class="ltx_bibblock">
+Wang, Y., Li, Z., Mei, J., Wei, Z., Liu, L., Wang, C., Sang, S., Yuille, A.L., Xie, C., Zhou, Y.: Swinmm: masked multi-view with swin transformers for 3d medical image segmentation. In: International conference on medical image computing and computer-assisted intervention. pp. 486–496. Springer (2023)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib30">
+<span class="ltx_tag ltx_tag_bibitem">[30]</span>
+<span class="ltx_bibblock">
+Wu, G., Zhang, S., Shi, R., Gao, S., Chen, Z., Wang, L., Chen, Z., Gao, H., Tang, Y., Cheng, M.M., et al.: Representation entanglement for generation: Training diffusion transformers is much easier than you think. Advances in Neural Information Processing Systems <span class="ltx_text ltx_font_bold" id="bib.bib30.1.1">38</span>, 7714–7743 (2026)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib31">
+<span class="ltx_tag ltx_tag_bibitem">[31]</span>
+<span class="ltx_bibblock">
+Yang, S., Hu, X., Wu, Q., Yang, D.: Vaevq: Enhancing discrete visual tokenization through variational modeling. In: Proceedings of the AAAI Conference on Artificial Intelligence. vol. 40, pp. 11703–11711 (2026)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib32">
+<span class="ltx_tag ltx_tag_bibitem">[32]</span>
+<span class="ltx_bibblock">
+Yang, S., Wang, H., Xing, Z., Chen, S., Zhu, L.: Segdino: An efficient design for medical and natural image segmentation with dino-v3. arXiv preprint arXiv:2509.00833 (2025)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib33">
+<span class="ltx_tag ltx_tag_bibitem">[33]</span>
+<span class="ltx_bibblock">
+Yang, S., Xing, Z., Zhu, L.: Vq-seg: Vector-quantized token perturbation for semi-supervised medical image segmentation. arXiv preprint arXiv:2601.10124 (2026)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib34">
+<span class="ltx_tag ltx_tag_bibitem">[34]</span>
+<span class="ltx_bibblock">
+Yang, S., Zhou, H., Yang, Y., Wang, W., Chen, S., Yang, G., Fu, H., Zhu, L.: Lcm-net: Llm-driven cross-modality moe feature fusion network for cancer survival analysis. IEEE Transactions on Medical Imaging (2026)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib35">
+<span class="ltx_tag ltx_tag_bibitem">[35]</span>
+<span class="ltx_bibblock">
+Yu, S., Kwak, S., Jang, H., Jeong, J., Huang, J., Shin, J., Xie, S.: Representation alignment for generation: Training diffusion transformers is easier than you think. arXiv preprint arXiv:2410.06940 (2024)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib36">
+<span class="ltx_tag ltx_tag_bibitem">[36]</span>
+<span class="ltx_bibblock">
+Zhu, J.Y., Park, T., Isola, P., Efros, A.A.: Unpaired image-to-image translation using cycle-consistent adversarial networks. In: Proceedings of the IEEE international conference on computer vision. pp. 2223–2232 (2017)
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib37">
+<span class="ltx_tag ltx_tag_bibitem">[37]</span>
+<span class="ltx_bibblock">
+Zuo, L., Liu, Y., Xue, Y., Dewey, B.E., Remedios, S.W., Hays, S.P., Bilgel, M., Mowry, E.M., Newsome, S.D., Calabresi, P.A., et al.: Haca3: A unified approach for multi-site mr image harmonization. Computerized Medical Imaging and Graphics <span class="ltx_text ltx_font_bold" id="bib.bib37.1.1">109</span>, 102285 (2023)
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2606.17989v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div aria-hidden="true" id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
