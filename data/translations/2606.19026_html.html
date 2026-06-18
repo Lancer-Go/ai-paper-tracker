@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">用于预测 HRRR 预测误差的混合 LSTM-Vision Transformer 架构</span><span class="original-text">A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 6 月 17 日星期三 12:45:01 生成 http://dlmf.nist.gov/LaTeXML/。</span><span class="original-text">Generated on Wed Jun 17 12:45:01 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<span class="translated-text">文档创建于 2026 年 6 月 22 日。</span><span class="original-text">Document created on 22 June 2026.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2606.19026" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2606.19026" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/">
+<img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/browse/0.3.4/images/arxiv-logo-one-color-white.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2606.19026v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2606.19026v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Data</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS1" title="In 2 Data ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.1 </span>NYSM Standard Network</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS2" title="In 2 Data ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.2 </span>NYSM Profiler Network</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS3" title="In 2 Data ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.3 </span>High-Resolution Rapid Refresh Forecast System</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS4" title="In 2 Data ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.4 </span>Data Curation</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Model</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>LSTM Encoder</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S3.SS2" title="In 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Vision Transformer Encoder</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS1" title="In 3.2 Vision Transformer Encoder ‣ 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2.1 </span>Input Representation</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS2" title="In 3.2 Vision Transformer Encoder ‣ 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2.2 </span>Learned Position and Time Embeddings</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS3" title="In 3.2 Vision Transformer Encoder ‣ 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2.3 </span>Token Projection and Encoding</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS4" title="In 3.2 Vision Transformer Encoder ‣ 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2.4 </span>Linear Projection Layer</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS3" title="In 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.3 </span>MLP Fusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS4" title="In 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.4 </span>LSTM Decoder</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS5" title="In 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.5 </span>Training Stability</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Results</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>Precipitation Error</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS2" title="In 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2 </span>Wind Error</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS3" title="In 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3 </span>Temperature Error</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S5" title="In A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Summary and Conclusions</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2606.19026v1 [cs.LG] 2026 年 6 月 17 日</span><span class="original-text">arXiv:2606.19026v1 [cs.LG] 17 Jun 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_font_bold ltx_title_document"><span class="translated-text">用于预测 HRRR 预测误差的混合 LSTM-Vision Transformer 架构</span><span class="original-text">A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">D. Aaron Evans
+</span><span class="ltx_author_notes">Corresponding author: <a class="ltx_ref ltx_href" href="https://arxiv.org/html/2606.19026v1/mailto:aaevans@albany.edu" title="">aaevans@albany.edu</a>
+<span class="ltx_contact ltx_role_affiliation">Atmospheric Sciences Research Center, University at Albany, SUNY, Albany, NY, USA
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Jay C. Rothenberger
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">University of Oklahoma, Norman, OK, USA
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Kara J. Sulia
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">Atmospheric Sciences Research Center, University at Albany, SUNY, Albany, NY, USA
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Nick P. Bassill
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">State Weather Risk Communication Center, University at Albany, SUNY, Albany, NY, USA
+</span></span></span>
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Chris D. Thorncroft
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation">Atmospheric Sciences Research Center, University at Albany, SUNY, Albany, NY, USA
+</span></span></span>
+</div>
+<div class="ltx_dates"><span class="translated-text">（2026 年 6 月 22 日）</span><span class="original-text">(22 June 2026)</span></div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">高分辨率数值天气预报（NWP）系统中的预报误差通常与未解决的行星边界层（PBL）过程、对流、地形引起的环流和其他垂直结构的大气现象有关。先前的工作表明，长短期记忆（LSTM）网络可以使用介观网观测成功预测高分辨率快速刷新（HRRR）模型中的预报误差，但我们认为性能下降与复杂的垂直大气演化时期有关。为了解决这一限制，我们开发了一种混合 LSTM-Vision Transformer (LSTM-ViT) 框架，该框架将表面观测的时间序列学习与纽约州 Mesonet 剖面仪网络的大气剖面相结合。 LSTM-ViT 框架经过训练，可以预测各个 mesonet 站的 HRRR 每小时降水量、10 米风速和 2 米温度预报误差。在所有三个预测器中，相对于基线 LSTM 架构，结合剖面仪导出的大气结构提高了预测误差预测技能，最大的收益发生在较短的预测提前期和增强的 PBL 活动期间。降水预报误差的改进尤其明显，其中 LSTM-ViT 框架的预测能力相对于基线 LSTM 大约提高了一倍，同时更好地捕获对流驱动的误差演变并减少与 PBL 过程相关的退化。这些结果表明，将时间序列学习与垂直通知注意机制相结合，为改进业务 NWP 系统中的预报误差预测提供了一条具有物理意义的途径。我们的研究为预测​​者提供了有关模型偏差和预测置信度的增强指导。</span><span class="original-text">Forecast errors in high-resolution numerical weather prediction (NWP) systems are often linked to unresolved planetary boundary layer (PBL) processes, convection, terrain-induced circulations, and other vertically structured atmospheric phenomena. Previous work demonstrated that Long Short-Term Memory (LSTM) networks can successfully predict forecast errors in the High-Resolution Rapid Refresh (HRRR) model using mesonet observations, but we believe performance degradation is linked to periods of complex vertical atmospheric evolution. To address this limitation, we develop a hybrid LSTM–Vision Transformer (LSTM–ViT) framework that combines temporal sequence learning from surface observations with atmospheric profiles from the New York State Mesonet profiler network. The LSTM–ViT framework is trained to predict HRRR hourly precipitation, 10-m wind speed, and 2-m temperature forecast errors at individual mesonet stations. Across all three predictors, incorporation of profiler-derived atmospheric structure improves forecast-error prediction skill relative to the baseline LSTM architecture, with the largest gains occurring at shorter forecast lead times and during periods of enhanced PBL activity. Improvements are particularly pronounced for precipitation forecast error, where the LSTM-ViT framework achieves approximately a twofold increase in predictive skill relative to the baseline LSTM while better capturing convectively driven error evolution and reducing degradation associated with PBL processes. These results demonstrate that combining temporal sequence learning with vertically informed attention mechanisms provides a physically meaningful pathway for improving forecast-error prediction in operational NWP systems. Our research offers forecasters enhanced guidance regarding model bias and forecast confidence.</span><span class="ltx_note ltx_role_footnote"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span><span class="translated-text">本手稿是预印本，已提交给同行评审</span><span class="original-text">This manuscript is a preprint and has been submitted for peer review to the</span><span class="ltx_text ltx_font_italic"><span class="translated-text">地球系统的人工智能</span><span class="original-text">Artificial Intelligence for the Earth Systems</span></span><span class="translated-text">日记。内容可能会根据同行评审过程的结果进行更改，不应被视为最终或确定的。本作品的版权可能会转让，恕不另行通知。</span><span class="original-text">journal. The content is subject to change based on the outcome of the peer-review process and should not be considered final or definitive. Copyright in this Work may be transferred without further notice.</span></span></span></span></p>
+</div>
+<section class="ltx_section ltx_indent_first" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">数值天气预报（NWP）系统表现出有限的分辨率和系统预报误差，这些误差通常难以在传统建模框架中明确表示，这推动了机器学习（ML）方法的发展，以利用历史预报和观测来预测和纠正这些误差。早期的机器学习应用程序展示了在后处理和决策支持环境中的价值，包括对大平原高影响天气的实时指导</span><span class="original-text">Numerical weather prediction (NWP) systems exhibit limited resolution and systematic forecast errors that are often difficult to represent explicitly within traditional modeling frameworks, motivating the development of machine-learning (ML) methods to predict and correct these errors using historical forecasts and observations. Early ML applications demonstrated value in post-processing and decision-support contexts, including real-time guidance for high-impact weather in the Great Plains</span><cite class="ltx_cite ltx_citemacro_citep">(McGovern et al., <a class="ltx_ref" href="#bib.bib18" title="">2017</a>)</cite><span class="translated-text">冰雹发生和大小的概率预测</span><span class="original-text">and probabilistic prediction of hail occurrence and size</span><cite class="ltx_cite ltx_citemacro_citep">(Gagne et al., <a class="ltx_ref" href="#bib.bib10" title="">2017</a>)</cite><span class="translated-text">。基于这些成功，ML 驱动的预测产品（例如 GraphCast）</span><span class="original-text">. Building on these successes, ML-driven forecast products such as GraphCast</span><cite class="ltx_cite ltx_citemacro_citep">(Lam et al., <a class="ltx_ref" href="#bib.bib14" title="">2023</a>)</cite><span class="translated-text">ECMWF 的人工智能预报系统（AIFS；</span><span class="original-text">and ECMWF’s Artificial Intelligence Forecasting System (AIFS;</span><cite class="ltx_cite ltx_citemacro_citep">Lang et al., <a class="ltx_ref" href="#bib.bib15" title="">2024</a></cite><span class="translated-text">）现在提供全场、中等分辨率的全球预报，标志着向机器学习增强业务天气预报的重大转变。</span><span class="original-text">) now provide full-field, medium-resolution global forecasts, marking a significant shift toward ML-augmented operational weather prediction.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">高分辨率数值天气预报系统中的持续误差继续激发更高的保真度和更方便的后处理技术，从而在不修改基础模型的情况下提高预报质量。为了应对这一挑战，</span><span class="original-text">Persistent errors in high-resolution NWP systems continue to motivate higher fidelity and more expedient post-processing techniques that improve forecast quality without modifying the underlying model. To address this challenge,</span><cite class="ltx_cite ltx_citemacro_citet">Evans et al. (<a class="ltx_ref" href="#bib.bib9" title="">2025</a>)</cite><span class="translated-text">开发了一个长短期记忆（LSTM）框架，可以直接根据数值天气预报和地面观测来预测预报误差。 LSTM 模型将基线高分辨率快速刷新 (HRRR) 预测提高了 15-75%（具体取决于目标变量），这表明 ML 可以从历史数据中学习系统的预测误差特征。由于该框架作为后处理步骤运行，因此预报员可以将其应用于现有的 NWP 产品，而无需额外的数值积分，从而提供了一种评估预报不确定性并在使用时纠正预报偏差的实用方法。来自美国 30 多个全州 mesonet 网络的密集表面观测的广泛可用性</span><span class="original-text">developed a Long Short-Term Memory (LSTM) framework that predicts forecast error directly from NWP forecasts and surface observations. The LSTM models improve baseline High-Resolution Rapid Refresh (HRRR) forecasts by 15–75%, depending on target variable, demonstrating that ML can learn systematic forecast-error characteristics from historical data. Because the framework operates as a post-processing step, forecasters can apply it to existing NWP products without additional numerical integrations, providing a practical means of assessing forecast uncertainty and correcting forecast biases at the point of use. The widespread availability of dense surface observations from more than 30 statewide mesonet networks across the United States</span><cite class="ltx_cite ltx_citemacro_citep">(Mahmood and Coauthors, <a class="ltx_ref" href="#bib.bib16" title="">2017</a>; NOAA/NCEP MADIS, <a class="ltx_ref" href="#bib.bib22" title="">2021</a>)</cite><span class="translated-text">还使得该方法可以轻松地在不同的预测环境中转移。</span><span class="original-text">also makes the approach readily transferable across diverse forecasting environments.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1">In <cite class="ltx_cite ltx_citemacro_citet">Evans et al. (<a class="ltx_ref" href="#bib.bib9" title="">2025</a>)</cite><span class="translated-text">中，我们使用平均绝对误差 (MAE) 以及在预测和观测的 NWP 预测误差之间计算的平均误差指标来评估纽约州 Mesonet (NYSM) 和俄克拉荷马州 Mesonet 的 LSTM 性能，同时检查跨地理区域、昼夜周期、季节周期的技能以及相对于 HRRR 预测的相对改进。这些分析将沿着与地形影响和潜在大气过程相关的中尺度边界的系统性能退化联系起来。最强的退化与活跃或复杂的行星边界层 (PBL) 演化周期相关，这表明未解决的边界层过程代表了基于表面的 LSTM 框架的一个重要限制。目前的工作通过视觉变换器（ViT）编码器合并微波辐射计的垂直解析 PBL 观测结果来解决这一限制，使模型能够学习可能​​导致预测误差的地表上方的大气结构。</span><span class="original-text">, we evaluate LSTM performance across the New York State Mesonet (NYSM) and Oklahoma State Mesonet using mean absolute error (MAE) and mean error metrics computed between predicted and observed NWP forecast errors, while examining skill across geographic regions, diurnal cycles, seasonal cycles, and relative improvements over HRRR forecasts. These analyses link systematic performance degradation along mesoscale boundaries associated with topographic influences and latent atmospheric processes. The strongest degradation is correlated with periods of active or complex planetary boundary layer (PBL) evolution, suggesting that unresolved boundary-layer processes represent an important limitation of the surface-based LSTM framework. The present work addresses this limitation by incorporating vertically resolved PBL observations from microwave radiometers through a Vision Transformer (ViT) encoder, enabling the model to learn atmospheric structures above the surface that may contribute to forecast error.</span></p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">先前的研究已经证明了将循环表示和基于注意力的表示相结合对于复杂的预测问题的价值。例如，</span><span class="original-text">Previous studies have demonstrated the value of combining recurrent and attention-based representations for complex forecasting problems. For example,</span><cite class="ltx_cite ltx_citemacro_citet">Zhang (<a class="ltx_ref" href="#bib.bib29" title="">2025</a>)</cite><span class="translated-text">发现混合 LSTM-Transformer 架构在电力负荷预测方面始终优于独立 LSTM 和 Transformer 模型，同时</span><span class="original-text">found that hybrid LSTM–Transformer architectures consistently outperformed standalone LSTM and Transformer models for electricity load forecasting, while</span><cite class="ltx_cite ltx_citemacro_citet">Tang et al. (<a class="ltx_ref" href="#bib.bib27" title="">2023</a>)</cite><span class="translated-text">结果表明，SwinLSTM 在时空预测任务上优于 ConvLSTM。总之，这些研究表明，注意力机制可以通过改进复杂空间和时间依赖性的表示来补充循环序列建模。然而，这两个框架都在单一数据模式上运行。相比之下，目前的工作将表面观测、数值天气预报预报场和垂直解析微波辐射计剖面结合在一个统一的架构中，以改进高分辨率数值天气预报环境中的预报误差预测。</span><span class="original-text">showed that SwinLSTM outperformed ConvLSTM on spatiotemporal prediction tasks. Together, these studies demonstrate that attention mechanisms can complement recurrent sequence modeling by improving representations of complex spatial and temporal dependencies. However, both frameworks operated on a single data modality. In contrast, the present work combines surface observations, NWP forecast fields, and vertically resolved microwave-radiometer profiles within a unified architecture to improve forecast-error prediction in a high-resolution NWP environment.</span></p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">本研究评估了 LSTM-Vision Transformer (LSTM-ViT) 框架，用于预测 HRRR 预报中的累积降水量、10 米风级和 2 米温度预报误差。我们假设垂直解析的 PBL 观测包含与预测误差演化相关的信息，而这些信息仅靠表面观测无法捕获。因此，通过 ViT 编码器合并垂直剖面信息应该可以提高相对于基于表面的 LSTM 架构的预测误差预测技能，特别是在复杂的边界层演化和中尺度强迫期间。</span><span class="original-text">This study evaluates a LSTM–Vision Transformer (LSTM-ViT) framework for predicting accumulated precipitation, 10-m wind magnitude, and 2-m temperature forecast errors within HRRR forecasts. We hypothesize that vertically resolved PBL observations contain information relevant to forecast-error evolution that surface observations alone cannot capture. Consequently, incorporating vertical profile information through a ViT encoder should improve forecast-error prediction skill relative to a surface-based LSTM architecture, particularly during periods of complex boundary-layer evolution and mesoscale forcing.</span></p>
+</div>
+</section>
+<section class="ltx_section ltx_indent_first" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">数据</span><span class="original-text">Data</span></h2>
+<section class="ltx_subsection ltx_indent_first" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span><span class="translated-text">NYSM标准网络</span><span class="original-text">NYSM Standard Network</span></h3>
+<div class="ltx_para" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.1"><span class="translated-text">NYSM 自 2018 年开始运营，由纽约州 (NYS) 的 127 个气象站组成，平均间距为 27 公里</span><span class="original-text">Operational since 2018, the NYSM comprises 127 weather stations across New York State (NYS), with an average spacing of 27 kilometers</span><cite class="ltx_cite ltx_citemacro_citep">(Brotzge et al., <a class="ltx_ref" href="#bib.bib4" title="">2020</a>, hereafter B20)</cite><span class="translated-text">。注：普莱西德湖站不包括在内，因为它是在 2024 年 5 月安装的，不在训练期间。 NYSM 因其严格的质量控制、精确的仪器校准和严格的场地布置要求 (B20) 而受到认可。 NYSM 数据每天、每周、每月和每年实时经历自动和手动质量保证流程 (B20)。每个观察结果都会自动分配一个质量标志：良好、可疑、警告或失败。因此，本文中用于训练 ML 模型的数据不包括标记为警告或失败的数据。</span><span class="original-text">. Note: Lake Placid Station is excluded, as it was installed in May 2024, which is outside of the training period. The NYSM is recognized for its rigorous quality control, precise instrument calibration, and strict site placement requirements (B20). NYSM data undergoes both automated and manual quality assurance processes in real time, as well as on a daily, weekly, monthly, and annual basis (B20). Each observation is automatically assigned a quality flag: good, suspect, warning, or failure. As such, the data used to train the ML models herein excludes data flagged with warning or failure.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS1.p2">
+<p class="ltx_p" id="S2.SS1.p2.1"><span class="translated-text">正如建立在</span><span class="original-text">As established in</span><cite class="ltx_cite ltx_citemacro_citet">Evans et al. (<a class="ltx_ref" href="#bib.bib9" title="">2025</a>, hereafter E25)</cite><span class="translated-text">，NYSM 观测结果与 NWP 模型预测的时间尺度一致。为了使每五分钟记录一次的 NYSM 观测值的时间尺度与 NWP 模型预报的时间尺度保持一致，每小时顶部的观测值被用作训练期间真实观测到的大气条件。有两个例外：总降水量是按小时累积的，风速是按小时平均的。 NYSM 标准网络中有 16 个气象变量，用作训练 LSTM 模型的特征。这些功能列于表中</span><span class="original-text">, the NYSM observations are aligned with the temporal scale of the NWP model forecast. To align the temporal scale of the NYSM observations, which are recorded every five minutes, with that of an NWP model forecast, the observations taken at the top of each hour are used as the true observed atmospheric conditions during training. There are two exceptions to this: total precipitation is accumulated over the hour, and wind speed is averaged over the hour. There are 16 meteorological variables from the NYSM standard network that are used as features in training the LSTM models. These features are listed in Table</span><a class="ltx_ref" href="#S2.T1" title="Table 1 ‣ 2.1 NYSM Standard Network ‣ 2 Data ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+</div>
+<figure class="ltx_table" id="S2.T1">
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="S2.T1.1" style="width:345.0pt;height:176.6pt;vertical-align:-86.5pt;"><span class="ltx_transformed_inner" style="transform:translate(-63.1pt,32.3pt) scale(0.732180577159169,0.732180577159169) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S2.T1.1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S2.T1.1.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t" id="S2.T1.1.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S2.T1.1.1.1.1.1.1">HRRR Model Features</span></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S2.T1.1.1.1.1.2"><span class="ltx_text ltx_font_bold" id="S2.T1.1.1.1.1.2.1">New York State Mesonet Features</span></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S2.T1.1.1.1.1.3"><span class="ltx_text ltx_font_bold" id="S2.T1.1.1.1.1.3.1">Profiler Features</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S2.T1.1.1.2.1">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r ltx_border_tt" id="S2.T1.1.1.2.1.1">–</td>
+<td class="ltx_td ltx_align_left ltx_border_r ltx_border_tt" id="S2.T1.1.1.2.1.2">Latitude</td>
+<td class="ltx_td ltx_align_left ltx_border_r ltx_border_tt" id="S2.T1.1.1.2.1.3">–</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.3.2">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r" id="S2.T1.1.1.3.2.1">–</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.3.2.2">Longitude</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.3.2.3">–</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.4.3">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r" id="S2.T1.1.1.4.3.1">–</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.4.3.2">Elevation</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.4.3.3">–</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.5.4">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r" id="S2.T1.1.1.5.4.1">2-Meter Temperature</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.5.4.2">2-Meter Temperature</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.5.4.3">Temperature</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.6.5">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r" id="S2.T1.1.1.6.5.1">2-Meter Specific Humidity</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.6.5.2">9-Meter Temperature</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.6.5.3">Infrared Temperature</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.7.6">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r" id="S2.T1.1.1.7.6.1">2-Meter Dew Point</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.7.6.2">2-Meter Dew Point</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.7.6.3">Dew Point</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.8.7">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r" id="S2.T1.1.1.8.7.1">2-Meter Relative Humidity</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.8.7.2">2-Meter Relative Humidity</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.8.7.3">Relative Humidity</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.9.8">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r" id="S2.T1.1.1.9.8.1">Downward SW Radiation</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.9.8.2">Solar Radiation</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.9.8.3">Liquid Content</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.10.9">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r" id="S2.T1.1.1.10.9.1">Downward LW Radiation</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.10.9.2">Atmospheric Pressure</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.10.9.3">Pressure Level</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.11.10">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r" id="S2.T1.1.1.11.10.1">Mean Sea-Level Pressure</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.11.10.2">Mean Sea-Level Pressure</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.11.10.3">Integrated Vapor</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.12.11">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r" id="S2.T1.1.1.12.11.1">Total Wind Speed</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.12.11.2">Mean 10-Meter Sonic Anemometer Wind Speed</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.12.11.3">Integrated Liquid</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.13.12">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r" id="S2.T1.1.1.13.12.1">10-Meter Wind U Component</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.13.12.2">10-Meter Sonic Anemometer Wind Speed</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.13.12.3">Vapor Density</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.14.13">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r" id="S2.T1.1.1.14.13.1">10-Meter Wind V Component</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.14.13.2">Max 10-Meter Sonic Anemometer Wind Speed</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.14.13.3">–</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.15.14">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r" id="S2.T1.1.1.15.14.1">10-Meter Wind Direction</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.15.14.2">10-Meter Wind Direction</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.15.14.3">–</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.16.15">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r" id="S2.T1.1.1.16.15.1">Total Hourly Precipitation</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.16.15.2">Total Hourly Precipitation</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.16.15.3">Rain Flag</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.17.16">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r" id="S2.T1.1.1.17.16.1">Accumulated Snow</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.17.16.2">Snow Depth</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.17.16.3">–</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.18.17">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r" id="S2.T1.1.1.18.17.1">CAPE</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.18.17.2">–</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.18.17.3">–</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.19.18">
+<td class="ltx_td ltx_align_left ltx_border_l ltx_border_r" id="S2.T1.1.1.19.18.1">Total Cloud Cover</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.19.18.2">–</td>
+<td class="ltx_td ltx_align_left ltx_border_r" id="S2.T1.1.1.19.18.3">Cloud Base</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.1.20.19">
+<td class="ltx_td ltx_align_left ltx_border_b ltx_border_l ltx_border_r" id="S2.T1.1.1.20.19.1">500-hPa Geopotential Height</td>
+<td class="ltx_td ltx_align_left ltx_border_b ltx_border_r" id="S2.T1.1.1.20.19.2">–</td>
+<td class="ltx_td ltx_align_left ltx_border_b ltx_border_r" id="S2.T1.1.1.20.19.3">–</td>
+</tr>
+</tbody>
+</table>
+</span></div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Combined list of HRRR, NYSM-Standard, and NYSM-Profiler independent variables used as features in training the Hybrid LSTM-ViT models.</figcaption>
+</figure>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span><span class="translated-text">NYSM 分析器网络</span><span class="original-text">NYSM Profiler Network</span></h3>
+<figure class="ltx_figure" id="S2.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="477" id="S2.F1.g1" src="https://arxiv.org/html/2606.19026v1/nysm_profiler_network.png" width="546"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>New York State overlaid with panels corresponding to NCEI climate divisions <cite class="ltx_cite ltx_citemacro_citep">(NCEI, <a class="ltx_ref" href="#bib.bib21" title="">2015</a>)</cite>. Green stars represent the locations of the microwave radiometers, and blue scatter points represent the locations of the NYSM stations eligible for use across the NYSM standard network.</figcaption>
+</figure>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.1"><span class="translated-text">NYSM Profiler 网络由标准网络中的 17 个站组成</span><span class="original-text">The NYSM Profiler Network consists of 17 stations across the standard network</span><cite class="ltx_cite ltx_citemacro_citep">(Shrestha et al., <a class="ltx_ref" href="#bib.bib24" title="">2022</a>, hereafter S22; see Fig. <a class="ltx_ref" href="#S2.F1" title="Figure 1 ‣ 2.2 NYSM Profiler Network ‣ 2 Data ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">1</span></a>)</cite><span class="translated-text">。在本研究中，我们使用来自无源 Radiometrics MP-3000 系列微波辐射计 (MWR) 的数据。 MWR 在两个光谱带上运行，即 21 K 波段 (22-30 GHz) 和 14 V 波段 (51-59 GHz)，以测量与水蒸气和氧气吸收波段相关的亮度温度 (S22)。然后使用这些亮度温度来检索大气温度、相对湿度、水蒸气密度和液态水含量的垂直剖面（S22）。使用神经网络结合辐射传输算法来执行检索（S22）。出于这项工作的目的，垂直剖面从地表延伸至 5 公里，该高度足以捕获纽约州上空的 PBL 和混合层</span><span class="original-text">. For this study, we use data from the passive Radiometrics MP-3000 series microwave radiometers (MWR). The MWR operates across two spectral bands, the 21 K band (22–30 GHz) and the 14 V band (51–59 GHz), to measure brightness temperatures associated with the water vapor and oxygen absorption bands (S22). These brightness temperatures are then used to retrieve vertical profiles of atmospheric temperature, relative humidity, water vapor density, and liquid water content (S22). Retrievals are performed using a neural network in conjunction with a radiative transfer algorithm (S22). For the purposes of this work, vertical profiles extend from the surface to 5 km, a height sufficient to capture the PBL and mixing layer over NYS</span><cite class="ltx_cite ltx_citemacro_citep">(Shrestha et al., <a class="ltx_ref" href="#bib.bib25" title="">2021</a>; Molod et al., <a class="ltx_ref" href="#bib.bib19" title="">2019</a>)</cite><span class="translated-text">。 MWR的垂直分辨率为500 m以下50 m，500 m至2000 m之间100 m，2000 m以上250 m（S22）。检索到的简档的时间分辨率是10分钟(S22)。</span><span class="original-text">. The vertical resolution of the MWR is 50 m below 500 m, 100 m between 500 m and 2000 m, and 250 m above 2000 m (S22). The temporal resolution of the retrieved profiles is 10 minutes (S22).</span></p>
+</div>
+<div class="ltx_para" id="S2.SS2.p2">
+<p class="ltx_p" id="S2.SS2.p2.1"><span class="translated-text">尽管水利部数据很有用，但检索过程本质上是不适定的，并且容易受到多种错误来源的影响。测量的亮度温度的偏差可能是由于气体吸收模型的不确定性、校准误差（例如液氮参考负载）以及神经网络算法（S22）的限制而引起的。在 NYSM 站点中，MWR 表现出一致的冷偏差，正平均偏差误差 (MBE) 范围在 2.7°C 至 3.3°C 之间，这些值具有统计显着性 (p</span><span class="original-text">Despite the utility of the MWR data, the retrieval process is inherently ill-posed and subject to multiple sources of error. Biases in the measured brightness temperatures can arise from uncertainties in the gas absorption model, calibration errors (such as liquid nitrogen reference loads), and limitations in the neural network algorithm (S22). Across NYSM sites, the MWR exhibits a consistent cold bias, with positive mean bias errors (MBE) ranging between 2.7°C and 3.3°C, values that are statistically significant (p</span><math alttext="\leq" class="ltx_Math" display="inline" id="S2.SS2.p2.1.m1" intent=":literal"><semantics><mo>≤</mo><annotation encoding="application/x-tex">\leq</annotation></semantics></math><span class="translated-text">0.05）（S22）。这种偏差的一个关键来源是仪器未能检测到高温逆温层，这导致逆温层之上的冷偏差急剧增加（S22）。</span><span class="original-text">0.05) (S22). A key source of this bias is the instrument’s failure to detect elevated temperature inversion layers, which leads to a sharp increase in cold bias above the inversion (S22).</span></p>
+</div>
+<div class="ltx_para" id="S2.SS2.p3">
+<p class="ltx_p" id="S2.SS2.p3.1"><span class="translated-text">在 PBL (S22) 以上的高度，水蒸气密度反演往往更准确。这可能反映了地表附近固有的较高湿度变化以及水蒸气含量随着高度的增加而大幅降低的事实（S22）。</span><span class="original-text">Water vapor density retrievals tend to be more accurate at altitudes above the PBL (S22). This likely reflects the inherently higher moisture variability near the surface and the fact that water vapor content decreases substantially with height (S22).</span></p>
+</div>
+<div class="ltx_para" id="S2.SS2.p4">
+<p class="ltx_p" id="S2.SS2.p4.1"><span class="translated-text">MWR 还配备了降水传感器，可使用二进制状态标志 (S22) 检测降水是否落在辐射计的天线罩上。另外，红外辐射温度计测量云底温度(S22)。然后云底高度被定义为检索到的温度剖面与云底温度相匹配的最低高度(S22)。</span><span class="original-text">The MWR is also equipped with a precipitation sensor that detects whether precipitation is falling over the radiometer’s radome using a binary status flag (S22). Additionally, an infrared radiation thermometer measures the cloud base temperature (S22). Cloud base height is then defined as the lowest altitude where the retrieved temperature profile matches the cloud base temperature (S22).</span></p>
+</div>
+<div class="ltx_para" id="S2.SS2.p5">
+<p class="ltx_p" id="S2.SS2.p5.1"><span class="translated-text">在所有误差指标（MBE、MAE 和 RMSE）中，有降水的日子表现出最低的温度检索误差，而晴朗的日子则表现出最大的温度误差 (S22)。温度误差往往在晴天时达到峰值，而水蒸气密度误差在多云和降水条件下最高（S22）。</span><span class="original-text">Days with precipitation exhibit the lowest temperature retrieval errors across all error metrics (MBE, MAE, and RMSE), while clear-sky days exhibit the largest temperature errors (S22). Temperature errors tend to peak on clear-sky days, whereas water vapor density errors are highest during cloudy and precipitating conditions (S22).</span></p>
+</div>
+<div class="ltx_para" id="S2.SS2.p6">
+<p class="ltx_p" id="S2.SS2.p6.4"><span class="translated-text">MWR 观测结果的结构类似于图像阵列，可与 Vision Transformer (ViT) 编码器兼容。而不是使用传统的Width图像格式</span><span class="original-text">The MWR observations are structured to resemble image-like arrays, enabling compatibility with a Vision Transformer (ViT) encoder. Rather than using the conventional image format of Width</span><math alttext="\times" class="ltx_Math" display="inline" id="S2.SS2.p6.1.m1" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math><span class="translated-text">身高</span><span class="original-text">Height</span><math alttext="\times" class="ltx_Math" display="inline" id="S2.SS2.p6.2.m2" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math><span class="translated-text">通道（例如红、绿、蓝），对于每个站点，MWR 数据被组织为时间戳</span><span class="original-text">Channels (e.g., red, green, blue), for each site, the MWR data are organized as Timestamp</span><math alttext="\times" class="ltx_Math" display="inline" id="S2.SS2.p6.3.m3" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math><span class="translated-text">身高</span><span class="original-text">Height</span><math alttext="\times" class="ltx_Math" display="inline" id="S2.SS2.p6.4.m4" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math><span class="translated-text">变量。在这种情况下，“通道”对应于大气变量，如表中所列</span><span class="original-text">Variable. In this case, the “channels” correspond to atmospheric variables, as listed in Table</span><a class="ltx_ref" href="#S2.T1" title="Table 1 ‣ 2.1 NYSM Standard Network ‣ 2 Data ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">。对于每个预测，该模型都使用最近完整小时的 MWR 观测值，其中包括 6 个时间步长，由最近的剖面仪站收集。</span><span class="original-text">. For each prediction, the model uses MWR observations from the most recent complete hour, which comprises 6 time steps, collected by the nearest profiler station.</span></p>
+</div>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S2.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span><span class="translated-text">高分辨率快速刷新预报系统</span><span class="original-text">High-Resolution Rapid Refresh Forecast System</span></h3>
+<div class="ltx_para" id="S2.SS3.p1">
+<p class="ltx_p" id="S2.SS3.p1.1"><span class="translated-text">HRRR预报系统，由美国国家海洋和大气管理局（NOAA）于2014年开发</span><span class="original-text">HRRR forecast system, developed by the National Oceanic and Atmospheric Administration (NOAA) in 2014</span><cite class="ltx_cite ltx_citemacro_citep">(Dowell et al., <a class="ltx_ref" href="#bib.bib8" title="">2022</a>)</cite><span class="translated-text">，采用天气研究和预报 (WRF-ARW) 模型的高级研究版本的云解析、允许对流实施作为其动力核心</span><span class="original-text">, employs a cloud-resolving, convection-allowing implementation of the Advanced Research version of the Weather Research and Forecasting (WRF-ARW) model as its dynamical core</span><cite class="ltx_cite ltx_citemacro_citep">(National Centers for Environmental Prediction, <a class="ltx_ref" href="#bib.bib20" title="">2024</a>)</cite><span class="translated-text">。 HRRR 专门设计用于支持快速变化的天气现象的短期预报，特别强调对作战态势感知至关重要的对流和降水系统</span><span class="original-text">. HRRR was specifically designed to support short-range forecasting of rapidly evolving weather phenomena, with particular emphasis on convection and precipitating systems that are critical for operational situational awareness</span><cite class="ltx_cite ltx_citemacro_citep">(Dowell et al., <a class="ltx_ref" href="#bib.bib8" title="">2022</a>)</cite><span class="translated-text">。该模型在横跨美国大陆的 3 公里兰伯特共形网格上运行</span><span class="original-text">. The model operates on a 3-km Lambert Conformal grid spanning the continental United States</span><cite class="ltx_cite ltx_citemacro_citep">(National Centers for Environmental Prediction, <a class="ltx_ref" href="#bib.bib20" title="">2024</a>)</cite><span class="translated-text">每小时初始化一次，提供长达 18 小时的预测。尽管 HRRR 还为 00、06、12 和 18 UTC 初始化周期生成长达 48 小时的预测</span><span class="original-text">and is initialized hourly, providing forecasts out to 18 hours. Although HRRR also produces extended forecasts to 48 hours for the 00, 06, 12, and 18 UTC initialization cycles</span><cite class="ltx_cite ltx_citemacro_citep">(Dowell et al., <a class="ltx_ref" href="#bib.bib8" title="">2022</a>)</cite><span class="translated-text">，本研究重点关注前 18 个预测小时，以在所有每小时初始化周期中保持一致的评估框架。</span><span class="original-text">, this study focuses on the first 18 forecast hours to maintain a consistent evaluation framework across all hourly initialization cycles.</span></p>
+</div>
+<div class="ltx_para" id="S2.SS3.p2">
+<p class="ltx_p" id="S2.SS3.p2.1"><span class="translated-text">HRRR 的精细空间和时间分辨率使其成为预报员的重要工具</span><span class="original-text">The HRRR’s fine spatial and temporal resolution makes it a critical tool for forecasters</span><cite class="ltx_cite ltx_citemacro_citep">(Dowell et al., <a class="ltx_ref" href="#bib.bib8" title="">2022</a>)</cite><span class="translated-text">。多年来，这种依赖推动了 HRRR 的重大发展和改进。本文介绍的 LSTM-ViT 在 HRRR 的三个版本上进行训练：HRRRv2（2018 年 1 月至 2018 年 7 月 11 日）、HRRRv3（2018 年 7 月 12 日至 2020 年 12 月 1 日）和 HRRRv4（2020 年 12 月 2 日至 2023 年 12 月）。表中提供了 HRRR 中用作训练 LSTM-ViT 特征的气象变量的详细列表</span><span class="original-text">. This reliance has driven significant development and improvement of the HRRR over the years. The LSTM-ViTs introduced herein are trained on three versions of the HRRR: HRRRv2 (January 2018 to 11 July 2018), HRRRv3 (12 July 2018 to 1 December 2020), and HRRRv4 (2 December 2020 to December 2023). A detailed list of the meteorological variables from the HRRR used as features in training the LSTM-ViTs is provided in Table</span><a class="ltx_ref" href="#S2.T1" title="Table 1 ‣ 2.1 NYSM Standard Network ‣ 2 Data ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+</div>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S2.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.4 </span><span class="translated-text">数据管理</span><span class="original-text">Data Curation</span></h3>
+<div class="ltx_para" id="S2.SS4.p1">
+<p class="ltx_p" id="S2.SS4.p1.1"><span class="translated-text">E25 中提供了介网仪器、质量控制、台站三角测量、地理特征提取、时间编码和预报误差计算的详细描述，为简洁起见，此处不再重复。 LSTM-ViT 模型使用 2018 年初到 2022 年底的数据进行训练，并使用 2023 年的数据进行验证。然后使用 2024 年和 2025 年的数据对所有模型进行测试，以捕获季节性和次季节模型性能指标。</span><span class="original-text">Detailed descriptions of mesonet instrumentation, quality control, station triangulation, geographic feature extraction, time encoding, and forecast error computation are provided in E25 and are not repeated here for brevity. The LSTM-ViT models are trained on data from the beginning of 2018 to the end of 2022 and validated on data from 2023. All models are then tested on data from 2024 and 2025 to capture seasonal and sub-seasonal model performance metrics.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section ltx_indent_first" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">型号</span><span class="original-text">Model</span></h2>
+<figure class="ltx_figure" id="S3.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="639" id="S3.F2.g1" src="https://arxiv.org/html/2606.19026v1/x1.png" width="827"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>This graphic illustrates the LSTM+ViT encoder–decoder workflow at a high level.</figcaption>
+</figure>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="translated-text">LSTM-ViT 架构结合了两种互补的建模范式，可解决预测误差预测的不同方面，并且，尽管两种架构都对时间顺序数据进行操作，但它们具有不同的目的。 LSTM 对地面观测和 NWP 预报的时间演变进行建模，保留预报误差预测的顺序和因果结构。相比之下，ViT 分析垂直解析的 MWR 剖面，使用注意机制来表示 PBL 内不同高度和时间观测值之间的关系。然后，该模型将所得的潜在表示组合成大气状态的统一描述。最后，LSTM 解码器使用这种融合表示来生成整个预测范围内的预测误差预测。这种设计保留了原始 LSTM 框架的时间预测能力，同时融入了仅靠表面观测无法提供的低层大气的垂直结构和演化信息。</span><span class="original-text">The LSTM-ViT architecture combines two complementary modeling paradigms that address distinct aspects of forecast-error prediction, and, although both architectures operate on temporally ordered data, they serve different purposes. The LSTM models the temporal evolution of surface observations and NWP forecasts, preserving the sequential and causal structure of forecast error prediction. In contrast, the ViT analyzes vertically resolved MWR profiles, using attention mechanisms to represent relationships among observations at different altitudes and times within the PBL. The model then combines the resulting latent representations into a unified description of the atmospheric state. Finally, an LSTM decoder uses this fused representation to generate forecast-error predictions across the forecast horizon. This design preserves the temporal forecasting capabilities of the original LSTM framework while incorporating information about the vertical structure and evolution of the lower atmosphere that surface observations alone cannot provide.</span></p>
+</div>
+<section class="ltx_subsection ltx_indent_first" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">LSTM 编码器</span><span class="original-text">LSTM Encoder</span></h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">在本研究中，我们采用了之前工作 (E25) 中引入的 LSTM 编码器-解码器架构。我们选择了 LSTM 架构，因为预测误差作为一个与时间相关的过程而演变，受到近期大气观测历史、NWP 预测和模型偏差的影响。 LSTM</span><span class="original-text">In this study, we employ the LSTM encoder–decoder architecture introduced in our prior work (E25). We selected an LSTM architecture because forecast error evolves as a temporally dependent process influenced by the recent history of atmospheric observations, NWP forecasts, and model biases. The LSTM</span><cite class="ltx_cite ltx_citemacro_citep">(Hochreiter and Schmidhuber, <a class="ltx_ref" href="#bib.bib12" title="">1997</a>)</cite><span class="translated-text">通过合并输入、遗忘和输出门来扩展循环神经网络 (RNN)，这些门可调节信息流并减轻梯度消失</span><span class="original-text">extends the Recurrent Neural Network (RNN) by incorporating input, forget, and output gates that regulate information flow and mitigate vanishing gradients</span><cite class="ltx_cite ltx_citemacro_citep">(Hochreiter and Schmidhuber, <a class="ltx_ref" href="#bib.bib12" title="">1997</a>)</cite><span class="translated-text">，使模型能够保留对大气预测任务至关重要的远程时间结构。在处理介子网观测序列和 HRRR 预报变量后，LSTM 编码器将最近的大气表面和预报历史压缩为其最终隐藏状态。这种潜在表示总结了与预测误差发展相关的条件的时间演变，并作为混合框架后续组件的输入，如图所示</span><span class="original-text">, enabling the model to retain the long-range temporal structure critical for atmospheric prediction tasks. After processing the sequence of mesonet observations and HRRR forecast variables, the LSTM encoder compresses the recent atmospheric surface and forecast history into its final hidden state. This latent representation summarizes the temporal evolution of conditions relevant to forecast-error development and serves as input to the subsequent components of the hybrid framework, as seen in Fig</span><a class="ltx_ref" href="#S3.F2" title="Figure 2 ‣ 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">2</span></a>.</p>
+</div>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span><span class="translated-text">视觉变压器编码器</span><span class="original-text">Vision Transformer Encoder</span></h3>
+<figure class="ltx_figure" id="S3.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="480" id="S3.F3.g1" src="https://arxiv.org/html/2606.19026v1/x2.png" width="758"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>The structure of the Vision Transformer (ViT) encoder unit as implemented. Panel (a) illustrates the set of microwave-radiometer variables used as input, while panel (b) shows the construction of tokens from the time–height observation tensor. Panel (c) depicts the addition of learned temporal and positional embeddings, which provide information about the observation time and vertical location of each token. The ViT encoder aggregates information across all times and heights through self-attention, producing a latent representation of the recent atmospheric boundary-layer state. The gray block (panels d–f) illustrates the internal structure of the ViT encoder, following <cite class="ltx_cite ltx_citemacro_citet">Dosovitskiy et al. (<a class="ltx_ref" href="#bib.bib7" title="">2021</a>)</cite>. The operations “<math alttext="+" class="ltx_Math" display="inline" id="S3.F3.2.m1" intent=":literal"><semantics><mo>+</mo><annotation encoding="application/x-tex">+</annotation></semantics></math>” denote element-wise addition associated with residual connections. The final linear projection layer maps the encoded representation into a fixed-length context vector, referred to herein as the encoded boundary layer, which is subsequently fused with the LSTM representation for forecast-error prediction.</figcaption>
+</figure>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">引入的变压器架构取得了广泛的成功</span><span class="original-text">The widespread success of the transformer architecture introduced by</span><cite class="ltx_cite ltx_citemacro_citet">Vaswani et al. (<a class="ltx_ref" href="#bib.bib28" title="">2017</a>)</cite><span class="translated-text">导致计算机视觉 ViT 模型的开发</span><span class="original-text">led to the development of ViT models for computer vision by</span><cite class="ltx_cite ltx_citemacro_citet">Dosovitskiy et al. (<a class="ltx_ref" href="#bib.bib7" title="">2021</a>)</cite><span class="translated-text">。 ViT 使用注意力机制将图像区域之间的关系建模为序列。与 RNN 网络不同，Transformer 中的注意力机制并行而不是顺序处理序列元素。正如所讨论的</span><span class="original-text">. ViTs model relationships between regions of an image as a sequence using attention mechanisms. Unlike RNN networks, the attention mechanisms within transformers process sequence elements in parallel rather than sequentially. As discussed by</span><cite class="ltx_cite ltx_citemacro_citet">Vaswani et al. (<a class="ltx_ref" href="#bib.bib28" title="">2017</a>); Dosovitskiy et al. (<a class="ltx_ref" href="#bib.bib7" title="">2021</a>)</cite><span class="translated-text">，多头注意力允许模型同时关注数据中的多种关系或模式。这使得 ViT 能够对每个像素（观测到的大气条件）之间的相互关系进行编码，而不受空间和时间的影响，从而更准确地编码垂直剖面的最相关信息，并将其馈送到 LSTM 进行预测误差预测。</span><span class="original-text">, multi-headed attention allows the model to simultaneously focus on multiple relationships or patterns within the data. This allows the ViT to encode how each pixel (observed atmospheric condition) relates to each other regardless of space and time, more accurately encoding the most relevant information of the vertical profile to be fed to the LSTM for forecast error prediction.</span></p>
+</div>
+<section class="ltx_subsubsection ltx_indent_first" id="S3.SS2.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.1 </span><span class="translated-text">输入表示</span><span class="original-text">Input Representation</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS1.p1">
+<p class="ltx_p" id="S3.SS2.SSS1.p1.6"><span class="translated-text">MWR 前一小时的观测形成一个维度为时间的三维张量</span><span class="original-text">The previous hour of MWR observations forms a three-dimensional tensor with dimensions Time</span><math alttext="\times" class="ltx_Math" display="inline" id="S3.SS2.SSS1.p1.1.m1" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math><span class="translated-text">身高</span><span class="original-text">Height</span><math alttext="\times" class="ltx_Math" display="inline" id="S3.SS2.SSS1.p1.2.m2" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math><span class="translated-text">变量(图.</span><span class="original-text">Variable (Fig.</span><a class="ltx_ref" href="#S3.F3" title="Figure 3 ‣ 3.2 Vision Transformer Encoder ‣ 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">(一))。由于 ViT 对标记序列而不是多维张量进行操作，因此我们将时间展平</span><span class="original-text">(a)). Because ViTs operate on sequences of tokens rather than multidimensional tensors, we flatten the Time</span><math alttext="\times" class="ltx_Math" display="inline" id="S3.SS2.SSS1.p1.3.m3" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math><span class="translated-text">MWR 张量的高度尺寸，</span><span class="original-text">Height dimensions of the MWR tensor,</span><math alttext="x\in\mathbb{R}^{T\times H\times V}" class="ltx_Math" display="inline" id="S3.SS2.SSS1.p1.4.m4" intent=":literal"><semantics><mrow><mi>x</mi><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>T</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>H</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>V</mi></mrow></msup></mrow><annotation encoding="application/x-tex">x\in\mathbb{R}^{T\times H\times V}</annotation></semantics></math><span class="translated-text">，变成一个序列</span><span class="original-text">, into a sequence of</span><math alttext="N=T\cdot H" class="ltx_Math" display="inline" id="S3.SS2.SSS1.p1.5.m5" intent=":literal"><semantics><mrow><mi>N</mi><mo>=</mo><mrow><mi>T</mi><mo lspace="0.222em" rspace="0.222em">⋅</mo><mi>H</mi></mrow></mrow><annotation encoding="application/x-tex">N=T\cdot H</annotation></semantics></math><span class="translated-text">代币，生产</span><span class="original-text">tokens, producing</span><math alttext="x_{p}\in\mathbb{R}^{N\times V}" class="ltx_Math" display="inline" id="S3.SS2.SSS1.p1.6.m6" intent=":literal"><semantics><mrow><msub><mi>x</mi><mi>p</mi></msub><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>N</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>V</mi></mrow></msup></mrow><annotation encoding="application/x-tex">x_{p}\in\mathbb{R}^{N\times V}</annotation></semantics></math><span class="translated-text">（图。</span><span class="original-text">(Fig.</span><a class="ltx_ref" href="#S3.F3" title="Figure 3 ‣ 3.2 Vision Transformer Encoder ‣ 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">(b))。每个标记包含在特定时间和高度水平观察到的完整 MWR 变量集，使自注意力机制能够对整个剖面序列中不同高度和时间发生的观察之间的关系进行建模。</span><span class="original-text">(b)). Each token contains the complete set of MWR variables observed at a specific time and height level, enabling the self-attention mechanism to model relationships between observations occurring at different altitudes and times throughout the profile sequence.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection ltx_indent_first" id="S3.SS2.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.2 </span><span class="translated-text">学习位置和时间嵌入</span><span class="original-text">Learned Position and Time Embeddings</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS2.p1">
+<p class="ltx_p" id="S3.SS2.SSS2.p1.2"><span class="translated-text">由于 ViT 并行而不是顺序处理输入，因此我们通过向每个标记添加学习的位置和时间嵌入来编码与每个 MWR 观察相关的位置和时间（图 1）。</span><span class="original-text">Because ViTs process inputs in parallel rather than sequentially, we encode both the position and time associated with each MWR observation by adding learned positional and temporal embeddings to each token (Fig.</span><a class="ltx_ref" href="#S3.F3" title="Figure 3 ‣ 3.2 Vision Transformer Encoder ‣ 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">(c))。两种嵌入都实现为具有尺寸的可训练参数</span><span class="original-text">(c)). Both embeddings are implemented as trainable parameters with dimensions</span><math alttext="(1,N,HV)" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p1.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><mn>1</mn><mo>,</mo><mi>N</mi><mo>,</mo><mrow><mi>H</mi><mo lspace="0em" rspace="0em">​</mo><mi>V</mi></mrow><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(1,N,HV)</annotation></semantics></math><span class="translated-text">, 其中</span><span class="original-text">, where</span><math alttext="HV" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p1.2.m2" intent=":literal"><semantics><mrow><mi>H</mi><mo lspace="0em" rspace="0em">​</mo><mi>V</mi></mrow><annotation encoding="application/x-tex">HV</annotation></semantics></math><span class="translated-text">是 ViT 的隐藏维度。位置嵌入对序列中标记的顺序进行编码，而时间嵌入提供有关绝对时间上下文的信息（例如，一天中的小时或季节周期）。这些嵌入共同使模型能够表示控制 PBL 演化的空间和时间依赖性；如果没有它们，模型将没有关于 MWR 观测的时间顺序或相对位置的明确信息。</span><span class="original-text">is the hidden dimension of the ViT. The positional embedding encodes the ordering of tokens within the sequence, while the temporal embedding provides information about absolute temporal context (e.g., hour of day or seasonal cycle). Together, these embeddings allow the model to represent the spatial and temporal dependencies that govern PBL evolution; without them, the model would have no explicit information about the temporal order or relative position of the MWR observations.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection ltx_indent_first" id="S3.SS2.SSS3">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.3 </span><span class="translated-text">令牌投影和编码</span><span class="original-text">Token Projection and Encoding</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS3.p1">
+<p class="ltx_p" id="S3.SS2.SSS3.p1.1"><span class="translated-text">ViT 编码器使用归一化多层感知器 (MLP) 投影将每个标记投影到模型嵌入空间中（图 1）。</span><span class="original-text">The ViT encoder projects each token into the model embedding space using a normalized multilayer perceptron (MLP) projection (Fig.</span><a class="ltx_ref" href="#S3.F3" title="Figure 3 ‣ 3.2 Vision Transformer Encoder ‣ 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">(d))。然后，该模型附加一个可学习的预测标记，类似于</span><span class="original-text">(d)). The model then appends a learnable prediction token that, analogous to the class token of</span><cite class="ltx_cite ltx_citemacro_citet">Dosovitskiy et al. (<a class="ltx_ref" href="#bib.bib7" title="">2021</a>)</cite><span class="translated-text">，聚合来自整个序列的信息，并作为编码大气剖面的紧凑摘要。</span><span class="original-text">, aggregates information from the entire sequence and serves as a compact summary of the encoded atmospheric profile.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.SSS3.p2">
+<p class="ltx_p" id="S3.SS2.SSS3.p2.1"><span class="translated-text">生成的序列通过由交替的多头自注意力和 MLP 块组成的标准 ViT 编码器，每个块之前都有层归一化，每个块之后有残差连接（图 1）。</span><span class="original-text">The resulting sequence passes through a standard ViT encoder consisting of alternating multi-head self-attention and MLP blocks, with layer normalization preceding each block and residual connections following each block (Fig.</span><a class="ltx_ref" href="#S3.F3" title="Figure 3 ‣ 3.2 Vision Transformer Encoder ‣ 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">(e)；</span><span class="original-text">(e);</span><cite class="ltx_cite ltx_citemacro_citep">Dosovitskiy et al., <a class="ltx_ref" href="#bib.bib7" title="">2021</a></cite>).</p>
+</div>
+</section>
+<section class="ltx_subsubsection ltx_indent_first" id="S3.SS2.SSS4">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.4 </span><span class="translated-text">线性投影层</span><span class="original-text">Linear Projection Layer</span></h4>
+<div class="ltx_para" id="S3.SS2.SSS4.p1">
+<p class="ltx_p" id="S3.SS2.SSS4.p1.1"><span class="translated-text">ViT 编码器的最后一个新颖组件是线性投影层（图 1）。</span><span class="original-text">The final novel component of the ViT encoder is the linear projection layer (Fig.</span><a class="ltx_ref" href="#S3.F3" title="Figure 3 ‣ 3.2 Vision Transformer Encoder ‣ 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">(f))。处理输入序列后，编码器提取最终的预测标记，作为大气剖面的紧凑表示。然后，学习的线性投影将该表示映射到 LSTM 解码器的隐藏状态空间。由于 ViT 为每个样本生成一个嵌入，而解码器包含多个 LSTM 层，因此该框架在解码器层维度上复制投影上下文向量，以便每个层接收 MWR 配置文件序列的相同编码表示。因此，投影层充当 ViT 编码器和 LSTM 解码器之间的接口，将编码的 MWR 表示转换为与循环网络兼容的潜在状态。</span><span class="original-text">(f)). After processing the input sequence, the encoder extracts the final prediction token, which serves as a compact representation of the atmospheric profile. A learned linear projection then maps this representation into the hidden-state space of the LSTM decoder. Because the ViT produces a single embedding per sample whereas the decoder contains multiple LSTM layers, the framework replicates the projected context vector across the decoder-layer dimension so that each layer receives the same encoded representation of the MWR profile sequence. Thus, the projection layer functions as an interface between the ViT encoder and LSTM decoder, transforming the encoded MWR representation into a latent state compatible with the recurrent network.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span><span class="translated-text">MLP融合</span><span class="original-text">MLP Fusion</span></h3>
+<div class="ltx_para" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.1"><span class="translated-text">在 LSTM 和 ViT 编码器产生其潜在表示后，该模型将这些互补的信息源组合成单个隐藏状态。 LSTM 编码器提供表面观测和 HRRR 预测的时间结构化表示，而 ViT 编码器提供最近一小时 MWR 剖面仪数据的基于注意力的表示。由于这些编码器在不同的表示空间中运行，因此在解码器使用它们的输出之前需要一种融合机制。</span><span class="original-text">After the LSTM and ViT encoders produce their latent representations, the model combines these complementary sources of information into a single hidden state. The LSTM encoder provides a temporally structured representation of surface observations and HRRR forecasts, while the ViT encoder provides an attention-based representation of the most recent hour of MWR profiler data. Because these encoders operate in different representational spaces, a fusion mechanism is required before their outputs can be used by the decoder.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.p2">
+<p class="ltx_p" id="S3.SS3.p2.1"><span class="translated-text">为了执行这种集成，我们连接 LSTM 和 ViT 嵌入，并将结果通过“融合”MLP（图 1）。</span><span class="original-text">To perform this integration, we concatenate the LSTM and ViT embeddings and pass the result through a “fusion” MLP (Fig.</span><a class="ltx_ref" href="#S3.F2" title="Figure 2 ‣ 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">（一个））。 MLP 将组合表示映射到 LSTM 解码器空间，应用 LeakyReLU 激活函数来表示表面气象和垂直结构之间的非线性关系，并使用 dropout 来减少过度拟合并阻止对任一编码器的过度依赖。</span><span class="original-text">(a)). The MLP maps the combined representation into the LSTM decoder space, applies a LeakyReLU activation function to allow represention of nonlinear relationships between surface meteorology and vertical structure, and uses dropout to reduce overfitting and discourage over-reliance on either encoder.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.p3">
+<p class="ltx_p" id="S3.SS3.p3.1"><span class="translated-text">MLP 产生一个统一的隐藏状态，集成了表面和垂直解析的大气信息（图 1）。</span><span class="original-text">The MLP produces a unified hidden state that integrates both surface and vertically resolved atmospheric information (Fig.</span><a class="ltx_ref" href="#S3.F2" title="Figure 2 ‣ 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">(b))。然后将该融合表示传递给解码器（图 1）。</span><span class="original-text">(b)). This fused representation is then passed to the decoder (Fig.</span><a class="ltx_ref" href="#S3.F2" title="Figure 2 ‣ 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">(c))，实现利用表面和垂直大气结构的预报误差预测。</span><span class="original-text">(c)), enabling forecast-error predictions that leverage both surface and vertical atmospheric structure.</span></p>
+</div>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S3.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.4 </span><span class="translated-text">LSTM 解码器</span><span class="original-text">LSTM Decoder</span></h3>
+<div class="ltx_para" id="S3.SS4.p1">
+<p class="ltx_p" id="S3.SS4.p1.1"><span class="translated-text">LSTM 解码器的其余部分遵循 E25 中详细说明的公式。解码器接收 ViT 导出的上下文向量以及由 LSTM 编码器生成的 mesonet 观测值和 HRRR 预测历史的编码表示。这些表示初始化解码器隐藏状态并提供生成未来预测误差预测所需的信息。</span><span class="original-text">The remainder of the LSTM decoder follows the formulation detailed in E25. The decoder receives the ViT-derived context vector together with the encoded representation of mesonet observations and HRRR forecast history produced by the LSTM encoder. These representations initialize the decoder hidden state and provide the information required to generate future forecast-error predictions.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS4.p2">
+<p class="ltx_p" id="S3.SS4.p2.1"><span class="translated-text">尽管 ViT 和 LSTM 都处理时间排序的数据，但它们的用途不同。 ViT 从前一小时的垂直解析 MWR 观测中提取时空特征，而 LSTM 解码器则对未来交付周期内预测误差的时间演变进行建模。这种分离使得 ViT 能够专注于从剖面数据中学习表示，而解码器则了解预测误差如何在预测范围内演变。</span><span class="original-text">Although both the ViT and LSTM process temporally ordered data, they serve distinct purposes. The ViT extracts spatiotemporal features from the previous hour of vertically resolved MWR observations, while the LSTM decoder models the temporal evolution of forecast error across future lead times. This separation allows the ViT to focus on learning a representation from profile data while the decoder learns how forecast errors evolve through the forecast horizon.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS4.p3">
+<p class="ltx_p" id="S3.SS4.p3.1"><span class="translated-text">解码器按顺序为每个预测小时生成预测，并在每一步更新其隐藏状态和单元状态。全连接的输出层将生成的潜在状态映射到相应预测时间的预测误差预测</span><span class="original-text">The decoder generates predictions sequentially for each forecast hour, updating its hidden and cell states at each step. A fully connected output layer maps the resulting latent state to the forecast-error prediction for the corresponding forecast hour</span><cite class="ltx_cite ltx_citemacro_citep">(Bishop and Bishop, <a class="ltx_ref" href="#bib.bib2" title="">2023</a>)</cite><span class="translated-text">。通过通过其隐藏状态和单元状态递归地传播信息，解码器捕获预测时间之间的依赖性，并生成连贯的预测误差预测序列。</span><span class="original-text">. By recursively propagating information through its hidden and cell states, the decoder captures dependencies among forecast hours and produces a coherent sequence of forecast-error predictions.</span></p>
+</div>
+<section class="ltx_subsubsection ltx_indentfirst" id="S3.SS4.SSSx1">
+<h4 class="ltx_title ltx_title_subsubsection"><span class="translated-text">线性后处理功能</span><span class="original-text">Linear Post Processing Function</span></h4>
+<div class="ltx_para" id="S3.SS4.SSSx1.p1">
+<p class="ltx_p" id="S3.SS4.SSSx1.p1.1"><span class="translated-text">最后，与 E25 一样，我们应用线性后处理（黑色新月，图 2）。</span><span class="original-text">Lastly, as in E25, we apply linear post-processing (black crescent, Fig.</span><a class="ltx_ref" href="#S3.F2" title="Figure 2 ‣ 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">(d)) 根据各个 NYSM 站、预测时间和感兴趣的预测误差变量定制 LSTM 输出。用于线性后处理计算的系数是使用数据的验证折叠来确定的，并存储在查找表中以供测试和推理使用。</span><span class="original-text">(d)) to tailor the LSTM output to the individual NYSM station, forecast hour, and forecast error variable of interest. The coefficients used for the linear post-processing calculations are determined using the validation fold of the data and are stored in a look-up table for testing and inference use.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S3.SS5">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.5 </span><span class="translated-text">训练稳定性</span><span class="original-text">Training Stability</span></h3>
+<div class="ltx_para" id="S3.SS5.p1">
+<p class="ltx_p" id="S3.SS5.p1.1"><span class="translated-text">与 E25 一样，我们使用了多种标准 ML 技术来管理训练稳定性并控制过度拟合。当验证性能停止改善时，我们实施提前停止（耐心 = 8）来终止训练，从而减少过度拟合并限制整个交付周期内预测误差的累积。我们还应用了ReduceLROnPlateau学习率调度程序（耐心= 4），每当验证损失在连续几个时期停止改善时，它就会自动降低学习率。这种自适应策略允许优化器在训练接近收敛时采用较小的参数更新并提高训练稳定性。最后，我们通过超参数调整来控制模型复杂度；表</span><span class="original-text">As in E25, we used several standard ML techniques to manage training stability and control overfitting. We implemented early stopping (patience = 8) to terminate training when validation performance ceased improving, thereby reducing overfitting and limiting the accumulation of prediction errors across lead times. We also applied a ReduceLROnPlateau learning-rate scheduler (patience = 4), which automatically reduced the learning rate whenever the validation loss stopped improving for several consecutive epochs. This adaptive strategy allowed the optimizer to take smaller parameter updates as training approached convergence and improved training stability. Finally, we controlled model complexity through hyperparameter tuning; Table</span><a class="ltx_ref" href="#S3.T2" title="Table 2 ‣ 3.5 Training Stability ‣ 3 Model ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">总结了我们在 LSTM-ViT 架构中使用的超参数。</span><span class="original-text">summarizes the hyperparameters we used in the LSTM-ViT architecture.</span></p>
+</div>
+<figure class="ltx_table" id="S3.T2">
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T2.4">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T2.4.5.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S3.T2.4.5.1.1"><span class="ltx_text ltx_font_bold" id="S3.T2.4.5.1.1.1">Hyperparameter</span></th>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S3.T2.4.5.1.2"><span class="ltx_text ltx_font_bold" id="S3.T2.4.5.1.2.1">Value</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.4.6.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S3.T2.4.6.2.1">Batch Size</th>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S3.T2.4.6.2.2">70</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.1.1.2">Learning Rate</th>
+<td class="ltx_td ltx_align_left" id="S3.T2.1.1.1"><math alttext="9\times 10^{-6}" class="ltx_Math" display="inline" id="S3.T2.1.1.1.m1" intent=":literal"><semantics><mrow><mn>9</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>6</mn></mrow></msup></mrow><annotation encoding="application/x-tex">9\times 10^{-6}</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.4.7.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.4.7.3.1">Number of Layers</th>
+<td class="ltx_td ltx_align_left" id="S3.T2.4.7.3.2">3</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.4.8.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.4.8.4.1">Hidden Units (LSTM)</th>
+<td class="ltx_td ltx_align_left" id="S3.T2.4.8.4.2">1728</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.4.9.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.4.9.5.1">Sequence Length</th>
+<td class="ltx_td ltx_align_left" id="S3.T2.4.9.5.2">15</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.4.10.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.4.10.6.1">Number of Heads</th>
+<td class="ltx_td ltx_align_left" id="S3.T2.4.10.6.2">11</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.4.11.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.4.11.7.1">Hidden Dimension (ViT)</th>
+<td class="ltx_td ltx_align_left" id="S3.T2.4.11.7.2">7260</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.4.12.8">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.4.12.8.1">MLP Units (Encoder)</th>
+<td class="ltx_td ltx_align_left" id="S3.T2.4.12.8.2">1032</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.2.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.2.2.2">Regularization</th>
+<td class="ltx_td ltx_align_left" id="S3.T2.2.2.1"><math alttext="1\times 10^{-15}" class="ltx_Math" display="inline" id="S3.T2.2.2.1.m1" intent=":literal"><semantics><mrow><mn>1</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>15</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1\times 10^{-15}</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.3.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.3.3.2">Attention Dropout</th>
+<td class="ltx_td ltx_align_left" id="S3.T2.3.3.1"><math alttext="1\times 10^{-12}" class="ltx_Math" display="inline" id="S3.T2.3.3.1.m1" intent=":literal"><semantics><mrow><mn>1</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>12</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1\times 10^{-12}</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.4.13.9">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.4.13.9.1">Optimizer</th>
+<td class="ltx_td ltx_align_left" id="S3.T2.4.13.9.2">AdamW</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.4.14.10">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.4.14.10.1">Scheduler</th>
+<td class="ltx_td ltx_align_left" id="S3.T2.4.14.10.2">ReduceLROnPlateau (factor=0.1, patience=4)</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.4.15.11">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.4.15.11.1">Early Stopping</th>
+<td class="ltx_td ltx_align_left" id="S3.T2.4.15.11.2">Patience = 8 epochs</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.4.16.12">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T2.4.16.12.1">MLP Units (Decoder)</th>
+<td class="ltx_td ltx_align_left" id="S3.T2.4.16.12.2">1500</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.4.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b" id="S3.T2.4.4.1">
+<math alttext="\alpha" class="ltx_Math" display="inline" id="S3.T2.4.4.1.m1" intent=":literal"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math> (Loss Function)</th>
+<td class="ltx_td ltx_align_left ltx_border_b" id="S3.T2.4.4.2">2.0</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Hyperparameters for the Hybrid LSTM-ViT model used in this study.</figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_section ltx_indent_first" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">结果</span><span class="original-text">Results</span></h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">本节评估相对于 E25 中基于地表的 LSTM 框架，垂直解析的 MWR 观测是否改善了 HRRR 预报误差预测。我们比较了 17 个 NYSM 剖面仪网络站的混合 LSTM-ViT 和基线 LSTM 模型的累积降水量、10 米风速和 2 米温度误差。我们重点讨论三个问题。首先，相对于基线 LSTM，LSTM-ViT 是否提高了预测误差预测能力？其次，这些改进是否因预测提前时间、变量、季节、一天中的时间或地区而异？第三，最大的收益是否与垂直 PBL 结构应提供超越表面观测的信息的预测机制一致？总之，这些比较量化了 MWR 剖面是否为地面观测和 HRRR 预测因子增加了预测价值，并且它们确定了垂直解析信息最能改善数据驱动的预测误差预测的条件。</span><span class="original-text">This section evaluates whether vertically resolved MWR observations improve HRRR forecast-error prediction relative to the surface-based LSTM framework from E25. We compare the hybrid LSTM-ViT and baseline LSTM models across the 17 NYSM profiler-network stations for accumulated precipitation, 10-m wind speed, and 2-m temperature errors. We focus on three questions. First, does the LSTM-ViT improve forecast-error prediction skill relative to the baseline LSTM? Second, do these improvements vary by forecast lead time, variable, season, time of day, or region? Third, are the largest gains consistent with forecast regimes in which vertical PBL structure should provide information beyond surface observations alone? Together, these comparisons quantify whether MWR profiles add predictive value to surface observations and HRRR forecast predictors, and they identify the conditions under which vertically resolved information most improves data-driven forecast-error prediction.</span></p>
+</div>
+<section class="ltx_subsection ltx_indent_first" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span><span class="translated-text">降水误差</span><span class="original-text">Precipitation Error</span></h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.1"><span class="translated-text">在E25中，LSTM降水误差预测在以垂直运动和不稳定为主的暖季对流事件期间退化，而地形和风暴频率则产生次要影响。 LSTM 还表现出不对称行为：它准确地捕获了正误差的大小（湿偏差），但低估了负误差的大小（干偏差），尽管正确识别了大多数负误差情况。此外，该模型始终高估了小幅度的降水误差。我们开发了 LSTM-ViT 架构，以增强 LSTM 表示垂直大气结构的能力，并提高对流和动态复杂环境中的性能。本文给出的结果评估了该增强框架的技能。由于模型输出错误，本分析中省略了以下站点：BUFF、BELL、ELLE、HFAL、MANH、TANN 和 WARW。</span><span class="original-text">In E25, LSTM precipitation-error predictions degraded during warm-season convective events dominated by vertical motion and instability, while topography and storm frequency exerted secondary influences. The LSTM also exhibited asymmetric behavior: it accurately captured the magnitude of positive errors (wet bias) but underestimated negative magnitudes (dry bias), despite correctly identifying most negative-error cases. Additionally, the model consistently overpredicted small-magnitude precipitation errors. We developed the LSTM-ViT architecture to augment the LSTM’s ability to represent vertical atmospheric structure and improve performance in convective and dynamically complex environments. The results presented herein evaluate the skill of this augmented framework. The following stations were omitted from this analysis due to erroneous model output: BUFF, BELL, ELLE, HFAL, MANH, TANN, and WARW.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F4"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="570" id="S4.F4.g1" src="https://arxiv.org/html/2606.19026v1/x3.png" width="758"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Scatterplot of the precipitation error across the NYSM network and all forecast hours, with the x-axis representing the true target error and the y-axis showing the corresponding Hybrid-predicted error. The red diagonal line indicates the 1:1 line, where perfect predictions would lie.</figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS1.p2">
+<p class="ltx_p" id="S4.SS1.p2.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S4.F4" title="Figure 4 ‣ 4.1 Precipitation Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">比较观测和预测的降水误差，红色对角线表示完全一致的 1:1 线。内</span><span class="original-text">compares observed and predicted precipitation errors, with the red diagonal indicating the 1:1 line of perfect agreement. Within</span><math alttext="\pm 5~\mathrm{mm~hr^{-1}}" class="ltx_Math" display="inline" id="S4.SS1.p2.1.m1" intent=":literal"><semantics><mrow><mo>±</mo><mrow><mn>5</mn><mo lspace="0.330em" rspace="0em">​</mo><mi>mm</mi><mo lspace="0.330em" rspace="0em">​</mo><msup><mi>hr</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow></mrow><annotation encoding="application/x-tex">\pm 5~\mathrm{mm~hr^{-1}}</annotation></semantics></math><span class="translated-text">，大约 89% 的预测位于或接近 1:1 线，相对于 LSTM (E25) 提高了 10%。 LSTM-ViT 模型仍然表现出不对称的预测能力，准确捕捉正降水误差（湿偏差；图 1）。</span><span class="original-text">, approximately 89% of predictions lie on or near the 1:1 line, representing a 10% improvement relative to the LSTM (E25). The LSTM-ViT model still exhibits asymmetric prediction skill, accurately capturing positive precipitation errors (wet biases; Fig.</span><a class="ltx_ref" href="#S4.F4" title="Figure 4 ‣ 4.1 Precipitation Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">(a)，象限 I），同时低估了负误差的大小（干偏差；象限 III）。然而，这种不对称性比 LSTM 框架 (E25) 中的不对称性要弱得多。 LSTM 中存在的对小正误差的明显过度敏感（E25 主要归因于对流事件的时间或空间范围的错过）已基本消除。 LSTM-ViT 模型保留了对小负误差的一些过度敏感（图 2）。</span><span class="original-text">(a), quadrant I) while underestimating the magnitude of negative errors (dry biases; quadrant III). However, this asymmetry is substantially weaker than in the LSTM framework (E25). The pronounced over-sensitivity to small positive errors present in the LSTM, which E25 primarily attributed to missed timing or spatial extent of convective events, is largely eliminated. The LSTM-ViT model retains some over-sensitivity to small negative errors (Fig.</span><a class="ltx_ref" href="#S4.F4" title="Figure 4 ‣ 4.1 Precipitation Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">(b))，通常与微量降水或天气尺度事件中的微小时间偏移相关，但相对于 LSTM (E25)，这种影响也大大减少。</span><span class="original-text">(b)), typically associated with minor timing offsets in trace precipitation or synoptic-scale events, but this effect is also substantially reduced relative to the LSTM (E25).</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F5"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="386" id="S4.F5.g1" src="https://arxiv.org/html/2606.19026v1/precip_confusion_matrix.png" width="464"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Confusion matrix summarizing the precision of Hybrid predictions for precipitation points across the entire NYSM and forecast hours. Rows indicate the true condition, and columns indicate the Hybrid’s prediction. More (less) precipitation translates to more (less) precipitation occurred than was forecast by the HRRR.</figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS1.p3">
+<p class="ltx_p" id="S4.SS1.p3.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S4.F5" title="Figure 5 ‣ 4.1 Precipitation Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">说明了 LSTM-ViT 模型检测 HRRR 降水误差的技巧。 LSTM-ViT 框架建立在 LSTM 识别 HRRR 湿偏差的能力之上，将精度提高了 4%，同时保持了 87% 的平均湿偏差检测率。干偏差检测似乎比 LSTM 中的噪声更大，LSTM 在 75% 的情况下正确识别了干偏差，但很大程度上产生了边际负误差预测 (E25)。相比之下，LSTM-ViT 模型会生成更具可操作性的负误差预测，尽管计时误差和小幅度变异性的增加可能导致混淆矩阵内技能的明显下降。尽管存在这些限制，LSTM-ViT 模型仍能在 41% 的情况下正确识别 HRRR 干偏差。</span><span class="original-text">illustrates the LSTM-ViT model’s skill in detecting HRRR precipitation errors. The LSTM-ViT framework builds upon the LSTM’s ability to identify HRRR wet bias, improving precision by 4% while maintaining an average wet-bias detection rate of 87%. Dry-bias detection appears noisier than in the LSTM, which correctly identified dry bias in 75% of cases but largely produced marginal negative-error predictions (E25). In contrast, the LSTM-ViT model generates more actionable negative-error forecasts, although timing errors and increased variability at small magnitudes could be responsible for the apparent reduction in skill within the confusion matrix. Despite these limitations, the LSTM-ViT model correctly identifies HRRR dry bias in 41% of cases.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F6"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="425" id="S4.F6.g1" src="https://arxiv.org/html/2606.19026v1/precip_state_mae.png" width="546"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>New York State MAE overlaid by NCEI climate division <cite class="ltx_cite ltx_citemacro_citep">(NCEI, <a class="ltx_ref" href="#bib.bib21" title="">2015</a>)</cite>. Each point represents the average Hybrid performance (MAE) for an NYSM station, averaged over all forecast lead times. The magnitude of the point is proportional to the MAE, where larger points translate to higher MAE.</figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS1.p4">
+<p class="ltx_p" id="S4.SS1.p4.2"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S4.F6" title="Figure 6 ‣ 4.1 Precipitation Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">显示 NYSM Profiler Network 中 LSTM-ViT 模型降水预测的平均绝对误差 (MAE)。空间变异性相对较小，大多数站点的 MAE 值在 0.75 至 2 毫米/小时之间</span><span class="original-text">shows the mean absolute error (MAE) of LSTM-ViT-model precipitation predictions across the NYSM Profiler Network. Spatial variability is relatively small, with most stations exhibiting MAE values between 0.75 and 2 mm hr</span><sup class="ltx_sup" id="S4.SS1.p4.2.1"><span class="ltx_text ltx_font_italic" id="S4.SS1.p4.2.1.1">-1</span></sup><span class="translated-text">。区域最大值出现在沿海气候分区内，包括 SUFF 站，与 E25 一致，其中 MAE 约为 1 毫米小时</span><span class="original-text">. A regional maximum occurs within the Coastal climate division, including SUFF station, consistent with E25, where MAE is approximately 1 mm hr</span><sup class="ltx_sup" id="S4.SS1.p4.2.2"><span class="ltx_text ltx_font_italic" id="S4.SS1.p4.2.2.1">-1</span></sup><span class="translated-text">高于域的其余部分。这些地区的年降水总量也是 NYSM 网络中最高的</span><span class="original-text">higher than across the remainder of the domain. These regions also receive the highest annual precipitation totals within the NYSM network</span><cite class="ltx_cite ltx_citemacro_citep">(Bader and Horton, <a class="ltx_ref" href="#bib.bib1" title="">2023</a>; Campbell and Steenburgh, <a class="ltx_ref" href="#bib.bib5" title="">2017</a>; Swain et al., <a class="ltx_ref" href="#bib.bib26" title="">2025</a>)</cite><span class="translated-text">。增强的陆地与海洋对比和城市放大</span><span class="original-text">. Enhanced land–sea contrasts and urban amplification</span><cite class="ltx_cite ltx_citemacro_citep">(Swain et al., <a class="ltx_ref" href="#bib.bib26" title="">2025</a>)</cite><span class="translated-text">可能导致图 1 中观察到的 MAE 升高。</span><span class="original-text">likely contribute to the elevated MAE observed in Fig.</span><a class="ltx_ref" href="#S4.F6" title="Figure 6 ‣ 4.1 Precipitation Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">。尽管 LSTM-ViT 模型比 LSTM 更有效地捕获正和负降水误差，但即使使用垂直解析的 PBL 信息，驱动极端降水的过程仍然难以在较长的交付周期内进行预测。这些结果表明，与该地区的城市放大、陆地-海洋对比和地形效应特征相关的极端降水的预测存在持续的局限性</span><span class="original-text">. Although the LSTM-ViT model more effectively captures both positive and negative precipitation errors than the LSTM, the processes driving precipitation extremes remain difficult to predict at longer lead times, even with vertically resolved PBL information. These results suggest a persistent limitation in forecasting extreme precipitation associated with urban amplification, land–sea contrasts, and orographic effects characteristic of this region</span><cite class="ltx_cite ltx_citemacro_citep">(Campbell and Steenburgh, <a class="ltx_ref" href="#bib.bib5" title="">2017</a>; Swain et al., <a class="ltx_ref" href="#bib.bib26" title="">2025</a>)</cite>.</p>
+</div>
+<figure class="ltx_figure" id="S4.F7"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="654" id="S4.F7.g1" src="https://arxiv.org/html/2606.19026v1/precip_wb.png" width="546"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 7: </span>From top to bottom, panels show aggregate RMSE in <math alttext="\mathrm{mm\,hr^{-1}}" class="ltx_Math" display="inline" id="S4.F7.3.m1" intent=":literal"><semantics><mrow><mi>mm</mi><mo lspace="0.170em" rspace="0em">​</mo><msup><mi>hr</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{mm\,hr^{-1}}</annotation></semantics></math> for the HRRR forecast, LSTM predictions, Hybrid model predictions, and then <math alttext="\Delta" class="ltx_Math" display="inline" id="S4.F7.4.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> RMSE comparison for each individual NYSM station in the Profiler network. In the HRRR panel, RMSE magnitude is represented by grayscale shading. In the subsequent ML panels, colors denote RMSE differences relative to the HRRR forecast, with red shading indicating higher RMSE and blue shading indicating lower RMSE than HRRR.</figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS1.p5">
+<p class="ltx_p" id="S4.SS1.p5.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S4.F7" title="Figure 7 ‣ 4.1 Precipitation Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">7</span></a><span class="translated-text">说明了 LSTM-ViT 模型预测相对于 HRRR 的相对改进，作为预测提前时间的函数。颜色渐变的灵感来自</span><span class="original-text">illustrates the relative improvement of LSTM-ViT-model predictions compared to the HRRR as a function of forecast lead time. The color shading is inspired by</span><cite class="ltx_cite ltx_citemacro_citet">Rasp et al. (<a class="ltx_ref" href="#bib.bib23" title="">2024</a>)</cite><span class="translated-text">。尽管 LSTM-ViT 预测的是预报误差而不是气象变量本身，但 HRRR 预报和 ML 校正预报都是根据相同的观测值进行评估的。因此，色标表示预测技能相对于基线 HRRR 预测的相对改进或下降。顶行显示 HRRR RMSE 随预测提前时间单调增加，这是 NWP 系统的一个有据可查的特征</span><span class="original-text">. Although the LSTM-ViT predicts forecast error rather than the meteorological variable itself, both the HRRR forecast and ML-corrected forecast are evaluated against the same observations. Consequently, the color scale represents relative improvement or degradation in forecast skill with respect to the baseline HRRR forecast. The top row shows the monotonic increase in HRRR RMSE with forecast lead time, a well-documented characteristic of NWP systems</span><cite class="ltx_cite ltx_citemacro_citep">(James et al., <a class="ltx_ref" href="#bib.bib13" title="">2022</a>)</cite><span class="translated-text">。第二行展示了 LSTM RMSE，强调了它系统地纠正 HRRR 偏差的能力，如 E25 中所讨论的。第三行展示了 LSTM-ViT 模型的性能，首先是全站聚合，可以在 HRRR、LSTM 和 LSTM-ViT 框架之间进行直接比较。</span><span class="original-text">. The second row presents LSTM RMSE, highlighting its ability to systematically correct HRRR bias, as discussed in E25. The third row presents LSTM-ViT-model performance, beginning with an all-stations aggregate that enables direct comparison among the HRRR, LSTM, and LSTM-ViT frameworks.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p6">
+<p class="ltx_p" id="S4.SS1.p6.1"><span class="translated-text">LSTM-ViT 模型在预测时间 (FH) 1-12 内实现了最低 RMSE，优于 HRRR 和 LSTM。除了 FH 12 之外，LSTM 实现了比 HRRR 和 LSTM-ViT 模型更低的 RMSE，这反映出其在较长交付时间内预测 HRRR 湿偏差的强大能力。这种行为还凸显了 LSTM-ViT 模型的局限性，该模型在预测错误的符号和时间方面表现出一致性降低。虽然 LSTM 更可靠地捕获正降水误差，但 LSTM-ViT 模型为识别高影响和负误差事件提供了更大的实用性，尽管偶尔的时间偏移会在较长的交付时间内增加 RMSE。</span><span class="original-text">The LSTM-ViT model achieves the lowest RMSE from forecast hours (FH) 1–12, outperforming both the HRRR and LSTM. Beyond FH 12, the LSTM achieves lower RMSE than both the HRRR and LSTM-ViT models, reflecting its strong ability to predict HRRR wet bias at longer lead times. This behavior also highlights a limitation of the LSTM-ViT model, which exhibits reduced consistency in predicting the sign and timing of errors. While the LSTM more reliably captures positive precipitation errors, the LSTM-ViT model provides greater utility for identifying high-impact and negative-error events, albeit with occasional temporal offsets that increase RMSE at longer lead times.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p7">
+<p class="ltx_p" id="S4.SS1.p7.1"><span class="translated-text">总体而言，LSTM-ViT 模型以通常随预测提前期扩展的方式改进了 HRRR。包括 STAT、SUFF 和 WANT 在内的几个站点在较长的准备时间内表现出特别大的改进，它们都位于沿海和下哈德逊河谷气候分区内，分析的极端降水发生在这些分区内。 STAT 和 WANT 显示出相似的特征，在短交货时间和长交货时间内都有显着改善，而 SUFF 在预测早期表现出较为温和的增长，随后在 FH 15 之后技能显着提高。</span><span class="original-text">Overall, the LSTM-ViT models improve upon the HRRR in a manner that generally scales with forecast lead time. Several stations exhibit particularly large improvements at longer lead times, including STAT, SUFF, and WANT, all located within the Coastal and Lower Hudson Valley climate divisions where the analyzed precipitation extreme occurs. STAT and WANT display similar signatures, with substantial improvements at both short and long lead times, whereas SUFF exhibits more modest gains early in the forecast followed by a pronounced increase in skill after FH 15.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p8">
+<p class="ltx_p" id="S4.SS1.p8.1"><span class="translated-text">大多数站点在中间交付时间（FH 4-12）实现了最大的改进，这可能反映了 LSTM-ViT 架构捕获的 PBL 过程的影响力增加。这种行为发生在网络的大部分区域，但北部高原和尚普兰谷气候区除外，它们表现出明显的错误特征。这些区域中的站点显示出更温和的改进，并且有时在选定的交付时间（例如，FH 14 的 CHAZ；FH 9 和 10 的 GABR）表现与 HRRR 相当或稍差。由于这些站点的 RMSE 并不系统地高于网络中的其他位置，因此结果表明 HRRR 在这些区域中已经表现得相当好，或者残余误差主要源于时间和幅度不匹配，而不是持久的模型偏差。</span><span class="original-text">Most stations achieve their largest improvements at intermediate lead times (FH 4–12), likely reflecting the increased influence of PBL processes captured by the LSTM-ViT architecture. This behavior occurs across most of the network, except within the Northern Plateau and Champlain Valley climate divisions, which exhibit distinct error signatures. Stations in these regions show more modest improvements and occasionally perform comparably to or slightly worse than the HRRR at select lead times (e.g., CHAZ at FH 14; GABR at FH 9 and 10). Because RMSE at these sites is not systematically higher than elsewhere in the network, the results suggest that the HRRR already performs reasonably well in these regions or that residual errors arise primarily from timing and magnitude mismatches rather than persistent model bias.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F8"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="302" id="S4.F8.g1" src="https://arxiv.org/html/2606.19026v1/precip_year.png" width="596"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 8: </span>NYSM, MAE of LSTM-ViT precipitation-error predictions in <math alttext="\mathrm{mm\,hr^{-1}}" class="ltx_Math" display="inline" id="S4.F8.2.m1" intent=":literal"><semantics><mrow><mi>mm</mi><mo lspace="0.170em" rspace="0em">​</mo><msup><mi>hr</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{mm\,hr^{-1}}</annotation></semantics></math>, grouped by month. Panels are filtered to exclude zero-error LSTM-ViT predictions to better highlight model failure modes.</figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS1.p9">
+<p class="ltx_p" id="S4.SS1.p9.4"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S4.F8" title="Figure 8 ‣ 4.1 Precipitation Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">8</span></a><span class="translated-text">显示每月 MAE 值（</span><span class="original-text">presents monthly MAE values (</span><math alttext="\mathrm{mm~hr^{-1}}" class="ltx_Math" display="inline" id="S4.SS1.p9.1.m1" intent=":literal"><semantics><mrow><mi>mm</mi><mo lspace="0.330em" rspace="0em">​</mo><msup><mi>hr</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{mm~hr^{-1}}</annotation></semantics></math><span class="translated-text">）对于 LSTM-ViT 降水误差预测，进行过滤以排除零误差 LSTM-ViT 预测，以更好地突出模型故障模式。 E25 中确定的许多季节性特征仍然存在于 LSTM-ViT 架构中，尽管 MAE 在大多数情况下减少了大约一半。误差表现出很强的季节性，最大值出现在夏季（7 月至 8 月），此时 MAE 超过年度最小值的两倍（大约</span><span class="original-text">) for LSTM-ViT precipitation-error predictions, filtered to exclude zero-error LSTM-ViT predictions to better highlight model failure modes. Many of the seasonal signatures identified in E25 persist in the LSTM-ViT architecture, although MAE is reduced by roughly half in most cases. Error exhibits strong seasonality, with the largest values occurring during summer (July–August), when MAE exceeds twice the yearly minimum (approximately</span><math alttext="3~\mathrm{mm~hr^{-1}}" class="ltx_Math" display="inline" id="S4.SS1.p9.2.m2" intent=":literal"><semantics><mrow><mn>3</mn><mo lspace="0.330em" rspace="0em">​</mo><mi>mm</mi><mo lspace="0.330em" rspace="0em">​</mo><msup><mi>hr</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">3~\mathrm{mm~hr^{-1}}</annotation></semantics></math><span class="translated-text">）并达到最大值</span><span class="original-text">) and reaches a maximum of</span><math alttext="6.15~\mathrm{mm~hr^{-1}}" class="ltx_Math" display="inline" id="S4.SS1.p9.3.m3" intent=":literal"><semantics><mrow><mn>6.15</mn><mo lspace="0.330em" rspace="0em">​</mo><mi>mm</mi><mo lspace="0.330em" rspace="0em">​</mo><msup><mi>hr</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">6.15~\mathrm{mm~hr^{-1}}</annotation></semantics></math><span class="translated-text">八月在 SOUT。哈德逊河谷、东部高原和沿海气候分区内的站点在冬季（12 月至 2 月）也表现出一致的次要极大值，其中 MAE 增加约</span><span class="original-text">at SOUT in August. Stations within the Hudson Valley, Eastern Plateau, and Coastal climate divisions also exhibit coherent secondary maxima during winter (December–February), where MAE increases by approximately</span><math alttext="1~\mathrm{mm~hr^{-1}}" class="ltx_Math" display="inline" id="S4.SS1.p9.4.m4" intent=":literal"><semantics><mrow><mn>1</mn><mo lspace="0.330em" rspace="0em">​</mo><mi>mm</mi><mo lspace="0.330em" rspace="0em">​</mo><msup><mi>hr</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1~\mathrm{mm~hr^{-1}}</annotation></semantics></math><span class="translated-text">相对于年度最小值。这些区域与图 2 所示的升高的 MAE 模式密切对应。</span><span class="original-text">relative to annual minima. These regions correspond closely to the elevated MAE patterns shown in Fig.</span><a class="ltx_ref" href="#S4.F6" title="Figure 6 ‣ 4.1 Precipitation Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">6</span></a>.</p>
+</div>
+<div class="ltx_para" id="S4.SS1.p10">
+<p class="ltx_p" id="S4.SS1.p10.1"><span class="translated-text">总体而言，合并垂直解析的 PBL 信息可显着改善大范围空间和时间尺度的降水预报误差预测。相对于 E25 中探索的基线 LSTM，LSTM-ViT 架构减少了系统偏差，改善了高影响和负错误事件的表示，并在 NYSM 网络的大部分区域产生了更多空间连贯的技能。尽管在以复杂的对流、沿海和地形过程为主的地区仍然存在挑战；结果表明，垂直大气结构为降水预报误差增长提供了有意义的预测信息，并激发了对以强不稳定性、中尺度强迫和快速演变的 PBL 动力学为特征的环境的垂直信息 ML 架构的进一步探索。</span><span class="original-text">Overall, incorporating vertically resolved PBL information substantially improves precipitation forecast-error prediction across a wide range of spatial and temporal scales. Relative to the baseline LSTM explored in E25, the LSTM-ViT architecture reduces systematic bias, improves representation of high-impact and negative-error events, and produces more spatially coherent skill across much of the NYSM network. Although challenges remain in regions dominated by complex convective, coastal, and orographic processes; the results demonstrate that vertical atmospheric structure provides meaningful predictive information for precipitation forecast-error growth and motivate further exploration of vertically informed ML architectures for environments characterized by strong instability, mesoscale forcing, and rapidly evolving PBL dynamics.</span></p>
+</div>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span><span class="translated-text">风误差</span><span class="original-text">Wind Error</span></h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.1"><span class="translated-text">在 E25 中，LSTM 风误差预测在各个地理区域表现出大致一致的昼夜特征，反映了与 PBL 深度、垂直混合和地形影响相关的大气过程。早上 PBL 启动之前和下午混合之后的误差最低，相对于日落后傍晚时段的 HRRR 而言，误差有所改善。这种模式可能反映了在稳定且混合良好的 PBL 条件下 LSTM 技能的提高。在 E25 中检查的三个预测变量中，风误差预测表现出与目标的最强协方差，并且在高预测和低预测范围内表现出最一致的性能。</span><span class="original-text">In E25, LSTM wind-error predictions exhibited a broadly consistent diurnal signature across geographic regions, reflecting atmospheric processes associated with PBL depth, vertical mixing, and orographic influences. Error was lowest prior to morning PBL spin-up and following afternoon mix-out, with enhanced improvement relative to the HRRR during the early evening hours after sunset. This pattern likely reflects increased LSTM skill under stable and well-mixed PBL conditions. Among the three predictors examined in E25, wind-error predictions exhibited the strongest covariance with the target and the most consistent performance across both over- and under-prediction regimes.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p2">
+<p class="ltx_p" id="S4.SS2.p2.1"><span class="translated-text">开发 LSTM-ViT 模型是为了增强 LSTM 对影响近地表风预报的垂直大气过程的表示，包括 PBL 分层、温度倒转、垂直动量传输和对流环流。通过合并垂直解析的大气结构，LSTM-ViT 框架旨在更好地捕获与不断变化的 PBL 动力学和地形调制流相互作用相关的风预报误差。由于模型输出错误，本分析中省略了以下站点：BKLN、CHAZ、ELLE 和 QUEE。</span><span class="original-text">The LSTM-ViT model was developed to augment the LSTM’s representation of vertical atmospheric processes influencing near-surface wind forecasts, including PBL stratification, temperature inversions, vertical momentum transport, and convective circulations. By incorporating vertically resolved atmospheric structure, the LSTM-ViT framework aims to better capture wind forecast error associated with evolving PBL dynamics and terrain-modulated flow interactions. The following stations were omitted from this analysis due to erroneous model output: BKLN, CHAZ, ELLE, and QUEE.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F9"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="623" id="S4.F9.g1" src="https://arxiv.org/html/2606.19026v1/x4.png" width="827"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 9: </span>Scatterplot of the wind error across the NYSM network and all forecast hours, with the x-axis representing the true target error and the y-axis showing the corresponding LSTM-ViT-predicted error. The red diagonal line indicates the 1:1 line, where perfect predictions would lie.</figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS2.p3">
+<p class="ltx_p" id="S4.SS2.p3.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S4.F9" title="Figure 9 ‣ 4.2 Wind Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">9</span></a><span class="translated-text">比较观测到的风误差和预测的风误差，红色对角线表示完全一致的 1:1 线。内</span><span class="original-text">compares observed and predicted wind errors, with the red diagonal denoting the 1:1 line of perfect agreement. Within</span><math alttext="\pm~2~\mathrm{m~s^{-1}}" class="ltx_Math" display="inline" id="S4.SS2.p3.1.m1" intent=":literal"><semantics><mrow><mo>±</mo><mrow><mn>2</mn><mo lspace="0.330em" rspace="0em">​</mo><mi mathvariant="normal">m</mi><mo lspace="0.330em" rspace="0em">​</mo><msup><mi mathvariant="normal">s</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow></mrow><annotation encoding="application/x-tex">\pm~2~\mathrm{m~s^{-1}}</annotation></semantics></math><span class="translated-text">，大约 92% 的预测落在或接近 1:1 线，这表明与 E25 中提出的 LSTM 框架的一致性相当。与 E25 一致，LSTM-ViT 模型在三个预测域中表现出与目标观测值最强的协方差，同时在正误差和负误差范围内保持相对对称的性能。</span><span class="original-text">, approximately 92% of predictions fall on or near the 1:1 line, indicating agreement comparable to that of the LSTM framework presented in E25. Consistent with E25, the LSTM-ViT model exhibits the strongest covariance with the target observations among the three forecast domains while maintaining relatively symmetric performance across both positive and negative error regimes.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F10"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="425" id="S4.F10.g1" src="https://arxiv.org/html/2606.19026v1/wind_state_mae.png" width="546"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 10: </span>New York State MAE overlaid by NCEI climate division <cite class="ltx_cite ltx_citemacro_citep">(NCEI, <a class="ltx_ref" href="#bib.bib21" title="">2015</a>)</cite>. Each point represents the average LSTM-ViT performance (MAE) for an NYSM station, averaged over all forecast lead times. The magnitude of the point is proportional to the MAE, where larger points translate to higher MAE.</figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS2.p4">
+<p class="ltx_p" id="S4.SS2.p4.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S4.F10" title="Figure 10 ‣ 4.2 Wind Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">10</span></a><span class="translated-text">显示 NYSM Profiler Network 中 LSTM-ViT 模型风预测的 MAE。空间变异性不大，大多数站点的误差在 0.25 到 0.25 之间</span><span class="original-text">displays the MAE of LSTM-ViT-model wind predictions across the NYSM Profiler Network. Spatial variability is modest, with most stations exhibiting errors between 0.25 and</span><math alttext="1~\mathrm{m~s^{-1}}" class="ltx_Math" display="inline" id="S4.SS2.p4.1.m1" intent=":literal"><semantics><mrow><mn>1</mn><mo lspace="0.330em" rspace="0em">​</mo><mi mathvariant="normal">m</mi><mo lspace="0.330em" rspace="0em">​</mo><msup><mi mathvariant="normal">s</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1~\mathrm{m~s^{-1}}</annotation></semantics></math><span class="translated-text">。没有明显的连贯的地理或区域错误结构，表明整个领域的性能相对一致。该 MAE 分布与 E25 中为 LSTM 框架报告的站级模式大致一致。</span><span class="original-text">. No coherent geographic or regional error structure is evident, suggesting relatively uniform performance across the domain. This MAE distribution is broadly consistent with the station-level patterns reported for the LSTM framework in E25.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F11"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="713" id="S4.F11.g1" src="https://arxiv.org/html/2606.19026v1/wind_wb.png" width="596"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 11: </span>From top to bottom, panels show aggregate RMSE in <math alttext="\mathrm{m~s^{-1}}" class="ltx_Math" display="inline" id="S4.F11.3.m1" intent=":literal"><semantics><mrow><mi mathvariant="normal">m</mi><mo lspace="0.330em" rspace="0em">​</mo><msup><mi mathvariant="normal">s</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{m~s^{-1}}</annotation></semantics></math> for the HRRR forecast, LSTM predictions, LSTM-ViT model predictions, and then <math alttext="\Delta" class="ltx_Math" display="inline" id="S4.F11.4.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> RMSE comparison for each individual NYSM station in the Profiler network. In the HRRR panel, RMSE magnitude is represented by grayscale shading. In the subsequent ML panels, colors denote RMSE differences relative to the HRRR forecast, with red shading indicating higher RMSE and blue shading indicating lower RMSE than HRRR.</figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS2.p5">
+<p class="ltx_p" id="S4.SS2.p5.1"><span class="translated-text">如图所示。</span><span class="original-text">As in Fig.</span><a class="ltx_ref" href="#S4.F7" title="Figure 7 ‣ 4.1 Precipitation Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">7</span></a><span class="translated-text">，图。</span><span class="original-text">, Fig.</span><a class="ltx_ref" href="#S4.F11" title="Figure 11 ‣ 4.2 Wind Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">11</span></a><span class="translated-text">说明了 LSTM-ViT 模型预测相对于 HRRR 的相对改进，作为预测提前时间的函数。 HRRR 表现出预期 RMSE 随交付周期单调增加。 LSTM-ViT 模型在所有预测范围内保持最低的 RMSE，最大的改进发生在较早的交付时间内。相比之下，LSTM 在 FH 1-4 时的表现比 HRRR 差，在 FH 8-16 时的 HRRR 有所提高，其技能与 LSTM-ViT 模型相当，并且在最后两个预测小时与 HRRR 相当。</span><span class="original-text">illustrates the relative improvement of LSTM-ViT-model predictions compared to the HRRR as a function of forecast lead time. The HRRR exhibits the expected monotonic increase in RMSE with lead time. The LSTM-ViT model maintains the lowest RMSE across all forecast horizons, with the largest improvements occurring at earlier lead times. In contrast, the LSTM performs worse than the HRRR at FH 1–4, improves upon the HRRR from FH 8–16 with skill comparable to the LSTM-ViT model, and becomes comparable to the HRRR at the final two forecast hours.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p6">
+<p class="ltx_p" id="S4.SS2.p6.1"><span class="translated-text">这些结果强化了 E25 的发现，其中 LSTM 在较长的提前时间内更有效地纠正了系统 HRRR 偏差，但当预测误差由快速演变的大气过程主导时，它就会陷入困境。相比之下，LSTM-ViT 模型始终优于 HRRR 和 LSTM，最大增益发生在 FH 1-10 期间，类似于降水误差域。这种增强的短期性能可能反映了垂直解析 PBL 信息的结合，这改善了与复杂中尺度和 PBL 过程相关的预测误差增长的表示。</span><span class="original-text">These results reinforce findings from E25, where the LSTM more effectively corrected systematic HRRR biases at longer lead times but struggled when forecast errors were dominated by rapidly evolving atmospheric processes. In contrast, the LSTM-ViT model consistently outperforms both the HRRR and LSTM, with the largest gains occurring during FH 1–10, similar to the precipitation-error domain. This enhanced short-range performance likely reflects the incorporation of vertically resolved PBL information, which improves representation of forecast-error growth associated with complex mesoscale and PBL processes.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p7">
+<p class="ltx_p" id="S4.SS2.p7.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S4.F11" title="Figure 11 ‣ 4.2 Wind Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">11</span></a><span class="translated-text">表明站间变异性比降水误差域更大。这种行为可能反映了 HRRR 对于近地表风级的基线性能已经很强，从而减少了 ML 模型需要纠正的系统误差。此外，地形通道、沿海相互作用和 PBL 稳定性强烈影响整个纽约州的表面风，并且可能无法在所有站点和大气状况中得到一致解决。因此，不同地点的预测误差演变差异很大，导致 LSTM-ViT 模型技能的站点间差异更大。</span><span class="original-text">shows that greater inter-station variability emerges than in the precipitation-error domain. This behavior likely reflects the already strong baseline performance of the HRRR for near-surface wind magnitude, leaving less systematic error for the ML models to correct. In addition, terrain channeling, coastal interactions, and PBL stability strongly influence surface winds across NYS and may not be resolved consistently across all stations and atmospheric regimes. Consequently, forecast-error evolution varies substantially between locations, producing greater station-to-station variability in LSTM-ViT-model skill.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p8">
+<p class="ltx_p" id="S4.SS2.p8.1"><span class="translated-text">尽管如此，许多台站表现出相对于 HRRR 的显着改进，特别是在较短的交付时间内，这表明垂直 PBL 结构为局部风预报误差增长提供了有意义的预测信息。除了 BRON、CLYM、VOOR 和 WANT 之外，所有台站都至少在某些预测范围内表现出相对于 HRRR 的改进性能。 HFAL、JORD、ONTA、SOUT、STON，尤其是 TANN 显示出特别大的 RMSE 降低，而 BUFF、REDH、STAT 和 WARW 显示出较小的改进。 BELL、GABR 和 REDF 在较短的交付时间内改善了 HRRR，但这种优势分别在超过大约 FH 5、9 和 10 后减弱。</span><span class="original-text">Nevertheless, many stations demonstrate notable improvements relative to the HRRR, particularly at shorter lead times, suggesting that vertical PBL structure provides meaningful predictive information for localized wind forecast-error growth. With the exception of BRON, CLYM, VOOR, and WANT, all stations exhibit at least some forecast horizons with improved performance relative to the HRRR. HFAL, JORD, ONTA, SOUT, STON, and especially TANN show particularly large RMSE reductions, whereas BUFF, REDH, STAT, and WARW exhibit more modest improvements. BELL, GABR, and REDF improve upon the HRRR at shorter lead times, but this advantage diminishes beyond approximately FH 5, 9, and 10, respectively.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F12"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="295" id="S4.F12.g1" src="https://arxiv.org/html/2606.19026v1/wind_day.png" width="596"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 12: </span>NYSM, MAE of LSTM-ViT wind-error predictions in <math alttext="\mathrm{m~s^{-1}}" class="ltx_Math" display="inline" id="S4.F12.2.m1" intent=":literal"><semantics><mrow><mi mathvariant="normal">m</mi><mo lspace="0.330em" rspace="0em">​</mo><msup><mi mathvariant="normal">s</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{m~s^{-1}}</annotation></semantics></math>, grouped by local time of day. Panels are filtered to exclude zero-error LSTM-ViT predictions to better highlight model failure modes.</figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS2.p9">
+<p class="ltx_p" id="S4.SS2.p9.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S4.F12" title="Figure 12 ‣ 4.2 Wind Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">12</span></a><span class="translated-text">呈现平均误差（</span><span class="original-text">presents mean error (</span><math alttext="\mathrm{m~s^{-1}}" class="ltx_Math" display="inline" id="S4.SS2.p9.1.m1" intent=":literal"><semantics><mrow><mi mathvariant="normal">m</mi><mo lspace="0.330em" rspace="0em">​</mo><msup><mi mathvariant="normal">s</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\mathrm{m~s^{-1}}</annotation></semantics></math><span class="translated-text">）按 LSTM-ViT 风误差预测的当地时间分组的值，经过过滤以排除零误差 LSTM-ViT 预测，以更好地突出模型故障模式。总体昼夜信号（底行）与 E25 中确定的时间表现模式大致一致，特别是相对技能退化时期；然而，LSTM 和 LSTM-ViT 框架之间偏差的大小和方向都有很大不同。尽管 LSTM 在大多数气候分区中都表现出持续的正偏差，但 LSTM-ViT 模型在整个昼夜周期中表现出相对稳定的性能。夜间和清晨（2200-0600）出现弱负偏差，下午晚些时候（1600-1900）出现轻微正偏差，正午附近出现适度负偏差。总体而言，这些结果表明，合并垂直 PBL 结构减少了在 LSTM 基线中观察到的系统性过度预测，并产生了风预报误差的时间上更加平衡的表示。</span><span class="original-text">) values grouped by local time of day for LSTM-ViT wind-error predictions, filtered to exclude zero-error LSTM-ViT predictions to better highlight model failure modes. The aggregate diurnal signal (bottom row) is broadly consistent with the temporal performance patterns identified in E25, particularly with respect to periods of relative skill degradation; however, both the magnitude and direction of the bias differ substantially between the LSTM and LSTM-ViT frameworks. Whereas the LSTM exhibited a persistent positive bias across most climate divisions, the LSTM-ViT model shows comparatively stable performance throughout the diurnal cycle. A weak negative bias occurs during the overnight and early morning hours (2200–0600), a slight positive bias emerges during the late afternoon (1600–1900), and a modest negative bias appears near solar noon. Overall, these results suggest that incorporating vertical PBL structure reduces the systematic overprediction observed in the LSTM baseline and produces a more temporally balanced representation of wind forecast error.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p10">
+<p class="ltx_p" id="S4.SS2.p10.1"><span class="translated-text">与 E25 的结果不同，大多数站点都表现出微妙到明显的负偏差。包括 BING、HFAL、JORD、SCHA 和 SCHO 在内的多个台站在下午晚些时候和傍晚早些时候表现出正偏差，这表明在白天混合增强和 PBL 过渡期间倾向于高估风预报误差。 TANN 和 WARW 也表现出明显的正偏差，尽管它们的时间演化与更广泛的网络不同。相反，BELL、OWEG、STAT、SUFF 和 WANT 显示出明显更强的预测不足，最大的负偏差通常发生在太阳正午附近和日出前的时间内。包括 HFAL、JORD、MANH、ONTA、SCHA、SOUT、TANN 和 VOOR 在内的一部分台站在早上过渡期间（0500-1000）进一步表现出较弱但一致的过度预测。总的来说，这些结果凸显了风预报误差预测的高度依赖于台站的性质，并表明局部 PBL 演化、地形相互作用和台站特定的大气状况强烈影响 LSTM-ViT 模型的行为。</span><span class="original-text">Unlike the results in E25, most stations exhibit subtle to pronounced negative bias. Several stations, including BING, HFAL, JORD, SCHA, and SCHO, display positive bias during the late afternoon and early evening, suggesting a tendency to overpredict wind forecast error during periods of enhanced daytime mixing and PBL transition. TANN and WARW also exhibit pronounced positive bias, although their temporal evolution differs from the broader network. Conversely, BELL, OWEG, STAT, SUFF, and WANT show substantially stronger underprediction, with the largest negative biases generally occurring near solar noon and during the pre-sunrise hours. A subset of stations, including HFAL, JORD, MANH, ONTA, SCHA, SOUT, TANN, and VOOR, further exhibit weak but consistent overprediction during the morning transition period (0500–1000). Collectively, these results highlight the highly station-dependent nature of wind forecast-error prediction and suggest that local PBL evolution, terrain interactions, and station-specific atmospheric regimes strongly influence LSTM-ViT-model behavior.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p11">
+<p class="ltx_p" id="S4.SS2.p11.1"><span class="translated-text">这些结果表明，相对于基线 LSTM 框架，合并垂直解析的大气结构大大改变了风预报误差。虽然 LSTM-ViT 模型展示了改进的聚合技能，特别是在较短的交付时间内，但其错误签名在整个 NYSM 网络中变得更加本地化、依赖于站且在时间上异构。与 LSTM 框架中明显的更广泛的区域结构不同，LSTM-ViT 架构似乎对局部 PBL 演化、地形相互作用和中尺度变化更加敏感。这种行为表明，垂直 PBL 信息使模型能够解决影响风预报误差增长的更精细尺度的过程，同时还提高了对高度局部化的大气状况的敏感性。总体而言，这些发现凸显了垂直信息机器学习框架在地理和动态复杂环境中进行风预报误差预测的前景和复杂性。</span><span class="original-text">These results indicate that incorporating vertically resolved atmospheric structure substantially alters wind forecast-error prediction relative to the baseline LSTM framework. While the LSTM-ViT model demonstrates improved aggregate skill, particularly at shorter lead times, its error signatures become more localized, station-dependent, and temporally heterogeneous across the NYSM network. Unlike the broader regional structures evident in the LSTM framework, the LSTM-ViT architecture appears more sensitive to localized PBL evolution, terrain interactions, and mesoscale variability. This behavior suggests that vertical PBL information enables the model to resolve finer-scale processes influencing wind forecast-error growth, while also increasing sensitivity to highly localized atmospheric regimes. Overall, these findings highlight both the promise and complexity of vertically-informed ML frameworks for wind forecast-error prediction in geographically and dynamically complex environments.</span></p>
+</div>
+</section>
+<section class="ltx_subsection ltx_indent_first" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span><span class="translated-text">温度误差</span><span class="original-text">Temperature Error</span></h3>
+<div class="ltx_para" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.1"><span class="translated-text">在 E25 中，LSTM 温度误差预测表现出清晰的区域结构和独特的本地时间特征，可能反映了与 PBL 深度和垂直混合相关的大气过程。模型性能存在微妙的南北梯度，南部站点比北部站点表现出更高的预测准确性，支持了这种解释。这种模式可能反映了受海洋影响的南部海岸和大陆性更强、地形复杂的北部地区之间 PBL 演化的系统差异。纽约州北部也经历了更频繁和持续的积雪，这可以增强地表温度反转并抑制 PBL 混合。由于 NWP 系统通常难以表示反演强度、深度和侵蚀，因此这些条件可能会引入额外的预测误差变异性，这对于基于地面的机器学习框架来说更难以预测。</span><span class="original-text">In E25, LSTM temperature-error predictions exhibited clear regional structures and distinct local-time signatures, likely reflecting atmospheric processes associated with PBL depth and vertical mixing. A subtle south–north gradient in model performance, with southern stations demonstrating greater predictive accuracy than northern stations, supports this interpretation. This pattern likely reflects systematic differences in PBL evolution between the maritime-influenced southern coast and the more continental, topographically complex northern regions. Northern New York also experiences more frequent and persistent snow cover, which can enhance surface-based temperature inversions and suppress PBL mixing. Because NWP systems often struggle to represent inversion strength, depth, and erosion, these conditions may introduce additional forecast-error variability that is more difficult for surface-based ML frameworks to predict.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS3.p2">
+<p class="ltx_p" id="S4.SS3.p2.1"><span class="translated-text">为了解决这些限制，我们开发了 LSTM-ViT 架构，以整合温度和潜在变量的垂直分布，利用 ML 框架内的物理洞察力。以下结果评估了这种增强架构的预测能力。由于模型输出错误，本分析中省略了以下站点：GABR、HFAL、MANH、OWEG、SARA、SUFF、SCHA、SCHO 和 TUPP。</span><span class="original-text">To address these limitations, we developed the LSTM-ViT architecture to incorporate vertical profiles of temperature and latent variables, leveraging physical insights within an ML framework. The following results evaluate the predictive skill of this augmented architecture. The following stations were omitted from this analysis due to erroneous model output: GABR, HFAL, MANH, OWEG, SARA, SUFF, SCHA, SCHO, and TUPP.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F13"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="623" id="S4.F13.g1" src="https://arxiv.org/html/2606.19026v1/x5.png" width="826"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 13: </span>Scatterplot of the temperature error across the NYSM network and all forecast hours, with the x-axis representing the true target error and the y-axis showing the corresponding LSTM-ViT-predicted error. The red diagonal line indicates the 1:1 line, where perfect predictions would lie.</figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS3.p3">
+<p class="ltx_p" id="S4.SS3.p3.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S4.F13" title="Figure 13 ‣ 4.3 Temperature Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">13</span></a><span class="translated-text">表明在</span><span class="original-text">shows that within</span><math alttext="\pm~2~\mathrm{{}^{\circ}C}" class="ltx_Math" display="inline" id="S4.SS3.p3.1.m1" intent=":literal"><semantics><mrow><mo>±</mo><mrow><mn>2</mn><mo lspace="0.330em" rspace="0em">​</mo><mmultiscripts><mi mathvariant="normal">C</mi><mprescripts></mprescripts><mrow></mrow><mo>∘</mo></mmultiscripts></mrow></mrow><annotation encoding="application/x-tex">\pm~2~\mathrm{{}^{\circ}C}</annotation></semantics></math><span class="translated-text">，大约 73% 的预测落在 1:1 线上或附近，这表示相对于 LSTM (E25)，对齐度减少了 1%。异常值中仍然存在明显的轻微不对称性：负误差与 1:1 线更接近，而正误差的大小往往被高估。这种行为表明，LSTM-ViT 模型可以更有效地捕获观测温度超过 HRRR 预测的事件，同时往往会低估观测温度低于 HRRR 预测的事件的强度。</span><span class="original-text">, approximately 73% of predictions fall on or near the 1:1 line, representing a 1% reduction in alignment relative to the LSTM (E25). A slight asymmetry remains evident in the outliers: negative errors align more closely with the 1:1 line, whereas positive errors tend to be over-predicted in magnitude. This behavior suggests that the LSTM-ViT model more effectively captures events in which observed temperatures exceed the HRRR forecast, while tending to underestimate the magnitude of events in which observed temperatures are colder than the HRRR forecast.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F14"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="426" id="S4.F14.g1" src="https://arxiv.org/html/2606.19026v1/temp_state_mae.png" width="546"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 14: </span>New York State MAE overlaid by NCEI climate division <cite class="ltx_cite ltx_citemacro_citep">(NCEI, <a class="ltx_ref" href="#bib.bib21" title="">2015</a>)</cite>. Each point represents the average LSTM-ViT performance (MAE) for an NYSM station, averaged over all forecast lead times. The magnitude of the point is proportional to the MAE, where larger points translate to higher MAE.</figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS3.p4">
+<p class="ltx_p" id="S4.SS3.p4.2"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S4.F14" title="Figure 14 ‣ 4.3 Temperature Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">14</span></a><span class="translated-text">显示整个纽约州的空间变异性不大，大多数站点的误差在 0.75 到 0.75 之间</span><span class="original-text">shows that spatial variability is modest across NYS, with most stations exhibiting errors between 0.75 and</span><math alttext="2\mathrm{{}^{\circ}C}" class="ltx_Math" display="inline" id="S4.SS3.p4.1.m1" intent=":literal"><semantics><mrow><mn>2</mn><mo lspace="0em" rspace="0em">​</mo><mmultiscripts><mi mathvariant="normal">C</mi><mprescripts></mprescripts><mrow></mrow><mo>∘</mo></mmultiscripts></mrow><annotation encoding="application/x-tex">2\mathrm{{}^{\circ}C}</annotation></semantics></math><span class="translated-text">。网络中没有出现连贯的地理或区域模式。除了表现出明显较低 MAE 的 TANN、BING 和 STON 之外，其余站点大约在</span><span class="original-text">. No coherent geographic or regional pattern emerges across the network. Excluding TANN, BING, and STON, which exhibit notably lower MAE, the remaining stations fall within approximately</span><math alttext="1\mathrm{{}^{\circ}C}" class="ltx_Math" display="inline" id="S4.SS3.p4.2.m2" intent=":literal"><semantics><mrow><mn>1</mn><mo lspace="0em" rspace="0em">​</mo><mmultiscripts><mi mathvariant="normal">C</mi><mprescripts></mprescripts><mrow></mrow><mo>∘</mo></mmultiscripts></mrow><annotation encoding="application/x-tex">1\mathrm{{}^{\circ}C}</annotation></semantics></math><span class="translated-text">彼此之间的差异，表明各个站点的性能相对一致。</span><span class="original-text">of one another, indicating relatively uniform performance across sites.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F15"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="713" id="S4.F15.g1" src="https://arxiv.org/html/2606.19026v1/temp_wb.png" width="596"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 15: </span>From top to bottom, panels show aggregate RMSE in <math alttext="\mathrm{{}^{\circ}C}" class="ltx_Math" display="inline" id="S4.F15.3.m1" intent=":literal"><semantics><mmultiscripts><mi mathvariant="normal">C</mi><mprescripts></mprescripts><mrow></mrow><mo>∘</mo></mmultiscripts><annotation encoding="application/x-tex">\mathrm{{}^{\circ}C}</annotation></semantics></math> for the HRRR forecast, LSTM predictions, LSTM-ViT model predictions, and then <math alttext="\Delta" class="ltx_Math" display="inline" id="S4.F15.4.m2" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> RMSE comparison for each individual NYSM station in the Profiler network. In the HRRR panel, RMSE magnitude is represented by grayscale shading. In the subsequent ML panels, colors denote RMSE differences relative to the HRRR forecast, with red shading indicating higher RMSE and blue shading indicating lower RMSE than HRRR.</figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS3.p5">
+<p class="ltx_p" id="S4.SS3.p5.1"><span class="translated-text">比较图中的前三行。</span><span class="original-text">Comparing the top three rows in Fig.</span><a class="ltx_ref" href="#S4.F15" title="Figure 15 ‣ 4.3 Temperature Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">15</span></a><span class="translated-text">，从 FH 1-13 来看，LSTM-ViT 模型的 RMSE 略低于 LSTM。在 FH 13 之外，LSTM 的 RMSE 低于 LSTM-ViT 模型，并且在 FH 15-16 时短暂低于 HRRR。 LSTM-ViT 模型的 RMSE 随前置时间几乎单调增加，而 LSTM 显示出更大的变异性，包括在 FH 11 处出现显着偏离，超过了 HRRR RMSE。</span><span class="original-text">, the LSTM-ViT model exhibits slightly lower RMSE than the LSTM from FH 1–13. Beyond FH 13, the LSTM attains lower RMSE than the LSTM-ViT model and briefly underperforms the HRRR at FH 15–16. The LSTM-ViT model exhibits a near-monotonic increase in RMSE with lead time, whereas the LSTM displays greater variability, including a notable departure at FH 11 where it exceeds HRRR RMSE.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS3.p6">
+<p class="ltx_p" id="S4.SS3.p6.1"><span class="translated-text">与 E25 一致，LSTM 通常提供巧妙的预测，尽管其输出往往更平滑，并且偶尔会相对于目标误差发生暂时移位。与降水量一样，图 2 中的汇总行</span><span class="original-text">Consistent with E25, the LSTM generally provides skillful predictions, although its output tends to be smoother and occasionally temporally displaced relative to the target error. As with precipitation, the aggregate row in Fig.</span><a class="ltx_ref" href="#S4.F15" title="Figure 15 ‣ 4.3 Temperature Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">15</span></a><span class="translated-text">表明 LSTM-ViT 模型主要在早期到中期的前置时间内对 HRRR 和 LSTM 进行了改进，其中最大的增益发生在 FH 5-14 期间。这些改进可能反映了 LSTM-ViT 架构捕获的 PBL 过程影响力的增加。然而，改进的幅度小于降水误差领域，凸显了整个纽约州温度误差预测的复杂性。</span><span class="original-text">demonstrates that the LSTM-ViT model improves upon both the HRRR and LSTM primarily at early to intermediate lead times, with the largest gains occurring during FH 5–14. These improvements likely reflect the increased influence of PBL processes captured by the LSTM-ViT architecture. However, the magnitude of improvement is smaller than in the precipitation-error domain, highlighting the complexity of temperature-error prediction across NYS.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS3.p7">
+<p class="ltx_p" id="S4.SS3.p7.1"><span class="translated-text">进一步的分析表明，提前期误差特征具有高度的站点特异性，而不是区域一致的。在大部分预测范围内，BELL、BUFF、CHAZ、JORD、ONTA、REDH、SOUT 和 WANT 相对于 HRRR 的改善甚微，某些交付周期表现出性能下降。在大多数情况下，RMSE 并不比 LSTM-ViT 域中的其他位置高很多，这表明 HRRR 在这些位置已经表现良好，或者时间偏移和输出变异性的增加导致了更高的误差。哈德逊河谷下游和纽约市大都市区的几个车站（BKLN、BRON、QUEE、WARW）相对于 HRRR 表现出最大的 RMSE 降低，特别是在较短的交货时间（FH 1-9）下。这些站在基于地表的 LSTM 框架 (E25) 中也表现良好，这表明控制预报误差的当地大气过程在这些位置尤其是可预测的。 LSTM-ViT 框架进一步放大了这些改进，可能是因为它可以利用独立 LSTM 无法获得的垂直大气信息。</span><span class="original-text">Further analysis indicates that lead-time error signatures are highly station-specific rather than regionally coherent. BELL, BUFF, CHAZ, JORD, ONTA, REDH, SOUT, and WANT show minimal improvement relative to the HRRR across much of the forecast horizon, with some lead times exhibiting degraded performance. In most of these cases, RMSE is not substantially higher than elsewhere in the LSTM-ViT domain, suggesting that the HRRR already performs well at these locations or that increased temporal offsets and output variability contribute to the higher error. Several stations in the lower Hudson Valley and New York City metropolitan area (BKLN, BRON, QUEE, WARW) exhibit the largest RMSE reductions relative to the HRRR, particularly at shorter lead times (FH 1–9). These stations also performed well in the surface-based LSTM framework (E25), suggesting that local atmospheric processes governing forecast error are especially predictable at these locations. The LSTM-ViT framework further amplifies these improvements, likely because it can leverage vertical atmospheric information unavailable to the standalone LSTM.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F16"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="296" id="S4.F16.g1" src="https://arxiv.org/html/2606.19026v1/temp_day.png" width="596"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 16: </span>NYSM, MAE of LSTM-ViT temperature-error predictions in <math alttext="\mathrm{{}^{\circ}C}" class="ltx_Math" display="inline" id="S4.F16.2.m1" intent=":literal"><semantics><mmultiscripts><mi mathvariant="normal">C</mi><mprescripts></mprescripts><mrow></mrow><mo>∘</mo></mmultiscripts><annotation encoding="application/x-tex">\mathrm{{}^{\circ}C}</annotation></semantics></math>, grouped by local time of day. Panels are filtered to exclude zero-error LSTM-ViT predictions to better highlight model failure modes.</figcaption>
+</figure>
+<div class="ltx_para" id="S4.SS3.p8">
+<p class="ltx_p" id="S4.SS3.p8.1"><span class="translated-text">参考图.</span><span class="original-text">Referencing Fig.</span><a class="ltx_ref" href="#S4.F16" title="Figure 16 ‣ 4.3 Temperature Error ‣ 4 Results ‣ A Hybrid LSTM–Vision Transformer Architecture for Predicting HRRR Forecast Errors"><span class="ltx_text ltx_ref_tag">16</span></a><span class="translated-text">，每日聚合特征（底行）与 E25 中确定的不同。 LSTM-ViT 模型从日出前时间（0200-0500）期间的轻微预测不足转变为当地时间 0700 至 1500 之间的适度高预测。从大约 1600 点到午夜，过度预测逐渐增加。与 LSTM 框架不同，LSTM-ViT 模型在接近太阳正午时表现相对较好，通常与峰值 PBL 翻转相关，而在早晨旋转和晚上混合阶段，当湍流和垂直结构更加动态复杂时，技能会下降。</span><span class="original-text">, the aggregate diurnal signature (bottom row) differs from that identified in E25. The LSTM-ViT model transitions from slight under-prediction during the pre-sunrise hours (0200–0500) to modest over-prediction between 0700 and 1500 local time. From approximately 1600 through midnight, over-prediction gradually increases. Unlike the LSTM framework, the LSTM-ViT model performs comparatively well near solar noon, typically associated with peak PBL overturning, while skill degrades during the morning spin-up and evening mixing-out phases when turbulence and vertical structure are more dynamically complex.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS3.p9">
+<p class="ltx_p" id="S4.SS3.p9.1"><span class="translated-text">尽管许多 NYSM 电台表现出不同的当地时间模式，但大多数 NYSM 电台都广泛遵循聚合签名。站点子集（BKLN、BRON、JORD、ONTA 和 STAT）显示的时间结构在很大程度上与总体行为反相关，从夜间的强烈高估转变为下午早些时候的适度低估。除 JORD 和 ONTA 外，这些车站均位于纽约市大都市区内；然而，其他沿海分区站没有类似的签名表明这种行为不仅仅是区域效应。</span><span class="original-text">Most NYSM stations broadly follow the aggregate signature, although many exhibit distinct local time-of-day patterns. A subset of stations (BKLN, BRON, JORD, ONTA, and STAT) displays a temporal structure that is largely anti-correlated with the aggregate behavior, transitioning from strong over-prediction overnight to modest under-prediction during the early afternoon. With the exception of JORD and ONTA, these stations are located within the NYC metropolitan area; however, the absence of a similar signature at other Coastal-division stations suggests that this behavior is not solely a regional effect.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS3.p10">
+<p class="ltx_p" id="S4.SS3.p10.1"><span class="translated-text">SOUT、TANN、WANT 和 VOOR 表现出特别独特的昼夜特征。 SOUT 和 TANN 的主要特点是全天适度过度预测，尽管 TANN 显示出更大的时间变化。相比之下，WANT 和 VOOR 在大部分昼夜周期中都表现出持续的预测不足，其中 VOOR 保持着网络中所有电台中最强且最一致的负偏差。</span><span class="original-text">SOUT, TANN, WANT, and VOOR exhibit particularly distinctive diurnal signatures. SOUT and TANN are characterized primarily by modest over-prediction throughout the day, although TANN displays greater temporal variability. In contrast, WANT and VOOR exhibit persistent under-prediction across much of the diurnal cycle, with VOOR maintaining the strongest and most consistent negative bias of any station in the network.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS3.p11">
+<p class="ltx_p" id="S4.SS3.p11.1"><span class="translated-text">总的来说，这些结果表明 LSTM-ViT 架构从 MWR 剖面中学习了垂直解析热力学结构的有用表示。结合这些信息可以改善温度预测误差预测，特别是在 PBL 演化强烈影响近地表温度变化的较短和中等交付周期内。尽管这些增益小于观测到的降水增益，但 LSTM-ViT 比 HRRR 或基线 LSTM 更好地捕获局部和随时间变化的温度误差特征。这些误差的特定站点性质凸显了整个纽约州温度预测的复杂性，其中地形、城市化、陆地-水对比和 PBL 演变在多个尺度上相互作用。总的来说，这些发现表明，垂直信息机器学习架构可以更好地表示物理驱动的温度预测误差，同时强调解决高度局部化的热力学过程所面临的持续挑战。</span><span class="original-text">Overall, these results suggest that the LSTM-ViT architecture learns useful representations of vertically resolved thermodynamic structure from the MWR profiles. Incorporating this information improves temperature forecast-error prediction, particularly at shorter and intermediate lead times when PBL evolution strongly influences near-surface temperature variability. Although these gains are smaller than those observed for precipitation, the LSTM-ViT better captures localized and temporally evolving temperature-error signatures than either the HRRR or baseline LSTM. The station-specific nature of these errors highlights the complexity of temperature prediction across NYS, where terrain, urbanization, land–water contrasts, and PBL evolution interact across multiple scales. Collectively, these findings show that vertically informed ML architectures can better represent physically driven temperature forecast errors, while underscoring the continued challenge of resolving highly localized thermodynamic processes.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section ltx_indent_first" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span><span class="translated-text">总结和结论</span><span class="original-text">Summary and Conclusions</span></h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">我们使用 NYSM Profiler 和 Standard 网络的观测数据为每个 mesonet 站和目标变量训练独立的混合 LSTM-ViT 模型，以预测 HRRR 每小时降水量、10 米风速和 2 米温度预报误差。模型根据 2018-2023 年的数据进行训练，并根据 2024-2025 年的数据进行评估。我们采用以异常值为中心的损失函数来改善罕见、高影响事件的表示，并使用 RMSE、MAE 和平均误差评估性能，并根据地理位置、一天中的时间、季节和预测提前时间进行额外分析。</span><span class="original-text">We trained independent hybrid LSTM-ViT models for each mesonet station and target variable using observations from the NYSM Profiler and Standard networks to predict HRRR hourly precipitation, 10-m wind speed, and 2-m temperature forecast errors. Models were trained on data from 2018–2023 and evaluated on data from 2024–2025. We employed an outlier-focused loss function to improve representation of rare, high-impact events and evaluated performance using RMSE, MAE, and mean error, with additional analyses by geography, time of day, season, and forecast lead time.</span></p>
+</div>
+<div class="ltx_para" id="S5.p2">
+<p class="ltx_p" id="S5.p2.1"><span class="translated-text">如在</span><span class="original-text">As in</span><cite class="ltx_cite ltx_citemacro_citet">Evans et al. (<a class="ltx_ref" href="#bib.bib9" title="">2025</a>)</cite><span class="translated-text">，预测误差预测技能表现出连贯的空间和时间模式，在与复杂的中尺度和 PBL 过程相关的时期通常会出现性能下降。尽管这些关系没有建立因果关系，但它们与地形、对流和 PBL 演化导致预测误差复杂性的解释是一致的。相对于独立的 LSTM，LSTM-ViT 框架在受复杂垂直大气过程影响的环境中表现出的退化要少得多。最大的改进发生在更短的预测提前期，此时观测到的垂直大气结构仍然最能代表未来的预测环境。随着前置时间的增加，大气层与观测到的剖面仪状态的距离越来越远，从而降低了 MWR 观测值的预测价值，并削弱了 LSTM-ViT 架构的相对优势。与这种行为一致，站级统计分析表明，LSTM-ViT 框架在短到中范围的交付时间内比独立 LSTM 提供了统计上显着的改进，而在最长的交付时间内差异变得更小并且通常不具有统计显着性。</span><span class="original-text">, forecast-error prediction skill exhibits coherent spatial and temporal patterns, with reduced performance often occurring during periods associated with complex mesoscale and PBL processes. Although these relationships do not establish causality, they are consistent with the interpretation that topography, convection, and PBL evolution contribute to forecast-error complexity. Relative to the standalone LSTM, the LSTM-ViT framework exhibits substantially less degradation in environments influenced by complex vertical atmospheric processes. The largest improvements occur at shorter forecast lead times, where the observed vertical atmospheric structure remains most representative of the future forecast environment. As lead time increases, the atmosphere evolves farther from the observed profiler state, reducing the predictive value of the MWR observations and diminishing the relative advantage of the LSTM-ViT architecture. Consistent with this behavior, station-level statistical analyses indicate that the LSTM-ViT framework provides a statistically significant improvement over the standalone LSTM at short- to-intermediate-range lead times, whereas differences become smaller and are generally not statistically significant at the longest lead times.</span></p>
+</div>
+<div class="ltx_para" id="S5.p3">
+<p class="ltx_p" id="S5.p3.1"><span class="translated-text">LSTM-ViT 降水误差预测在大多数性能指标上始终优于 LSTM 基线。特别是，LSTM-ViT 模型可以产生更真实的负误差预测，并在对流事件期间表现出较低的性能下降。然而，该框架在错误预测方面保留了不对称性，正错误通常比负错误更准确地捕获。第二个限制是时间位移。尽管 LSTM-ViT 模型经常识别预测错误事件的发生，但预测经常会发生一到两个预测小时的偏差。这种偏差会导致 RMSE 和 MAE 增大，特别是在交货时间较长的情况下，而输出变异性的增加会进一步导致性能下降。减少时间偏移和提高预测一致性是未来工作的重要方向。</span><span class="original-text">LSTM-ViT precipitation-error prediction consistently improves upon the LSTM baseline across most performance metrics. In particular, the LSTM-ViT model produces more realistic negative-error forecasts and exhibits reduced performance degradation during convective events. However, the framework retains an asymmetry in error prediction, with positive errors generally captured more accurately than negative errors. A second limitation is temporal displacement. Although the LSTM-ViT model often identifies the occurrence of forecast-error events, predictions are frequently shifted by one to two forecast hours. This misalignment inflates RMSE and MAE, particularly at longer lead times, while increasing output variability further contributes to performance degradation. Reducing temporal offsets and improving forecast consistency represent important directions for future work.</span></p>
+</div>
+<div class="ltx_para" id="S5.p4">
+<p class="ltx_p" id="S5.p4.1"><span class="translated-text">LSTM-ViT 风误差预测与基线 LSTM 框架相比表现出适度但一致的改进，特别是在较短的预测周期内。 LSTM-ViT 模型保留了一些与每日 PBL 演化和过渡期相关的性能下降；然而，与 LSTM 框架中观察到的特征相比，这些特征更加局部化，并且表现出不同的幅度和偏差结构。这种空间异质性可能反映了预测近地表风强度的固有困难，其中地形效应、湍流混合和中尺度变化强烈影响预测误差的演变。尽管合并垂直解析的热力学信息可以提高预测能力，但与降水和温度域相比，风预报误差似乎不太受可用的MWR观测结果的严格限制。包含垂直解析的风廓线和空间上更一致的热力学观测可能会进一步提高性能。尽管如此，LSTM-ViT 框架持续改进了 HRRR 和基线 LSTM，特别是在较短的交付时间内，这表明它捕获了导致近地表风预报误差的垂直大气过程。</span><span class="original-text">LSTM-ViT wind-error predictions demonstrate modest but consistent improvements over the baseline LSTM framework, particularly at shorter forecast lead times. The LSTM-ViT model retains some of the performance degradation associated with diurnal PBL evolution and transition periods; however, these signatures are more localized and exhibit different magnitudes and bias structures than those observed in the LSTM framework. This spatial heterogeneity likely reflects the inherent difficulty of predicting near-surface wind magnitude, where terrain effects, turbulent mixing, and mesoscale variability strongly influence forecast-error evolution. Although incorporating vertically resolved thermodynamic information improves predictive skill, wind forecast error appears less strongly constrained by the available MWR observations than the precipitation and temperature domains. Inclusion of vertically resolved wind profiles and more spatially consistent thermodynamic observations would likely further improve performance. Nevertheless, the LSTM-ViT framework consistently improves upon both the HRRR and baseline LSTM, particularly at shorter lead times, suggesting that it captures vertical atmospheric processes that contribute to near-surface wind forecast error.</span></p>
+</div>
+<div class="ltx_para" id="S5.p5">
+<p class="ltx_p" id="S5.p5.1"><span class="translated-text">LSTM-ViT 温度误差预测表现出比 LSTM 基线在空间和时间上更加一致的聚合模式。尽管两个框架之间的整体性能大致相当，但 LSTM-ViT 模型似乎对白天 PBL 翻转和太阳辐射驱动的变异性不太敏感，而在夜间条件下表现出更大的退化。这种夜间技能的减少可能反映了日落后近地表热力学的复杂性增加，此时局部热源和热汇、稳定边界层和逆温变得更加重要。这些过程仍然难以通过 NYSM 剖面仪观测来解决，并且可能会引入偏差，导致夜间模式的模型准确性降低。</span><span class="original-text">LSTM-ViT temperature-error predictions exhibit more spatially and temporally coherent aggregate patterns than the LSTM baseline. Although overall performance between the two frameworks is broadly comparable, the LSTM-ViT model appears less sensitive to daytime PBL overturning and solar-radiation-driven variability, while exhibiting greater degradation under nocturnal conditions. This reduced nighttime skill likely reflects the increased complexity of near-surface thermodynamics after sunset, when local heat sources and sinks, stable boundary layers, and temperature inversions become more important. These processes remain difficult to resolve with NYSM profiler observations and may introduce biases that contribute to reduced model accuracy in nocturnal regimes.</span></p>
+</div>
+<div class="ltx_para" id="S5.p6">
+<p class="ltx_p" id="S5.p6.1"><span class="translated-text">这些结果表明，所提出的 LSTM-ViT 框架在较短的预测周期中最为有效，在预测误差预测的幅度和方向精度方面始终优于基线 LSTM。这一优势在快速变化的大气状况中尤其明显，其中垂直解析的 PBL 信息改善了近期预报误差增长和变化的表示。</span><span class="original-text">These results suggest that the proposed LSTM-ViT framework is most effective at shorter forecast lead times, where it consistently outperforms the baseline LSTM in both the magnitude and directional accuracy of forecast-error prediction. This advantage is particularly evident in rapidly evolving atmospheric regimes, where vertically resolved PBL information improves representation of near-term forecast-error growth and variability.</span></p>
+</div>
+<div class="ltx_para" id="S5.p7">
+<p class="ltx_p" id="S5.p7.1"><span class="translated-text">在较长的交付时间内，E25 中探索的 LSTM 框架通常在纠正系统 HRRR 偏差方面表现出更稳定的技能，特别是对于持久性和空间相干的错误结构。因此，这两种架构表现出互补的优势：LSTM-ViT 框架可以在更短的交付时间内更好地解决局部和动态演变的过程，而 LSTM 在延长的交付时间内更有效地捕获更广泛的和暂时持续的预测偏差。这些发现表明，垂直信息架构和序列学习方法在用作统一预测误差预测框架的补充组件而不是作为竞争方法时，可以提供最大的操作价值。</span><span class="original-text">At longer lead times, the LSTM framework explored in E25 often demonstrates more stable skill in correcting systematic HRRR biases, particularly for persistent and spatially coherent error structures. Consequently, the two architectures exhibit complementary strengths: the LSTM-ViT framework better resolves localized and dynamically evolving processes at shorter lead times, whereas the LSTM more effectively captures broader-scale and temporally persistent forecast biases at extended lead times. These findings suggest that vertically informed architectures and sequence-learning approaches may provide the greatest operational value when used as complementary components of a unified forecast-error prediction framework rather than as competing methodologies.</span></p>
+</div>
+<div class="ltx_para" id="S5.p8">
+<p class="ltx_p" id="S5.p8.1"><span class="translated-text">尽管 LSTM-ViT 框架超越了 LSTM 基线，但仍然存在重要的局限性。未来的工作应侧重于为两种架构开发基于贝叶斯神经网络 (BNN) 的不确定性校准和可靠性 (UCR) 框架，实现预测误差预测的概率特征，并为预测者提供可操作的置信度测量和确定性指导</span><span class="original-text">Although the LSTM-ViT framework advances beyond the LSTM baseline, important limitations remain. Future work should focus on developing a Bayesian Neural Network (BNN)-based Uncertainty Calibration and Reliability (UCR) framework for both architectures, enabling probabilistic characterization of forecast-error predictions and providing forecasters with actionable measures of confidence alongside deterministic guidance</span><cite class="ltx_cite ltx_citemacro_citep">(Mansfield and Christensen, <a class="ltx_ref" href="#bib.bib17" title="">2026</a>; Clare et al., <a class="ltx_ref" href="#bib.bib6" title="">2022</a>)</cite>.</p>
+</div>
+<div class="ltx_para" id="S5.p9">
+<p class="ltx_p" id="S5.p9.1"><span class="translated-text">本研究的另一个局限性是需要提高整个建模框架的训练稳定性。由于模型输出错误或不稳定，一些站点被排除在分析之外，这表明数据质量、观测代表性或模型稳健性存在潜在问题。分析器数据不一致、校准问题和大量数据缺失可能会降低某些地点的培训效果。此外，许多受影响的站并不与辐射计位于同一地点，而是依赖于 30 公里半径内站点的观测，这表明观测覆盖范围和仪器放置的限制可能会限制模型准确描述当地垂直大气结构的能力。这些发现强调了在未来的工作中需要改进数据质量控制、扩大观测覆盖范围和更强大的培训策略。</span><span class="original-text">Another limitation of the present study is the need for improved training stability across the modeling framework. Several stations were excluded from the analysis due to erroneous or unstable model output, indicating potential issues with data quality, observational representativeness, or model robustness. Profiler-data inconsistencies, calibration issues, and substantial missing data may reduce training effectiveness at some locations. In addition, many affected stations are not co-located with radiometers but instead rely on observations from sites within a 30-km radius, suggesting that limitations in observational coverage and instrument placement may restrict the model’s ability to accurately characterize local vertical atmospheric structure. These findings highlight the need for improved data quality control, enhanced observational coverage, and more robust training strategies in future work.</span></p>
+</div>
+<div class="ltx_para" id="S5.p10">
+<p class="ltx_p" id="S5.p10.1"><span class="translated-text">LSTM-ViT 框架通过联合编码表面观测和垂直解析的 PBL 结构，为 HRRR 预测误差的预期幅度和方向提供特定于站点的实时指导。通过将 LSTM 的时间序列学习与 ViT 中 MWR 衍生的大气剖面的基于注意力的表示相结合，该模型捕获了与 PBL 过程相关的预报误差特征，而这些特征在基于地面的方法或纯序列方法中并未完全表示。此功能可以对预测不确定性进行更明智的评估，特别是在与已知模型缺陷和复杂垂直变化相关的环境中。</span><span class="original-text">The LSTM–ViT framework provides station-specific, real-time guidance on the expected magnitude and direction of HRRR forecast error by jointly encoding surface observations and vertically resolved PBL structure. By combining temporal sequence learning from the LSTM with attention-based representations of MWR-derived atmospheric profiles from the ViT, the model captures forecast-error characteristics associated with PBL processes that are not fully represented in surface-based or purely sequential approaches. This capability enables more informed assessment of forecast uncertainty, particularly in environments associated with known model deficiencies and complex vertical variability.</span></p>
+</div>
+<div class="ltx_para" id="S5.p11">
+<p class="ltx_p" id="S5.p11.1"><span class="translated-text">与 LSTM 基线相比，LSTM-ViT 的性能得到了改善，这证明了将垂直大气背景与时间序列学习相结合以进行预测误差预测的价值。结果凸显了混合架构在增强 HRRR 等高分辨率 NWP 系统中的预报误差预测方面的潜力，特别是在较短的交付时间内。该框架为预报员提供了在使用时对预报不确定性进行更实际的评估，并且可以轻松扩展到其他介网-剖面仪网络和数值天气预报系统。</span><span class="original-text">The improved performance of the LSTM-ViT compared to the LSTM baseline demonstrates the value of combining vertical atmospheric context with temporal sequence learning for forecast-error prediction. The results highlight the potential of hybrid architectures to enhance forecast-error prediction in high-resolution NWP systems such as the HRRR, particularly at shorter lead times. This framework provides forecasters with a more physically informed assessment of forecast uncertainty at the point of use and can be readily extended to other mesonet–profiler networks and NWP systems.</span></p>
+</div>
+</section>
+<section class="ltx_section ltx_indentfirst" id="Sx1">
+<h2 class="ltx_title ltx_title_section"><span class="translated-text">致谢</span><span class="original-text">Acknowledgments</span></h2>
+<div class="ltx_para" id="Sx1.p1">
+<p class="ltx_p" id="Sx1.p1.1"><span class="translated-text">本材料基于美国国家科学基金会资助的 RISE-2019758 号工作。</span><span class="original-text">This material is based upon work supported by the U.S. National Science Foundation under Grant No. RISE-2019758.</span><br class="ltx_break"/><span class="translated-text">这项研究是由纽约州 (NYS) Mesonet 促成的。纽约州 Mesonet (NYSM) 建设的原始资金由联邦紧急事务管理局拨款 FEMA-4085-DR-NY 提供。 NYSM 的持续运营和维护得到了国家 Mesonet 计划、奥尔巴尼大学、联邦和私人拨款等的支持。</span><span class="original-text">This research is made possible by the New York State (NYS) Mesonet. Original funding for the NYS Mesonet (NYSM) buildup was provided by Federal Emergency Management Agency grant FEMA-4085-DR-NY. The continued operation and maintenance of the NYSM is supported by National Mesonet Program, University at Albany, Federal and private grants, and others.</span><br class="ltx_break"/><span class="translated-text">作者感谢俄克拉荷马大学的 Andrew Fagg 博士深思熟虑地阅读了手稿，并提供了宝贵的反馈意见，改进了本文的最终版本。</span><span class="original-text">The author thanks Dr. Andrew Fagg of the University of Oklahoma for his thoughtful reading of the manuscript and for providing valuable feedback that improved the final version of this work.</span></p>
+</div>
+</section>
+<section class="ltx_section ltx_indentfirst" id="Sx2">
+<h2 class="ltx_title ltx_title_section"><span class="translated-text">数据声明</span><span class="original-text">Data Statement</span></h2>
+<div class="ltx_para" id="Sx2.p1">
+<p class="ltx_p" id="Sx2.p1.1"><span class="translated-text">HRRR 数据取自犹他大学 MesoWest HRRR 档案</span><span class="original-text">HRRR data were accessed from the University of Utah MesoWest HRRR archive</span><cite class="ltx_cite ltx_citemacro_citep">(Blaylock et al., <a class="ltx_ref" href="#bib.bib3" title="">2017</a>)</cite><span class="translated-text">以及来自亚马逊网络服务。</span><span class="original-text">and from Amazon Web Services.</span><br class="ltx_break"/><span class="translated-text">NYSM 数据可通过纽约州 Mesonet 网站索取：</span><span class="original-text">NYSM data can be requested through the New York State Mesonet website:</span><a class="ltx_ref ltx_url ltx_font_typewriter" href="http://nysmesonet.org" title="">http://nysmesonet.org</a>. 
+<br class="ltx_break"/><span class="translated-text">用于数据预处理、模型训练和图形生成的代码可在以下位置公开获取：</span><span class="original-text">The code used for data preprocessing, model training, and figure generation is publicly available at</span><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/shmaronshmevans/inference_ai2es_forecast_err" title="">https://github.com/shmaronshmevans/inference_ai2es_forecast_err</a>.</p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist">
+<li class="ltx_bibitem" id="bib.bib1">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bader and Horton (2023)</span>
+<span class="ltx_bibblock">
+Bader, D., and R. Horton, 2023: New york state climate change projections methodology report. Technical report, new york state climate impacts assessment, Columbia University, Lamont-Doherty Earth Observatory, Columbia Climate School. Prepared for the New York State Climate Impacts Assessment.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib2">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bishop and Bishop (2023)</span>
+<span class="ltx_bibblock">
+Bishop, C. M., and H. Bishop, 2023: <span class="ltx_text ltx_font_italic" id="bib.bib2.1.1">Deep Learning: Foundations and Concepts</span>. 1st ed., Springer Cham, 649 pp., https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">https://doi.org/10.1007/978-3-031-45468-4</span>, URL <a class="ltx_ref ltx_url" href="https://doi.org/10.1007/978-3-031-45468-4" title="">https://doi.org/10.1007/978-3-031-45468-4</a>, 200 b/w illustrations, 400 illustrations in colour.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib3">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Blaylock et al. (2017)</span>
+<span class="ltx_bibblock">
+Blaylock, B. K., J. D. Horel, and S. T. Liston, 2017: Cloud archiving and data mining of high-resolution rapid refresh forecast model output. <span class="ltx_text ltx_font_italic" id="bib.bib3.1.1">Computers &amp; Geosciences</span>, <span class="ltx_text ltx_font_bold" id="bib.bib3.2.2">109</span>, 43–50, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1016/j.cageo.2017.08.005</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib4">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Brotzge et al. (2020)</span>
+<span class="ltx_bibblock">
+Brotzge, J. A., and Coauthors, 2020: A technical overview of the new york state mesonet standard network. <span class="ltx_text ltx_font_italic" id="bib.bib4.1.1">Journal of Atmospheric and Oceanic Technology</span>, <span class="ltx_text ltx_font_bold" id="bib.bib4.2.2">37</span>, 1827–1845, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1175/JTECH-D-19-0220.1</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib5">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Campbell and Steenburgh (2017)</span>
+<span class="ltx_bibblock">
+Campbell, L. S., and W. J. Steenburgh, 2017: The owles iop2b lake-effect snowstorm: Mechanisms contributing to the tug hill precipitation maximum. <span class="ltx_text ltx_font_italic" id="bib.bib5.1.1">Monthly Weather Review</span>, <span class="ltx_text ltx_font_bold" id="bib.bib5.2.2">145</span>, 2461–2478, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1175/MWR-D-16-0460.1</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib6">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Clare et al. (2022)</span>
+<span class="ltx_bibblock">
+Clare, M. C. A., M. Sonnewald, R. Lguensat, J. Deshayes, and V. Balaji, 2022: Explainable artificial intelligence for bayesian neural networks: Toward trustworthy predictions of ocean dynamics. <span class="ltx_text ltx_font_italic" id="bib.bib6.1.1">Journal of Advances in Modeling Earth Systems</span>, <span class="ltx_text ltx_font_bold" id="bib.bib6.2.2">14</span>, e2022MS003 162, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1029/2022MS003162</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib7">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dosovitskiy et al. (2021)</span>
+<span class="ltx_bibblock">
+Dosovitskiy, A., and Coauthors, 2021: An image is worth 16x16 words: Transformers for image recognition at scale. <span class="ltx_text ltx_font_italic" id="bib.bib7.1.1">International Conference on Learning Representations (ICLR)</span>, URL <a class="ltx_ref ltx_url" href="https://openreview.net/forum?id=YicbFdNTTy" title="">https://openreview.net/forum?id=YicbFdNTTy</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib8">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dowell et al. (2022)</span>
+<span class="ltx_bibblock">
+Dowell, D. C., and Coauthors, 2022: The high-resolution rapid refresh (hrrr): An hourly updating convection-allowing forecast model. part i: Motivation and system description. <span class="ltx_text ltx_font_italic" id="bib.bib8.1.1">Weather and Forecasting</span>, <span class="ltx_text ltx_font_bold" id="bib.bib8.2.2">37</span>, 1371–1395, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1175/WAF-D-21-0151.1</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib9">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Evans et al. (2025)</span>
+<span class="ltx_bibblock">
+Evans, D. A., K. J. Sulia, N. P. Bassill, C. D. Thorncroft, J. C. Rothenberger, and L. C. Gaudet, 2025: Predicting forecast error for the hrrr using lstm neural networks: A comparative study using new york and oklahoma state mesonets. URL <a class="ltx_ref ltx_url" href="https://arxiv.org/abs/2512.14898" title="">https://arxiv.org/abs/2512.14898</a>, <a class="ltx_ref ltx_url" href="https://arxiv.org/html/2606.19026v1/2512.14898" title="">2512.14898</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib10">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Gagne et al. (2017)</span>
+<span class="ltx_bibblock">
+Gagne, D. J., A. McGovern, S. E. Haupt, R. A. Sobash, J. K. Williams, and M. Xue, 2017: Storm-based probabilistic hail forecasting with machine learning applied to convection-allowing ensembles. <span class="ltx_text ltx_font_italic" id="bib.bib10.1.1">Weather and Forecasting</span>, <span class="ltx_text ltx_font_bold" id="bib.bib10.2.2">32</span>, 1819–1840, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1175/WAF-D-17-0010.1</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib11">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Gaudet et al. (2024)</span>
+<span class="ltx_bibblock">
+Gaudet, L. C., K. J. Sulia, R. D. Torn, and N. P. Bassill, 2024: Verification of the global forecast system, north american mesoscale forecast system, and high-resolution rapid refresh model near-surface forecasts by use of the new york state mesonet. <span class="ltx_text ltx_font_italic" id="bib.bib11.1.1">Weather and Forecasting</span>, <span class="ltx_text ltx_font_bold" id="bib.bib11.2.2">39</span>, 369–386, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1175/WAF-D-23-0094.1</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib12">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Hochreiter and Schmidhuber (1997)</span>
+<span class="ltx_bibblock">
+Hochreiter, S., and J. Schmidhuber, 1997: Long short-term memory. <span class="ltx_text ltx_font_italic" id="bib.bib12.1.1">Neural Computation</span>, <span class="ltx_text ltx_font_bold" id="bib.bib12.2.2">9</span>, 1735–1780, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1162/neco.1997.9.8.1735</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib13">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">James et al. (2022)</span>
+<span class="ltx_bibblock">
+James, E. P., and Coauthors, 2022: The high-resolution rapid refresh (hrrr): An hourly updating convection-allowing forecast model. part ii: Forecast performance. <span class="ltx_text ltx_font_italic" id="bib.bib13.1.1">Weather and Forecasting</span>, <span class="ltx_text ltx_font_bold" id="bib.bib13.2.2">37 (8)</span>, 1397–1417, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1175/waf-d-21-0130.1</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib14">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lam et al. (2023)</span>
+<span class="ltx_bibblock">
+Lam, R., and Coauthors, 2023: Learning skillful medium-range global weather forecasting. <span class="ltx_text ltx_font_italic" id="bib.bib14.1.1">Science</span>, <span class="ltx_text ltx_font_bold" id="bib.bib14.2.2">382 (6677)</span>, 1416–1421, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1126/science.adi2336</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib15">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lang et al. (2024)</span>
+<span class="ltx_bibblock">
+Lang, S., and Coauthors, 2024: Aifs – ecmwf’s data-driven forecasting system. <span class="ltx_text ltx_font_italic" id="bib.bib15.1.1">ArXiv</span>, <a class="ltx_ref ltx_url" href="https://arxiv.org/html/2606.19026v1/2406.01465" title="">2406.01465</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib16">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Mahmood and Coauthors (2017)</span>
+<span class="ltx_bibblock">
+Mahmood, R., and Coauthors, 2017: Mesonets: Mesoscale weather and climate observations for the united states. <span class="ltx_text ltx_font_italic" id="bib.bib16.1.1">Bulletin of the American Meteorological Society</span>, <span class="ltx_text ltx_font_bold" id="bib.bib16.2.2">98</span>, 1349–1361, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1175/BAMS-D-15-00258.1</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib17">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Mansfield and Christensen (2026)</span>
+<span class="ltx_bibblock">
+Mansfield, L., and H. Christensen, 2026: Epistemic and aleatoric uncertainty quantification in weather and climate models. <span class="ltx_text ltx_font_italic" id="bib.bib17.1.1">Quarterly Journal of the Royal Meteorological Society</span>, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1002/qj.70219</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib18">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">McGovern et al. (2017)</span>
+<span class="ltx_bibblock">
+McGovern, A., K. L. Elmore, D. J. Gagne, S. E. Haupt, C. D. Karstens, R. Lagerquist, T. Smith, and J. K. Williams, 2017: Using artificial intelligence to improve real-time decision-making for high-impact weather. <span class="ltx_text ltx_font_italic" id="bib.bib18.1.1">Bulletin of the American Meteorological Society</span>, <span class="ltx_text ltx_font_bold" id="bib.bib18.2.2">98</span>, 2073–2090, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1175/BAMS-D-16-0123.1</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib19">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Molod et al. (2019)</span>
+<span class="ltx_bibblock">
+Molod, A., H. Salmun, and A. B. Marquardt Collow, 2019: Annual cycle of planetary boundary layer heights estimated from wind profiler network data. <span class="ltx_text ltx_font_italic" id="bib.bib19.1.1">Journal of Geophysical Research: Atmospheres</span>, <span class="ltx_text ltx_font_bold" id="bib.bib19.2.2">124 (12)</span>, 6207–6221, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1029/2018JD030102</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib20">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">National Centers for Environmental Prediction (2024)</span>
+<span class="ltx_bibblock">
+National Centers for Environmental Prediction, 2024: High-resolution rapid refresh (hrrr) model. URL <a class="ltx_ref ltx_url" href="https://rapidrefresh.noaa.gov/hrrr/" title="">https://rapidrefresh.noaa.gov/hrrr/</a>, accessed: 1 Apr. 2025.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib21">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">NCEI (2015)</span>
+<span class="ltx_bibblock">
+NCEI, 2015: U.s. climate divisions. Accessed: 2023-08-03, <a class="ltx_ref ltx_url" href="https://www.ncei.noaa.gov/access/monitoring/dyk/us-climate-divisions" title="">https://www.ncei.noaa.gov/access/monitoring/dyk/us-climate-divisions</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib22">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">NOAA/NCEP MADIS (2021)</span>
+<span class="ltx_bibblock">
+NOAA/NCEP MADIS, 2021: Madis meteorological surface data providers. Accessed: 2025-12-09, <a class="ltx_ref ltx_url" href="https://madis.ncep.noaa.gov/mesonet_providers.shtml" title="">https://madis.ncep.noaa.gov/mesonet˙providers.shtml</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib23">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Rasp et al. (2024)</span>
+<span class="ltx_bibblock">
+Rasp, S., and Coauthors, 2024: Weatherbench 2: A benchmark for the next generation of data-driven global weather models. <span class="ltx_text ltx_font_italic" id="bib.bib23.1.1">Journal of Advances in Modeling Earth Systems</span>, <span class="ltx_text ltx_font_bold" id="bib.bib23.2.2">16 (6)</span>, e2023MS004 019, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1029/2023MS004019</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib24">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Shrestha et al. (2022)</span>
+<span class="ltx_bibblock">
+Shrestha, B., J. A. Brotzge, and J. Wang, 2022: Evaluation of the new york state mesonet profiler network data. <span class="ltx_text ltx_font_italic" id="bib.bib24.1.1">Atmospheric Measurement Techniques</span>, <span class="ltx_text ltx_font_bold" id="bib.bib24.2.2">15</span>, 6011–6033, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.5194/amt-15-6011-2022</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib25">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Shrestha et al. (2021)</span>
+<span class="ltx_bibblock">
+Shrestha, B., J. A. Brotzge, J. Wang, N. Bain, C. D. Thorncroft, E. Joseph, J. Freedman, and S. Perez, 2021: Overview and applications of the new york state mesonet profiler network. <span class="ltx_text ltx_font_italic" id="bib.bib25.1.1">Journal of Applied Meteorology and Climatology</span>, <span class="ltx_text ltx_font_bold" id="bib.bib25.2.2">60</span>, 1591–1611, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1175/JAMC-D-21-0104.1</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib26">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Swain et al. (2025)</span>
+<span class="ltx_bibblock">
+Swain, M., J. C. Peña, R. Bornstein, and J. Gonzalez, 2025: Coastal and anthropogenic heat impacts on pbl processes during extreme summer thunderstorm precipitation in new york city. <span class="ltx_text ltx_font_italic" id="bib.bib26.1.1">Urban Climate</span>, <span class="ltx_text ltx_font_bold" id="bib.bib26.2.2">62</span>, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1016/j.uclim.2025.102534</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib27">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Tang et al. (2023)</span>
+<span class="ltx_bibblock">
+Tang, S., C. Li, P. Zhang, and R. Tang, 2023: Swinlstm: Improving spatiotemporal prediction accuracy using swin transformer and lstm. 13424-13433 pp., https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1109/ICCV51070.2023.01239</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib28">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Vaswani et al. (2017)</span>
+<span class="ltx_bibblock">
+Vaswani, A., N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, L. u. Kaiser, and I. Polosukhin, 2017: Attention is all you need. <span class="ltx_text ltx_font_italic" id="bib.bib28.1.1">Advances in Neural Information Processing Systems</span>, I. Guyon, U. V. Luxburg, S. Bengio, H. Wallach, R. Fergus, S. Vishwanathan, and R. Garnett, Eds., Curran Associates, Inc., Vol. 30, URL <a class="ltx_ref ltx_url" href="https://proceedings.neurips.cc/paper_files/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf" title="">https://proceedings.neurips.cc/paper˙files/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib29">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhang (2025)</span>
+<span class="ltx_bibblock">
+Zhang, Y., 2025: Application of lstm and transformer hybrid model for electricity consumption forecasting. <span class="ltx_text ltx_font_italic" id="bib.bib29.1.1">Journal of Energy Research and Reviews</span>, <span class="ltx_text ltx_font_bold" id="bib.bib29.2.2">17 (6)</span>, 71–87, https://doi.org/<span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.9734/jenrr/2025/v17i6423</span>.
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2606.19026v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer>
+<div id="fixed-buttons-container">
+<div aria-hidden="true" id="beta-badge"><span class="translated-text">测试版</span><span class="original-text">BETA</span></div>
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
