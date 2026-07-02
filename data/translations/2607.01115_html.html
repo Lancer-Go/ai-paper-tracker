@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">为大学利益相关者开发多模式聊天助手：基于 RAG 的方法</span><span class="original-text">Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 7 月 1 日星期三 14:20:07 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Wed Jul  1 14:20:07 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+    // Pre-apply spinout-banner dismissal here, before the banner paints, so it
+    // never flashes in only to be hidden later by the deferred arxiv-header.js.
+    // Key matches arxiv-header.js: "arxiv-banner-dismissed:" + data-banner-name.
+    if (localStorage.getItem('arxiv-banner-dismissed:spinout-nonprofit')) {
+      document.documentElement.setAttribute("data-banner-dismissed", "");
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/><link href="https://arxiv.org/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626" media="screen" rel="stylesheet" type="text/css"/><style>
+  /* Banner pre-dismissal (set above before paint -> no flash-then-hide) and
+     reading-mode chrome hiding. */
+  html[data-banner-dismissed] .ds-announcement { display: none; }
+  html[data-reading-mode="enabled"] .ds-announcement,
+  html[data-reading-mode="enabled"] .ds-site-footer { display: none; }
+  /* Keep the announcement text dark on the Open-Blue band in both colour themes
+     (otherwise it inherits the paper's warm-wash text in dark mode and washes out). */
+  .ds-announcement-text { color: var(--arxiv-ink, #1c1a17); }
+</style>
+<script defer="" src="https://arxiv.org/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2607.01115" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2607.01115" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog><div aria-label="Announcement" class="ds-announcement" data-banner-name="spinout-nonprofit" id="announcement-banner" role="region">
+<img alt="" aria-hidden="true" class="ds-announcement-glyph" src="https://arxiv.org/static/base/1.0.1/images/icons/smileybones-small.svg"/>
+<span class="ds-announcement-text"><span class="translated-text">arXiv 现在是一个独立的非营利组织！</span><span class="original-text">arXiv is now an independent nonprofit!</span></span>
+<a class="ds-announcement-link" href="https://info.arxiv.org/about"><span class="translated-text">了解更多</span><span class="original-text">Learn more</span></a>
+<button aria-label="Dismiss announcement" class="ds-announcement-close" type="button">×</button>
+</div>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/"><img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/base/1.0.1/images/arxiv-logo-primary-light.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2607.01115v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2607.01115v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">I </span><span class="ltx_text ltx_font_smallcaps">Introduction</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S2" title="In Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">II </span><span class="ltx_text ltx_font_smallcaps">Related work</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">III </span><span class="ltx_text ltx_font_smallcaps">Proposed RAG-based System</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S3.SS1" title="In III Proposed RAG-based System ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-A</span> </span><span class="ltx_text ltx_font_italic">System Overview</span></span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS1.SSS1" title="In III-A System Overview ‣ III Proposed RAG-based System ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-A</span>1 </span>Multimodal Inference Engine</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS1.SSS2" title="In III-A System Overview ‣ III Proposed RAG-based System ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-A</span>2 </span>Knowledge Base Construction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS1.SSS3" title="In III-A System Overview ‣ III Proposed RAG-based System ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-A</span>3 </span>Retrieval</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS1.SSS4" title="In III-A System Overview ‣ III Proposed RAG-based System ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-A</span>4 </span>Augmentation via Context-Query Fusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS1.SSS5" title="In III-A System Overview ‣ III Proposed RAG-based System ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-A</span>5 </span>Performance Monitoring and Feedback Collection</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS2" title="In III Proposed RAG-based System ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-B</span> </span><span class="ltx_text ltx_font_italic">Deployment</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">IV </span><span class="ltx_text ltx_font_smallcaps">Experimental setup and simulation</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In IV Experimental setup and simulation ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-A</span> </span><span class="ltx_text ltx_font_italic">Experimental setup</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS2" title="In IV Experimental setup and simulation ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-B</span> </span><span class="ltx_text ltx_font_italic">Interactive User Interface</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS3" title="In IV Experimental setup and simulation ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-C</span> </span><span class="ltx_text ltx_font_italic">Simulation</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS4" title="In IV Experimental setup and simulation ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-D</span> </span><span class="ltx_text ltx_font_italic">Handling Hallucination</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS5" title="In IV Experimental setup and simulation ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-E</span> </span><span class="ltx_text ltx_font_italic">Query Response Time</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS6" title="In IV Experimental setup and simulation ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-F</span> </span><span class="ltx_text ltx_font_italic">Multimodal Performance Evaluation</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS7" title="In IV Experimental setup and simulation ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">IV-G</span> </span><span class="ltx_text ltx_font_italic">RAG Effectiveness Analysis</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S5" title="In Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">V </span><span class="ltx_text ltx_font_smallcaps">Data Privacy, Secure Access Control, and Compliance</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S6" title="In Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">VI </span><span class="ltx_text ltx_font_smallcaps">Conclusions</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY-NC-ND 4.0</span><span class="original-text">License: CC BY-NC-ND 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2607.01115v1 [cs.CL] 2026 年 7 月 1 日</span><span class="original-text">arXiv:2607.01115v1 [cs.CL] 01 Jul 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<div class="ltx_para" id="p1">
+<span class="ltx_ERROR undefined" id="p1.1"><span class="translated-text">\ps@标题</span><span class="original-text">\ps@headings</span></span>
+</div>
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">为大学利益相关者开发多模式聊天助手：基于 RAG 的方法</span><span class="original-text">Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Md Abu Hanif Shaikh, and Abdullah Al Shafi
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">大学利益相关者在获取及时、可靠的信息方面常常面临困难，特别是在智能支持系统很少的发展中国家。现有的基于规则的聊天机器人无法处理复杂的、特定领域的查询，并且没有能力适应不断变化的机构政策。作为一种填补空白的解决方案，我们提出了具有检索增强生成功能的多模式大学聊天机器人。该系统将大型语言模型与语义检索相结合，从以机构为中心的资源（例如大学手册）生成基于上下文的响应。该系统通过视觉语言模型接受文本和图像查询，并应用量化推理以在受限硬件上快速部署。使用 FastAPI 构建的可扩展后端与使用 Next.js 开发的响应式前端相连，确保了实时可用性。我们的多模式评估表明，尽管视觉输入的响应时间增加，但系统在文本和图像查询方面都保持了很高的满意度分数。此外，定量评估表明，在我们提出的基于 RAG 的系统中，幻觉从 31.7% 减少到 6.6%，证实了检索接地的有效性。</span><span class="original-text">University stakeholders often face difficulties in accessing timely and reliable information, especially in developing countries, where there are very few intelligent support systems. Existing rule-based chatbots are unable to handle complex, domain-specific queries and are not well-equipped to adapt to evolving institutional policies. As a fill-in-the-gap solution, we present the multimodal university chatbot with retrieval-augmented generation. The system combines the large language model with semantic retrieval to produce context-based responses from institution-centric resources, such as the university handbook. The system accepts text and image queries through the vision-language model and applies quantized inference for rapid deployment on constrained hardware. A scalable backend built with FastAPI, adjoined with a responsive frontend developed with Next.js, ensures real-time usability. Our multimodal evaluation demonstrates that the system maintains strong satisfaction scores across both text and image queries, despite increased response time for visual inputs. Furthermore, quantitative evaluation shows that hallucination is reduced from 31.7% to 6.6% in our proposed RAG-based system, confirming the effectiveness of retrieval grounding.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span class="ltx_text ltx_font_smallcaps" id="S1.1.1"><span class="translated-text">简介</span><span class="original-text">Introduction</span></span>
+</h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">人们通常更喜欢收到即时的总结性答复，而不是搜索冗长的文档</span><span class="original-text">Instead of searching through lengthy documents, people generally prefer to receive an instant and summarized response</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">mcgrath2025generative</span>]</cite><span class="translated-text">。这就是为什么聊天机器人在教育、临床决策支持系统、客户服务等各个领域日益流行的原因</span><span class="original-text">. That is why chatbots are getting popular day by day in various sectors like education, clinical decision support system, customer service, etc</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">peyton2025review</span>]</cite><span class="translated-text">。这同样适用于大学及其利益相关者，如教师、行政官员、学生、工作人员和潜在申请人。大学聊天机器人在美国、英国、加拿大等发达国家非常常见，但在孟加拉国等发展中国家几乎闻所未闻</span><span class="original-text">. The same holds for universities and their stakeholders like teachers, administrative officers, students, staff, and potential applicants. University chatbots are very common in developed countries like the USA, UK, Canada, but almost unheard of in developing countries like Bangladesh</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">peyton2025review</span>]</cite><span class="translated-text">。因此，构建这样的聊天机器人确实是迈向学术支持基础设施现代化、弥合数字鸿沟以及增强学生在资源有限的教育环境中获取信息的重要一步。</span><span class="original-text">. Hence, building such a chatbot is indeed an important step toward the modernization of academic support infrastructure, bridging the digital divide, and enhancing student access to information in resource-constrained educational environments.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">此外，传统的基于规则的聊天机器人系统和静态知识库通常无法处理复杂的查询，涉及机构政策中的细微差别、课程设置的动态变化或与用户上下文相关的个性化响应</span><span class="original-text">Furthermore, traditional rule-based chatbot systems and static knowledge bases frequently cannot handle complex queries involving subtle nuances in institutional policies, dynamic changes in course offerings, or personalized responses tied to user context</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">peyton2025review</span>]</cite><span class="translated-text">。这一差距迫切需要开发能够推理、检索和自主行动的智能系统。</span><span class="original-text">. This gap necessitates the urgent development of intelligent systems capable of reasoning, retrieval, and autonomous action.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">我们提出的系统通过利用检索增强生成（RAG）来解决这一挑战</span><span class="original-text">Our proposed system addresses this challenge by leveraging retrieval-augmented generation (RAG)</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">li2025retrieval</span>]</cite><span class="translated-text">，一种先进的人工智能范式，将大型语言模型 (LLM) 与检索机制集成在一起。这种方法使聊天机器人能够检索相关的大学特定文档（例如，学术政策、课程目录、常见问题解答），这些文档可能会动态变化，而无需计算成本高昂的微调过程。我们系统的核心使用 RAG 来查找和组合文档中的信息，根据上下文给出准确的答案。后端使用 FastAPI 一次性处理多个请求，前端使用 Next.js 和 React 确保流畅的用户体验。该工作的主要贡献如下：</span><span class="original-text">, an advanced paradigm in AI that integrates large language models (LLMs) with retrieval mechanisms. This approach enables the chatbot to retrieve relevant university-specific documents (e.g., academic policies, course catalogs, FAQs), which may change dynamically, without a computationally expensive fine-tuning process. The core of our system uses RAG to find and combine information from documents, giving accurate answers based on context. The backend uses FastAPI for handling many requests at once, and the frontend ensures a smooth user experience with Next.js and React. The main contributions of the work are listed below:</span></p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<ol class="ltx_enumerate" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">i.</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="translated-text">开发由 RAG 驱动的大学聊天助手，利用视觉语言模型 (VLM) 处理文本和图像查询。</span><span class="original-text">Development of a RAG-powered university chat assistant that processes both text and image queries utilizing a vision language model (VLM).</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item"><span class="translated-text">二.</span><span class="original-text">ii.</span></span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="translated-text">为了支持这个聊天助手，构建了一个利用语义嵌入和 chromaDB 的检索管道，以提供来自机构文档的上下文感知的准确响应。</span><span class="original-text">To support this chat assistant, a retrieval pipeline utilizing semantic embeddings and chromaDB was constructed to provide context-aware, accurate responses from institutional documents.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item"><span class="translated-text">三.</span><span class="original-text">iii.</span></span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1"><span class="translated-text">实现量化推理和异步 FastAPI 后端，以实现实时、资源高效的操作。</span><span class="original-text">Implementation of quantized inference and asynchronous FastAPI backend for real-time, resource-efficient operation.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item"><span class="translated-text">四.</span><span class="original-text">iv.</span></span>
+<div class="ltx_para" id="S1.I1.i4.p1">
+<p class="ltx_p" id="S1.I1.i4.p1.1"><span class="translated-text">将我们提议的系统部署为可公开访问的聊天助手：</span><span class="original-text">Deployment of our proposed system as a publicly accessible chat assistant at</span><a class="ltx_ref ltx_href" href="https://chat.kuet.ac.bd" title=""><span class="ltx_ERROR undefined" id="S1.I1.i4.p1.1.1.1">\ttfamily</span>chat.kuet.ac.bd</a><span class="translated-text">具有交互式界面、反馈系统，并具有处理幻觉问题的能力。</span><span class="original-text">with an interactive interface, feedback system, and demonstrated ability to handle hallucination issues.</span></p>
+</div>
+</li>
+</ol>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">本文的其余部分组织如下：</span><span class="original-text">The rest of the paper is organized as follows, Section</span><a class="ltx_ref" href="#S2" title="II Related work ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_tag">II</span></a><span class="translated-text">比较了孟加拉国背景下的一些现有作品的局限性。我们建议的基于 RAG 的系统的架构在第 1 节中进行了描述。</span><span class="original-text">compares some existing works with limitations in the context of Bangladesh. The architecture of our suggested RAG-based system is described in Section</span><a class="ltx_ref" href="#S3" title="III Proposed RAG-based System ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_tag">III</span></a><span class="translated-text">。实验设置和模拟在章节中介绍</span><span class="original-text">. The experimental setup and simulation are presented in Section</span><a class="ltx_ref" href="#S4" title="IV Experimental setup and simulation ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_tag">IV</span></a><span class="translated-text">。道德问题在第 5 节中讨论</span><span class="original-text">. The ethical issues are discussed in Section</span><a class="ltx_ref" href="#S5" title="V Data Privacy, Secure Access Control, and Compliance ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_tag">V</span></a><span class="translated-text">。最后在Section中得出结论</span><span class="original-text">. Finally, a conclusion is drawn in Section</span><a class="ltx_ref" href="#S6" title="VI Conclusions ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_tag">VI</span></a>.</p>
+</div>
+<figure class="ltx_figure" id="S1.F1">
+<p class="ltx_p ltx_align_center ltx_align_center" id="S1.F1.1"><span class="ltx_text" id="S1.F1.1.1"><img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="222" id="S1.F1.1.1.g1" src="https://arxiv.org/html/2607.01115v1/x1.png" width="637"/></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S1.F1.3.1.1" style="font-size:90%;">Figure 1</span>: </span><span class="ltx_text" id="S1.F1.4.2" style="font-size:90%;">Architecture of our developed system.</span></figcaption>
+</figure>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span class="ltx_text ltx_font_smallcaps" id="S2.1.1"><span class="translated-text">相关工作</span><span class="original-text">Related work</span></span>
+</h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="translated-text">大学聊天机器人的研究已经从早期基于规则或面向语义的模型的研究发展为先进的人工智能和混合架构，可提高学生支持水平并简化管理任务和学术资源的可访问性。</span><span class="original-text">Research on university chatbots has developed from early research on rule-based or semantically oriented models into advanced AI and hybrid architectures that increase levels of student support and streamline administrative tasks and academic resource accessibility.</span></p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="translated-text">论文一开始，</span><span class="original-text">At the very beginning, the paper</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">ranoliya2017chatbot</span>]</cite><span class="translated-text">提出了一个大学常见问题解答聊天机器人，使用 AIML 和潜在语义分析来为学生的查询提供高效、交互式和准确的响应。此后，帕特尔等人。现在优博特</span><span class="original-text">proposes a university FAQ chatbot using AIML and latent semantic analysis to provide efficient, interactive, and accurate responses to student queries. After that, Patel et al. present UNIBOT</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">patel2019ai</span>]</cite><span class="translated-text">，一个基于网络的大学聊天机器人，采用自定义算法开发，可为学生的查询提供快速、类似人类的响应。 Nguyen 等人使用 Rasa 框架以及 BERT 和 RNN 模型识别意图，准确率达到 97.1%。</span><span class="original-text">, a web-based university chatbot developed with a custom algorithm to provide fast, human-like responses to student queries. Using the Rasa framework and BERT and RNN models with an accuracy of 97.1% in identifying intention, Nguyen et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">nguyen2021neu</span>]</cite><span class="translated-text">开发了招生流程人工智能助手，减少了招生人员的工作量。</span><span class="original-text">developed an AI assistant for admission processes and therefore reduced the workload of admission personnel.</span></p>
+</div>
+<div class="ltx_para" id="S2.p3">
+<p class="ltx_p" id="S2.p3.1"><span class="translated-text">在 Balderas 等人的研究中。</span><span class="original-text">In the study of Balderas et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">balderas2023chatbot</span>]</cite><span class="translated-text">开发了聊天机器人系统，以方便在紧急情况下与大学生进行沟通，从而确保更大的校园安全。该研究</span><span class="original-text">, a chatbot system was developed to facilitate communication with university students in emergency situations, thus ensuring greater campus safety. The study</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">attigeri2024advanced</span>]</cite><span class="translated-text">报告了用于大学校园咨询的五种基于 NLP 的聊天机器人模型的开发和比较研究，结果表明顺序神经网络模型优于 TF-IDF 和模式匹配方法。</span><span class="original-text">reports the development and comparative study of five NLP-based chatbot models for counseling on university campuses, showing that sequential neural network models outclass TF-IDF and pattern-matching approaches.</span></p>
+</div>
+<div class="ltx_para" id="S2.p4">
+<p class="ltx_p" id="S2.p4.1"><span class="translated-text">帕拉莱斯-布拉沃等人。</span><span class="original-text">Parrales-Bravo et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">parrales2024csm</span>]</cite><span class="translated-text">开发了机器学习和 NLP 技术来创建一个部署在 Telegram 中的聊天机器人，帮助瓜亚基尔大学的学生查询有关入学和付款的问题。它显示出广泛的可用性和学生群体的积极接受度。</span><span class="original-text">have developed machine learning and NLP techniques to create a chatbot that is deployed in Telegram, assisting students of the University of Guayaquil in queries regarding enrollment and payment. It shows extensive usability and positive acceptance among the student population.</span></p>
+</div>
+<div class="ltx_para" id="S2.p5">
+<p class="ltx_p" id="S2.p5.1">In <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">li2025retrieval</span>]</cite><span class="translated-text">，提出了一种集成基于规则、基于检索和生成方法的混合聊天机器人，用于教育行政支持，比独立模型实现更高的准确性和用户满意度。纽潘等人。</span><span class="original-text">, a hybrid chatbot integrating rule-based, retrieval-based, and generative approaches is proposed for administrative support in education, achieving higher accuracy and user satisfaction than stand-alone models. Neupane et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">neupane2024questions</span>]</cite><span class="translated-text">推出 BARKPLUG V.2，这是一个基于 RAG 的聊天机器人，它通过提供准确的、针对特定上下文的答案来改善对大学资源的访问，实现高性能和令人满意的可用性。论文</span><span class="original-text">present BARKPLUG V.2, a RAG-based chatbot that improves access to university resources by delivering accurate, context-specific answers, achieving high performance and satisfactory usability. The paper</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">han2025mobile</span>]</cite><span class="translated-text">推出 EduChatGPT，这是一种用于教育的个性化 AI 聊天机器人，它将 GPT-4 与实时学生数据集成，以提供量身定制的学习支持。它采用模块化架构，结合了自然语言处理、数据集成和自适应反馈机制。实验评估表明学生参与度和个性化学习成果有所改善。这项工作强调了生成式人工智能在增强高等教育背景下的个性化学术支持方面的潜力。</span><span class="original-text">introduces EduChatGPT, a personalized AI chatbot for education that integrates GPT-4 with real-time student data to deliver tailored learning support. It employs a modular architecture combining natural language processing, data integration, and adaptive feedback mechanisms. Experimental evaluation demonstrates improvements in student engagement and personalized learning outcomes. The work highlights the potential of generative AI to enhance individualized academic support in higher education contexts.</span></p>
+</div>
+<div class="ltx_para" id="S2.p6">
+<p class="ltx_p" id="S2.p6.1"><span class="translated-text">最后，尽管有一些大学聊天机器人利用了发达国家的各种技术，但在包括孟加拉国在内的发展中国家和欠发达国家却缺乏这样的系统。我们试图通过为孟加拉国的大学利益相关者设计一个基于网络的聊天应用程序来缩小差距。</span><span class="original-text">To the end, though there are several university chatbots leveraging various techniques for developed countries, there is a scarcity of such system in the developing and under-developed countries including Bangladesh. We have tried to mitigate the gap by designing a web-based chat application for university stakeholders in the context of Bangladesh.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section"><span class="translated-text">三、</span><span class="original-text">III</span></span><span class="ltx_text ltx_font_smallcaps" id="S3.1.1"><span class="translated-text">提议的基于 RAG 的系统</span><span class="original-text">Proposed RAG-based System</span></span>
+</h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="translated-text">如图所示。</span><span class="original-text">As shown in Fig.</span><a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ I Introduction ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">，人工智能系统被设计为接受多模式输入（文本和图像）以生成连贯且上下文敏感的响应。该系统利用尖端的视觉语言模型、嵌入技术和文档检索技术。其首要目的是理解以自然语言或图像形式提出的查询，然后通过从预定义的知识源（大学手册）查询或实时图像分析来提供描述性响应。</span><span class="original-text">, an AI system was designed to accept multimodal input (text and image) to generate coherent and context-sensitive responses. The system utilizes cutting-edge vision language models, embedding techniques, and document retrieval techniques. Its foremost purpose is the understanding of queries posed in natural language or image form, and then providing a descriptive response by either querying from pre-defined knowledge sources (University handbook) or image analysis on a real-time basis.</span></p>
+</div>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS1.5.1.1"><span class="translated-text">Ⅲ-A</span><span class="original-text">III-A</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS1.6.2"><span class="translated-text">系统概览</span><span class="original-text">System Overview</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">该系统被配置为支持 RESTful API 的 Web 应用程序。它以自然语言文本或带有文本的图像的形式接收用户的输入，并根据输入的内容动态选择适当的管道。该架构主要有三个模块：（1）推理引擎； (2) 知识检索和增强； (3) 反馈收集和监测。</span><span class="original-text">The system is configured as a web application with RESTful APIs support. It receives input from the user in the form of natural-language text or an image with text and dynamically selects the appropriate pipeline depending on the content of the input. The architecture has three main modules: (1) inference engine; (2) knowledge retrieval and augmentation; and (3) feedback collection and monitoring.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F2">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S3.F2.sf1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="699" id="S3.F2.sf1.g1" src="https://arxiv.org/html/2607.01115v1/x2.png" width="951"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F2.sf1.2.1.1" style="font-size:90%;">(a)</span> </span><span class="ltx_text" id="S3.F2.sf1.3.2" style="font-size:90%;">Chat interface</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_cell ltx_flex_size_2">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S3.F2.sf2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="691" id="S3.F2.sf2.g1" src="https://arxiv.org/html/2607.01115v1/x3.png" width="951"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F2.sf2.2.1.1" style="font-size:90%;">(b)</span> </span><span class="ltx_text" id="S3.F2.sf2.3.2" style="font-size:90%;">Feedback form</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F2.2.1.1" style="font-size:90%;">Figure 2</span>: </span><span class="ltx_text" id="S3.F2.3.2" style="font-size:90%;">Interactive user interface of our system.</span></figcaption>
+</figure>
+<section class="ltx_subsubsection" id="S3.SS1.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S3.SS1.SSS1.5.1.1"><span class="translated-text">Ⅲ-A</span><span class="original-text">III-A</span></span>1 </span><span class="translated-text">多模态推理引擎</span><span class="original-text">Multimodal Inference Engine</span></h4>
+<div class="ltx_para" id="S3.SS1.SSS1.p1">
+<p class="ltx_p" id="S3.SS1.SSS1.p1.1"><span class="translated-text">用户输入由大型 VLM llava-1.5-7b 处理</span><span class="original-text">The user inputs are processed by a large-scale VLM llava-1.5-7b</span><span class="ltx_note ltx_role_footnote" id="footnote1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span>https://huggingface.co/liuhaotian/llava-v1.5-7b</span></span></span><span class="translated-text">，能够进行多模式处理。该模型在量化级别上加载，以最大限度地减少内存消耗并使推理速度更快，同时为描述和解释任务保持足够的准确性。用户可以发送图像或文本查询，或同时发送两者。如果两种模式都存在，系统会构建一个包含用户查询和图像的结构化提示，以进行上下文感知视觉推理。纯文本查询仅进行语言处理，并有一个可选步骤，从特定领域的知识库补充上下文信息。无论情况如何，该模型都擅长指令跟踪和自然语言生成。</span><span class="original-text">, which is capable of multimodal processing. The model is loaded on a quantized level to minimize memory consumption and to make the inference faster, while maintaining sufficient accuracy for the description and interpretation tasks. A user may send either an image or a textual query, or both at the same time. The system, in case both modalities exist, builds a structured prompt incorporating the user’s query and the image for context-aware visual reasoning. Text-only queries undergo language-only processing, with an optional step of supplementing in-context information from a domain-specific knowledge base. Whatever the scenario might be, the model excels at instruction following and natural language generation.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS1.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S3.SS1.SSS2.5.1.1"><span class="translated-text">Ⅲ-A</span><span class="original-text">III-A</span></span>2 </span><span class="translated-text">知识库建设</span><span class="original-text">Knowledge Base Construction</span></h4>
+<div class="ltx_para" id="S3.SS1.SSS2.p1">
+<p class="ltx_p" id="S3.SS1.SSS2.p1.1"><span class="translated-text">为了增强模型对特定领域知识的响应，对静态文档语料库进行了预处理和索引。该管道包括：</span><span class="original-text">To enhance the model’s responses with domain-specific knowledge, a static document corpus is preprocessed and indexed. The pipeline includes:</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.SSS2.p2">
+<p class="ltx_p" id="S3.SS1.SSS2.p2.1"><span class="ltx_text ltx_font_bold" id="S3.SS1.SSS2.p2.1.1"><span class="translated-text">文件加载：</span><span class="original-text">Document loading:</span></span><span class="translated-text">系统的第一步涉及文档的摄取，其中从知识源中提取原始文本数据。在考虑本研究时，以 PDF 格式的 KUET 大学官方手册作为主要来源。解析文档的每一页以获得行级文本。为了减少噪音，应用正则表达式来删除不相关的元素，例如罗马数字标题、数字索引、页面标记等，这些元素根本没有语义信息。通过这种方式，只保留有意义的内容，从而最大限度地提高 RAG 管道其他阶段的相关性和准确性。</span><span class="original-text">The first step of the system concerns the ingestion of documents, where raw textual data is extracted from the knowledge source. In the consideration of this study, the official KUET university handbook, in PDF format, was taken as the primary source. Each page of the document was parsed to obtain line-level text. To reduce noise, regular expressions were applied to remove irrelevant elements such as roman-numeral headers, numeric indices, page markers, etc., none of which have semantic information at all. In this way, only meaningful content was retained, thus maximizing the relevance and accuracy of the other stages of the RAG pipeline.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.SSS2.p3">
+<p class="ltx_p" id="S3.SS1.SSS2.p3.1"><span class="ltx_text ltx_font_bold" id="S3.SS1.SSS2.p3.1.1"><span class="translated-text">文本分割：</span><span class="original-text">Text splitting:</span></span><span class="translated-text">由于法学硕士无法处理任意长的文本序列，因此加载的文档被分成更小的、语义连贯的单元。首先，在考虑基于字符的分割之前，会递归地尝试在逻辑边界（段落、句子）处分割文本。块大小为 512 个字符，重叠为 64 个字符，非常适合相邻块之间的上下文连续性；确保边界附近的重要短语在多个块中共享，从而最大限度地减少检索过程中的信息丢失。粒度和语义完整性之间的这种平衡保证了块在上下文上足够丰富，并且在计算上足够小，以便由系统处理嵌入生成。</span><span class="original-text">Since LLMs are unable to process arbitrarily long sequences of text, the loaded document was thus divided into smaller, semantically coherent units. At first, the text is recursively attempted to be split at logical boundaries (paragraphs, sentences) before considering character-based splits. A chunk size of 512 characters, with an overlap of 64, is ideal for contextual continuity between adjacent chunks; ensuring that important phrases near the boundaries are shared in multiple chunks and therefore minimize information loss during retrieval. This balance between granularity and semantic integrity guarantees that chunks are rich enough contextually and small enough computationally to be handled for embedding generation by the system.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.SSS2.p4">
+<p class="ltx_p" id="S3.SS1.SSS2.p4.1"><span class="ltx_text ltx_font_bold" id="S3.SS1.SSS2.p4.1.1"><span class="translated-text">语义索引：</span><span class="original-text">Semantic Indexing:</span></span><span class="translated-text">文本分割完成后，每个文本块都被转换为密集向量嵌入来表达语义。嵌入是使用 all-miniLM-L6-v2 创建的</span><span class="original-text">Once text splitting was done, each chunk of text was converted into a dense vector embedding to express semantic meaning. Embeddings were created using the all-miniLM-L6-v2</span><span class="ltx_note ltx_role_footnote" id="footnote2"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_tag ltx_tag_note">2</span>https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2</span></span></span><span class="translated-text">生成针对语义相似性任务优化的 384 维向量的模型。然后，由于 Chroma 向量存储极其轻便、保存数据的能力以及快速的相似性搜索机制，这些向量被放入 Chroma 向量存储中进行存储。保留嵌入可以使系统免于跨会话重新计算嵌入，从而减少延迟。嵌入将语义相似的文本块在向量空间中聚集在一起，从而允许在查询时检索相关知识。</span><span class="original-text">model that yields 384-dimensional vectors optimized for semantic similarity tasks. The vectors were then put into a Chroma vector store for storage due to its extreme lightness, ability to persist data, and fast similarity search mechanisms. Persisting the embeddings saved the system from recomputing the embeddings across sessions, reducing latency. The embeddings clustered semantically similar text chunks together in vector space, thereby allowing the retrieval of pertinent knowledge at query time.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F3">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S3.F3.sf1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="593" id="S3.F3.sf1.g1" src="https://arxiv.org/html/2607.01115v1/x4.png" width="951"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F3.sf1.2.1.1" style="font-size:90%;">(a)</span> </span><span class="ltx_text" id="S3.F3.sf1.3.2" style="font-size:90%;">text only</span></figcaption>
+</figure>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<figure class="ltx_figure ltx_figure_panel ltx_align_center" id="S3.F3.sf2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="318" id="S3.F3.sf2.g1" src="https://arxiv.org/html/2607.01115v1/x5.png" width="951"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F3.sf2.2.1.1" style="font-size:90%;">(b)</span> </span><span class="ltx_text" id="S3.F3.sf2.3.2" style="font-size:90%;">image with text</span></figcaption>
+</figure>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F3.2.1.1" style="font-size:90%;">Figure 3</span>: </span><span class="ltx_text" id="S3.F3.3.2" style="font-size:90%;">Simulation of our system.</span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsubsection" id="S3.SS1.SSS3">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S3.SS1.SSS3.5.1.1"><span class="translated-text">Ⅲ-A</span><span class="original-text">III-A</span></span>3 </span><span class="translated-text">检索</span><span class="original-text">Retrieval</span></h4>
+<div class="ltx_para" id="S3.SS1.SSS3.p1">
+<p class="ltx_p" id="S3.SS1.SSS3.p1.1"><span class="translated-text">检索器充当用户查询和知识库本身之间的桥梁。当提交查询时，必须使用相同的嵌入模型将其嵌入到相同的语义空间中，以保持表示的一致性。然后，通过查询嵌入与存储的文档嵌入的余弦相似度进行对比，以选择高度相关的块。这里，考虑到相关性和效率之间的良好平衡，检索了前 3 名。</span><span class="original-text">The retriever acts as a bridge between user queries and the knowledge base itself. When the query is submitted, it must be embedded into the same semantic space using the same embedding model to maintain uniformity in representation. Then, the query embedding is contrasted with the stored document embeddings by their cosine similarity to select the highly relevant chunks. Here, the top-3 were retrieved, as a good balance between relevance and efficiency was considered.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS1.SSS4">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S3.SS1.SSS4.5.1.1"><span class="translated-text">Ⅲ-A</span><span class="original-text">III-A</span></span>4 </span><span class="translated-text">通过上下文查询融合进行增强</span><span class="original-text">Augmentation via Context-Query Fusion</span></h4>
+<div class="ltx_para" id="S3.SS1.SSS4.p1">
+<p class="ltx_p" id="S3.SS1.SSS4.p1.1"><span class="translated-text">根据用户的查询检索最相关的前 3 个块后，将这些片段连接起来以创建一个上下文块。然后，将该上下文块与原始查询结合起来，创建增强提示，然后将其传递到语言模型。最终的提示模板如下：</span><span class="original-text">After retrieving the most relevant top-3 chunks based on the user’s query, concatenates these segments to create one contextual block. This contextual block is then joined with the original query to create an augmented prompt, which is then passed to the language model. The final prompt template is as follows:</span></p>
+<blockquote class="ltx_quote" id="S3.SS1.SSS4.p1.2">
+<p class="ltx_p" id="S3.SS1.SSS4.p1.2.1"><span class="translated-text">“使用以下经过大学验证的信息来回答。如果信息不充分，请说‘我无法回答这个问题。’</span><span class="original-text">“Use the following university-verified information to answer. If the information is insufficient, say ‘I cannot answer the question.’</span><br class="ltx_break"/><span class="translated-text">检索到的上下文 1：...</span><span class="original-text">Retrieved Context 1: …</span><br class="ltx_break"/><span class="translated-text">检索到的上下文 2：……</span><span class="original-text">Retrieved Context 2: …</span><br class="ltx_break"/><span class="translated-text">检索到的上下文 3：……</span><span class="original-text">Retrieved Context 3: …</span><br class="ltx_break"/><span class="translated-text">用户查询：……”</span><span class="original-text">User Query: …”</span></p>
+</blockquote>
+</div>
+<div class="ltx_para" id="S3.SS1.SSS4.p2">
+<p class="ltx_p" id="S3.SS1.SSS4.p2.1"><span class="translated-text">这种即时构建迫使模型了解从底层语料库中检索到的特定领域知识，从而增强其生成扎根的、上下文感知的响应，并减少幻觉。</span><span class="original-text">Such prompt construction forces the model to be aware of domain-specific knowledge retrieved from the underlying corpus, thus sharpening its generation of grounded, context-aware responses, and reducing hallucinations.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS1.SSS5">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S3.SS1.SSS5.5.1.1"><span class="translated-text">Ⅲ-A</span><span class="original-text">III-A</span></span>5 </span><span class="translated-text">绩效监控和反馈收集</span><span class="original-text">Performance Monitoring and Feedback Collection</span></h4>
+<div class="ltx_para" id="S3.SS1.SSS5.p1">
+<p class="ltx_p" id="S3.SS1.SSS5.p1.1"><span class="translated-text">反馈可以通过表单提供，该表单接受姓名、电子邮件和对所生成输出的评论等详细信息。该反馈被记录到 CSV 文件中，随后用于评估和增强模型。</span><span class="original-text">Feedback can be provided via a form that accepts details such as name, email, and comments on the outputs produced. This feedback is logged into a CSV file and later used for assessment and enhancement of the model.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F4">
+<p class="ltx_p ltx_align_center ltx_align_center" id="S3.F4.1"><span class="ltx_text" id="S3.F4.1.1"><img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="100" id="S3.F4.1.1.g1" src="https://arxiv.org/html/2607.01115v1/x6.png" width="501"/></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F4.3.1.1" style="font-size:90%;">Figure 4</span>: </span><span class="ltx_text" id="S3.F4.4.2" style="font-size:90%;">Demonstration of how our system handle hallucination.</span></figcaption>
+</figure>
+<figure class="ltx_figure" id="S3.F5">
+<p class="ltx_p ltx_align_center ltx_align_center" id="S3.F5.1"><span class="ltx_text" id="S3.F5.1.1"><img alt="Refer to caption" class="ltx_graphics ltx_img_landscape" height="163" id="S3.F5.1.1.g1" src="https://arxiv.org/html/2607.01115v1/x7.png" width="230"/></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F5.3.1.1" style="font-size:90%;">Figure 5</span>: </span><span class="ltx_text" id="S3.F5.4.2" style="font-size:90%;">Distribution of query response time during the trial phase.</span></figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS2.5.1.1"><span class="translated-text">Ⅲ-B</span><span class="original-text">III-B</span></span> </span><span class="ltx_text ltx_font_italic" id="S3.SS2.6.2"><span class="translated-text">部署</span><span class="original-text">Deployment</span></span>
+</h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">拟议的聊天助手公开部署于</span><span class="original-text">The proposed chat assistant is publicly deployed at</span><a class="ltx_ref ltx_href" href="https://chat.kuet.ac.bd" title=""><span class="ltx_ERROR undefined" id="S3.SS2.p1.1.1.1">\ttfamily</span>chat.kuet.ac.bd</a><span class="translated-text">采用 3.0 GHz 的 Intel Core i7-7700 CPU（四个 CPU）、32 GB 主内存和 NVIDIA GeForce GTX 1080 (8GB)，运行 Python 3.12。</span><span class="original-text">on an Intel Core i7-7700 CPU at 3.0 GHz (four CPUs), with 32 GB of main memory, and an NVIDIA GeForce GTX 1080 (8GB), running with Python 3.12.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span class="ltx_text ltx_font_smallcaps" id="S4.1.1"><span class="translated-text">实验设置和模拟</span><span class="original-text">Experimental setup and simulation</span></span>
+</h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">在本节中，我们将讨论与系统模拟一起使用的技术。</span><span class="original-text">In this section, we discuss the technologies that we have used together with the simulation of our system.</span></p>
+</div>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS1.5.1.1">IV-A</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS1.6.2"><span class="translated-text">实验装置</span><span class="original-text">Experimental setup</span></span>
+</h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.1"><span class="translated-text">建议的系统是使用 Next.js 前端和 FastAPI 后端构建的。对于视觉语言处理，它采用LLaVA-1.5-7B模型，而ChromaDB作为矢量数据库。生成式 AI 组件是使用 PyTorch 实现的。文档通过 PyPDFLoader 模块摄取并使用 RecursiveCharacterTextSplitter 进行分段。使用语义相似性搜索作为检索机制，并由全 MiniLM-L6-v2 嵌入模型支持。整个检索增强生成（RAG）工作流程是通过 LangChain 框架协调的。</span><span class="original-text">The proposed system is built using a Next.js front end and a FastAPI back end. For visual–language processing, it employs the LLaVA-1.5-7B model, while ChromaDB serves as the vector database. The generative AI components are implemented using PyTorch. Documents are ingested through the PyPDFLoader module and segmented using the RecursiveCharacterTextSplitter. Semantic similarity search is used as the retrieval mechanism, supported by the all-MiniLM-L6-v2 embedding model. The overall retrieval-augmented generation (RAG) workflow is orchestrated through the LangChain framework.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS2.5.1.1">IV-B</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS2.6.2"><span class="translated-text">交互式用户界面</span><span class="original-text">Interactive User Interface</span></span>
+</h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.1"><span class="translated-text">在图中。</span><span class="original-text">In Fig.</span><a class="ltx_ref" href="#S3.F2.sf1" title="In Figure 2 ‣ III-A System Overview ‣ III Proposed RAG-based System ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_tag">2(a)</span></a><span class="translated-text">，我们系统的交互式聊天用户界面已经显示，用户可以在其中提出查询（文本和/或图像）并获取他们所需的信息。用户还可以使用图 1 所示的反馈表提供反馈，以进一步改进我们的系统。</span><span class="original-text">, the interactive chat user interface of our system has been shown, where users can ask queries (text and/or image) and get their required information. Users can also provide their feedback for further improvement of our system using the feedback form shown in Fig.</span><a class="ltx_ref" href="#S3.F2.sf2" title="In Figure 2 ‣ III-A System Overview ‣ III Proposed RAG-based System ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_tag">2(b)</span></a>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS3.5.1.1">IV-C</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS3.6.2"><span class="translated-text">模拟</span><span class="original-text">Simulation</span></span>
+</h3>
+<div class="ltx_para" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.1"><span class="translated-text">我们的系统的仿真如图 1 所示。</span><span class="original-text">The simulation of our system is demonstrated in Fig.</span><a class="ltx_ref" href="#S3.F3" title="Figure 3 ‣ III-A2 Knowledge Base Construction ‣ III-A System Overview ‣ III Proposed RAG-based System ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">。在图中。</span><span class="original-text">. In Fig.</span><a class="ltx_ref" href="#S3.F3.sf1" title="In Figure 3 ‣ III-A2 Knowledge Base Construction ‣ III-A System Overview ‣ III Proposed RAG-based System ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_tag">3(a)</span></a><span class="translated-text">，用户仅以文本形式提出特定于域的查询（KUET 相关），而我们基于 RAG 的系统能够给出上下文感知的回复。用户还可以根据上传的图片进行查询，我们的系统也能够回答这样的查询，如图1所示。</span><span class="original-text">, the user asks a domain-specific query (KUET-related) only in text, and our RAG-based system is capable of giving a context-aware reply. And the user can also make a query based on an uploaded image, and our system is also capable of answering such a query, which is shown in Fig.</span><a class="ltx_ref" href="#S3.F3.sf2" title="In Figure 3 ‣ III-A2 Knowledge Base Construction ‣ III-A System Overview ‣ III Proposed RAG-based System ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_tag">3(b)</span></a>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS4.5.1.1">IV-D</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS4.6.2"><span class="translated-text">处理幻觉</span><span class="original-text">Handling Hallucination</span></span>
+</h3>
+<div class="ltx_para" id="S4.SS4.p1">
+<p class="ltx_p" id="S4.SS4.p1.1"><span class="translated-text">图。</span><span class="original-text">Fig.</span><a class="ltx_ref" href="#S3.F4" title="Figure 4 ‣ III-A5 Performance Monitoring and Feedback Collection ‣ III-A System Overview ‣ III Proposed RAG-based System ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">展示了我们的系统如何处理 LLM 幻觉问题。幻觉意味着LLM们自信地给出了错误的答案，尽管没有证据</span><span class="original-text">shows how our system can handle the LLM hallucination problem. Hallucination means that LLMs give wrong answers confidently, although there is no evidence</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">liu2024survey</span>]</cite><span class="translated-text">。这是一般 LLM 模型的一个非常常见的限制。但是，由于我们正在合并上下文，并且没有找到与查询相关的上下文，因此 LLM 回答说它没有信息，而不是给出错误的答案。</span><span class="original-text">. It is a very common limitation of a general LLM models.However, as we are incorporating context and no context related to the query was found, the LLM answers that it doesn’t have the information instead of giving a wrong answer.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS5">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS5.5.1.1">IV-E</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS5.6.2"><span class="translated-text">查询响应时间</span><span class="original-text">Query Response Time</span></span>
+</h3>
+<div class="ltx_para" id="S4.SS5.p1">
+<p class="ltx_p" id="S4.SS5.p1.1"><span class="translated-text">图。</span><span class="original-text">Fig.</span><a class="ltx_ref" href="#S3.F5" title="Figure 5 ‣ III-A5 Performance Monitoring and Feedback Collection ‣ III-A System Overview ‣ III Proposed RAG-based System ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">说明了试验期间记录的基于 160 个查询的查询响应时间的分布。响应时间范围为 1.23 至 44.49 秒，平均值为 13.57 秒，标准差为 10.87 秒。直方图显示出右偏分布，表明大多数查询都得到了快速答复，但有些查询的答复时间明显更长。尽管 GPU 加速，但响应时间仍然非常长，因为具有 70 亿个参数的模型需要大量计算。 GTX 1080 可以处理，但它并不是大规模推理的最佳选择。部署中的这种限制对所经历的延迟起着至关重要的作用，因此响应时间更长。此外，基于 CPU 的预处理和矢量搜索会占用更多时间。此外，顺序处理降低了 GPU 的使用率。</span><span class="original-text">illustrates the distribution of query response times recorded during the trial, based on 160 queries. The response times range from 1.23 to 44.49 seconds, with a mean of 13.57 seconds and a standard deviation of 10.87 seconds. The histogram reveals a right-skewed distribution, indicating that most queries were answered quickly, but some took significantly longer. Despite GPU acceleration, response times remain significantly high because the model with 7 billion parameters requires substantial computation. The GTX 1080 can handle it, but it is not the best choice for large-scale inference. This limitation in deployment plays a crucial role in the latency experienced, and hence, the response time is longer. Also, the CPU-based preprocessing and the vector searches take up more time. Moreover, sequential processing lowers the usage of the GPU.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS6">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS6.5.1.1">IV-F</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS6.6.2"><span class="translated-text">多模式绩效评估</span><span class="original-text">Multimodal Performance Evaluation</span></span>
+</h3>
+<div class="ltx_para" id="S4.SS6.p1">
+<p class="ltx_p" id="S4.SS6.p1.1"><span class="translated-text">52 名试验参与者填写的反馈表的平均满意度为 4.26/5，表明获得学术资源的机会有所改善。除此之外，我们还分析了用户对不同查询方式的满意度。该系统的纯文本查询平均得分为 4.56/5，基于图像查询的平均得分为 3.95/5。图像查询的平均响应时间为 16.4 秒，比纯文本查询长约 4.6 秒，这是由多模式处理的开销造成的。</span><span class="original-text">The feedback form filled out by 52 trial participants yielded a satisfaction score of 4.26/5 on average, indicating improved access to academic resources. Besides that, we also analyzed user satisfaction with the different query modalities. The system managed to reach the average score of 4.56/5 for text-only queries and 3.95/5 for image-based queries. The average response time for image queries was 16.4 seconds, about 4.6 seconds longer than for text-only ones, which was caused by the overhead of multimodal processing.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS7">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS7.5.1.1"><span class="translated-text">静脉注射G</span><span class="original-text">IV-G</span></span> </span><span class="ltx_text ltx_font_italic" id="S4.SS7.6.2"><span class="translated-text">RAG有效性分析</span><span class="original-text">RAG Effectiveness Analysis</span></span>
+</h3>
+<div class="ltx_para" id="S4.SS7.p1">
+<p class="ltx_p" id="S4.SS7.p1.1"><span class="translated-text">为了提供系统有效性的定量证据，我们评估了幻觉率、检索准确性、用户满意度和延迟。基于试验阶段的 160 个特定领域查询，基线 LLaVA-1.5-7B 模型的幻觉率为 31.7%，而我们的 RAG 增强模型将其降低至 6.6%，如图 1 所示。</span><span class="original-text">To provide quantitative evidence of system effectiveness, we evaluated the hallucination rate, retrieval accuracy, user satisfaction, and latency. Based on 160 domain-specific queries during the trial phase, the baseline LLaVA-1.5-7B model exhibited a hallucination rate of 31.7%, whereas our RAG-enhanced model reduced this to 6.6%, which is visually illustrated in Fig.</span><a class="ltx_ref" href="#S4.F6" title="Figure 6 ‣ IV-G RAG Effectiveness Analysis ‣ IV Experimental setup and simulation ‣ Towards Developing a Multimodal Chat Assistant for University Stakeholders: RAG-based Approach"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">。幻觉注释由两名审稿人独立验证，与科恩的注释者之间达成了实质性协议</span><span class="original-text">. Hallucination annotations were validated independently by two reviewers, achieving a substantial inter-annotator agreement with Cohen’s</span><math alttext="\kappa" class="ltx_Math" display="inline" id="S4.SS7.p1.1.m1" intent=":literal"><semantics><mi>κ</mi><annotation encoding="application/x-tex">\kappa</annotation></semantics></math><span class="translated-text">= 0.84，证实了评估的可靠性</span><span class="original-text">= 0.84, confirming the reliability of the evaluation</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">warrens2015five</span>]</cite><span class="translated-text">。语义检索器的 top-1 准确率达到 78.3%，top-3 准确率达到 92.1%。由于我们的系统中使用了前 3 名，因此对于大多数与大学相关的查询来说，检索准确性仍然很高。</span><span class="original-text">. The semantic retriever achieved 78.3% top-1 and 92.1% top-3 accuracy. As the top-3 were used in our system, retrieval accuracy remains high for most university-related queries.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F6">
+<p class="ltx_p ltx_align_center ltx_align_center" id="S4.F6.1"><span class="ltx_text" id="S4.F6.1.1"><img alt="Refer to caption" class="ltx_graphics ltx_img_square" height="245" id="S4.F6.1.1.g1" src="https://arxiv.org/html/2607.01115v1/hallucination_rate.png" width="272"/></span></p>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F6.3.1.1" style="font-size:90%;">Figure 6</span>: </span><span class="ltx_text" id="S4.F6.4.2" style="font-size:90%;">Demonstrating how our RAG-enhanced approach reduces baseline hallucination rate by about 25%.</span></figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span class="ltx_text ltx_font_smallcaps" id="S5.1.1"><span class="translated-text">数据隐私、安全访问控制和合规性</span><span class="original-text">Data Privacy, Secure Access Control, and Compliance</span></span>
+</h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">机构文件和用户查询均在非常严格的安全措施下处理。检索功能仅涉及基于JWT的授权，并且客户端和服务器的整个通信均受到HTTPS保护。电子邮件或 ID 等敏感数据在记录前已被屏蔽，上传的图像仅在内存中处理，除非获得许可。此外，还制定了非常严格的 CORS 策略，仅允许来自受信任的大学域的请求。这些行为不仅可以确保隐私，而且还符合机构数据治理政策。</span><span class="original-text">Institutional documents and user queries are dealt with under very strict security measures. Retrieval functions involve only JWT-based authorization, and the entire communication of the client and server is protected with HTTPS. Sensitive data like emails or IDs are already masked before logging, and uploaded images are processed only in memory unless permission is granted. Furthermore, very strict CORS policies are in place that allow requests from only the trusted university domains. Not only do these actions assure privacy, but they also comply with the institutional data governance policies.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">VI </span><span class="ltx_text ltx_font_smallcaps" id="S6.1.1"><span class="translated-text">结论</span><span class="original-text">Conclusions</span></span>
+</h2>
+<div class="ltx_para" id="S6.p1">
+<p class="ltx_p" id="S6.p1.1"><span class="translated-text">该研究展示了将 RAG 与多模态推理相结合来创建可以处理文本和图像查询的智能大学聊天助手的有效性。通过使用语义嵌入、向量存储和检索管道，系统提供基于上下文的响应。这减少了对静态知识库的依赖，并有助于避免大型语言模型中常见的幻觉。聊天助手被部署为公开可用的 Web 应用程序，向各个大学利益相关者展示了其实际用途。这种方法强调特定领域的检索增强型聊天助手如何使信息更易于访问、简化管理任务并帮助缩小教育机构（尤其是发展中地区）的数字差距。尽管我们的系统正确回答了大多数特定领域的问题，但仍然存在一些限制，例如多跳推理、延迟问题等。有时我们还面临上下文集成问题，从而导致非常通用的响应。将来，我们希望使用代理 RAG、多跳 RAG 等高级 RAG 变体来扩展我们的系统，使其更加可靠。</span><span class="original-text">The study shows the effectiveness of combining RAG with multimodal inference to create a smart university chat assistant that can handle both text and image queries. By using semantic embeddings, vector storage, and retrieval pipelines, the system provides responses based on context. This reduces the reliance on static knowledge bases and helps avoid the hallucinations often seen in large language models. The chat assistant is deployed as a publicly available web application, demonstrating its practical use for various university stakeholders. This method emphasizes how domain-specific, retrieval-augmented chat assistants can make information more accessible, streamline administrative tasks, and help close digital gaps in educational institutions, especially in developing areas. Though our system answers most of the domain-specific questions correctly, there are still several limitations, like multihop reasoning, latency issues, etc. Sometimes we also face the contextual integration problem, thus resulting in a very generic response. In the future, we would like to extend our system to be more reliable using advanced RAG variants like agentic RAG, multi-hop RAG, etc.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2607.01115v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer><footer class="ds-site-footer">
+<div class="ds-site-footer-grid">
+<div class="ds-site-footer-main">
+<div class="ds-site-footer-ack"><span class="translated-text">我们衷心感谢来自
+        我们的</span><span class="original-text">We gratefully acknowledge support from
+        our</span><strong><span class="translated-text">主要资助者</span><span class="original-text">major funders</span></strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong><span class="translated-text">成员机构</span><span class="original-text">member institutions</span></strong></a><span class="ack-member-inline" hidden="">, <strong></strong></span><span class="translated-text">,
+        以及所有贡献者。</span><span class="original-text">,
+        and all contributors.</span></div>
+<nav aria-label="Site navigation" class="ds-site-footer-links">
+<a href="https://info.arxiv.org/about"><span class="translated-text">关于</span><span class="original-text">About</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help"><span class="translated-text">帮助</span><span class="original-text">Help</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/contact.html"><span class="translated-text">联系方式</span><span class="original-text">Contact</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/subscribe"><span class="translated-text">订阅</span><span class="original-text">Subscribe</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/license/index.html"><span class="translated-text">版权</span><span class="original-text">Copyright</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/policies/privacy_policy.html"><span class="translated-text">隐私</span><span class="original-text">Privacy</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/web_accessibility.html"><span class="translated-text">无障碍</span><span class="original-text">Accessibility</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://status.arxiv.org" rel="noopener noreferrer" target="_blank"><span class="translated-text">运营状况</span><span class="original-text">Operational Status</span><span class="is-sr-only"><span class="translated-text">（在新选项卡中打开）</span><span class="original-text">(opens in new tab)</span></span></a>
+</nav>
+</div>
+<div aria-label="Major funders" class="ds-site-footer-funders">
+<div class="ds-site-footer-funders-label"><span class="translated-text">主要资金支持来自</span><span class="original-text">Major funding support from</span></div>
+<div class="ds-site-footer-funders-logos">
+<img alt="Simons Foundation" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png"/>
+<img alt="Schmidt Sciences" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/schmidt-sciences.png"/>
+</div>
+</div>
+</div>
+</footer><div id="fixed-buttons-container">
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
