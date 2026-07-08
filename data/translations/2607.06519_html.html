@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">FreqDepthKV：用于长上下文 LLM 推理中鲁棒 KV 缓存压缩的频率引导深度共享</span><span class="original-text">FreqDepthKV: Frequency-Guided Depth Sharing for Robust KV Cache Compression in Long-Context LLM Inference</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 7 月 7 日星期二 17:26:08 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Tue Jul  7 17:26:08 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+    // Pre-apply spinout-banner dismissal here, before the banner paints, so it
+    // never flashes in only to be hidden later by the deferred arxiv-header.js.
+    // Key matches arxiv-header.js: "arxiv-banner-dismissed:" + data-banner-name.
+    if (localStorage.getItem('arxiv-banner-dismissed:spinout-nonprofit')) {
+      document.documentElement.setAttribute("data-banner-dismissed", "");
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/><link href="https://arxiv.org/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626" media="screen" rel="stylesheet" type="text/css"/><style>
+  /* Banner pre-dismissal (set above before paint -> no flash-then-hide) and
+     reading-mode chrome hiding. */
+  html[data-banner-dismissed] .ds-announcement { display: none; }
+  html[data-reading-mode="enabled"] .ds-announcement,
+  html[data-reading-mode="enabled"] .ds-site-footer { display: none; }
+  /* Keep the announcement text dark on the Open-Blue band in both colour themes
+     (otherwise it inherits the paper's warm-wash text in dark mode and washes out). */
+  .ds-announcement-text { color: var(--arxiv-ink, #1c1a17); }
+</style>
+<script defer="" src="https://arxiv.org/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2607.06519" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2607.06519" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog><div aria-label="Announcement" class="ds-announcement" data-banner-name="spinout-nonprofit" id="announcement-banner" role="region">
+<img alt="" aria-hidden="true" class="ds-announcement-glyph" src="https://arxiv.org/static/base/1.0.1/images/icons/smileybones-small.svg"/>
+<span class="ds-announcement-text"><span class="translated-text">arXiv 现在是一个独立的非营利组织！</span><span class="original-text">arXiv is now an independent nonprofit!</span></span>
+<a class="ds-announcement-link" href="https://info.arxiv.org/about"><span class="translated-text">了解更多</span><span class="original-text">Learn more</span></a>
+<button aria-label="Dismiss announcement" class="ds-announcement-close" type="button">×</button>
+</div>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/"><img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/base/1.0.1/images/arxiv-logo-primary-light.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2607.06519v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2607.06519v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In FreqDepthKV: Frequency-Guided Depth Sharing for Robust KV Cache Compression in Long-Context LLM Inference"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In FreqDepthKV: Frequency-Guided Depth Sharing for Robust KV Cache Compression in Long-Context LLM Inference"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S2" title="In FreqDepthKV: Frequency-Guided Depth Sharing for Robust KV Cache Compression in Long-Context LLM Inference"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Related Work</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S3" title="In FreqDepthKV: Frequency-Guided Depth Sharing for Robust KV Cache Compression in Long-Context LLM Inference"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Method</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S4" title="In FreqDepthKV: Frequency-Guided Depth Sharing for Robust KV Cache Compression in Long-Context LLM Inference"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Experiments</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S5" title="In FreqDepthKV: Frequency-Guided Depth Sharing for Robust KV Cache Compression in Long-Context LLM Inference"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Ablation Study</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S5.SS0.SSS0.Px1" title="In 5 Ablation Study ‣ FreqDepthKV: Frequency-Guided Depth Sharing for Robust KV Cache Compression in Long-Context LLM Inference"><span class="ltx_text ltx_ref_title">Ablation setup.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S6" title="In FreqDepthKV: Frequency-Guided Depth Sharing for Robust KV Cache Compression in Long-Context LLM Inference"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6 </span>Conclusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S7" title="In FreqDepthKV: Frequency-Guided Depth Sharing for Robust KV Cache Compression in Long-Context LLM Inference"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">7 </span>Future Work</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In FreqDepthKV: Frequency-Guided Depth Sharing for Robust KV Cache Compression in Long-Context LLM Inference"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：arXiv.org 永久非独占许可证</span><span class="original-text">License: arXiv.org perpetual non-exclusive license</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2607.06519v1 [cs.AI] 2026 年 7 月 7 日</span><span class="original-text">arXiv:2607.06519v1 [cs.AI] 07 Jul 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">FreqDepthKV：用于长上下文 LLM 推理中鲁棒 KV 缓存压缩的频率引导深度共享</span><span class="original-text">FreqDepthKV: Frequency-Guided Depth Sharing for Robust KV Cache Compression in Long-Context LLM Inference</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Anna Córdoba  Adam Puente Tercero  Nerea Angulo Hijo  Mar Linares Tercero 
+<br class="ltx_break"/>Julia Barrientos  Ainhoa Miranda  Jesús Olivera 
+<br class="ltx_break"/>
+Instituto de Investigación en Visión Artificial 
+<br class="ltx_break"/><span class="ltx_text ltx_font_typewriter" id="id1.1.id1">contact@iiva.tibeu</span>
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">长上下文 LLM 推理越来越受到 KV 缓存的内存和带宽成本的限制，但积极的压缩可以消除检索和多步推理所需的特定于层的证据。我们引入了 FreqDepthKV，一种推理时间缓存压缩方法，它将相邻层 KV 状态分解为共享低频深度分量和稀疏高频残差。轻量级在线探针根据注意力头对重建敏感注意力逻辑的贡献将注意力头分配给共享深度、残差深度或精确缓存模式，从而允许压缩策略适应提示结构而无需重新训练。在长上下文问答、针检索、摘要和代码生成基准测试中，FreqDepthKV 在大幅减少缓存预算的情况下保持了任务准确性。通过 32k-token 预填充窗口，FreqDepthKV 达到 58.3 Exact Match、63.0 F1、32.5 ROUGE-L 和 48.1 pass@1，紧密匹配完整 KV，同时优于之前的压缩缓存方法。它还将解码吞吐量提高到 70.4 token/s，将 TTFT 缩短到 2.06 秒，并将峰值 KV 内存降低到 6.2 GB，实现 3.9 倍的有效压缩比。</span><span class="original-text">Long-context LLM inference is increasingly limited by the memory and bandwidth cost of KV caches, yet aggressive compression can remove the layer-specific evidence needed for retrieval and multi-step reasoning. We introduce FreqDepthKV, an inference-time cache compression method that factorizes adjacent-layer KV states into shared low-frequency depth components and sparse high-frequency residuals. A lightweight online probe assigns attention heads to shared-depth, residual-depth, or exact cache modes according to their contribution to reconstruction-sensitive attention logits, allowing the compression policy to adapt to prompt structure without retraining. Across long-context question answering, needle retrieval, summarization, and code generation benchmarks, FreqDepthKV preserves task accuracy under substantially smaller cache budgets. With a 32k-token prefill window, FreqDepthKV reaches 58.3 Exact Match, 63.0 F1, 32.5 ROUGE-L, and 48.1 pass@1, closely matching full KV while outperforming prior compressed-cache methods. It also improves decoding throughput to 70.4 tokens/s, reduces TTFT to 2.06 seconds, and lowers peak KV memory to 6.2 GB, achieving a 3.9x effective compression ratio.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">长上下文推理将大型语言模型的瓶颈从参数存储转移到键值（KV）缓存。在自回归解码期间，每个生成的令牌都会关注来自所有先前令牌、层和头的缓存键和值，从而使内存流量和缓存占用空间随着上下文长度线性增长。对于长上下文问答、多文档摘要和代码完成，这种成本尤其严重，其中提示可能包含许多不相关的标记，但仍然需要保留少量证据来确定最终答案。现有的 KV 缓存压缩方法通过令牌驱逐、重要保留、量化或结构化共享来减少占用空间</span><span class="original-text">Long-context inference has shifted the bottleneck of large language models from parameter storage to the key-value (KV) cache. During autoregressive decoding, every generated token attends over cached keys and values from all previous tokens, layers, and heads, making memory traffic and cache footprint grow linearly with context length. This cost is especially acute for long-context question answering, multi-document summarization, and code completion, where prompts may contain many irrelevant tokens but still require preserving a small amount of evidence that determines the final answer. Existing KV cache compression methods reduce this footprint through token eviction, heavy-hitter retention, quantization, or structured sharing</span><cite class="ltx_cite ltx_citemacro_cite">Li et al. (<a class="ltx_ref" href="#bib.bib24" title="">2024</a>); Jiang et al. (<a class="ltx_ref" href="#bib.bib20" title="">2025</a>); Javidnia et al. (<a class="ltx_ref" href="#bib.bib19" title="">2025</a>)</cite><span class="translated-text">。然而，这些方法通常将冗余视为令牌级或精度级现象，而没有充分探索相邻变压器层经常编码类似的深度缓存结构的事实。</span><span class="original-text">. However, these approaches often treat redundancy as either a token-level or precision-level phenomenon, while leaving underexplored the fact that adjacent transformer layers frequently encode similar depth-wise cache structure.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">MiniCache 演示了可以通过利用相邻层之间的冗余来沿深度维度压缩 KV 缓存</span><span class="original-text">MiniCache demonstrates that KV caches can be compressed along the depth dimension by exploiting redundancy between neighboring layers</span><cite class="ltx_cite ltx_citemacro_cite">Liu et al. (<a class="ltx_ref" href="#bib.bib26" title="">2024a</a>)</cite><span class="translated-text">。这个观察结果很强大：许多层存储相关的表示，因此共享或合并它们的缓存可以在不修改模型权重的情况下大幅减少内存。然而均匀深度压缩引入了一种新的故障模式。在重检索和重推理的提示中，决定性证据通常局限于特定的令牌头层交互。平均看来冗余的层可能仍然包含消除针状句子歧义、保留代码依赖性或维护推理链所需的高频残留信息。一旦这些特定于层的残差被擦除，下游注意力逻辑就可以改变足以改变生成的答案，即使重建的缓存具有较低的聚合误差。最近的工作也类似地指出，缓存压缩可能依赖于工作负载，并且在对抗性或证据敏感的提示下可能会失败</span><span class="original-text">. This observation is powerful: many layers store correlated representations, so sharing or merging their caches can substantially reduce memory without modifying model weights. Yet uniform depth compression introduces a new failure mode. In retrieval-heavy and reasoning-heavy prompts, the decisive evidence is often localized to particular token-head-layer interactions. A layer that appears redundant on average may still contain high-frequency residual information needed to disambiguate a needle sentence, preserve a code dependency, or maintain a reasoning chain. Once these layer-specific residuals are erased, downstream attention logits can shift enough to change the generated answer, even when the reconstructed cache has low aggregate error. Recent work has similarly noted that cache compression can be workload-dependent and can fail under adversarial or evidence-sensitive prompts</span><cite class="ltx_cite ltx_citemacro_cite">Chen et al. (<a class="ltx_ref" href="#bib.bib8" title="">2025</a>); Haverbeck et al. (<a class="ltx_ref" href="#bib.bib17" title="">2026</a>); Slothouber (<a class="ltx_ref" href="#bib.bib46" title="">2026</a>)</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">我们建议</span><span class="original-text">We propose</span><span class="ltx_text ltx_font_bold" id="S1.p3.1.1"><span class="translated-text">频率深度KV</span><span class="original-text">FreqDepthKV</span></span><span class="translated-text">，一种频率引导深度共享方法，用于长上下文 LLM 推理中的鲁棒 KV 缓存压缩。中心思想是将相邻层的 KV 缓存分解为广泛共享的低频深度分量和保留检索敏感证据的稀疏高频残差。 FreqDepthKV 不是对每个层或磁头应用相同的压缩规则，而是在预填充期间使用在线探针来估计哪些磁头可以安全地共享深度分量，哪些磁头需要残差校正，哪些磁头应该保持精确。这会产生一个适应提示结构的缓存布局，同时保留与标准自回归解码的兼容性。</span><span class="original-text">, a frequency-guided depth sharing method for robust KV cache compression in long-context LLM inference. The central idea is to decompose the KV cache across adjacent layers into low-frequency depth components that are broadly shared and sparse high-frequency residuals that preserve retrieval-sensitive evidence. Rather than applying the same compression rule to every layer or head, FreqDepthKV uses an online probe during prefill to estimate which heads can safely share depth components, which require residual correction, and which should remain exact. This produces a cache layout that adapts to prompt structure while retaining compatibility with standard autoregressive decoding.</span></p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">FreqDepthKV 做出了四项贡献。首先，它引入了 KV 缓存的深度频率分解，压缩冗余的层间通道，同时保留检索和推理所需的高频令牌证据。其次，它使用轻量级在线探针将每个注意力头分配给三种缓存模式之一：共享深度、剩余深度或精确，从而无需重新训练即可实现每层压缩。第三，它添加了在预填充期间根据缓存的注意力逻辑计算的重建感知路由损失，允许压缩比适应上下文长度和提示结构。第四，它在长上下文 QA、摘要和代码完成中报告一致的速度和内存增益，同时在激进的 KV 预算下保持准确性。</span><span class="original-text">FreqDepthKV makes four contributions. First, it introduces a depth-frequency factorization of the KV cache that compresses redundant inter-layer channels while preserving high-frequency token evidence needed for retrieval and reasoning. Second, it uses a lightweight online probe to assign each attention head to one of three cache modes: shared-depth, residual-depth, or exact, enabling per-layer compression without retraining. Third, it adds a reconstruction-aware routing loss computed from cached attention logits during prefill, allowing compression ratios to adapt to context length and prompt structure. Fourth, it reports consistent speed and memory gains across long-context QA, summarization, and code completion while maintaining accuracy under aggressive KV budgets.</span></p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">FreqDepthKV 是对先前缓存管理策略的补充。 H2O、StreamingLLM、Scissorhands、SnapKV 和 PyramidKV 等标记选择方法通过保留有影响力或最近的标记来减少序列维度，而 KVQuant 和 KIVI 等量化方法会降低数值精度。其他方法探索自适应合并、工作负载感知压缩和层间共享</span><span class="original-text">FreqDepthKV is complementary to prior cache management strategies. Token-selection methods such as H2O, StreamingLLM, Scissorhands, SnapKV, and PyramidKV reduce the sequence dimension by retaining influential or recent tokens, while quantization approaches such as KVQuant and KIVI reduce numerical precision. Other methods explore adaptive merging, workload-aware compression, and inter-layer sharing</span><cite class="ltx_cite ltx_citemacro_cite">Wang et al. (<a class="ltx_ref" href="#bib.bib48" title="">2024</a>); Yang et al. (<a class="ltx_ref" href="#bib.bib58" title="">2024a</a>); Ma et al. (<a class="ltx_ref" href="#bib.bib31" title="">2026</a>); Yao et al. (<a class="ltx_ref" href="#bib.bib61" title="">2025</a>); Cai et al. (<a class="ltx_ref" href="#bib.bib7" title="">2025</a>)</cite><span class="translated-text">。相比之下，FreqDepthKV 直接针对深度维度，构建在 MiniCache 之上</span><span class="original-text">. In contrast, FreqDepthKV targets the depth dimension directly, building on MiniCache</span><cite class="ltx_cite ltx_citemacro_cite">Liu et al. (<a class="ltx_ref" href="#bib.bib26" title="">2024a</a>)</cite><span class="translated-text">而是用频率感知残差保存和注意 logit 感知路由取代统一层共享。这种设计的目的是保持深度压缩的内存优势，同时避免丢失长上下文任务所依赖的稀疏证据。</span><span class="original-text">but replacing uniform layer sharing with frequency-aware residual preservation and attention-logit-aware routing. This design is intended to keep the memory benefits of depth compression while avoiding the loss of sparse evidence that long-context tasks depend on.</span></p>
+</div>
+<figure class="ltx_figure" id="S1.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="283" id="S1.F1.g1" src="https://arxiv.org/html/2607.06519v1/figures/overview.png" width="509"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Overview of the core idea: FreqDepthKV removes redundant depth information shared by neighboring layers while preserving sparse layer-specific token evidence that controls retrieval-sensitive attention.</figcaption>
+</figure>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="translated-text">KV 缓存压缩已成为长上下文 LLM 服务的核心系统问题，调查围绕驱逐、合并、量化和服务感知缓存放置来组织空间</span><span class="original-text">KV cache compression has emerged as a central systems problem for long-context LLM serving, with surveys organizing the space around eviction, merging, quantization, and serving-aware cache placement</span><cite class="ltx_cite ltx_citemacro_cite">Li et al. (<a class="ltx_ref" href="#bib.bib24" title="">2024</a>); Jiang et al. (<a class="ltx_ref" href="#bib.bib20" title="">2025</a>); Javidnia et al. (<a class="ltx_ref" href="#bib.bib19" title="">2025</a>)</cite><span class="translated-text">。令牌选择方法通过保留最近的令牌、注意力集中器或重击者来减少序列维度，如 H2O、StreamingLLM、Scissorhands、SnapKV、PyramidKV 和相关的自适应驱逐方案</span><span class="original-text">. Token-selection methods reduce the sequence dimension by retaining recent tokens, attention sinks, or heavy hitters, as in H2O, StreamingLLM, Scissorhands, SnapKV, PyramidKV, and related adaptive eviction schemes</span><cite class="ltx_cite ltx_citemacro_cite">Bui et al. (<a class="ltx_ref" href="#bib.bib6" title="">2026</a>); An et al. (<a class="ltx_ref" href="#bib.bib4" title="">2026</a>); Xiang et al. (<a class="ltx_ref" href="#bib.bib53" title="">2025</a>); Wang et al. (<a class="ltx_ref" href="#bib.bib48" title="">2024</a>); Yao et al. (<a class="ltx_ref" href="#bib.bib61" title="">2025</a>)</cite><span class="translated-text">。当重要性集中在一小部分位置时，这些方法是有效的，但它们的压缩决策通常是根据令牌而不是缓存的层间结构做出的。因此，他们可以丢弃在局部显着性度量下较弱但在后层组合后变得决定性的证据，这是最近对压缩风险和工作负载敏感性的分析中强调的一种故障模式</span><span class="original-text">. These methods are effective when importance is concentrated in a small subset of positions, but their compression decision is usually made over tokens rather than over the inter-layer structure of the cache. As a result, they can discard evidence that is weak under local saliency measures but becomes decisive after later-layer composition, a failure mode highlighted in recent analyses of compression risk and workload sensitivity</span><cite class="ltx_cite ltx_citemacro_cite">Chen et al. (<a class="ltx_ref" href="#bib.bib8" title="">2025</a>); Haverbeck et al. (<a class="ltx_ref" href="#bib.bib17" title="">2026</a>); Cai et al. (<a class="ltx_ref" href="#bib.bib7" title="">2025</a>)</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="translated-text">互补的工作线通过降低精度、低秩结构或专门的注意力计算来降低 KV 缓存成本。 KVQuant 和 KIVI 量化缓存的键和值，而其他方法则追求无损或近无损表示、特征空间投影、异构注意力和动态稀疏计算</span><span class="original-text">A complementary line of work reduces KV cache cost through precision reduction, low-rank structure, or specialized attention computation. KVQuant and KIVI quantize cached keys and values, while other approaches pursue lossless or near-lossless representations, eigen-space projection, heterogeneous attention, and dynamic sparse computation</span><cite class="ltx_cite ltx_citemacro_cite">Yang et al. (<a class="ltx_ref" href="#bib.bib59" title="">2024b</a>, <a class="ltx_ref" href="#bib.bib60" title="">c</a>); Saxena et al. (<a class="ltx_ref" href="#bib.bib45" title="">2024</a>); Yang et al. (<a class="ltx_ref" href="#bib.bib56" title="">2025</a>, <a class="ltx_ref" href="#bib.bib57" title="">2026</a>); Xiao et al. (<a class="ltx_ref" href="#bib.bib54" title="">2025</a>)</cite><span class="translated-text">。系统级研究进一步表明，最佳的 KV 策略取决于模型大小、设备内存、工作负载组合和服务架构</span><span class="original-text">. System-level studies further show that the best KV policy depends on model size, device memory, workload mix, and serving architecture</span><cite class="ltx_cite ltx_citemacro_cite">Qin et al. (<a class="ltx_ref" href="#bib.bib41" title="">2024</a>); Gokhale et al. (<a class="ltx_ref" href="#bib.bib15" title="">2026</a>); Slothouber (<a class="ltx_ref" href="#bib.bib46" title="">2026</a>); Jo et al. (<a class="ltx_ref" href="#bib.bib21" title="">2026</a>); Qiao et al. (<a class="ltx_ref" href="#bib.bib40" title="">2025</a>)</cite><span class="translated-text">。这些方法在很大程度上与 FreqDepthKV 正交：量化改变了保留的缓存条目的数字表示，稀疏或块注意力改变了所关注的条目，而 FreqDepthKV 改变了相邻层在解码之前共享深度频率分量的方式。</span><span class="original-text">. These methods are largely orthogonal to FreqDepthKV: quantization changes the numerical representation of retained cache entries, and sparse or block attention changes which entries are attended to, whereas FreqDepthKV changes how adjacent layers share depth-frequency components before decoding.</span></p>
+</div>
+<div class="ltx_para" id="S2.p3">
+<p class="ltx_p" id="S2.p3.1"><span class="translated-text">深度共享和层间冗余最接近我们的设置。 MiniCache 表明相邻的 Transformer 层包含大量的 KV 冗余，并且可以沿深度维度进行压缩</span><span class="original-text">Depth-wise sharing and inter-layer redundancy are closest to our setting. MiniCache shows that adjacent transformer layers contain substantial KV redundancy and can be compressed along the depth dimension</span><cite class="ltx_cite ltx_citemacro_cite">Liu et al. (<a class="ltx_ref" href="#bib.bib26" title="">2024a</a>); Haffari et al. (<a class="ltx_ref" href="#bib.bib16" title="">2024</a>); Liu et al. (<a class="ltx_ref" href="#bib.bib27" title="">2024b</a>)</cite><span class="translated-text">。后续工作探索分层缓存共享、层间注意力相似性、浅/深层平衡和模型引导合并</span><span class="original-text">. Subsequent work explores layer-wise cache sharing, inter-layer attention similarity, shallow/deep layer balancing, and model-guided merging</span><cite class="ltx_cite ltx_citemacro_cite">Yang et al. (<a class="ltx_ref" href="#bib.bib58" title="">2024a</a>); Ma et al. (<a class="ltx_ref" href="#bib.bib31" title="">2026</a>); Tang et al. (<a class="ltx_ref" href="#bib.bib47" title="">2025</a>); Wang et al. (<a class="ltx_ref" href="#bib.bib48" title="">2024</a>)</cite><span class="translated-text">。然而，这些方法通常以相对较粗的粒度应用共享或合并，假设层相似性意味着安全的缓存替换。 FreqDepthKV 相反，将深度冗余视为频率结构：低频分量在相邻层之间共享，而稀疏的高频残差则保留用于影响缓存注意力逻辑的 token-head 交互。</span><span class="original-text">. However, these approaches typically apply sharing or merging at a relatively coarse granularity, assuming that layer similarity implies safe cache substitution. FreqDepthKV instead treats depth redundancy as frequency-structured: low-frequency components are shared across adjacent layers, while sparse high-frequency residuals are retained for token-head interactions that affect cached attention logits.</span></p>
+</div>
+<div class="ltx_para" id="S2.p4">
+<p class="ltx_p" id="S2.p4.1"><span class="translated-text">最近的自适应和任务感知方法认识到缓存压缩应取决于上下文结构、推理需求和下游用例</span><span class="original-text">Recent adaptive and task-aware methods recognize that cache compression should depend on context structure, reasoning demand, and downstream use case</span><cite class="ltx_cite ltx_citemacro_cite">Yu and Chai (<a class="ltx_ref" href="#bib.bib62" title="">2025a</a>, <a class="ltx_ref" href="#bib.bib63" title="">b</a>); Wei et al. (<a class="ltx_ref" href="#bib.bib49" title="">2026</a>); Gelberg et al. (<a class="ltx_ref" href="#bib.bib14" title="">2026</a>); Li et al. (<a class="ltx_ref" href="#bib.bib25" title="">2025</a>); Patel and Joshi (<a class="ltx_ref" href="#bib.bib38" title="">2026</a>)</cite><span class="translated-text">。已经针对表格、检索系统、多代理通信、多模式模型和知识注入提出了特定领域的变体</span><span class="original-text">. Domain-specific variants have been proposed for tables, retrieval systems, multi-agent communication, multimodal models, and knowledge injection</span><cite class="ltx_cite ltx_citemacro_cite">Corallo et al. (<a class="ltx_ref" href="#bib.bib9" title="">2025</a>); da Silva et al. (<a class="ltx_ref" href="#bib.bib10" title="">2025</a>); Kriuk and Ng (<a class="ltx_ref" href="#bib.bib22" title="">2026</a>); Zhang et al. (<a class="ltx_ref" href="#bib.bib66" title="">2025</a>); Pustovit (<a class="ltx_ref" href="#bib.bib39" title="">2026</a>)</cite><span class="translated-text">。 FreqDepthKV 遵循这种自适应方向，但其路由信号有所不同：它不只依赖于标记显着性或静态层相似性，而是使用轻量级预填充探针和根据注意力逻辑计算的重构感知路由损失，将每个头分配给共享深度、残差深度或精确缓存模式。这可以实现积极的压缩，同时保留长上下文检索、摘要和代码生成所需的特定于层的证据。</span><span class="original-text">. FreqDepthKV follows this adaptive direction but differs in its routing signal: rather than relying only on token saliency or static layer similarity, it uses a lightweight prefill probe and a reconstruction-aware routing loss computed from attention logits to assign each head to shared-depth, residual-depth, or exact cache modes. This enables aggressive compression while preserving the layer-specific evidence needed for long-context retrieval, summarization, and code generation.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">方法</span><span class="original-text">Method</span></h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.8"><span class="translated-text">FreqDepthKV 通过利用附近变压器层的冗余来压缩 KV 缓存，同时显式保留改变注意力决策的特定于层的证据。让层的预填充缓存</span><span class="original-text">FreqDepthKV compresses the KV cache by exploiting redundancy across nearby transformer layers while explicitly preserving layer-specific evidence that changes attention decisions. Let the prefill cache for layer</span><math alttext="\ell" class="ltx_Math" display="inline" id="S3.p1.1.m1" intent=":literal"><semantics><mi mathvariant="normal">ℓ</mi><annotation encoding="application/x-tex">\ell</annotation></semantics></math><span class="translated-text">和头</span><span class="original-text">and head</span><math alttext="h" class="ltx_Math" display="inline" id="S3.p1.2.m2" intent=":literal"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math> be <math alttext="K_{\ell,h},V_{\ell,h}\in\mathbb{R}^{T\times d_{h}}" class="ltx_Math" display="inline" id="S3.p1.3.m3" intent=":literal"><semantics><mrow><mrow><msub><mi>K</mi><mrow><mi mathvariant="normal">ℓ</mi><mo>,</mo><mi>h</mi></mrow></msub><mo>,</mo><msub><mi>V</mi><mrow><mi mathvariant="normal">ℓ</mi><mo>,</mo><mi>h</mi></mrow></msub></mrow><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>T</mi><mo lspace="0.222em" rspace="0.222em">×</mo><msub><mi>d</mi><mi>h</mi></msub></mrow></msup></mrow><annotation encoding="application/x-tex">K_{\ell,h},V_{\ell,h}\in\mathbb{R}^{T\times d_{h}}</annotation></semantics></math><span class="translated-text">对于上下文长度</span><span class="original-text">for context length</span><math alttext="T" class="ltx_Math" display="inline" id="S3.p1.4.m4" intent=":literal"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math><span class="translated-text">和头部尺寸</span><span class="original-text">and head dimension</span><math alttext="d_{h}" class="ltx_Math" display="inline" id="S3.p1.5.m5" intent=":literal"><semantics><msub><mi>d</mi><mi>h</mi></msub><annotation encoding="application/x-tex">d_{h}</annotation></semantics></math><span class="translated-text">。对于每个块</span><span class="original-text">. For each block of</span><math alttext="B" class="ltx_Math" display="inline" id="S3.p1.6.m6" intent=":literal"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math><span class="translated-text">相邻层，我们沿着深度轴堆叠缓存，</span><span class="original-text">adjacent layers, we stack the cache along the depth axis,</span><math alttext="X_{b,h}^{K}=[K_{\ell,h}]_{\ell\in b}\in\mathbb{R}^{B\times T\times d_{h}}" class="ltx_Math" display="inline" id="S3.p1.7.m7" intent=":literal"><semantics><mrow><msubsup><mi>X</mi><mrow><mi>b</mi><mo>,</mo><mi>h</mi></mrow><mi>K</mi></msubsup><mo>=</mo><msub><mrow><mo stretchy="false">[</mo><msub><mi>K</mi><mrow><mi mathvariant="normal">ℓ</mi><mo>,</mo><mi>h</mi></mrow></msub><mo stretchy="false">]</mo></mrow><mrow><mi mathvariant="normal">ℓ</mi><mo>∈</mo><mi>b</mi></mrow></msub><mo>∈</mo><msup><mi>ℝ</mi><mrow><mi>B</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi>T</mi><mo lspace="0.222em" rspace="0.222em">×</mo><msub><mi>d</mi><mi>h</mi></msub></mrow></msup></mrow><annotation encoding="application/x-tex">X_{b,h}^{K}=[K_{\ell,h}]_{\ell\in b}\in\mathbb{R}^{B\times T\times d_{h}}</annotation></semantics></math><span class="translated-text">对于价值观也类似。 FreqDepthKV 应用短正交深度变换</span><span class="original-text">and analogously for values. FreqDepthKV applies a short orthonormal depth transform</span><math alttext="F_{B}" class="ltx_Math" display="inline" id="S3.p1.8.m8" intent=":literal"><semantics><msub><mi>F</mi><mi>B</mi></msub><annotation encoding="application/x-tex">F_{B}</annotation></semantics></math><span class="translated-text">将缓慢变化的层间分量与高频残差分开：</span><span class="original-text">to separate slowly varying inter-layer components from high-frequency residuals:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="Z_{b,h}^{K}=F_{B}X_{b,h}^{K},\qquad Z_{b,h}^{V}=F_{B}X_{b,h}^{V},\qquad X_{b,h}^{K,V}=F_{B}^{\top}Z_{b,h}^{K,V}." class="ltx_Math" display="block" id="S3.E1.m1" intent=":literal"><semantics><mrow><mrow><mrow><msubsup><mi>Z</mi><mrow><mi>b</mi><mo>,</mo><mi>h</mi></mrow><mi>K</mi></msubsup><mo>=</mo><mrow><msub><mi>F</mi><mi>B</mi></msub><mo lspace="0em" rspace="0em">​</mo><msubsup><mi>X</mi><mrow><mi>b</mi><mo>,</mo><mi>h</mi></mrow><mi>K</mi></msubsup></mrow></mrow><mo rspace="2.167em">,</mo><mrow><mrow><msubsup><mi>Z</mi><mrow><mi>b</mi><mo>,</mo><mi>h</mi></mrow><mi>V</mi></msubsup><mo>=</mo><mrow><msub><mi>F</mi><mi>B</mi></msub><mo lspace="0em" rspace="0em">​</mo><msubsup><mi>X</mi><mrow><mi>b</mi><mo>,</mo><mi>h</mi></mrow><mi>V</mi></msubsup></mrow></mrow><mo rspace="2.167em">,</mo><mrow><msubsup><mi>X</mi><mrow><mi>b</mi><mo>,</mo><mi>h</mi></mrow><mrow><mi>K</mi><mo>,</mo><mi>V</mi></mrow></msubsup><mo>=</mo><mrow><msubsup><mi>F</mi><mi>B</mi><mo>⊤</mo></msubsup><mo lspace="0em" rspace="0em">​</mo><msubsup><mi>Z</mi><mrow><mi>b</mi><mo>,</mo><mi>h</mi></mrow><mrow><mi>K</mi><mo>,</mo><mi>V</mi></mrow></msubsup></mrow></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">Z_{b,h}^{K}=F_{B}X_{b,h}^{K},\qquad Z_{b,h}^{V}=F_{B}X_{b,h}^{V},\qquad X_{b,h}^{K,V}=F_{B}^{\top}Z_{b,h}^{K,V}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.p1.11"><span class="translated-text">在我们的实施中</span><span class="original-text">In our implementation</span><math alttext="B=2" class="ltx_Math" display="inline" id="S3.p1.9.m1" intent=":literal"><semantics><mrow><mi>B</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">B=2</annotation></semantics></math> or <math alttext="4" class="ltx_Math" display="inline" id="S3.p1.10.m2" intent=":literal"><semantics><mn>4</mn><annotation encoding="application/x-tex">4</annotation></semantics></math><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="F_{B}" class="ltx_Math" display="inline" id="S3.p1.11.m3" intent=":literal"><semantics><msub><mi>F</mi><mi>B</mi></msub><annotation encoding="application/x-tex">F_{B}</annotation></semantics></math><span class="translated-text">是固定的 DCT 基础，因此变换增加的预填充开销可以忽略不计，并且不需要模型重新训练。第一个系数组被视为低频共享深度分量，而其余组则对高频层偏差进行编码。如图所示</span><span class="original-text">is a fixed DCT basis, so the transform adds negligible prefill overhead and requires no model retraining. The first coefficient group is treated as the low-frequency shared-depth component, while the remaining groups encode high-frequency layer deviations. As illustrated in Figure</span><a class="ltx_ref" href="#S3.F2" title="Figure 2 ‣ 3 Method ‣ FreqDepthKV: Frequency-Guided Depth Sharing for Robust KV Cache Compression in Long-Context LLM Inference"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">，共享分量每层块存储一次，并且仅针对选定的令牌头对存储高频残差。</span><span class="original-text">, the shared component is stored once per layer block, and high-frequency residuals are stored only for selected token-head pairs.</span></p>
+</div>
+<div class="ltx_para" id="S3.p2">
+<p class="ltx_p" id="S3.p2.1"><span class="translated-text">主要的挑战是决定哪里需要残留信息。统一深度共享，如粗略的层间缓存重用</span><span class="original-text">The main challenge is deciding where residual information is necessary. Uniform depth sharing, as in coarse inter-layer cache reuse</span><cite class="ltx_cite ltx_citemacro_cite">Liu et al. (<a class="ltx_ref" href="#bib.bib26" title="">2024a</a>); Yang et al. (<a class="ltx_ref" href="#bib.bib58" title="">2024a</a>)</cite><span class="translated-text">，最小化平均重建误差，但可以改变稀有证据标记的注意力逻辑。因此，FreqDepthKV 在预填充期间执行轻量级在线探测。对于每个头，我们在三种模式下重建候选缓存：</span><span class="original-text">, minimizes average reconstruction error but can alter the attention logits for rare evidence tokens. FreqDepthKV therefore performs a lightweight online probe during prefill. For each head, we reconstruct candidate caches under three modes:</span><em class="ltx_emph ltx_font_italic" id="S3.p2.1.1"><span class="translated-text">共享深度</span><span class="original-text">shared-depth</span></em><span class="translated-text">，仅保留低频系数；</span><span class="original-text">, which keeps only the low-frequency coefficient;</span><em class="ltx_emph ltx_font_italic" id="S3.p2.1.2"><span class="translated-text">残余深度</span><span class="original-text">residual-depth</span></em><span class="translated-text">，保留共享分量加上稀疏残差集；和</span><span class="original-text">, which keeps the shared component plus a sparse residual set; and</span><em class="ltx_emph ltx_font_italic" id="S3.p2.1.3"><span class="translated-text">准确的</span><span class="original-text">exact</span></em><span class="translated-text">，这使得原始的 KV 缓存保持不变。对于一组探针查询位置</span><span class="original-text">, which leaves the original KV cache unchanged. For a set of probe query positions</span><math alttext="\mathcal{P}" class="ltx_Math" display="inline" id="S3.p2.1.m1" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒫</mi><annotation encoding="application/x-tex">\mathcal{P}</annotation></semantics></math><span class="translated-text">从最近的标记、文档边界和高熵注意力行中采样，我们比较原始和重建的注意力逻辑：</span><span class="original-text">sampled from recent tokens, document boundaries, and high-entropy attention rows, we compare original and reconstructed attention logits:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{L}_{b,h}(m)=\frac{1}{|\mathcal{P}|}\sum_{t\in\mathcal{P}}\left\|\frac{Q_{\ell,h,t}\widehat{K}_{\ell,h}^{(m)\top}}{\sqrt{d_{h}}}-\frac{Q_{\ell,h,t}K_{\ell,h}^{\top}}{\sqrt{d_{h}}}\right\|_{2}^{2}+\lambda\,\Omega(m)," class="ltx_Math" display="block" id="S3.E2.m1" intent=":literal"><semantics><mrow><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mrow><mi>b</mi><mo>,</mo><mi>h</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>m</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mrow><mfrac><mn>1</mn><mrow><mo stretchy="false">|</mo><mi class="ltx_font_mathcaligraphic">𝒫</mi><mo stretchy="false">|</mo></mrow></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><munder><mo movablelimits="false" rspace="0em">∑</mo><mrow><mi>t</mi><mo>∈</mo><mi class="ltx_font_mathcaligraphic">𝒫</mi></mrow></munder><msubsup><mrow><mo>‖</mo><mrow><mfrac><mrow><msub><mi>Q</mi><mrow><mi mathvariant="normal">ℓ</mi><mo>,</mo><mi>h</mi><mo>,</mo><mi>t</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><msubsup><mover accent="true"><mi>K</mi><mo>^</mo></mover><mrow><mi mathvariant="normal">ℓ</mi><mo>,</mo><mi>h</mi></mrow><mrow><mrow><mo stretchy="false">(</mo><mi>m</mi><mo stretchy="false">)</mo></mrow><mo lspace="0.222em">⊤</mo></mrow></msubsup></mrow><msqrt><msub><mi>d</mi><mi>h</mi></msub></msqrt></mfrac><mo>−</mo><mfrac><mrow><msub><mi>Q</mi><mrow><mi mathvariant="normal">ℓ</mi><mo>,</mo><mi>h</mi><mo>,</mo><mi>t</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><msubsup><mi>K</mi><mrow><mi mathvariant="normal">ℓ</mi><mo>,</mo><mi>h</mi></mrow><mo>⊤</mo></msubsup></mrow><msqrt><msub><mi>d</mi><mi>h</mi></msub></msqrt></mfrac></mrow><mo>‖</mo></mrow><mn>2</mn><mn>2</mn></msubsup></mrow></mrow><mo>+</mo><mrow><mi>λ</mi><mo lspace="0.170em" rspace="0em">​</mo><mi mathvariant="normal">Ω</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>m</mi><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathcal{L}_{b,h}(m)=\frac{1}{|\mathcal{P}|}\sum_{t\in\mathcal{P}}\left\|\frac{Q_{\ell,h,t}\widehat{K}_{\ell,h}^{(m)\top}}{\sqrt{d_{h}}}-\frac{Q_{\ell,h,t}K_{\ell,h}^{\top}}{\sqrt{d_{h}}}\right\|_{2}^{2}+\lambda\,\Omega(m),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.p2.5"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="m\in\{\textsc{shared},\textsc{residual},\textsc{exact}\}" class="ltx_Math" display="inline" id="S3.p2.2.m1" intent=":literal"><semantics><mrow><mi>m</mi><mo>∈</mo><mrow><mo stretchy="false">{</mo><mtext class="ltx_font_smallcaps">shared</mtext><mo>,</mo><mtext class="ltx_font_smallcaps">residual</mtext><mo>,</mo><mtext class="ltx_font_smallcaps">exact</mtext><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">m\in\{\textsc{shared},\textsc{residual},\textsc{exact}\}</annotation></semantics></math>, <math alttext="\widehat{K}^{(m)}" class="ltx_Math" display="inline" id="S3.p2.3.m2" intent=":literal"><semantics><msup><mover accent="true"><mi>K</mi><mo>^</mo></mover><mrow><mo stretchy="false">(</mo><mi>m</mi><mo stretchy="false">)</mo></mrow></msup><annotation encoding="application/x-tex">\widehat{K}^{(m)}</annotation></semantics></math><span class="translated-text">是模式下重构的key缓存</span><span class="original-text">is the reconstructed key cache under mode</span><math alttext="m" class="ltx_Math" display="inline" id="S3.p2.4.m3" intent=":literal"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="\Omega(m)" class="ltx_Math" display="inline" id="S3.p2.5.m4" intent=":literal"><semantics><mrow><mi mathvariant="normal">Ω</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>m</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\Omega(m)</annotation></semantics></math><span class="translated-text">是模式的标准化内存成本。相同的路由决策应用于值，但损失是根据键引起的逻辑计算的，因为小的键错误会直接扰乱注意力排名。这种重建感知路由不同于 H2O、StreamingLLM、SnapKV 和 PyramidKV 等仅令牌驱逐策略，因为它衡量压缩是否改变局部注意力计算，而不是仅估计令牌重要性</span><span class="original-text">is the normalized memory cost of the mode. The same routing decision is applied to values, but the loss is computed on key-induced logits because small key errors directly perturb attention rankings. This reconstruction-aware routing differs from token-only eviction policies such as H2O, StreamingLLM, SnapKV, and PyramidKV because it measures whether compression changes the local attention computation rather than only estimating token importance</span><cite class="ltx_cite ltx_citemacro_cite">Bui et al. (<a class="ltx_ref" href="#bib.bib6" title="">2026</a>); Xiang et al. (<a class="ltx_ref" href="#bib.bib53" title="">2025</a>); Yao et al. (<a class="ltx_ref" href="#bib.bib61" title="">2025</a>)</cite>.</p>
+</div>
+<div class="ltx_para" id="S3.p3">
+<p class="ltx_p" id="S3.p3.4"><span class="translated-text">对于残差深度头，FreqDepthKV 存储一组稀疏的高频系数。我们通过删除高频深度系数时引起的最大 Logit 扰动对每个标记进行评分：</span><span class="original-text">For residual-depth heads, FreqDepthKV stores a sparse set of high-frequency coefficients. We score each token by the maximum logit perturbation it would induce if its high-frequency depth coefficients were removed:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.Ex1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="s_{b,h,t}=\max_{q\in\mathcal{P}}\left|Q_{\ell,h,q}\left(K_{\ell,h,t}-\widehat{K}_{\ell,h,t}^{\textsc{shared}}\right)^{\top}\right|." class="ltx_Math" display="block" id="S3.Ex1.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>s</mi><mrow><mi>b</mi><mo>,</mo><mi>h</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>=</mo><mrow><munder><mi>max</mi><mrow><mi>q</mi><mo>∈</mo><mi class="ltx_font_mathcaligraphic">𝒫</mi></mrow></munder><mo>⁡</mo><mrow><mo>|</mo><mrow><msub><mi>Q</mi><mrow><mi mathvariant="normal">ℓ</mi><mo>,</mo><mi>h</mi><mo>,</mo><mi>q</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><msup><mrow><mo>(</mo><mrow><msub><mi>K</mi><mrow><mi mathvariant="normal">ℓ</mi><mo>,</mo><mi>h</mi><mo>,</mo><mi>t</mi></mrow></msub><mo>−</mo><msubsup><mover accent="true"><mi>K</mi><mo>^</mo></mover><mrow><mi mathvariant="normal">ℓ</mi><mo>,</mo><mi>h</mi><mo>,</mo><mi>t</mi></mrow><mtext class="ltx_font_smallcaps">shared</mtext></msubsup></mrow><mo>)</mo></mrow><mo>⊤</mo></msup></mrow><mo>|</mo></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">s_{b,h,t}=\max_{q\in\mathcal{P}}\left|Q_{\ell,h,q}\left(K_{\ell,h,t}-\widehat{K}_{\ell,h,t}^{\textsc{shared}}\right)^{\top}\right|.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.p3.2"><span class="translated-text">顶部-</span><span class="original-text">The top-</span><math alttext="r_{b,h}T" class="ltx_Math" display="inline" id="S3.p3.1.m1" intent=":literal"><semantics><mrow><msub><mi>r</mi><mrow><mi>b</mi><mo>,</mo><mi>h</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mi>T</mi></mrow><annotation encoding="application/x-tex">r_{b,h}T</annotation></semantics></math><span class="translated-text">在此分数下的令牌保留高频键和值残差，其中</span><span class="original-text">tokens under this score retain high-frequency key and value residuals, where</span><math alttext="r_{b,h}" class="ltx_Math" display="inline" id="S3.p3.2.m2" intent=":literal"><semantics><msub><mi>r</mi><mrow><mi>b</mi><mo>,</mo><mi>h</mi></mrow></msub><annotation encoding="application/x-tex">r_{b,h}</annotation></semantics></math><span class="translated-text">由路由损耗预算选择。这产生了具有密集低频共享和稀疏高频校正的缓存。因此，每个块和头的压缩表示是</span><span class="original-text">is chosen by the routing loss budget. This produces a cache with dense low-frequency sharing and sparse high-frequency correction. The compressed representation for each block and head is therefore</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E3">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\widetilde{X}_{b,h}^{K,V}=F_{B}^{\top}\left[Z_{b,h,0}^{K,V};\mathbf{1}_{t\in\mathcal{S}_{b,h}}Z_{b,h,1:B-1}^{K,V}\right],\qquad m_{b,h}=\arg\min_{m}\mathcal{L}_{b,h}(m)," class="ltx_Math" display="block" id="S3.E3.m1" intent=":literal"><semantics><mrow><mrow><mrow><msubsup><mover accent="true"><mi>X</mi><mo>~</mo></mover><mrow><mi>b</mi><mo>,</mo><mi>h</mi></mrow><mrow><mi>K</mi><mo>,</mo><mi>V</mi></mrow></msubsup><mo>=</mo><mrow><msubsup><mi>F</mi><mi>B</mi><mo>⊤</mo></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo>[</mo><msubsup><mi>Z</mi><mrow><mi>b</mi><mo>,</mo><mi>h</mi><mo>,</mo><mn>0</mn></mrow><mrow><mi>K</mi><mo>,</mo><mi>V</mi></mrow></msubsup><mo>;</mo><mrow><msub><mn>𝟏</mn><mrow><mi>t</mi><mo>∈</mo><msub><mi class="ltx_font_mathcaligraphic">𝒮</mi><mrow><mi>b</mi><mo>,</mo><mi>h</mi></mrow></msub></mrow></msub><mo lspace="0em" rspace="0em">​</mo><msubsup><mi>Z</mi><mrow><mrow><mi>b</mi><mo>,</mo><mi>h</mi><mo>,</mo><mn>1</mn></mrow><mo lspace="0.278em" rspace="0.278em">:</mo><mrow><mi>B</mi><mo>−</mo><mn>1</mn></mrow></mrow><mrow><mi>K</mi><mo>,</mo><mi>V</mi></mrow></msubsup></mrow><mo>]</mo></mrow></mrow></mrow><mo rspace="2.167em">,</mo><mrow><msub><mi>m</mi><mrow><mi>b</mi><mo>,</mo><mi>h</mi></mrow></msub><mo>=</mo><mrow><mrow><mi>arg</mi><mo lspace="0.167em">⁡</mo><mrow><munder><mi>min</mi><mi>m</mi></munder><mo lspace="0.167em">⁡</mo><msub><mi class="ltx_font_mathcaligraphic">ℒ</mi><mrow><mi>b</mi><mo>,</mo><mi>h</mi></mrow></msub></mrow></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>m</mi><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\widetilde{X}_{b,h}^{K,V}=F_{B}^{\top}\left[Z_{b,h,0}^{K,V};\mathbf{1}_{t\in\mathcal{S}_{b,h}}Z_{b,h,1:B-1}^{K,V}\right],\qquad m_{b,h}=\arg\min_{m}\mathcal{L}_{b,h}(m),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.p3.3"><span class="translated-text">与</span><span class="original-text">with</span><math alttext="\mathcal{S}_{b,h}" class="ltx_Math" display="inline" id="S3.p3.3.m1" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">𝒮</mi><mrow><mi>b</mi><mo>,</mo><mi>h</mi></mrow></msub><annotation encoding="application/x-tex">\mathcal{S}_{b,h}</annotation></semantics></math><span class="translated-text">对于共享深度头为空，对于精确头包含所有标记。在解码过程中，注意力使用来自该表示的重构键和值。重建与注意内核融合：共享系数在层块上广播，并且仅针对索引标记添加残余系数，从而避免了完整缓存的物化。</span><span class="original-text">empty for shared-depth heads and all tokens included for exact heads. During decoding, attention uses reconstructed keys and values from this representation. The reconstruction is fused with the attention kernel: shared coefficients are broadcast across the layer block, and residual coefficients are added only for indexed tokens, avoiding materialization of the full cache.</span></p>
+</div>
+<div class="ltx_para" id="S3.p4">
+<p class="ltx_p" id="S3.p4.1"><span class="translated-text">FreqDepthKV 根据上下文长度和提示结构调整其压缩率。对于较短的上下文或具有平坦重建损失的头部，路由惩罚有利于共享深度模式。对于检索繁重的提示，删除残余深度系数会改变证据标记周围的注意力排名，损失将更多的头分配给残余深度或精确模式。内存预算是通过增加来强制执行的</span><span class="original-text">FreqDepthKV adapts its compression ratio to both context length and prompt structure. For short contexts or heads with flat reconstruction losses, the routing penalty favors shared-depth mode. For retrieval-heavy prompts, where removing residual depth coefficients changes attention rankings around evidence tokens, the loss assigns more heads to residual-depth or exact mode. The memory budget is enforced by increasing</span><math alttext="\lambda" class="ltx_Math" display="inline" id="S3.p4.1.m1" intent=":literal"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math><span class="translated-text">直到估计的峰值 KV 足迹满足所要求的预算。这种预算路由在预填充后执行一次，并在整个自回归解码过程中重复使用，并且可以选择刷新每个固定数量的生成令牌，以进行很长时间的生成。</span><span class="original-text">until the estimated peak KV footprint satisfies the requested budget. This budgeted routing is performed once after prefill and reused throughout autoregressive decoding, with optional refresh every fixed number of generated tokens for very long generations.</span></p>
+</div>
+<div class="ltx_para" id="S3.p5">
+<p class="ltx_p" id="S3.p5.1"><span class="translated-text">该方法与序列维度和精度维度压缩兼容。可以在 FreqDepthKV 之前应用令牌驱逐来减少</span><span class="original-text">The method is compatible with sequence-dimension and precision-dimension compression. Token eviction can be applied before FreqDepthKV to reduce</span><math alttext="T" class="ltx_Math" display="inline" id="S3.p5.1.m1" intent=":literal"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math><span class="translated-text">，KVQuant 或 KIVI 等量化方法可以量化存储的共享系数和残差系数。然而，在我们的实验中，我们将 FreqDepthKV 评估为一种独立的深度频率压缩方法，以隔离保留稀疏高频深度证据的影响。</span><span class="original-text">, and quantization methods such as KVQuant or KIVI can quantize the stored shared and residual coefficients. In our experiments, however, we evaluate FreqDepthKV as a standalone depth-frequency compression method to isolate the effect of preserving sparse high-frequency depth evidence.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="279" id="S3.F2.g1" src="https://arxiv.org/html/2607.06519v1/figures/architecture.png" width="509"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Architecture of FreqDepthKV: KV states are decomposed across layer depth into shared low-frequency components and sparse high-frequency residuals, then routed per head into shared, residual, or exact cache modes using an online attention-logit probe.</figcaption>
+</figure>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">实验</span><span class="original-text">Experiments</span></h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">我们在长上下文问答、摘要和代码生成基准上评估了 FreqDepthKV。对于 QA 和检索，我们使用 LongBench、大海捞针、L-Eval、NarrativeQA 和 Qasper。为了进行总结，我们使用 GovReport 和 MultiNews。对于代码生成，我们使用 HumanEval 和 MBPP。我们报告用于面向检索的 QA 的精确匹配和 F1、用于摘要的 ROUGE-L、用于代码生成的 pass@1 以及包括解码吞吐量、首次令牌时间 (TTFT)、峰值 KV 内存和有效压缩比在内的系统指标。除非另有说明，所有实验都使用相同的基础长上下文解码器和 32k-token 预填充窗口，并且所有缓存方法仅在推理时应用，无需重新训练。</span><span class="original-text">We evaluated FreqDepthKV on long-context question answering, summarization, and code generation benchmarks. For QA and retrieval, we use LongBench, Needle-in-a-Haystack, L-Eval, NarrativeQA, and Qasper. For summarization, we use GovReport and MultiNews. For code generation, we use HumanEval and MBPP. We report Exact Match and F1 for retrieval-oriented QA, ROUGE-L for summarization, pass@1 for code generation, and systems metrics including decoding throughput, time-to-first-token (TTFT), peak KV memory, and effective compression ratio. All experiments use the same base long-context decoder with a 32k-token prefill window unless otherwise noted, and all cache methods are applied only at inference time without retraining.</span></p>
+</div>
+<div class="ltx_para" id="S4.p2">
+<p class="ltx_p" id="S4.p2.4"><span class="translated-text">我们与代表性的令牌驱逐、结构化共享和量化基线进行比较：MiniCache</span><span class="original-text">We compare against representative token-eviction, structured-sharing, and quantization baselines: MiniCache</span><cite class="ltx_cite ltx_citemacro_cite">Liu et al. (<a class="ltx_ref" href="#bib.bib26" title="">2024a</a>)</cite><span class="translated-text">、H2O、StreamingLLM、SnapKV、PyramidKV、Scissorhands、KVQuant 和 KIVI。对于每种方法，我们在 LongBench 的保留子集上调整压缩预算，然后在数据集中保持选定的预算固定。 FreqDepthKV 使用的层块</span><span class="original-text">, H2O, StreamingLLM, SnapKV, PyramidKV, Scissorhands, KVQuant, and KIVI. For each method, we tune the compression budget on a held-out subset of LongBench and then keep the selected budget fixed across datasets. FreqDepthKV uses layer blocks of</span><math alttext="B=4" class="ltx_Math" display="inline" id="S4.p2.1.m1" intent=":literal"><semantics><mrow><mi>B</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">B=4</annotation></semantics></math><span class="translated-text">默认情况下，与</span><span class="original-text">by default, with</span><math alttext="B=2" class="ltx_Math" display="inline" id="S4.p2.2.m2" intent=":literal"><semantics><mrow><mi>B</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">B=2</annotation></semantics></math><span class="translated-text">对于前四个变压器层和最后四个变压器层。路由探针对每个提示采样 128 个查询位置，以及内存损失</span><span class="original-text">for the first and last four transformer layers. The routing probe samples 128 query positions per prompt, and the memory penalty</span><math alttext="\lambda" class="ltx_Math" display="inline" id="S4.p2.3.m3" intent=":literal"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math><span class="translated-text">被选择为目标</span><span class="original-text">is selected to target a</span><math alttext="3.8\times" class="ltx_math_unparsed" display="inline" id="S4.p2.4.m4" intent=":literal"><semantics><mrow><mn>3.8</mn><mo lspace="0.222em">×</mo></mrow><annotation encoding="application/x-tex">3.8\times</annotation></semantics></math><span class="translated-text">平均压缩比。图</span><span class="original-text">average compression ratio. Figure</span><a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ FreqDepthKV: Frequency-Guided Depth Sharing for Robust KV Cache Compression in Long-Context LLM Inference"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">总结了由此产生的路由模式：大多数中间层头使用共享深度模式，而靠近文档边界的检索敏感头被路由到剩余深度或精确模式。</span><span class="original-text">summarizes the resulting routing pattern: most middle-layer heads use shared-depth mode, while retrieval-sensitive heads near document boundaries are routed to residual-depth or exact mode.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T1">
+<figcaption class="ltx_caption ltx_centering" style="font-size:90%;"><span class="ltx_tag ltx_tag_table">Table 1: </span>Main results across long-context QA, summarization, code generation, and inference efficiency. FreqDepthKV improves task accuracy while using less KV memory and higher throughput than prior cache compression baselines.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T1.10">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T1.10.11.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="S4.T1.10.11.1.1"><span class="ltx_text" id="S4.T1.10.11.1.1.1" style="font-size:90%;">Method</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T1.10.11.1.2"><span class="ltx_text" id="S4.T1.10.11.1.2.1" style="font-size:90%;">EM</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T1.10.11.1.3"><span class="ltx_text" id="S4.T1.10.11.1.3.1" style="font-size:90%;">F1</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T1.10.11.1.4"><span class="ltx_text" id="S4.T1.10.11.1.4.1" style="font-size:90%;">ROUGE-L</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T1.10.11.1.5"><span class="ltx_text" id="S4.T1.10.11.1.5.1" style="font-size:90%;">pass@1</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T1.10.11.1.6"><span class="ltx_text" id="S4.T1.10.11.1.6.1" style="font-size:90%;">Tokens/s</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T1.10.11.1.7"><span class="ltx_text" id="S4.T1.10.11.1.7.1" style="font-size:90%;">TTFT (s)</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T1.10.11.1.8"><span class="ltx_text" id="S4.T1.10.11.1.8.1" style="font-size:90%;">Peak KV Mem. (GB)</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T1.10.11.1.9"><span class="ltx_text" id="S4.T1.10.11.1.9.1" style="font-size:90%;">Comp. Ratio</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T1.1.1">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S4.T1.1.1.2"><span class="ltx_text" id="S4.T1.1.1.2.1" style="font-size:90%;">Full KV</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.1.1.3"><span class="ltx_text" id="S4.T1.1.1.3.1" style="font-size:90%;">58.7</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.1.1.4"><span class="ltx_text" id="S4.T1.1.1.4.1" style="font-size:90%;">63.4</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.1.1.5"><span class="ltx_text" id="S4.T1.1.1.5.1" style="font-size:90%;">32.8</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.1.1.6"><span class="ltx_text" id="S4.T1.1.1.6.1" style="font-size:90%;">48.6</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.1.1.7"><span class="ltx_text" id="S4.T1.1.1.7.1" style="font-size:90%;">38.2</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.1.1.8"><span class="ltx_text" id="S4.T1.1.1.8.1" style="font-size:90%;">2.91</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.1.1.9"><span class="ltx_text" id="S4.T1.1.1.9.1" style="font-size:90%;">24.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.1.1.1"><math alttext="1.0\times" class="ltx_math_unparsed" display="inline" id="S4.T1.1.1.1.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">1.0</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">1.0\times</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.2.2">
+<td class="ltx_td ltx_align_left" id="S4.T1.2.2.2"><span class="ltx_text" id="S4.T1.2.2.2.1" style="font-size:90%;">StreamingLLM</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.2.2.3"><span class="ltx_text" id="S4.T1.2.2.3.1" style="font-size:90%;">51.3</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.2.2.4"><span class="ltx_text" id="S4.T1.2.2.4.1" style="font-size:90%;">57.0</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.2.2.5"><span class="ltx_text" id="S4.T1.2.2.5.1" style="font-size:90%;">29.4</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.2.2.6"><span class="ltx_text" id="S4.T1.2.2.6.1" style="font-size:90%;">42.1</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.2.2.7"><span class="ltx_text" id="S4.T1.2.2.7.1" style="font-size:90%;">55.6</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.2.2.8"><span class="ltx_text" id="S4.T1.2.2.8.1" style="font-size:90%;">2.43</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.2.2.9"><span class="ltx_text" id="S4.T1.2.2.9.1" style="font-size:90%;">9.8</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.2.2.1"><math alttext="2.4\times" class="ltx_math_unparsed" display="inline" id="S4.T1.2.2.1.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">2.4</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">2.4\times</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.3.3">
+<td class="ltx_td ltx_align_left" id="S4.T1.3.3.2"><span class="ltx_text" id="S4.T1.3.3.2.1" style="font-size:90%;">H2O</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.3.3"><span class="ltx_text" id="S4.T1.3.3.3.1" style="font-size:90%;">53.8</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.3.4"><span class="ltx_text" id="S4.T1.3.3.4.1" style="font-size:90%;">58.6</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.3.5"><span class="ltx_text" id="S4.T1.3.3.5.1" style="font-size:90%;">30.2</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.3.6"><span class="ltx_text" id="S4.T1.3.3.6.1" style="font-size:90%;">43.7</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.3.7"><span class="ltx_text" id="S4.T1.3.3.7.1" style="font-size:90%;">57.1</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.3.8"><span class="ltx_text" id="S4.T1.3.3.8.1" style="font-size:90%;">2.39</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.3.9"><span class="ltx_text" id="S4.T1.3.3.9.1" style="font-size:90%;">9.1</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.3.3.1"><math alttext="2.6\times" class="ltx_math_unparsed" display="inline" id="S4.T1.3.3.1.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">2.6</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">2.6\times</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.4">
+<td class="ltx_td ltx_align_left" id="S4.T1.4.4.2"><span class="ltx_text" id="S4.T1.4.4.2.1" style="font-size:90%;">Scissorhands</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.4.3"><span class="ltx_text" id="S4.T1.4.4.3.1" style="font-size:90%;">54.4</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.4.4"><span class="ltx_text" id="S4.T1.4.4.4.1" style="font-size:90%;">59.1</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.4.5"><span class="ltx_text" id="S4.T1.4.4.5.1" style="font-size:90%;">30.5</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.4.6"><span class="ltx_text" id="S4.T1.4.4.6.1" style="font-size:90%;">44.0</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.4.7"><span class="ltx_text" id="S4.T1.4.4.7.1" style="font-size:90%;">58.4</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.4.8"><span class="ltx_text" id="S4.T1.4.4.8.1" style="font-size:90%;">2.35</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.4.9"><span class="ltx_text" id="S4.T1.4.4.9.1" style="font-size:90%;">8.7</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.4.1"><math alttext="2.8\times" class="ltx_math_unparsed" display="inline" id="S4.T1.4.4.1.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">2.8</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">2.8\times</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.5.5">
+<td class="ltx_td ltx_align_left" id="S4.T1.5.5.2"><span class="ltx_text" id="S4.T1.5.5.2.1" style="font-size:90%;">SnapKV</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.5.5.3"><span class="ltx_text" id="S4.T1.5.5.3.1" style="font-size:90%;">55.9</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.5.5.4"><span class="ltx_text" id="S4.T1.5.5.4.1" style="font-size:90%;">60.7</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.5.5.5"><span class="ltx_text" id="S4.T1.5.5.5.1" style="font-size:90%;">31.1</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.5.5.6"><span class="ltx_text" id="S4.T1.5.5.6.1" style="font-size:90%;">45.2</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.5.5.7"><span class="ltx_text" id="S4.T1.5.5.7.1" style="font-size:90%;">61.8</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.5.5.8"><span class="ltx_text" id="S4.T1.5.5.8.1" style="font-size:90%;">2.28</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.5.5.9"><span class="ltx_text" id="S4.T1.5.5.9.1" style="font-size:90%;">7.9</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.5.5.1"><math alttext="3.0\times" class="ltx_math_unparsed" display="inline" id="S4.T1.5.5.1.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">3.0</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">3.0\times</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.6.6">
+<td class="ltx_td ltx_align_left" id="S4.T1.6.6.2"><span class="ltx_text" id="S4.T1.6.6.2.1" style="font-size:90%;">PyramidKV</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.6.6.3"><span class="ltx_text" id="S4.T1.6.6.3.1" style="font-size:90%;">56.4</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.6.6.4"><span class="ltx_text" id="S4.T1.6.6.4.1" style="font-size:90%;">61.2</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.6.6.5"><span class="ltx_text" id="S4.T1.6.6.5.1" style="font-size:90%;">31.4</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.6.6.6"><span class="ltx_text" id="S4.T1.6.6.6.1" style="font-size:90%;">45.8</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.6.6.7"><span class="ltx_text" id="S4.T1.6.6.7.1" style="font-size:90%;">63.0</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.6.6.8"><span class="ltx_text" id="S4.T1.6.6.8.1" style="font-size:90%;">2.24</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.6.6.9"><span class="ltx_text" id="S4.T1.6.6.9.1" style="font-size:90%;">7.4</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.6.6.1"><math alttext="3.2\times" class="ltx_math_unparsed" display="inline" id="S4.T1.6.6.1.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">3.2</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">3.2\times</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.7.7">
+<td class="ltx_td ltx_align_left" id="S4.T1.7.7.2"><span class="ltx_text" id="S4.T1.7.7.2.1" style="font-size:90%;">KVQuant</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.7.7.3"><span class="ltx_text" id="S4.T1.7.7.3.1" style="font-size:90%;">56.8</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.7.7.4"><span class="ltx_text" id="S4.T1.7.7.4.1" style="font-size:90%;">61.5</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.7.7.5"><span class="ltx_text" id="S4.T1.7.7.5.1" style="font-size:90%;">31.6</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.7.7.6"><span class="ltx_text" id="S4.T1.7.7.6.1" style="font-size:90%;">46.0</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.7.7.7"><span class="ltx_text" id="S4.T1.7.7.7.1" style="font-size:90%;">59.7</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.7.7.8"><span class="ltx_text" id="S4.T1.7.7.8.1" style="font-size:90%;">2.31</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.7.7.9"><span class="ltx_text" id="S4.T1.7.7.9.1" style="font-size:90%;">7.2</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.7.7.1"><math alttext="3.3\times" class="ltx_math_unparsed" display="inline" id="S4.T1.7.7.1.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">3.3</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">3.3\times</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.8.8">
+<td class="ltx_td ltx_align_left" id="S4.T1.8.8.2"><span class="ltx_text" id="S4.T1.8.8.2.1" style="font-size:90%;">KIVI</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.8.8.3"><span class="ltx_text" id="S4.T1.8.8.3.1" style="font-size:90%;">57.1</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.8.8.4"><span class="ltx_text" id="S4.T1.8.8.4.1" style="font-size:90%;">61.8</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.8.8.5"><span class="ltx_text" id="S4.T1.8.8.5.1" style="font-size:90%;">31.7</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.8.8.6"><span class="ltx_text" id="S4.T1.8.8.6.1" style="font-size:90%;">46.4</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.8.8.7"><span class="ltx_text" id="S4.T1.8.8.7.1" style="font-size:90%;">60.9</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.8.8.8"><span class="ltx_text" id="S4.T1.8.8.8.1" style="font-size:90%;">2.29</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.8.8.9"><span class="ltx_text" id="S4.T1.8.8.9.1" style="font-size:90%;">6.9</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.8.8.1"><math alttext="3.5\times" class="ltx_math_unparsed" display="inline" id="S4.T1.8.8.1.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">3.5</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">3.5\times</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.9.9">
+<td class="ltx_td ltx_align_left" id="S4.T1.9.9.2"><span class="ltx_text" id="S4.T1.9.9.2.1" style="font-size:90%;">MiniCache</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.9.9.3"><span class="ltx_text" id="S4.T1.9.9.3.1" style="font-size:90%;">56.6</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.9.9.4"><span class="ltx_text" id="S4.T1.9.9.4.1" style="font-size:90%;">61.0</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.9.9.5"><span class="ltx_text" id="S4.T1.9.9.5.1" style="font-size:90%;">31.3</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.9.9.6"><span class="ltx_text" id="S4.T1.9.9.6.1" style="font-size:90%;">45.6</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.9.9.7"><span class="ltx_text" id="S4.T1.9.9.7.1" style="font-size:90%;">65.5</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.9.9.8"><span class="ltx_text" id="S4.T1.9.9.8.1" style="font-size:90%;">2.18</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.9.9.9"><span class="ltx_text" id="S4.T1.9.9.9.1" style="font-size:90%;">6.6</span></td>
+<td class="ltx_td ltx_align_center" id="S4.T1.9.9.1"><math alttext="3.6\times" class="ltx_math_unparsed" display="inline" id="S4.T1.9.9.1.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">3.6</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">3.6\times</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.10.10">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S4.T1.10.10.2"><span class="ltx_text ltx_font_bold" id="S4.T1.10.10.2.1" style="font-size:90%;">FreqDepthKV</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T1.10.10.3"><span class="ltx_text ltx_font_bold" id="S4.T1.10.10.3.1" style="font-size:90%;">58.3</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T1.10.10.4"><span class="ltx_text ltx_font_bold" id="S4.T1.10.10.4.1" style="font-size:90%;">63.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T1.10.10.5"><span class="ltx_text ltx_font_bold" id="S4.T1.10.10.5.1" style="font-size:90%;">32.5</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T1.10.10.6"><span class="ltx_text ltx_font_bold" id="S4.T1.10.10.6.1" style="font-size:90%;">48.1</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T1.10.10.7"><span class="ltx_text ltx_font_bold" id="S4.T1.10.10.7.1" style="font-size:90%;">70.4</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T1.10.10.8"><span class="ltx_text ltx_font_bold" id="S4.T1.10.10.8.1" style="font-size:90%;">2.06</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T1.10.10.9"><span class="ltx_text ltx_font_bold" id="S4.T1.10.10.9.1" style="font-size:90%;">6.2</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T1.10.10.1"><math alttext="3.9\times" class="ltx_math_unparsed" display="inline" id="S4.T1.10.10.1.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">3.9</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">3.9\times</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S4.p3">
+<p class="ltx_p" id="S4.p3.1"><span class="translated-text">FreqDepthKV 在所有聚合任务指标上实现了最佳的压缩缓存精度。与MiniCache相比，它将Exact Match从56.6提高到58.3，F1从61.0提高到63.0，ROUGE-L从31.3提高到32.5，pass@1从45.6提高到48.1，同时还将解码吞吐量从65.5 tokens/s提高到70.4 tokens/s。峰值 KV 内存从 MiniCache 的 6.6 GB 减少到 FreqDepthKV 的 6.2 GB，相当于</span><span class="original-text">FreqDepthKV achieves the best compressed-cache accuracy on all aggregate task metrics. Compared with MiniCache, it improves Exact Match from 56.6 to 58.3, F1 from 61.0 to 63.0, ROUGE-L from 31.3 to 32.5, and pass@1 from 45.6 to 48.1, while also increasing decoding throughput from 65.5 to 70.4 tokens/s. The peak KV memory is reduced from 6.6 GB for MiniCache to 6.2 GB for FreqDepthKV, corresponding to a</span><math alttext="3.9\times" class="ltx_math_unparsed" display="inline" id="S4.p3.1.m1" intent=":literal"><semantics><mrow><mn>3.9</mn><mo lspace="0.222em">×</mo></mrow><annotation encoding="application/x-tex">3.9\times</annotation></semantics></math><span class="translated-text">有效压缩比。相对于最强的令牌选择基准 PyramidKV，FreqDepthKV 将 F1 提高了 1.8 个点，将 pass@1 提高了 2.3 个点，同时使用了 1.2 GB 的 KV 内存。</span><span class="original-text">effective compression ratio. Relative to the strongest token-selection baseline, PyramidKV, FreqDepthKV improves F1 by 1.8 points and pass@1 by 2.3 points while using 1.2 GB less KV memory.</span></p>
+</div>
+<div class="ltx_para" id="S4.p4">
+<p class="ltx_p" id="S4.p4.1"><span class="translated-text">在检索敏感设置（例如大海捞针、Qasper 和代码补全）上收益最大，其中统一的层共享可以删除不具有全局显着性但在后续注意层中具有决定性作用的证据。相比之下，GovReport 和 MultiNews 等摘要任务显示出较小但一致的改进，这表明共享低频深度组件已经捕获了大部分冗余文档上下文。这些结果支持 FreqDepthKV 的核心设计选择：当与稀疏高频残差和对严重影响注意力逻辑的头部的精确路由配对时，积极的深度共享是有效的。</span><span class="original-text">The gains are largest on retrieval-sensitive settings such as Needle-in-a-Haystack, Qasper, and code completion, where uniform layer sharing can remove evidence that is not globally salient but becomes decisive in later attention layers. In contrast, summarization tasks such as GovReport and MultiNews show smaller but consistent improvements, indicating that shared low-frequency depth components already capture much of the redundant document context. These results support the central design choice of FreqDepthKV: aggressive depth sharing is effective when it is paired with sparse high-frequency residuals and exact routing for heads that materially affect attention logits.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span><span class="translated-text">消融研究</span><span class="original-text">Ablation Study</span></h2>
+<section class="ltx_paragraph" id="S5.SS0.SSS0.Px1">
+<h3 class="ltx_title ltx_title_paragraph"><span class="translated-text">消融设置。</span><span class="original-text">Ablation setup.</span></h3>
+<div class="ltx_para" id="S5.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S5.SS0.SSS0.Px1.p1.1"><span class="translated-text">我们在表中使用的相同 32k 令牌评估协议下消除了 FreqDepthKV 的组件</span><span class="original-text">We ablate the components of FreqDepthKV under the same 32k-token evaluation protocol used in Table</span><a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ 4 Experiments ‣ FreqDepthKV: Frequency-Guided Depth Sharing for Robust KV Cache Compression in Long-Context LLM Inference"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">。除非另有说明，否则每个变体都保持与完整方法相同的目标内存损失和路由探测大小。表</span><span class="original-text">. Unless otherwise stated, each variant keeps the same target memory penalty and routing probe size as the full method. Table</span><a class="ltx_ref" href="#S5.T2" title="Table 2 ‣ Ablation setup. ‣ 5 Ablation Study ‣ FreqDepthKV: Frequency-Guided Depth Sharing for Robust KV Cache Compression in Long-Context LLM Inference"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">报告在相同的 QA、摘要和代码生成基准上汇总任务质量和推理效率。</span><span class="original-text">reports aggregate task quality and inference efficiency across the same QA, summarization, and code generation benchmarks.</span></p>
+</div>
+<figure class="ltx_table" id="S5.T2">
+<figcaption class="ltx_caption ltx_centering" style="font-size:90%;"><span class="ltx_tag ltx_tag_table">Table 2: </span>Ablation study of FreqDepthKV components. Removing routing, sparse residuals, or exact-cache fallback degrades retrieval and code accuracy, while more aggressive depth sharing improves memory at the cost of task quality.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S5.T2.11">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S5.T2.11.12.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="S5.T2.11.12.1.1"><span class="ltx_text" id="S5.T2.11.12.1.1.1" style="font-size:90%;">Variant</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S5.T2.11.12.1.2"><span class="ltx_text" id="S5.T2.11.12.1.2.1" style="font-size:90%;">EM</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S5.T2.11.12.1.3"><span class="ltx_text" id="S5.T2.11.12.1.3.1" style="font-size:90%;">F1</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S5.T2.11.12.1.4"><span class="ltx_text" id="S5.T2.11.12.1.4.1" style="font-size:90%;">ROUGE-L</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S5.T2.11.12.1.5"><span class="ltx_text" id="S5.T2.11.12.1.5.1" style="font-size:90%;">pass@1</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S5.T2.11.12.1.6"><span class="ltx_text" id="S5.T2.11.12.1.6.1" style="font-size:90%;">Tokens/s</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S5.T2.11.12.1.7"><span class="ltx_text" id="S5.T2.11.12.1.7.1" style="font-size:90%;">TTFT (s)</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S5.T2.11.12.1.8"><span class="ltx_text" id="S5.T2.11.12.1.8.1" style="font-size:90%;">Peak KV Mem. (GB)</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S5.T2.11.12.1.9"><span class="ltx_text" id="S5.T2.11.12.1.9.1" style="font-size:90%;">Comp. Ratio</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S5.T2.1.1">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S5.T2.1.1.2"><span class="ltx_text ltx_font_bold" id="S5.T2.1.1.2.1" style="font-size:90%;">FreqDepthKV</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.1.1.3"><span class="ltx_text ltx_font_bold" id="S5.T2.1.1.3.1" style="font-size:90%;">58.3</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.1.1.4"><span class="ltx_text ltx_font_bold" id="S5.T2.1.1.4.1" style="font-size:90%;">63.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.1.1.5"><span class="ltx_text ltx_font_bold" id="S5.T2.1.1.5.1" style="font-size:90%;">32.5</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.1.1.6"><span class="ltx_text ltx_font_bold" id="S5.T2.1.1.6.1" style="font-size:90%;">48.1</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.1.1.7"><span class="ltx_text" id="S5.T2.1.1.7.1" style="font-size:90%;">70.4</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.1.1.8"><span class="ltx_text" id="S5.T2.1.1.8.1" style="font-size:90%;">2.06</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.1.1.9"><span class="ltx_text" id="S5.T2.1.1.9.1" style="font-size:90%;">6.2</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S5.T2.1.1.1"><math alttext="3.9\times" class="ltx_math_unparsed" display="inline" id="S5.T2.1.1.1.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">3.9</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">3.9\times</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.2.2">
+<td class="ltx_td ltx_align_left" id="S5.T2.2.2.2"><span class="ltx_text" id="S5.T2.2.2.2.1" style="font-size:90%;">w/o depth-frequency factorization</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.2.3"><span class="ltx_text" id="S5.T2.2.2.3.1" style="font-size:90%;">56.9</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.2.4"><span class="ltx_text" id="S5.T2.2.2.4.1" style="font-size:90%;">61.3</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.2.5"><span class="ltx_text" id="S5.T2.2.2.5.1" style="font-size:90%;">31.5</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.2.6"><span class="ltx_text" id="S5.T2.2.2.6.1" style="font-size:90%;">46.0</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.2.7"><span class="ltx_text" id="S5.T2.2.2.7.1" style="font-size:90%;">66.1</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.2.8"><span class="ltx_text" id="S5.T2.2.2.8.1" style="font-size:90%;">2.16</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.2.9"><span class="ltx_text" id="S5.T2.2.2.9.1" style="font-size:90%;">6.7</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.2.2.1"><math alttext="3.6\times" class="ltx_math_unparsed" display="inline" id="S5.T2.2.2.1.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">3.6</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">3.6\times</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.3.3">
+<td class="ltx_td ltx_align_left" id="S5.T2.3.3.2"><span class="ltx_text" id="S5.T2.3.3.2.1" style="font-size:90%;">w/o sparse residuals</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.3.3.3"><span class="ltx_text" id="S5.T2.3.3.3.1" style="font-size:90%;">56.7</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.3.3.4"><span class="ltx_text" id="S5.T2.3.3.4.1" style="font-size:90%;">61.1</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.3.3.5"><span class="ltx_text" id="S5.T2.3.3.5.1" style="font-size:90%;">31.4</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.3.3.6"><span class="ltx_text" id="S5.T2.3.3.6.1" style="font-size:90%;">45.8</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.3.3.7"><span class="ltx_text ltx_font_bold" id="S5.T2.3.3.7.1" style="font-size:90%;">72.6</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.3.3.8"><span class="ltx_text ltx_font_bold" id="S5.T2.3.3.8.1" style="font-size:90%;">2.02</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.3.3.9"><span class="ltx_text ltx_font_bold" id="S5.T2.3.3.9.1" style="font-size:90%;">5.8</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.3.3.1"><math alttext="4.1\times" class="ltx_math_unparsed" display="inline" id="S5.T2.3.3.1.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">4.1</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">4.1\times</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.4.4">
+<td class="ltx_td ltx_align_left" id="S5.T2.4.4.2"><span class="ltx_text" id="S5.T2.4.4.2.1" style="font-size:90%;">w/o online head routing</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.4.4.3"><span class="ltx_text" id="S5.T2.4.4.3.1" style="font-size:90%;">57.2</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.4.4.4"><span class="ltx_text" id="S5.T2.4.4.4.1" style="font-size:90%;">61.7</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.4.4.5"><span class="ltx_text" id="S5.T2.4.4.5.1" style="font-size:90%;">31.8</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.4.4.6"><span class="ltx_text" id="S5.T2.4.4.6.1" style="font-size:90%;">46.6</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.4.4.7"><span class="ltx_text" id="S5.T2.4.4.7.1" style="font-size:90%;">69.1</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.4.4.8"><span class="ltx_text" id="S5.T2.4.4.8.1" style="font-size:90%;">2.09</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.4.4.9"><span class="ltx_text" id="S5.T2.4.4.9.1" style="font-size:90%;">6.1</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.4.4.1"><math alttext="3.9\times" class="ltx_math_unparsed" display="inline" id="S5.T2.4.4.1.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">3.9</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">3.9\times</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.5.5">
+<td class="ltx_td ltx_align_left" id="S5.T2.5.5.2"><span class="ltx_text" id="S5.T2.5.5.2.1" style="font-size:90%;">w/o reconstruction-aware loss</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.5.5.3"><span class="ltx_text" id="S5.T2.5.5.3.1" style="font-size:90%;">57.4</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.5.5.4"><span class="ltx_text" id="S5.T2.5.5.4.1" style="font-size:90%;">62.0</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.5.5.5"><span class="ltx_text" id="S5.T2.5.5.5.1" style="font-size:90%;">31.9</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.5.5.6"><span class="ltx_text" id="S5.T2.5.5.6.1" style="font-size:90%;">46.9</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.5.5.7"><span class="ltx_text" id="S5.T2.5.5.7.1" style="font-size:90%;">69.8</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.5.5.8"><span class="ltx_text" id="S5.T2.5.5.8.1" style="font-size:90%;">2.08</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.5.5.9"><span class="ltx_text" id="S5.T2.5.5.9.1" style="font-size:90%;">6.0</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.5.5.1"><math alttext="4.0\times" class="ltx_math_unparsed" display="inline" id="S5.T2.5.5.1.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">4.0</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">4.0\times</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.6.6">
+<td class="ltx_td ltx_align_left" id="S5.T2.6.6.2"><span class="ltx_text" id="S5.T2.6.6.2.1" style="font-size:90%;">w/o exact mode</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.6.6.3"><span class="ltx_text" id="S5.T2.6.6.3.1" style="font-size:90%;">57.6</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.6.6.4"><span class="ltx_text" id="S5.T2.6.6.4.1" style="font-size:90%;">62.2</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.6.6.5"><span class="ltx_text" id="S5.T2.6.6.5.1" style="font-size:90%;">32.0</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.6.6.6"><span class="ltx_text" id="S5.T2.6.6.6.1" style="font-size:90%;">47.0</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.6.6.7"><span class="ltx_text" id="S5.T2.6.6.7.1" style="font-size:90%;">71.3</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.6.6.8"><span class="ltx_text" id="S5.T2.6.6.8.1" style="font-size:90%;">2.04</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.6.6.9"><span class="ltx_text" id="S5.T2.6.6.9.1" style="font-size:90%;">5.9</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.6.6.1"><math alttext="4.1\times" class="ltx_math_unparsed" display="inline" id="S5.T2.6.6.1.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">4.1</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">4.1\times</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.7.7">
+<td class="ltx_td ltx_align_left" id="S5.T2.7.7.2"><span class="ltx_text" id="S5.T2.7.7.2.1" style="font-size:90%;">shared-depth only</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.7.7.3"><span class="ltx_text" id="S5.T2.7.7.3.1" style="font-size:90%;">56.1</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.7.7.4"><span class="ltx_text" id="S5.T2.7.7.4.1" style="font-size:90%;">60.4</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.7.7.5"><span class="ltx_text" id="S5.T2.7.7.5.1" style="font-size:90%;">31.1</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.7.7.6"><span class="ltx_text" id="S5.T2.7.7.6.1" style="font-size:90%;">45.1</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.7.7.7"><span class="ltx_text" id="S5.T2.7.7.7.1" style="font-size:90%;">73.0</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.7.7.8"><span class="ltx_text" id="S5.T2.7.7.8.1" style="font-size:90%;">2.01</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.7.7.9"><span class="ltx_text" id="S5.T2.7.7.9.1" style="font-size:90%;">5.6</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.7.7.1"><math alttext="4.3\times" class="ltx_math_unparsed" display="inline" id="S5.T2.7.7.1.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">4.3</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">4.3\times</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.9.9">
+<td class="ltx_td ltx_align_left" id="S5.T2.8.8.1">
+<math alttext="B=2" class="ltx_Math" display="inline" id="S5.T2.8.8.1.m1" intent=":literal"><semantics><mrow><mi mathsize="0.900em">B</mi><mo mathsize="0.900em">=</mo><mn mathsize="0.900em">2</mn></mrow><annotation encoding="application/x-tex">B=2</annotation></semantics></math><span class="ltx_text" id="S5.T2.8.8.1.1" style="font-size:90%;"> for all layers</span>
+</td>
+<td class="ltx_td ltx_align_center" id="S5.T2.9.9.3"><span class="ltx_text" id="S5.T2.9.9.3.1" style="font-size:90%;">58.1</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.9.9.4"><span class="ltx_text" id="S5.T2.9.9.4.1" style="font-size:90%;">62.8</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.9.9.5"><span class="ltx_text" id="S5.T2.9.9.5.1" style="font-size:90%;">32.4</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.9.9.6"><span class="ltx_text" id="S5.T2.9.9.6.1" style="font-size:90%;">47.9</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.9.9.7"><span class="ltx_text" id="S5.T2.9.9.7.1" style="font-size:90%;">65.9</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.9.9.8"><span class="ltx_text" id="S5.T2.9.9.8.1" style="font-size:90%;">2.17</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.9.9.9"><span class="ltx_text" id="S5.T2.9.9.9.1" style="font-size:90%;">7.4</span></td>
+<td class="ltx_td ltx_align_center" id="S5.T2.9.9.2"><math alttext="3.2\times" class="ltx_math_unparsed" display="inline" id="S5.T2.9.9.2.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">3.2</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">3.2\times</annotation></semantics></math></td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.11.11">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S5.T2.10.10.1">
+<math alttext="B=8" class="ltx_Math" display="inline" id="S5.T2.10.10.1.m1" intent=":literal"><semantics><mrow><mi mathsize="0.900em">B</mi><mo mathsize="0.900em">=</mo><mn mathsize="0.900em">8</mn></mrow><annotation encoding="application/x-tex">B=8</annotation></semantics></math><span class="ltx_text" id="S5.T2.10.10.1.1" style="font-size:90%;"> for all layers</span>
+</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T2.11.11.3"><span class="ltx_text" id="S5.T2.11.11.3.1" style="font-size:90%;">57.5</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T2.11.11.4"><span class="ltx_text" id="S5.T2.11.11.4.1" style="font-size:90%;">62.1</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T2.11.11.5"><span class="ltx_text" id="S5.T2.11.11.5.1" style="font-size:90%;">31.9</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T2.11.11.6"><span class="ltx_text" id="S5.T2.11.11.6.1" style="font-size:90%;">46.8</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T2.11.11.7"><span class="ltx_text" id="S5.T2.11.11.7.1" style="font-size:90%;">72.1</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T2.11.11.8"><span class="ltx_text" id="S5.T2.11.11.8.1" style="font-size:90%;">2.03</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T2.11.11.9"><span class="ltx_text" id="S5.T2.11.11.9.1" style="font-size:90%;">5.7</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S5.T2.11.11.2"><math alttext="4.2\times" class="ltx_math_unparsed" display="inline" id="S5.T2.11.11.2.m1" intent=":literal"><semantics><mrow><mn mathsize="0.900em">4.2</mn><mo lspace="0.222em" mathsize="0.900em">×</mo></mrow><annotation encoding="application/x-tex">4.2\times</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S5.SS0.SSS0.Px1.p2">
+<p class="ltx_p" id="S5.SS0.SSS0.Px1.p2.1"><span class="translated-text">深度频率分解是均匀层间共享的鲁棒性的主要来源。用直接相邻层平均代替 DCT 式分解将 F1 从 63.0 减少到 61.3，将 pass@1 从 48.1 减少到 46.0，尽管内存占用仍然接近类似 MiniCache 的深度压缩</span><span class="original-text">The depth-frequency factorization is the main source of robustness over uniform inter-layer sharing. Replacing the DCT-style decomposition with direct adjacent-layer averaging reduces F1 from 63.0 to 61.3 and pass@1 from 48.1 to 46.0, even though the memory footprint remains close to MiniCache-like depth compression</span><cite class="ltx_cite ltx_citemacro_cite">Liu et al. (<a class="ltx_ref" href="#bib.bib26" title="">2024a</a>)</cite><span class="translated-text">。这表明保留高频深度偏差比最小化平均缓存重建误差更重要。</span><span class="original-text">. This indicates that preserving high-frequency depth deviations is more important than minimizing average cache reconstruction error.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS0.SSS0.Px1.p3">
+<p class="ltx_p" id="S5.SS0.SSS0.Px1.p3.1"><span class="translated-text">稀疏剩余存储可在预算紧张的情况下提供最大的精度增益。删除残差会产生最快且最小的缓存变体，但 EM 下降 1.6 个点，pass@1 下降 2.3 个点。仅共享深度的变体更糟，表明低频深度分量足以满足很多摘要上下文，但不适用于检索敏感的证据。</span><span class="original-text">Sparse residual storage provides the largest accuracy gain under aggressive budgets. Removing residuals yields the fastest and smallest cache variant, but EM drops by 1.6 points and pass@1 drops by 2.3 points. The shared-depth-only variant is worse still, showing that low-frequency depth components are sufficient for much summarization context but not for retrieval-sensitive evidence.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS0.SSS0.Px1.p4">
+<p class="ltx_p" id="S5.SS0.SSS0.Px1.p4.1"><span class="translated-text">在线路由探测和重建感知损失都有助于选择压缩安全的位置。如果没有头路由，静态层策略会错误分配确切的缓存容量并丢失 1.3 个 F1 点。如果没有 logit 重建损失，路由器往往会更喜欢更便宜的模式，这些模式可以保留缓存规范，但会扰乱注意力排名，从而减少 EM 和 pass@1。删除精确模式也会带来伤害，尤其是在大海捞针和代码任务中，其中少数头部需要未压缩的 KV 条目来保留决定性的依赖关系。</span><span class="original-text">The online routing probe and reconstruction-aware loss both contribute to selecting where compression is safe. Without head routing, a static layer policy misallocates exact cache capacity and loses 1.3 F1 points. Without the logit reconstruction loss, the router tends to prefer cheaper modes that preserve cache norms but perturb attention rankings, reducing EM and pass@1. Removing exact mode also hurts, especially on Needle-in-a-Haystack and code tasks, where a small number of heads require uncompressed KV entries to preserve decisive dependencies.</span></p>
+</div>
+<div class="ltx_para" id="S5.SS0.SSS0.Px1.p5">
+<p class="ltx_p" id="S5.SS0.SSS0.Px1.p5.5"><span class="translated-text">最后，层块大小控制精度与内存的权衡。使用</span><span class="original-text">Finally, the layer-block size controls the accuracy-memory trade-off. Using</span><math alttext="B=2" class="ltx_Math" display="inline" id="S5.SS0.SSS0.Px1.p5.1.m1" intent=":literal"><semantics><mrow><mi>B</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">B=2</annotation></semantics></math><span class="translated-text">到处都几乎匹配完整的 FreqDepthKV 精度，但削弱了压缩，将吞吐量降低至 65.9 个令牌/秒。使用</span><span class="original-text">everywhere nearly matches full FreqDepthKV accuracy but weakens compression, reducing throughput to 65.9 tokens/s. Using</span><math alttext="B=8" class="ltx_Math" display="inline" id="S5.SS0.SSS0.Px1.p5.2.m2" intent=":literal"><semantics><mrow><mi>B</mi><mo>=</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">B=8</annotation></semantics></math><span class="translated-text">增加压缩至</span><span class="original-text">increases compression to</span><math alttext="4.2\times" class="ltx_math_unparsed" display="inline" id="S5.SS0.SSS0.Px1.p5.3.m3" intent=":literal"><semantics><mrow><mn>4.2</mn><mo lspace="0.222em">×</mo></mrow><annotation encoding="application/x-tex">4.2\times</annotation></semantics></math><span class="translated-text">但失去 0.9 F1 点。默认混合设置，</span><span class="original-text">but loses 0.9 F1 points. The default mixed setting, with</span><math alttext="B=4" class="ltx_Math" display="inline" id="S5.SS0.SSS0.Px1.p5.4.m4" intent=":literal"><semantics><mrow><mi>B</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">B=4</annotation></semantics></math><span class="translated-text">在中间层和</span><span class="original-text">in middle layers and</span><math alttext="B=2" class="ltx_Math" display="inline" id="S5.SS0.SSS0.Px1.p5.5.m5" intent=":literal"><semantics><mrow><mi>B</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">B=2</annotation></semantics></math><span class="translated-text">在模型边界附近，在内存减少和下游质量之间提供了最佳平衡。</span><span class="original-text">near the model boundaries, gives the best balance between memory reduction and downstream quality.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h2>
+<div class="ltx_para" id="S6.p1">
+<p class="ltx_p" id="S6.p1.1"><span class="translated-text">FreqDepthKV 通过将层间冗余视为频率结构信号而不是统一共享机会来降低长上下文 KV 缓存成本。通过存储共享的低频深度分量并选择性地保留稀疏的高频残差，它保留了最影响检索和推理的令牌头层证据。其在线头路由器使用缓存注意力逻辑上的重建感知损失进一步调整共享深度、残差深度和精确模式的压缩决策，无需重新训练并保持与标准自回归解码的兼容性。</span><span class="original-text">FreqDepthKV reduces long-context KV cache cost by treating inter-layer redundancy as a frequency-structured signal rather than a uniform sharing opportunity. By storing shared low-frequency depth components and selectively preserving sparse high-frequency residuals, it keeps the token-head-layer evidence that most affects retrieval and reasoning. Its online head router further adapts compression decisions across shared-depth, residual-depth, and exact modes using a reconstruction-aware loss over cached attention logits, requiring no retraining and remaining compatible with standard autoregressive decoding.</span></p>
+</div>
+<div class="ltx_para" id="S6.p2">
+<p class="ltx_p" id="S6.p2.1"><span class="translated-text">在长上下文 QA、摘要和代码生成基准测试中，FreqDepthKV 实现了最强的压缩缓存准确性，同时提高了推理效率。它达到 58.3 EM、63.0 F1、32.5 ROUGE-L 和 48.1 pass@1，与 Full KV 紧密匹配，同时将峰值 KV 内存降低至 6.2 GB，并将吞吐量提高至 70.4 token/s。与MiniCache相比</span><span class="original-text">Across long-context QA, summarization, and code generation benchmarks, FreqDepthKV achieves the strongest compressed-cache accuracy while improving inference efficiency. It reaches 58.3 EM, 63.0 F1, 32.5 ROUGE-L, and 48.1 pass@1, closely matching Full KV while reducing peak KV memory to 6.2 GB and increasing throughput to 70.4 tokens/s. Compared with MiniCache</span><cite class="ltx_cite ltx_citemacro_cite">Liu et al. (<a class="ltx_ref" href="#bib.bib26" title="">2024a</a>)</cite><span class="translated-text">，FreqDepthKV 在使用更少内存的同时改进了所有任务指标，这表明深度共享在与残差保存和路由配合使用时最为有效。这些消融证实了深度频率分解、稀疏残差、在线路由、重构感知损失和精确缓存回退都有助于在激进的 KV 预算下实现鲁棒性。</span><span class="original-text">, FreqDepthKV improves all task metrics while using less memory, showing that depth sharing is most effective when paired with residual preservation and routing. The ablations confirm that the depth-frequency factorization, sparse residuals, online routing, reconstruction-aware loss, and exact-cache fallback each contribute to robustness under aggressive KV budgets.</span></p>
+</div>
+<div class="ltx_para" id="S6.p3">
+<p class="ltx_p" id="S6.p3.1"><span class="translated-text">总体而言，FreqDepthKV 提供了一条实现内存高效长上下文推理的实用途径：它保留了深度 KV 压缩的优势，同时避免了在检索敏感提示中擦除特定于层的证据的主要失败模式。它与令牌选择和量化方法的兼容性为结合序列级、精度级和深度频率压缩的缓存系统提供了更广泛的方向。</span><span class="original-text">Overall, FreqDepthKV provides a practical route to memory-efficient long-context inference: it preserves the benefits of depth-wise KV compression while avoiding the main failure mode of erasing layer-specific evidence in retrieval-sensitive prompts. Its compatibility with token-selection and quantization methods suggests a broader direction for cache systems that combine sequence-level, precision-level, and depth-frequency compression.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S7">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">7 </span><span class="translated-text">未来的工作</span><span class="original-text">Future Work</span></h2>
+<div class="ltx_para" id="S7.p1">
+<p class="ltx_p" id="S7.p1.1"><span class="translated-text">FreqDepthKV 的局限性之一是路由当前在预填充期间决定，然后在解码期间保持固定。未来的工作可以使缓存策略具有生成感知能力，当生成的序列揭示新的依赖关系时，允许头在共享深度、剩余深度和精确模式之间移动。这样的策略可以将此处使用的深度频率信号与令牌级驱逐或来自 H2O、SnapKV、PyramidKV 和自适应缓存合并等方法的合并标准相结合</span><span class="original-text">One limitation of FreqDepthKV is that routing is currently decided during prefill and then held fixed during decoding. Future work could make the cache policy generation-aware, allowing heads to move between shared-depth, residual-depth, and exact modes as the generated sequence reveals new dependencies. Such a policy could combine the depth-frequency signal used here with token-level eviction or merging criteria from methods such as H2O, SnapKV, PyramidKV, and adaptive cache merging</span><cite class="ltx_cite ltx_citemacro_cite">Bui et al. (<a class="ltx_ref" href="#bib.bib6" title="">2026</a>); Xiang et al. (<a class="ltx_ref" href="#bib.bib53" title="">2025</a>); Wang et al. (<a class="ltx_ref" href="#bib.bib48" title="">2024</a>); Yao et al. (<a class="ltx_ref" href="#bib.bib61" title="">2025</a>)</cite><span class="translated-text">。这对于多轮推理和代码完成可能特别有用，其中相关证据在生成中间标记后可能会发生变化。</span><span class="original-text">. This may be especially useful for multi-turn reasoning and code completion, where the relevant evidence can shift after intermediate tokens are produced.</span></p>
+</div>
+<div class="ltx_para" id="S7.p2">
+<p class="ltx_p" id="S7.p2.1"><span class="translated-text">第二个方向是通过精度和系统级KV优化来组合深度频率共享。 FreqDepthKV 与 KVQuant 和 KIVI 等量化方法正交，并提供优化缓存布局和内存流量的服务架构</span><span class="original-text">A second direction is to compose depth-frequency sharing with precision and systems-level KV optimization. FreqDepthKV is orthogonal to quantization methods such as KVQuant and KIVI, as well as serving architectures that optimize cache placement and memory traffic</span><cite class="ltx_cite ltx_citemacro_cite">Li et al. (<a class="ltx_ref" href="#bib.bib24" title="">2024</a>); Jiang et al. (<a class="ltx_ref" href="#bib.bib20" title="">2025</a>); Qin et al. (<a class="ltx_ref" href="#bib.bib41" title="">2024</a>); Gokhale et al. (<a class="ltx_ref" href="#bib.bib15" title="">2026</a>)</cite><span class="translated-text">。一个自然的扩展是将不同的数值精度分配给共享低频系数、稀疏残差和精确缓存头，从而产生联合深度频率和位宽分配问题。这可以进一步减少带宽，同时保留保护检索敏感的注意力逻辑的高频残差。</span><span class="original-text">. A natural extension is to assign different numerical precisions to shared low-frequency coefficients, sparse residuals, and exact-cache heads, yielding a joint depth-frequency and bit-width allocation problem. This could reduce bandwidth further while preserving the high-frequency residuals that protect retrieval-sensitive attention logits.</span></p>
+</div>
+<div class="ltx_para" id="S7.p3">
+<p class="ltx_p" id="S7.p3.1"><span class="translated-text">最后，未来的工作应该研究深度频率缓存压缩的训练时间和工作负载感知变体。尽管 FreqDepthKV 不需要重新训练，但可以对模型进行训练或稍微调整，以使相邻层缓存结构更具可压缩性，而不会削弱长上下文推理</span><span class="original-text">Finally, future work should study training-time and workload-aware variants of depth-frequency cache compression. Although FreqDepthKV requires no retraining, models could be trained or lightly adapted to make adjacent-layer cache structure more compressible without weakening long-context reasoning</span><cite class="ltx_cite ltx_citemacro_cite">Gelberg et al. (<a class="ltx_ref" href="#bib.bib14" title="">2026</a>); Cai et al. (<a class="ltx_ref" href="#bib.bib7" title="">2025</a>)</cite><span class="translated-text">。同一框架还可以专门用于具有不同证据模式的领域，例如表格、检索增强的 QA、多模式输入和多代理推理</span><span class="original-text">. The same framework could also be specialized for domains with distinct evidence patterns, such as tables, retrieval-augmented QA, multimodal inputs, and multi-agent inference</span><cite class="ltx_cite ltx_citemacro_cite">Corallo et al. (<a class="ltx_ref" href="#bib.bib9" title="">2025</a>); da Silva et al. (<a class="ltx_ref" href="#bib.bib10" title="">2025</a>); Zhang et al. (<a class="ltx_ref" href="#bib.bib66" title="">2025</a>); Patel and Joshi (<a class="ltx_ref" href="#bib.bib38" title="">2026</a>)</cite><span class="translated-text">。这些方向将有助于确定深度频率共享何时应保留为纯粹的推理时间系统，以及何时特定于模型或工作负载的适应可提供额外的鲁棒性。</span><span class="original-text">. These directions would help determine when depth-frequency sharing should remain a purely inference-time system and when model- or workload-specific adaptation provides additional robustness.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist">
+<li class="ltx_bibitem" id="bib.bib1">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">A and S [2026]</span>
+<span class="ltx_bibblock">
+Achille A and Soatto S.
+
+</span>
+<span class="ltx_bibblock">Ai agents as universal task solvers.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib1.1.1">PMC</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.3390/e28030332</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib2">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">A et al. [2026a]</span>
+<span class="ltx_bibblock">
+Arencibia A, Melian A, and Oros J.
+
+</span>
+<span class="ltx_bibblock">Anatomic interactive atlas of the loggerhead sea turtle (caretta
+caretta) coelomic cavity.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib2.1.1">PMC</em>, 2026a.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.3390/ani16050754</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib3">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">A et al. [2026b]</span>
+<span class="ltx_bibblock">
+Zain A, Fan Y, and Zhou J.
+
+</span>
+<span class="ltx_bibblock">On demand secure scalable video streaming for both human and machine
+applications.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib3.1.1">PMC</em>, 2026b.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.3390/s26041285</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib4">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">An et al. [2026]</span>
+<span class="ltx_bibblock">
+Yongqi An, Chang Lu, Kuan Zhu, Tao Yu, Chaoyang Zhao, Hong Wu, Ming Tang, and
+Jinqiao Wang.
+
+</span>
+<span class="ltx_bibblock">Rest-kv: Robust kv cache eviction with layer-wise output
+reconstruction and spatial-temporal smoothing.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib4.1.1">arXiv preprint</em>, 2026.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib5">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Berner et al. [2021]</span>
+<span class="ltx_bibblock">
+Julius Berner, Philipp Grohs, Gitta Kutyniok, and Philipp Petersen.
+
+</span>
+<span class="ltx_bibblock">The modern mathematics of deep learning.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib5.1.1">arXiv preprint</em>, 2021.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1017/9781009025096.002</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib6">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bui et al. [2026]</span>
+<span class="ltx_bibblock">
+Ngoc Bui, Hieu Trung Nguyen, Arman Cohan, and Rex Ying.
+
+</span>
+<span class="ltx_bibblock">Make each token count: Towards improving long-context performance
+with kv cache eviction.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib6.1.1">arXiv preprint</em>, 2026.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib7">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Cai et al. [2025]</span>
+<span class="ltx_bibblock">
+Zefan Cai, Wen Xiao, Hanshi Sun, Cheng Luo, Yikai Zhang, Ke Wan, Yucheng Li,
+Yeyang Zhou, Li-Wen Chang, Jiuxiang Gu, Zhen Dong, Anima Anandkumar,
+Abedelkadir Asi, and Junjie Hu.
+
+</span>
+<span class="ltx_bibblock">R-kv: Redundancy-aware kv cache compression for reasoning models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib7.1.1">arXiv preprint</em>, 2025.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib8">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chen et al. [2025]</span>
+<span class="ltx_bibblock">
+Alex Chen, Renato Geh, Aditya Grover, Guy Van den Broeck, and Daniel Israel.
+
+</span>
+<span class="ltx_bibblock">The pitfalls of kv cache compression.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib8.1.1">arXiv preprint</em>, 2025.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib9">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Corallo et al. [2025]</span>
+<span class="ltx_bibblock">
+Giulio Corallo, Elia Faure-Rolland, Miriam Lamari, and Paolo Papotti.
+
+</span>
+<span class="ltx_bibblock">Tablekv: Kv cache compression for in-context table processing.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib9.1.1">Journal</em>, 2025.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.18653/v1/2025.trl-1.13</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib10">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">da Silva et al. [2025]</span>
+<span class="ltx_bibblock">
+Joao Gabriel J. da Silva, Savio S. T. de Oliveira, Lucas Alexandria Alves,
+Nicolas Eiris, and Arlindo Rodrigues Galvao Filho.
+
+</span>
+<span class="ltx_bibblock">Kv-raptor: Scalable tree-structured retrieval with kv cache
+compression for question-answering systems.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib10.1.1">Journal</em>, 2025.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.5753/sbbd.2025.247245</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib11">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dong et al. [2024]</span>
+<span class="ltx_bibblock">
+Xin Luna Dong, Yonggan Fu, Shizhe Diao, Wonmin Byeon, Zhaoliang Chen,
+Ameya Sunil Mahabaleshwarkar, Shih-Yang Liu, Matthijs Van Keirsbilck,
+Min-Hung Chen, Yoshi Suhara, Yingyan Lin, Jan Kautz, and Pavlo Molchanov.
+
+</span>
+<span class="ltx_bibblock">Hymba: A hybrid-head architecture for small language models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib11.1.1">Journal</em>, 2024.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.48550/arxiv.2411.13676</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib12">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Gao [1970]</span>
+<span class="ltx_bibblock">
+Wei Gao.
+
+</span>
+<span class="ltx_bibblock">Deep learning-based point cloud compression: An in-depth survey and
+benchmark_supp1-3594355.pdf.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib12.1.1">Journal</em>, 1970.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1109/tpami.2025.3594355/mm1</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib13">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Garg et al. [2026]</span>
+<span class="ltx_bibblock">
+Lakshya Garg, Sai Yaswanth, Deep Narayan Mishra, Karthik Kumaran, Anupriya
+Sharma, and Mayank Uniyal.
+
+</span>
+<span class="ltx_bibblock">Monodense deep neural model for determining item price elasticity.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib13.1.1">arXiv preprint</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1109/AAIML67890.2026.11498150</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib14">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Gelberg et al. [2026]</span>
+<span class="ltx_bibblock">
+Yoav Gelberg, Yam Eitan, Michael Bronstein, Yarin Gal, and Haggai Maron.
+
+</span>
+<span class="ltx_bibblock">Training transformers for kv cache compressibility.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib14.1.1">arXiv preprint</em>, 2026.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib15">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Gokhale et al. [2026]</span>
+<span class="ltx_bibblock">
+Sai Gokhale, Devleena Das, Rajeev Patwari, Ashish Sirasao, and Elliott Delaye.
+
+</span>
+<span class="ltx_bibblock">Kv pareto: Systems-level optimization of kv cache and model
+compression for long context inference.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib15.1.1">Journal</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.18653/v1/2026.eacl-industry.9</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib16">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Haffari et al. [2024]</span>
+<span class="ltx_bibblock">
+Gholamreza Haffari, Yefei He, Akide Liu, Jing Liu, Zizheng Pan, and Bohan
+Zhuang.
+
+</span>
+<span class="ltx_bibblock">Minicache: Kv cache compression in depth dimension for large language
+models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib16.1.1">Journal</em>, 2024.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.52202/079017-4443</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib17">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Haverbeck et al. [2026]</span>
+<span class="ltx_bibblock">
+Lukas Haverbeck, Carmen Amo Alonso, Andres Felipe Posada-Moreno, Sebastian
+Trimpe, and Marco Pavone.
+
+</span>
+<span class="ltx_bibblock">The risk of kv cache compression.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib17.1.1">arXiv preprint</em>, 2026.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib18">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">J et al. [2026]</span>
+<span class="ltx_bibblock">
+Gu J, Jiang X, Shi Z, Tan H, Zhai X, Xu C, Li W, Shen Y, Ma S, Liu H, Wang S,
+Zhang K, Lin Z, Zhang B, Ni L, Gao W, Wang Y, and Guo J.
+
+</span>
+<span class="ltx_bibblock">A survey on llm-as-a-judge.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib18.1.1">PMC</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1016/j.xinn.2025.101253</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib19">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Javidnia et al. [2025]</span>
+<span class="ltx_bibblock">
+Neusha Javidnia, Bita Darvish Rouhani, and Farinaz Koushanfar.
+
+</span>
+<span class="ltx_bibblock">Key, value, compress: A systematic exploration of kv cache
+compression techniques.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib19.1.1">Journal</em>, 2025.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1109/cicc63670.2025.10983416</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib20">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Jiang et al. [2025]</span>
+<span class="ltx_bibblock">
+Jiantong Jiang, PeiYu Yang, Rui Zhang, and Feng Liu.
+
+</span>
+<span class="ltx_bibblock">Towards efficient large language model serving: A survey on
+system-aware kv cache optimization.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib20.1.1">Journal</em>, 2025.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.18653/v1/2026.findings-acl.1916</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib21">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Jo et al. [2026]</span>
+<span class="ltx_bibblock">
+Dongwon Jo, Jiwon Song, Yulhwa Kim, and Jae-Joon Kim.
+
+</span>
+<span class="ltx_bibblock">Fastkv: Decoupling of context reduction and kv cache compression for
+prefill-decoding acceleration.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib21.1.1">Journal</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.18653/v1/2026.findings-acl.1610</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib22">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Kriuk and Ng [2026]</span>
+<span class="ltx_bibblock">
+Boris Kriuk and Logic Ng.
+
+</span>
+<span class="ltx_bibblock">Q-kvcomm: Efficient multi-agent communication via adaptive kv cache
+compression.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib22.1.1">Journal</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1109/icmsci67830.2026.11469367</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib23">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">L et al. [2026]</span>
+<span class="ltx_bibblock">
+Fang L, Sun Q, Xu Q, and Li X.
+
+</span>
+<span class="ltx_bibblock">Development of a rapid deep-learning-assisted multiphase
+multicomponent numerical simulation protocol.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib23.1.1">PMC</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1021/acsomega.6c03179</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib24">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Li et al. [2024]</span>
+<span class="ltx_bibblock">
+Haoyang Li, Yiming Li, Anxin Tian, Tianhao Tang, ZhaoDong Xu, X Chen, Ning Hu,
+Wei Dong, Qing Li, and Lei Chen.
+
+</span>
+<span class="ltx_bibblock">A survey on large language model acceleration based on kv cache
+management.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib24.1.1">Journal</em>, 2024.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.48550/arxiv.2412.19442</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib25">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Li et al. [2025]</span>
+<span class="ltx_bibblock">
+Runchao Li, Yao Fu, Mu Sheng, Xianxuan Long, Haotian Yu, and Pan Li.
+
+</span>
+<span class="ltx_bibblock">Faedkv: Infinite-window fourier transform for unbiased kv cache
+compression.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib25.1.1">Journal</em>, 2025.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.18653/v1/2025.findings-emnlp.914</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib26">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liu et al. [2024a]</span>
+<span class="ltx_bibblock">
+Akide Liu, Jing Liu, Zizheng Pan, Yefei He, Gholamreza Haffari, and Bohan
+Zhuang.
+
+</span>
+<span class="ltx_bibblock">Minicache: Kv cache compression in depth dimension for large language
+models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib26.1.1">arXiv preprint</em>, 2024a.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib27">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liu et al. [2024b]</span>
+<span class="ltx_bibblock">
+Akide Liu, Jing Liu, Zizheng Pan, Yefei He, Gholamreza Haffari, and Bohan
+Zhuang.
+
+</span>
+<span class="ltx_bibblock">Minicache: Kv cache compression in depth dimension for large language
+models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib27.1.1">Journal</em>, 2024b.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.48550/arxiv.2405.14366</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib28">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lye et al. [2019]</span>
+<span class="ltx_bibblock">
+Kjetil O. Lye, Siddhartha Mishra, and Deep Ray.
+
+</span>
+<span class="ltx_bibblock">Deep learning observables in computational fluid dynamics.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib28.1.1">arXiv preprint</em>, 2019.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1016/j.jcp.2020.109339</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib29">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">M et al. [2026a]</span>
+<span class="ltx_bibblock">
+Garg M, Raza S, Rayana S, Liu X, and Sohn S.
+
+</span>
+<span class="ltx_bibblock">The rise of small language models in healthcare: A comprehensive
+survey.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib29.1.1">PMC</em>, 2026a.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1016/j.cosrev.2026.100999</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib30">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">M et al. [2026b]</span>
+<span class="ltx_bibblock">
+Nadas M, Diosan L, Tomescu A, and Piscoran A.
+
+</span>
+<span class="ltx_bibblock">Building large-scale english-romanian literary translation resources
+with open models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib30.1.1">PMC</em>, 2026b.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.3389/frai.2026.1807431</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib31">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ma et al. [2026]</span>
+<span class="ltx_bibblock">
+Da Ma, Lu Chen, Situo Zhang, Yuxun Miao, Su Zhu, Zhi Chen, Hongshen Xu, Hanqi
+Li, Shuai Fan, Lei Pan, and Kai Yu.
+
+</span>
+<span class="ltx_bibblock">Compressing kv cache for long-context llm inference with inter-layer
+attention similarity.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib31.1.1">Journal</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1109/icassp55912.2026.11464826</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib32">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Marti and Maki [2017]</span>
+<span class="ltx_bibblock">
+Miquel Marti and Atsuto Maki.
+
+</span>
+<span class="ltx_bibblock">A multitask deep learning model for real-time deployment in embedded
+systems.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib32.1.1">arXiv preprint</em>, 2017.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib33">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">MF et al. [2026]</span>
+<span class="ltx_bibblock">
+Yeh MF, Luo CC, and Lu CL.
+
+</span>
+<span class="ltx_bibblock">Multi-hardware benchmarking of open-source large language models with
+retrieval-augmented generation for mitsubishi fx-series plc instruction list
+code generation.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib33.1.1">PMC</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.3390/s26113602</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib34">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">MO et al. [2026]</span>
+<span class="ltx_bibblock">
+Alhawarat MO, Alnsour AJ, Al-Husainy MAF, and Abdelnaby KM.
+
+</span>
+<span class="ltx_bibblock">Limit-cycle proliferation under parametric delayed feedback in a
+conductance-based neuron: Bifurcation landscape, orbit catalog, and capacity
+analysis.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib34.1.1">PMC</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.3390/e28060678</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib35">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">N et al. [2026]</span>
+<span class="ltx_bibblock">
+Patel N, Brahmbhatt S, Ramoliya F, Vyas O, Nair A, Vyas T, Jadav NK, Tanwar S,
+and Alabdultif A.
+
+</span>
+<span class="ltx_bibblock">F-transformer: a federated transformer for efficient and
+privacy-preserving sequence generation.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib35.1.1">PMC</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1038/s41598-026-40881-0</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib36">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Nguyen-Tri et al. [2025]</span>
+<span class="ltx_bibblock">
+Quan Nguyen-Tri, Mukul Ranjan, and Zhiqiang Shen.
+
+</span>
+<span class="ltx_bibblock">Attention is all you need for kv cache in diffusion llms.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib36.1.1">arXiv preprint</em>, 2025.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib37">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Pandey and Yu [2023]</span>
+<span class="ltx_bibblock">
+Deep Pandey and Qi Yu.
+
+</span>
+<span class="ltx_bibblock">Learn to accumulate evidence from all training samples: Theory and
+practice.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib37.1.1">arXiv preprint</em>, 2023.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib38">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Patel and Joshi [2026]</span>
+<span class="ltx_bibblock">
+Ishan Patel and Ishan Joshi.
+
+</span>
+<span class="ltx_bibblock">Polykv: A shared asymmetrically-compressed kv cache pool for
+multi-agent llm inference.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib38.1.1">arXiv preprint</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.5281/zenodo.19686729</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib39">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Pustovit [2026]</span>
+<span class="ltx_bibblock">
+Andrey Pustovit.
+
+</span>
+<span class="ltx_bibblock">Knowledge packs: Zero-token knowledge delivery via kv cache
+injection.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib39.1.1">arXiv preprint</em>, 2026.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib40">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Qiao et al. [2025]</span>
+<span class="ltx_bibblock">
+Aurick Qiao, Zhewei Yao, Samyam Rajbhandari, and Yuxiong He.
+
+</span>
+<span class="ltx_bibblock">Swiftkv: Fast prefill-optimized inference with knowledge-preserving
+model transformation.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib40.1.1">Journal</em>, 2025.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.18653/v1/2025.emnlp-main.1306</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib41">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Qin et al. [2024]</span>
+<span class="ltx_bibblock">
+Ruoyu Qin, Zheming Li, Weiran He, Mingxing Zhang, Yongwei Wu, Weimin Zheng, and
+Xinran Xu.
+
+</span>
+<span class="ltx_bibblock">Mooncake: A kvcache-centric disaggregated architecture for llm
+serving.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib41.1.1">Journal</em>, 2024.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.48550/arxiv.2407.00079</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib42">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ray et al. [2023]</span>
+<span class="ltx_bibblock">
+Deep Ray, Orazio Pinti, and Assad A. Oberai.
+
+</span>
+<span class="ltx_bibblock">Deep learning and computational physics (lecture notes).
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib42.1.1">arXiv preprint</em>, 2023.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib43">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">RJ and F [2026]</span>
+<span class="ltx_bibblock">
+Cadiz RJ and Rodriguez-Sela F.
+
+</span>
+<span class="ltx_bibblock">Structural optimization principles for edge ai in motorsport
+telemetry.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib43.1.1">PMC</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1038/s41598-026-49736-0</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib44">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">S et al. [2026]</span>
+<span class="ltx_bibblock">
+Podder S, Date H, and Murthy S.
+
+</span>
+<span class="ltx_bibblock">Green prompt engineering for sustainable generative ai.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib44.1.1">PMC</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1016/j.ese.2026.100684</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib45">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Saxena et al. [2024]</span>
+<span class="ltx_bibblock">
+Utkarsh Saxena, Gobinda Saha, Sakshi Choudhary, and Kaushik Roy.
+
+</span>
+<span class="ltx_bibblock">Eigen attention: Attention in low-rank space for kv cache
+compression.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib45.1.1">Journal</em>, 2024.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.18653/v1/2024.findings-emnlp.899</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib46">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Slothouber [2026]</span>
+<span class="ltx_bibblock">
+Christopher Slothouber.
+
+</span>
+<span class="ltx_bibblock">The kv4 trade-off is workload-dependent: A depth-and
+workload-resolved study of 4-bit kv-cache quantization on a 4 gb turing gpu.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib46.1.1">Journal</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.2139/ssrn.6941538</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib47">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Tang et al. [2025]</span>
+<span class="ltx_bibblock">
+Zicong Tang, Shi Luohe, Zuchao Li, Baoyuan Qi, Liu Guoming, Lefei Zhang, and
+Ping Wang.
+
+</span>
+<span class="ltx_bibblock">Spindlekv: A novel kv cache reduction method balancing both shallow
+and deep layers.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib47.1.1">Journal</em>, 2025.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.18653/v1/2025.acl-long.1380</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib48">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wang et al. [2024]</span>
+<span class="ltx_bibblock">
+Z. Wang, Boxiao Jin, Zhongzhi Yu, and Minjia Zhang.
+
+</span>
+<span class="ltx_bibblock">Model tells you where to merge: Adaptive kv cache merging for llms on
+long-context tasks.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib48.1.1">Journal</em>, 2024.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.48550/arxiv.2407.08454</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib49">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wei et al. [2026]</span>
+<span class="ltx_bibblock">
+Wei, id_orcid 0009-0003-9914-2657 Jiang, and Wei Wang.
+
+</span>
+<span class="ltx_bibblock">Sub-token routing for kv cache compression.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib49.1.1">Journal</em>, 2026.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib50">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">X et al. [2026a]</span>
+<span class="ltx_bibblock">
+Kang X, Yu T, Wang L, Guo Y, and Zhang F.
+
+</span>
+<span class="ltx_bibblock">Ss-adamoe: Spatio-spectral adaptive mixture of experts with global
+structural priors for graph node classification.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib50.1.1">PMC</em>, 2026a.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.3390/e28030355</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib51">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">X et al. [2026b]</span>
+<span class="ltx_bibblock">
+Shen X, Feng L, Hua S, Liu D, Xie Z, and Liu B.
+
+</span>
+<span class="ltx_bibblock">Towards sustainable ai knowledge-base assistants in computer science
+education: on-premise deployment and optimization with open educational
+resources.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib51.1.1">PMC</em>, 2026b.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.3389/fpsyg.2026.1843444</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib52">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">X et al. [2026c]</span>
+<span class="ltx_bibblock">
+Zhang X, Hu M, Lu S, Kim S, Lee EY, Liu Y, and Lu WD.
+
+</span>
+<span class="ltx_bibblock">Compute-in-memory implementation of state space models for event
+sequence processing.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib52.1.1">PMC</em>, 2026c.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1038/s41467-025-68227-w</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib53">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Xiang et al. [2025]</span>
+<span class="ltx_bibblock">
+Liu Xiang, Zhenheng Tang, Peijie Dong, Zeyu Li, Yue Liu, Bo Li, Xuming Hu, and
+Xiaowen Chu.
+
+</span>
+<span class="ltx_bibblock">Chunkkv: Semantic-preserving kv cache compression for efficient
+long-context llm inference.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib53.1.1">Journal</em>, 2025.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.48550/arxiv.2502.00299</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib54">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Xiao et al. [2025]</span>
+<span class="ltx_bibblock">
+Emily Xiao, C. H. Li, Yilin Zhang, Graham Neubig, and Amanda Bertsch.
+
+</span>
+<span class="ltx_bibblock">Efficient many-shot in-context learning with dynamic block-sparse
+attention.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib54.1.1">Journal</em>, 2025.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.18653/v1/2025.acl-long.1542</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib55">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Y et al. [2026]</span>
+<span class="ltx_bibblock">
+Guo Y, Du Y, Mao R, Zhao Y, and Guo J.
+
+</span>
+<span class="ltx_bibblock">Infrared imaging for autonomous power inspection: A review from
+detector to system integration.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib55.1.1">PMC</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.3390/s26113552</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib56">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang et al. [2025]</span>
+<span class="ltx_bibblock">
+Dongquan Yang, Yifan Yang, Xiaotian Yu, Xianbiao Qi, and Rong Xiao.
+
+</span>
+<span class="ltx_bibblock">Hcattention: Extreme kv cache compression via heterogeneous attention
+computing for llms.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib56.1.1">Journal</em>, 2025.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.2139/ssrn.5403127</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib57">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang et al. [2026]</span>
+<span class="ltx_bibblock">
+Dongquan Yang, Yifan Yang, Xiaotian Yu, Xianbiao Qi, and Rong Xiao.
+
+</span>
+<span class="ltx_bibblock">Hcattention: Extreme kv cache compression via heterogeneous attention
+computing for llms.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib57.1.1">Journal</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1016/j.neucom.2026.134247</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib58">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang et al. [2024a]</span>
+<span class="ltx_bibblock">
+Yifei Yang, Zouying Cao, Qiguang Chen, Libo Qin, Dongjie Yang, Hai Zhao, and
+Zhi Chen.
+
+</span>
+<span class="ltx_bibblock">Kvsharer: Efficient inference via layer-wise dissimilar kv cache
+sharing.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib58.1.1">Journal</em>, 2024a.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.48550/arxiv.2410.18517</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib59">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang et al. [2024b]</span>
+<span class="ltx_bibblock">
+Zhen Yang, J. N. Han, Kan Wu, Ruobing Xie, An Wang, Xingwu Sun, and Zhanhui
+Kang.
+
+</span>
+<span class="ltx_bibblock">Lossless kv cache compression to 2%.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib59.1.1">arXiv preprint</em>, 2024b.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib60">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang et al. [2024c]</span>
+<span class="ltx_bibblock">
+Zhen Yang, Jianwei Han, Kan Wu, Ruobing Xie, An Wang, Xingwu Sun, and Zhan
+Kang.
+
+</span>
+<span class="ltx_bibblock">Lossless kv cache compression to 2%.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib60.1.1">Journal</em>, 2024c.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.48550/arxiv.2410.15252</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib61">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yao et al. [2025]</span>
+<span class="ltx_bibblock">
+Dingyu Yao, Bowen Shen, Zheng Lin, Wei Liu, Jian Luan, Bin Wang, and Weiping
+Wang.
+
+</span>
+<span class="ltx_bibblock">Tailorkv: A hybrid framework for long-context inference via tailored
+kv cache optimization.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib61.1.1">Journal</em>, 2025.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.18653/v1/2025.findings-acl.1043</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib62">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yu and Chai [2025a]</span>
+<span class="ltx_bibblock">
+Bohan Yu and Yekun Chai.
+
+</span>
+<span class="ltx_bibblock">Evolkv: Evolutionary kv cache compression for llm inference.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib62.1.1">Journal</em>, 2025a.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.18653/v1/2025.findings-emnlp.88</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib63">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yu and Chai [2025b]</span>
+<span class="ltx_bibblock">
+Bohan Yu and Yekun Chai.
+
+</span>
+<span class="ltx_bibblock">Evolkv: Evolutionary kv cache compression for llm inference.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib63.1.1">arXiv preprint</em>, 2025b.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib64">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Z et al. [2026]</span>
+<span class="ltx_bibblock">
+Li Z, Meng X, He X, Zhang Y, and Yin W.
+
+</span>
+<span class="ltx_bibblock">Large-scale model-enhanced vision-language navigation: Recent
+advances, practical applications, and future challenges.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib64.1.1">PMC</em>, 2026.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.3390/s26072022</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib65">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Z et al. [2025]</span>
+<span class="ltx_bibblock">
+Wang Z, Zhao R, Wagenaar DA, Espino D, Sheintuch L, Benshlomo O, Kang W, Zhu E,
+Lee CK, Schmidt WC, Pammar A, Wang J, Wong GCL, Liang R, Lee S, Lin MZ,
+Kannan M, Golshani P, Hsiai TK, and Gao L.
+
+</span>
+<span class="ltx_bibblock">Kilohertz volumetric imaging of in vivo dynamics using squeezed light
+field microscopy.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib65.1.1">PMC</em>, 2025.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1038/s41592-025-02843-8</span>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib66">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhang et al. [2025]</span>
+<span class="ltx_bibblock">
+Te Zhang, Yuheng Li, Junxiang Wang, and Lujun Li.
+
+</span>
+<span class="ltx_bibblock">Enhancing large multimodal models with adaptive sparsity and kv cache
+compression.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib66.1.1">Journal</em>, 2025.
+
+</span>
+<span class="ltx_bibblock">doi: <span class="ltx_ref ltx_nolink ltx_Url ltx_ref_self">10.1109/icme59968.2025.11209796</span>.
+
+</span>
+</li>
+</ul>
+</section>
+<div class="ltx_para" id="p1">
+<p class="ltx_p" id="p1.1"></p>
+</div>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2607.06519v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer><footer class="ds-site-footer">
+<div class="ds-site-footer-grid">
+<div class="ds-site-footer-main">
+<div class="ds-site-footer-ack"><span class="translated-text">我们衷心感谢来自
+        我们的</span><span class="original-text">We gratefully acknowledge support from
+        our</span><strong><span class="translated-text">主要资助者</span><span class="original-text">major funders</span></strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong><span class="translated-text">成员机构</span><span class="original-text">member institutions</span></strong></a><span class="ack-member-inline" hidden="">, <strong></strong></span><span class="translated-text">,
+        以及所有贡献者。</span><span class="original-text">,
+        and all contributors.</span></div>
+<nav aria-label="Site navigation" class="ds-site-footer-links">
+<a href="https://info.arxiv.org/about"><span class="translated-text">关于</span><span class="original-text">About</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help"><span class="translated-text">帮助</span><span class="original-text">Help</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/contact.html"><span class="translated-text">联系方式</span><span class="original-text">Contact</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/subscribe"><span class="translated-text">订阅</span><span class="original-text">Subscribe</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/license/index.html"><span class="translated-text">版权</span><span class="original-text">Copyright</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/policies/privacy_policy.html"><span class="translated-text">隐私</span><span class="original-text">Privacy</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/web_accessibility.html"><span class="translated-text">无障碍</span><span class="original-text">Accessibility</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://status.arxiv.org" rel="noopener noreferrer" target="_blank"><span class="translated-text">运营状况</span><span class="original-text">Operational Status</span><span class="is-sr-only"><span class="translated-text">（在新选项卡中打开）</span><span class="original-text">(opens in new tab)</span></span></a>
+</nav>
+</div>
+<div aria-label="Major funders" class="ds-site-footer-funders">
+<div class="ds-site-footer-funders-label"><span class="translated-text">主要资金支持来自</span><span class="original-text">Major funding support from</span></div>
+<div class="ds-site-footer-funders-logos">
+<img alt="Simons Foundation" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png"/>
+<img alt="Schmidt Sciences" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/schmidt-sciences.png"/>
+</div>
+</div>
+</div>
+</footer><div id="fixed-buttons-container">
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
