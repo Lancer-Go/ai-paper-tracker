@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title>ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning</title>
+<!--Generated on Thu Jul  9 13:00:35 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+    // Pre-apply spinout-banner dismissal here, before the banner paints, so it
+    // never flashes in only to be hidden later by the deferred arxiv-header.js.
+    // Key matches arxiv-header.js: "arxiv-banner-dismissed:" + data-banner-name.
+    if (localStorage.getItem('arxiv-banner-dismissed:spinout-nonprofit')) {
+      document.documentElement.setAttribute("data-banner-dismissed", "");
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/><link href="https://arxiv.org/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626" media="screen" rel="stylesheet" type="text/css"/><style>
+  /* Banner pre-dismissal (set above before paint -> no flash-then-hide) and
+     reading-mode chrome hiding. */
+  html[data-banner-dismissed] .ds-announcement { display: none; }
+  html[data-reading-mode="enabled"] .ds-announcement,
+  html[data-reading-mode="enabled"] .ds-site-footer { display: none; }
+  /* Keep the announcement text dark on the Open-Blue band in both colour themes
+     (otherwise it inherits the paper's warm-wash text in dark mode and washes out). */
+  .ds-announcement-text { color: var(--arxiv-ink, #1c1a17); }
+</style>
+<script defer="" src="https://arxiv.org/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2607.08443" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2607.08443" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title">Report GitHub Issue</h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title">Title:</label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription">Content selection saved. Describe the issue below:</p>
+<label for="description">Description:</label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report">Submit without GitHub</button>
+<button class="modal-submit" type="submit" value="github-report">Submit in GitHub</button>
+</footer>
+</form>
+</dialog><div aria-label="Announcement" class="ds-announcement" data-banner-name="spinout-nonprofit" id="announcement-banner" role="region">
+<img alt="" aria-hidden="true" class="ds-announcement-glyph" src="https://arxiv.org/static/base/1.0.1/images/icons/smileybones-small.svg"/>
+<span class="ds-announcement-text">arXiv is now an independent nonprofit!</span>
+<a class="ds-announcement-link" href="https://info.arxiv.org/about">Learn more</a>
+<button aria-label="Dismiss announcement" class="ds-announcement-close" type="button">×</button>
+</div>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/"><img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/base/1.0.1/images/arxiv-logo-primary-light.svg" width="100"/>
+<span class="sr-only">Back to arXiv</span>
+</a>
+</div>
+<!--TOC, dark mode, links-->
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank">Why HTML?</a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only">Report Issue</span></a>
+<!--back to abstract-->
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2607.08443v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only">Back to Abstract</span>
+</a>
+<!-- PDF download link -->
+<a class="header-button" href="https://arxiv.org/pdf/2607.08443v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only">Download PDF</span></a>
+<!-- navigational table of contents toggle -->
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<!--- collapsable header / reading mode toggle -->
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<!--- colored theme toggle -->
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">I </span><span class="ltx_text ltx_font_smallcaps">Introduction</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">II </span><span class="ltx_text ltx_font_smallcaps">System Model and RL Problem Formulation</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S2.SS1" title="In II System Model and RL Problem Formulation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-A</span> </span><span class="ltx_text ltx_font_italic">Preliminaries</span></span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S2.SS1.SSS1" title="In II-A Preliminaries ‣ II System Model and RL Problem Formulation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-A</span>1 </span>State Space</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S2.SS1.SSS2" title="In II-A Preliminaries ‣ II System Model and RL Problem Formulation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-A</span>2 </span>Action Space</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S2.SS1.SSS3" title="In II-A Preliminaries ‣ II System Model and RL Problem Formulation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-A</span>3 </span>Reward Function</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS2" title="In II System Model and RL Problem Formulation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-B</span> </span><span class="ltx_text ltx_font_italic">Objective Function and Learning Strategy</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS3" title="In II System Model and RL Problem Formulation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">II-C</span> </span><span class="ltx_text ltx_font_italic">Proposed Algorithm</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">III </span><span class="ltx_text ltx_font_smallcaps">Performance Evaluation</span></span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In III Performance Evaluation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref"><span class="ltx_text">III-A</span> </span><span class="ltx_text ltx_font_italic">Results</span></span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S4" title="In ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">IV </span><span class="ltx_text ltx_font_smallcaps">Conclusions and Future Work</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S5" title="In ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">V </span><span class="ltx_text ltx_font_smallcaps">Acknowledgement</span></span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr">
+    License: CC BY-SA 4.0
+  </a>
+<div id="watermark-tr">
+arXiv:2607.08443v1 [cs.NI] 09 Jul 2026</div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document">ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning</h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Ashit Kumar Subudhi1,
+Bhargav Chirumamilla3, Shubham Vaishnav5, Mduduzi C. Hlophe2, 
+<br class="ltx_break"/>Praveen Kumar Donta5, Andrea Fumagalli4, Venkateswarlu Gudepu4, Koteswararao Kondepu1
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p class="ltx_p">Dynamic traffic variations in Open Radio Access Networks (O-RAN) lead to drift, which degrades the performance of Artificial Intelligence/Machine Learning (AI/ML) models.
+Traditional retraining approaches maintain forecasting accuracy but incur high computational cost and may lead to violations of Service Level Agreements (SLAs).
+This work proposes a Q-learning-based adaptive retraining approach that formulates the retraining decision as a Markov Decision Process (MDP), where a Reinforcement Learning (RL) agent learns a policy that balances forecasting accuracy and retraining cost.
+The proposed approach incorporates a multi-expert Long Short-Term Memory (LSTM) ensemble to mitigate catastrophic forgetting and improve robustness across diverse traffic conditions.
+Experimental results show that the proposed approach effectively reduces retraining overhead compared to greedy and random baselines, while maintaining system performance within predefined limits.</p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">I </span><span class="ltx_text ltx_font_smallcaps" id="S1.1.1">Introduction</span>
+</h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1">The advent of fifth-generation and beyond (B5G) networks marks a significant leap forward in telecommunications and enables a wide range of new services — network slicing, autonomous vehicles, Augmented and Virtual Reality (AR/VR), and e-Health.
+The B5G networks support high data rates, ultra-low latency, and connectivity for a massive number of devices, which are critical requirements for addressing diverse and dynamic user service demands.
+However, traditional Radio Access Network (RAN) architectures rely on proprietary hardware with closed and embedded interfaces, which limits flexibility and restricts configurability to meet B5G network requirements <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="Understanding O-RAN: Architecture, interfaces, algorithms, security, and research challenges">5</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1">The O-RAN Alliance introduces RAN Intelligent Controllers (RICs) that enable data collection across the RAN through standardized open interfaces and incorporate intelligence using Artificial Intelligence and Machine Learning (AI/ML) algorithms.
+However, AI/ML model performance relies on the characteristics of the training data.
+The arrival of new and previously unseen user traffic patterns introduces user data traffic changes, which degrade AI/ML model performance, referred to as drift.
+Drift caused by dynamic fluctuations in user traffic produces false insights and inaccurate decisions, leading to poor network management, severe service interruptions, inefficient resource allocation, and overall network performance degradation.
+Such effects result in violations of Service-Level Agreements (SLAs) <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="The Drift Handling Framework for Open Radio Access Networks: An Experimental Evaluation">1</a>]</cite>, along with reduced network reliability, increased operational costs, and degraded user experience.
+Such consequences can be catastrophic for time-critical applications — smart ambulances — where drift-induced performance degradation leads to failures in meeting stringent throughput and response-time requirements.</p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1">Drift handling for B5G networks primarily relies on performance monitoring, statistical analysis, and data-driven approaches.
+Threshold-based approaches detect drift when AI/ML model performance metrics — accuracy, precision, recall, or error rate — exceed predefined thresholds, with traditional approaches including Drift Detection Method (DDM) and Early Drift Detection Method (EDDM) <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="Learning under Concept Drift: A Review">3</a>]</cite>.
+Statistical approaches such as the Fisher score evaluate changes in feature user traffic to identify drift without relying on model error rates <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="Concept Drift Monitoring and Diagnostics of Supervised Learning Models via Score Vectors">9</a>]</cite>.
+Existing approaches rely on predefined thresholds, require large data samples, and struggle to adapt to highly dynamic, complex network environments.
+Selecting appropriate threshold values remains challenging: low thresholds increase computational overhead due to frequent retraining, while high thresholds degrade model performance and lead to SLA violations.
+Data stream-based approaches also suffer from limited adaptability, as static or periodic evaluations fail to capture the continuously evolving nature of real-world data.</p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1">In <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib18" title="Online anomaly detection with concept drift adaptation using recurrent neural networks">6</a>]</cite>, the authors introduced a drift adaptation and anomaly detection algorithm for Recurrent Neural Networks (RNNs), where the prediction model is updated incrementally without directly detecting drift.
+However, the adoption of Reinforcement learning (RL)-based approaches enables adaptive decision-making by learning when to trigger model retraining based on observed system states and has shown potential to improve the trade-off between prediction performance and retraining frequency in dynamic environments.</p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1">The RL improves threshold-based retraining approaches by enabling adaptive decision-making, rather than static retraining rules, when drift is detected.
+The RL aims to maximize the cumulative reward, while making proactive and adaptive retraining decisions, unlike conventional static decision-making.
+Whereas the proposed RL-based approach learns an adaptive retraining policy that dynamically decides when to update the model based on observed system states.
+Q-learning, a model-free RL approach, is well-suited to the uncertain and dynamic nature of B5G systems, as it does not rely on a system model. In addition, it enables effective exploration-exploitation balances, enabling the proposed approach to dynamically adapt to different traffic patterns while ensuring reliable performance <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib4" title="LEAF: Navigating Concept Drift in Cellular Networks">2</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1">To overcome the shortcomings of threshold-based decision-making schemes combined with traditional predictive or unsupervised methods for model retraining, this paper proposes an RL-based approach for drift handling in B5G networks.
+The main contributions of the proposed ADORN approach are summarized as follows:</p>
+<ul class="ltx_itemize" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1">An RL-based Q-learning approach for drift handling.</p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1">A state representation using statistical features of user traffic.</p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1">An adaptive Long Short-Term Memory (LSTM) ensemble for dynamic model selection.</p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i4.p1">
+<p class="ltx_p" id="S1.I1.i4.p1.1">An evaluation using Quality of Service (QoS) prediction use case with real-time and synthetic datasets.</p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i5" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i5.p1">
+<p class="ltx_p" id="S1.I1.i5.p1.1">A performance comparison of the proposed work with Greedy and Random baseline approaches.</p>
+</div>
+</li>
+</ul>
+</div>
+<figure class="ltx_figure" id="S1.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="362" id="S1.F1.g1" src="https://arxiv.org/html/2607.08443v1/x1.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>System Model</figcaption>
+</figure>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">II </span><span class="ltx_text ltx_font_smallcaps" id="S2.1.1">System Model and RL Problem Formulation</span>
+</h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.3">The proposed system model is based on the O-RAN architecture, defining RICs, i.e., the Near-Real Time (Near-RT RIC) and the Non-Real Time (Non-RT RIC), which enables the <em class="ltx_emph ltx_font_italic" id="S2.p1.3.1">intelligence</em> as illustrated in Fig. <a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ I Introduction ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">1</span></a>.
+The RICs enable autonomous optimization of O-RAN by functioning at different timescales, depending on the AI/ML model inference position.
+For instance, the Non-RT RIC corresponds to the operations that has granularity of <math alttext="&gt;1\ sec" class="ltx_Math" display="inline" id="S2.p1.1.m1" intent=":literal"><semantics><mrow><mi></mi><mo>&gt;</mo><mrow><mn>1</mn><mo lspace="0.500em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi></mrow></mrow><annotation encoding="application/x-tex">&gt;1\ sec</annotation></semantics></math> — Offline AI/ML or RL agent training, policy creation and enforcement, and many other; whereas the Near-RT RIC handles functionalities — load balancing, handover, scheduling policy, RAN slicing and many other — that has time scale between <math alttext="10\ ms" class="ltx_Math" display="inline" id="S2.p1.2.m2" intent=":literal"><semantics><mrow><mn>10</mn><mo lspace="0.500em" rspace="0em">​</mo><mi>m</mi><mo lspace="0em" rspace="0em">​</mo><mi>s</mi></mrow><annotation encoding="application/x-tex">10\ ms</annotation></semantics></math> and <math alttext="&lt;1\ sec" class="ltx_Math" display="inline" id="S2.p1.3.m3" intent=":literal"><semantics><mrow><mi></mi><mo>&lt;</mo><mrow><mn>1</mn><mo lspace="0.500em" rspace="0em">​</mo><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mi>e</mi><mo lspace="0em" rspace="0em">​</mo><mi>c</mi></mrow></mrow><annotation encoding="application/x-tex">&lt;1\ sec</annotation></semantics></math>.
+Inside the Non-RT RIC, the AI/ML models or RL agents are trained and deployed as rApps.</p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1">The O-RAN architecture provides multiple interfaces — O1, A1, and E2 —, to facilitate data collection and communication among the RAN components (i.e., central unit (O-CU), distributed unit (O-DU), and radio unit (O-RU)).
+The AI/ML model management block within the Non-RT RIC plays a key role in drift handling utilizing the proposed RL-based approach, which leverages an RL agent.
+The trained RL agent generates optimal policies to determine the drift occurrence and communicates with the AI/ML model management block whenever drift is detected.
+The RL agent can also be deployed as an rApp to further enhance its integration within the RIC.</p>
+</div>
+<div class="ltx_para" id="S2.p3">
+<p class="ltx_p" id="S2.p3.1">To address drift in B5G networks due to dynamic changes in user traffic, the proposed work employs an ensemble of LSTM models that continuously evaluate performance under evolving network conditions.
+The proposed approach formulates the retraining decision as a sequential decision-making problem using a Markov Decision Process (MDP) and trains an RL agent to select retraining actions based on observed system states, with the objective of maximizing predictive accuracy while minimizing computational cost.</p>
+</div>
+<div class="ltx_para" id="S2.p4">
+<p class="ltx_p" id="S2.p4.1">The proposed approach feeds normalized Mean Absolute Error (nMAE) along with statistical features into the RL agent to distinguish normal variations from drift and to balance performance degradation with the number of retraining actions, and the proposed approach defines the RL problem using state, action, and reward components.</p>
+</div>
+<section class="ltx_subsection" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S2.SS1.4.1.1">II-A</span> </span><span class="ltx_text ltx_font_italic" id="S2.SS1.5.2">Preliminaries</span>
+</h3>
+<div class="ltx_para" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.6">The proposed approach defines the problem as a MDP represented by the tuple <math alttext="(\mathcal{S},\mathcal{A},\mathcal{P},R,\gamma)" class="ltx_Math" display="inline" id="S2.SS1.p1.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><mi class="ltx_font_mathcaligraphic">𝒮</mi><mo>,</mo><mi class="ltx_font_mathcaligraphic">𝒜</mi><mo>,</mo><mi class="ltx_font_mathcaligraphic">𝒫</mi><mo>,</mo><mi>R</mi><mo>,</mo><mi>γ</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(\mathcal{S},\mathcal{A},\mathcal{P},R,\gamma)</annotation></semantics></math>, where <math alttext="\mathcal{S}" class="ltx_Math" display="inline" id="S2.SS1.p1.2.m2" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒮</mi><annotation encoding="application/x-tex">\mathcal{S}</annotation></semantics></math> denotes the state space, <math alttext="\mathcal{A}" class="ltx_Math" display="inline" id="S2.SS1.p1.3.m3" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒜</mi><annotation encoding="application/x-tex">\mathcal{A}</annotation></semantics></math> denotes the action space, <math alttext="\mathcal{P}(s^{\prime}\mid s,a)" class="ltx_Math" display="inline" id="S2.SS1.p1.4.m4" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">𝒫</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><msup><mi>s</mi><mo>′</mo></msup><mo>∣</mo><mrow><mi>s</mi><mo>,</mo><mi>a</mi></mrow></mrow><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{P}(s^{\prime}\mid s,a)</annotation></semantics></math> defines the state transition dynamics, <math alttext="R(s,a)" class="ltx_Math" display="inline" id="S2.SS1.p1.5.m5" intent=":literal"><semantics><mrow><mi>R</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">R(s,a)</annotation></semantics></math> represents the reward function, and <math alttext="\gamma" class="ltx_Math" display="inline" id="S2.SS1.p1.6.m6" intent=":literal"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math> is the discount factor.
+The elements of the MDP are defined as follows:</p>
+</div>
+<section class="ltx_subsubsection" id="S2.SS1.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S2.SS1.SSS1.4.1.1">II-A</span>1 </span>State Space</h4>
+<div class="ltx_para" id="S2.SS1.SSS1.p1">
+<p class="ltx_p" id="S2.SS1.SSS1.p1.4">The state space is based on statistical characteristics of incoming traffic data, and the framework represents each state as a discretized 2-tuple:</p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="{\bf s_{t}}\triangleq\left(\textnormal{mean},\textnormal{variance}\right)\in\mathcal{S}" class="ltx_Math" display="block" id="S2.E1.m1" intent=":literal"><semantics><mrow><msub><mi>𝐬</mi><mi>𝐭</mi></msub><mo>≜</mo><mrow><mo>(</mo><mtext>mean</mtext><mo>,</mo><mtext>variance</mtext><mo>)</mo></mrow><mo>∈</mo><mi class="ltx_font_mathcaligraphic">𝒮</mi></mrow><annotation encoding="application/x-tex">{\bf s_{t}}\triangleq\left(\textnormal{mean},\textnormal{variance}\right)\in\mathcal{S}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS1.SSS1.p1.3">where <math alttext="\mathcal{S}" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p1.1.m1" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒮</mi><annotation encoding="application/x-tex">\mathcal{S}</annotation></semantics></math> denotes the set of all possible states, and <math alttext="s_{t}" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p1.2.m2" intent=":literal"><semantics><msub><mi>s</mi><mi>t</mi></msub><annotation encoding="application/x-tex">s_{t}</annotation></semantics></math> denotes the system state at time <math alttext="t" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p1.3.m3" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.</p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S2.SS1.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S2.SS1.SSS2.4.1.1">II-A</span>2 </span>Action Space</h4>
+<div class="ltx_para" id="S2.SS1.SSS2.p1">
+<p class="ltx_p" id="S2.SS1.SSS2.p1.1">The action space is defined as a binary decision to optimize the retraining policy of the specialized LSTM ensemble. At each discrete decision point, the reinforcement learning agent selects an action <math alttext="a_{t}" class="ltx_Math" display="inline" id="S2.SS1.SSS2.p1.1.m1" intent=":literal"><semantics><msub><mi>a</mi><mi>t</mi></msub><annotation encoding="application/x-tex">a_{t}</annotation></semantics></math> as follows:</p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="{\bf a_{t}}\triangleq\begin{cases}1,\quad&amp;\mbox{$\textnormal{Retrain the model}$}\\
+0,\quad&amp;\mbox{$\textnormal{Remain the same (Idle)}$}\end{cases}" class="ltx_Math" display="block" id="S2.E2.m1" intent=":literal"><semantics><mrow><msub><mi>𝐚</mi><mi>𝐭</mi></msub><mo>≜</mo><mrow><mo>{</mo><mtable columnspacing="5pt" displaystyle="true" rowspacing="0pt"><mtr><mtd class="ltx_align_left" columnalign="left"><mrow><mn>1</mn><mo>,</mo></mrow></mtd><mtd class="ltx_align_left" columnalign="left"><mtext class="ltx_markedasmath">Retrain the model</mtext></mtd></mtr><mtr><mtd class="ltx_align_left" columnalign="left"><mrow><mn>0</mn><mo>,</mo></mrow></mtd><mtd class="ltx_align_left" columnalign="left"><mtext class="ltx_markedasmath">Remain the same (Idle)</mtext></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">{\bf a_{t}}\triangleq\begin{cases}1,\quad&amp;\mbox{$\textnormal{Retrain the model}$}\\
+0,\quad&amp;\mbox{$\textnormal{Remain the same (Idle)}$}\end{cases}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS1.SSS2.p1.3">where <math alttext="a_{t}=1" class="ltx_Math" display="inline" id="S2.SS1.SSS2.p1.2.m1" intent=":literal"><semantics><mrow><msub><mi>a</mi><mi>t</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">a_{t}=1</annotation></semantics></math> triggers immediate model retraining to restore predictive accuracy upon drift detection, and <math alttext="a_{t}=0" class="ltx_Math" display="inline" id="S2.SS1.SSS2.p1.3.m2" intent=":literal"><semantics><mrow><msub><mi>a</mi><mi>t</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">a_{t}=0</annotation></semantics></math> avoids unnecessary retraining and preserves computational resources.</p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S2.SS1.SSS3">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection"><span class="ltx_text" id="S2.SS1.SSS3.4.1.1">II-A</span>3 </span>Reward Function</h4>
+<div class="ltx_para" id="S2.SS1.SSS3.p1">
+<p class="ltx_p" id="S2.SS1.SSS3.p1.6">The reward function is <math alttext="R(s,a):\mathcal{S}\times\mathcal{A}\rightarrow\mathbb{R}" class="ltx_Math" display="inline" id="S2.SS1.SSS3.p1.1.m1" intent=":literal"><semantics><mrow><mrow><mi>R</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo rspace="0.278em" stretchy="false">)</mo></mrow></mrow><mo rspace="0.278em">:</mo><mrow><mrow><mi class="ltx_font_mathcaligraphic">𝒮</mi><mo lspace="0.222em" rspace="0.222em">×</mo><mi class="ltx_font_mathcaligraphic">𝒜</mi></mrow><mo stretchy="false">→</mo><mi>ℝ</mi></mrow></mrow><annotation encoding="application/x-tex">R(s,a):\mathcal{S}\times\mathcal{A}\rightarrow\mathbb{R}</annotation></semantics></math> to balance predictive accuracy and computational cost.
+The reward function incorporates sensitivity to both the presence and magnitude of drift through a magnitude-aware piecewise formulation.
+Let <math alttext="e_{t}" class="ltx_Math" display="inline" id="S2.SS1.SSS3.p1.2.m2" intent=":literal"><semantics><msub><mi>e</mi><mi>t</mi></msub><annotation encoding="application/x-tex">e_{t}</annotation></semantics></math> denote the nMAE of a particular traffic window, and let <math alttext="\theta" class="ltx_Math" display="inline" id="S2.SS1.SSS3.p1.3.m3" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math> denote the predefined drift threshold.
+The drift magnitude as <math alttext="\Delta_{t}=e_{t}-\theta" class="ltx_Math" display="inline" id="S2.SS1.SSS3.p1.4.m4" intent=":literal"><semantics><mrow><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo>=</mo><mrow><msub><mi>e</mi><mi>t</mi></msub><mo>−</mo><mi>θ</mi></mrow></mrow><annotation encoding="application/x-tex">\Delta_{t}=e_{t}-\theta</annotation></semantics></math>. The reward <math alttext="R_{t}" class="ltx_Math" display="inline" id="S2.SS1.SSS3.p1.5.m5" intent=":literal"><semantics><msub><mi>R</mi><mi>t</mi></msub><annotation encoding="application/x-tex">R_{t}</annotation></semantics></math> for an action <math alttext="a_{t}\in{0,1}" class="ltx_Math" display="inline" id="S2.SS1.SSS3.p1.6.m6" intent=":literal"><semantics><mrow><msub><mi>a</mi><mi>t</mi></msub><mo>∈</mo><mrow><mn>0</mn><mo>,</mo><mn>1</mn></mrow></mrow><annotation encoding="application/x-tex">a_{t}\in{0,1}</annotation></semantics></math> is given by:</p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E3">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="R_{t}(s_{t},a_{t})=\begin{cases}w_{1}|\Delta_{t}|+C_{1},&amp;\text{if }a_{t}=1,\ \Delta_{t}&gt;0\\
+w_{2}|\Delta_{t}|+C_{2},&amp;\text{if }a_{t}=0,\ \Delta_{t}\leq 0\\
+-w_{3}|\Delta_{t}|-C_{3},&amp;\text{if }a_{t}=1,\ \Delta_{t}\leq 0\\
+-w_{4}|\Delta_{t}|-C_{4},&amp;\text{if }a_{t}=0,\ \Delta_{t}&gt;0\end{cases}" class="ltx_Math" display="block" id="S2.E3.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>R</mi><mi>t</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mo>{</mo><mtable columnspacing="5pt" displaystyle="true" rowspacing="0pt"><mtr><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mrow><msub><mi>w</mi><mn>1</mn></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">|</mo><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo stretchy="false">|</mo></mrow></mrow><mo>+</mo><msub><mi>C</mi><mn>1</mn></msub></mrow><mo>,</mo></mrow></mtd><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mrow><mtext>if </mtext><mo lspace="0em" rspace="0em">​</mo><msub><mi>a</mi><mi>t</mi></msub></mrow><mo>=</mo><mn>1</mn></mrow><mo rspace="0.667em">,</mo><mrow><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo>&gt;</mo><mn>0</mn></mrow></mrow></mtd></mtr><mtr><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mrow><msub><mi>w</mi><mn>2</mn></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">|</mo><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo stretchy="false">|</mo></mrow></mrow><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub></mrow><mo>,</mo></mrow></mtd><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mrow><mtext>if </mtext><mo lspace="0em" rspace="0em">​</mo><msub><mi>a</mi><mi>t</mi></msub></mrow><mo>=</mo><mn>0</mn></mrow><mo rspace="0.667em">,</mo><mrow><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo>≤</mo><mn>0</mn></mrow></mrow></mtd></mtr><mtr><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mrow><mo>−</mo><mrow><msub><mi>w</mi><mn>3</mn></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">|</mo><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo stretchy="false">|</mo></mrow></mrow></mrow><mo>−</mo><msub><mi>C</mi><mn>3</mn></msub></mrow><mo>,</mo></mrow></mtd><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mrow><mtext>if </mtext><mo lspace="0em" rspace="0em">​</mo><msub><mi>a</mi><mi>t</mi></msub></mrow><mo>=</mo><mn>1</mn></mrow><mo rspace="0.667em">,</mo><mrow><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo>≤</mo><mn>0</mn></mrow></mrow></mtd></mtr><mtr><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mrow><mo>−</mo><mrow><msub><mi>w</mi><mn>4</mn></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">|</mo><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo stretchy="false">|</mo></mrow></mrow></mrow><mo>−</mo><msub><mi>C</mi><mn>4</mn></msub></mrow><mo>,</mo></mrow></mtd><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mrow><mtext>if </mtext><mo lspace="0em" rspace="0em">​</mo><msub><mi>a</mi><mi>t</mi></msub></mrow><mo>=</mo><mn>0</mn></mrow><mo rspace="0.667em">,</mo><mrow><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo>&gt;</mo><mn>0</mn></mrow></mrow></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">R_{t}(s_{t},a_{t})=\begin{cases}w_{1}|\Delta_{t}|+C_{1},&amp;\text{if }a_{t}=1,\ \Delta_{t}&gt;0\\
+w_{2}|\Delta_{t}|+C_{2},&amp;\text{if }a_{t}=0,\ \Delta_{t}\leq 0\\
+-w_{3}|\Delta_{t}|-C_{3},&amp;\text{if }a_{t}=1,\ \Delta_{t}\leq 0\\
+-w_{4}|\Delta_{t}|-C_{4},&amp;\text{if }a_{t}=0,\ \Delta_{t}&gt;0\end{cases}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS1.SSS3.p1.8">where <math alttext="w_{1},w_{2},w_{3},w_{4}" class="ltx_Math" display="inline" id="S2.SS1.SSS3.p1.7.m1" intent=":literal"><semantics><mrow><msub><mi>w</mi><mn>1</mn></msub><mo>,</mo><msub><mi>w</mi><mn>2</mn></msub><mo>,</mo><msub><mi>w</mi><mn>3</mn></msub><mo>,</mo><msub><mi>w</mi><mn>4</mn></msub></mrow><annotation encoding="application/x-tex">w_{1},w_{2},w_{3},w_{4}</annotation></semantics></math> denote weighting coefficients that control sensitivity to drift magnitude, and <math alttext="C_{1},C_{2},C_{3},C_{4}" class="ltx_Math" display="inline" id="S2.SS1.SSS3.p1.8.m2" intent=":literal"><semantics><mrow><msub><mi>C</mi><mn>1</mn></msub><mo>,</mo><msub><mi>C</mi><mn>2</mn></msub><mo>,</mo><msub><mi>C</mi><mn>3</mn></msub><mo>,</mo><msub><mi>C</mi><mn>4</mn></msub></mrow><annotation encoding="application/x-tex">C_{1},C_{2},C_{3},C_{4}</annotation></semantics></math> denote operational constants that represent fixed rewards or penalties associated with each decision.</p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S2.SS2.4.1.1">II-B</span> </span><span class="ltx_text ltx_font_italic" id="S2.SS2.5.2">Objective Function and Learning Strategy</span>
+</h3>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.12">The proposed approach aims to achieve a balance between high predictive accuracy and low cumulative retraining actions by maximizing the expected cumulative discounted reward:</p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E4">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="J(\pi)=\mathbb{E}{\tau\sim\pi{\theta}}\left[\sum_{t=0}^{\infty}\gamma^{t}r(s_{t},a_{t})\right]" class="ltx_Math" display="block" id="S2.E4.m1" intent=":literal"><semantics><mrow><mrow><mi>J</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>π</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mi>𝔼</mi><mo lspace="0em" rspace="0em">​</mo><mi>τ</mi></mrow><mo>∼</mo><mrow><mi>π</mi><mo lspace="0em" rspace="0em">​</mo><mi>θ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo>[</mo><mrow><munderover><mo lspace="0em" movablelimits="false">∑</mo><mrow><mi>t</mi><mo>=</mo><mn>0</mn></mrow><mi mathvariant="normal">∞</mi></munderover><mrow><msup><mi>γ</mi><mi>t</mi></msup><mo lspace="0em" rspace="0em">​</mo><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>]</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">J(\pi)=\mathbb{E}{\tau\sim\pi{\theta}}\left[\sum_{t=0}^{\infty}\gamma^{t}r(s_{t},a_{t})\right]</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS2.p1.5">where <math alttext="\tau=(s_{0},a_{0},r_{0},s_{1},a_{1},\dots)" class="ltx_Math" display="inline" id="S2.SS2.p1.1.m1" intent=":literal"><semantics><mrow><mi>τ</mi><mo>=</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mn>0</mn></msub><mo>,</mo><msub><mi>a</mi><mn>0</mn></msub><mo>,</mo><msub><mi>r</mi><mn>0</mn></msub><mo>,</mo><msub><mi>s</mi><mn>1</mn></msub><mo>,</mo><msub><mi>a</mi><mn>1</mn></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\tau=(s_{0},a_{0},r_{0},s_{1},a_{1},\dots)</annotation></semantics></math> denotes the trajectory of states, actions, and rewards generated under policy <math alttext="\pi_{\theta}" class="ltx_Math" display="inline" id="S2.SS2.p1.2.m2" intent=":literal"><semantics><msub><mi>π</mi><mi>θ</mi></msub><annotation encoding="application/x-tex">\pi_{\theta}</annotation></semantics></math>, <math alttext="\mathbb{E}" class="ltx_Math" display="inline" id="S2.SS2.p1.3.m3" intent=":literal"><semantics><mi>𝔼</mi><annotation encoding="application/x-tex">\mathbb{E}</annotation></semantics></math> denotes the expectation over traffic scenarios, and <math alttext="\gamma\in[0,1]" class="ltx_Math" display="inline" id="S2.SS2.p1.4.m4" intent=":literal"><semantics><mrow><mi>γ</mi><mo>∈</mo><mrow><mo stretchy="false">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false">]</mo></mrow></mrow><annotation encoding="application/x-tex">\gamma\in[0,1]</annotation></semantics></math> denotes the discount factor.
+The proposed approach employs a Q-learning algorithm <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib16" title="Reinforcement learning: An introduction second edition">7</a>]</cite> to learn an optimal policy through interaction with the environment.
+The Q-learning algorithm updates the action-value function <math alttext="Q(s_{t},a_{t})" class="ltx_Math" display="inline" id="S2.SS2.p1.5.m5" intent=":literal"><semantics><mrow><mi>Q</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">Q(s_{t},a_{t})</annotation></semantics></math> using the Bellman update rule:</p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E5">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="Q(s_{t},a_{t})\leftarrow Q(s_{t},a_{t})+\alpha\left[r_{t}+\gamma\max_{a^{\prime}}Q(s^{\prime},a^{\prime})-Q(s_{t},a_{t})\right]" class="ltx_Math" display="block" id="S2.E5.m1" intent=":literal"><semantics><mrow><mrow><mi>Q</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">←</mo><mrow><mrow><mi>Q</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>+</mo><mrow><mi>α</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo>[</mo><mrow><mrow><msub><mi>r</mi><mi>t</mi></msub><mo>+</mo><mrow><mi>γ</mi><mo lspace="0.167em" rspace="0em">​</mo><mrow><munder><mi>max</mi><msup><mi>a</mi><mo>′</mo></msup></munder><mo lspace="0.167em">⁡</mo><mi>Q</mi></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msup><mi>s</mi><mo>′</mo></msup><mo>,</mo><msup><mi>a</mi><mo>′</mo></msup><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>−</mo><mrow><mi>Q</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>]</mo></mrow></mrow></mrow></mrow><annotation encoding="application/x-tex">Q(s_{t},a_{t})\leftarrow Q(s_{t},a_{t})+\alpha\left[r_{t}+\gamma\max_{a^{\prime}}Q(s^{\prime},a^{\prime})-Q(s_{t},a_{t})\right]</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(5)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS2.p1.11">where, <math alttext="\alpha" class="ltx_Math" display="inline" id="S2.SS2.p1.6.m1" intent=":literal"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math> denotes the learning rate, <math alttext="s^{\prime}" class="ltx_Math" display="inline" id="S2.SS2.p1.7.m2" intent=":literal"><semantics><msup><mi>s</mi><mo>′</mo></msup><annotation encoding="application/x-tex">s^{\prime}</annotation></semantics></math> denotes the next state after taking action <math alttext="a_{t}" class="ltx_Math" display="inline" id="S2.SS2.p1.8.m3" intent=":literal"><semantics><msub><mi>a</mi><mi>t</mi></msub><annotation encoding="application/x-tex">a_{t}</annotation></semantics></math>, <math alttext="a^{\prime}" class="ltx_Math" display="inline" id="S2.SS2.p1.9.m4" intent=":literal"><semantics><msup><mi>a</mi><mo>′</mo></msup><annotation encoding="application/x-tex">a^{\prime}</annotation></semantics></math> denotes the set of possible actions in state <math alttext="s^{\prime}" class="ltx_Math" display="inline" id="S2.SS2.p1.10.m5" intent=":literal"><semantics><msup><mi>s</mi><mo>′</mo></msup><annotation encoding="application/x-tex">s^{\prime}</annotation></semantics></math>, and <math alttext="\max_{a^{\prime}}Q(s^{\prime},a^{\prime})" class="ltx_Math" display="inline" id="S2.SS2.p1.11.m6" intent=":literal"><semantics><mrow><mrow><msub><mi>max</mi><msup><mi>a</mi><mo>′</mo></msup></msub><mo lspace="0.167em">⁡</mo><mi>Q</mi></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msup><mi>s</mi><mo>′</mo></msup><mo>,</mo><msup><mi>a</mi><mo>′</mo></msup><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\max_{a^{\prime}}Q(s^{\prime},a^{\prime})</annotation></semantics></math> denotes the maximum expected future reward.
+This learning process enables the agent to learn a policy that triggers retraining only when the long-term gain in prediction accuracy outweighs the associated computational cost, thereby ensuring efficient and reliable operation in dynamic B5G networks.</p>
+</div>
+<figure class="ltx_table" id="S2.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">TABLE I: </span>Summary of Key Notations and Symbols</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S2.T1.18">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S2.T1.18.19.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_t" id="S2.T1.18.19.1.1"><span class="ltx_text ltx_font_bold" id="S2.T1.18.19.1.1.1">Symbol</span></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_t" id="S2.T1.18.19.1.2"><span class="ltx_text ltx_font_bold" id="S2.T1.18.19.1.2.1">Description</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S2.T1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S2.T1.1.1.1"><math alttext="W" class="ltx_Math" display="inline" id="S2.T1.1.1.1.m1" intent=":literal"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S2.T1.1.1.2">Incoming 5G Traffic Stream (Temporal Window)</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.2.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.2.2.1"><math alttext="\{\mathcal{E}_{i}\}" class="ltx_Math" display="inline" id="S2.T1.2.2.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">{</mo><msub><mi class="ltx_font_mathcaligraphic">ℰ</mi><mi>i</mi></msub><mo stretchy="false">}</mo></mrow><annotation encoding="application/x-tex">\{\mathcal{E}_{i}\}</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_left" id="S2.T1.2.2.2">Ensemble of Specialized LSTM Models</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.3.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.3.3.1"><math alttext="\mathcal{S}" class="ltx_Math" display="inline" id="S2.T1.3.3.1.m1" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒮</mi><annotation encoding="application/x-tex">\mathcal{S}</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_left" id="S2.T1.3.3.2">State Space (discretized traffic statistics)</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.6.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.4.4.1"><math alttext="a_{t}" class="ltx_Math" display="inline" id="S2.T1.4.4.1.m1" intent=":literal"><semantics><msub><mi>a</mi><mi>t</mi></msub><annotation encoding="application/x-tex">a_{t}</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_left" id="S2.T1.6.6.3">Action (<math alttext="a_{t}=0" class="ltx_Math" display="inline" id="S2.T1.5.5.2.m1" intent=":literal"><semantics><mrow><msub><mi>a</mi><mi>t</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">a_{t}=0</annotation></semantics></math>: Idle, <math alttext="a_{t}=1" class="ltx_Math" display="inline" id="S2.T1.6.6.3.m2" intent=":literal"><semantics><mrow><msub><mi>a</mi><mi>t</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">a_{t}=1</annotation></semantics></math>: Retrain)</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.7.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.7.7.1"><math alttext="e_{t}" class="ltx_Math" display="inline" id="S2.T1.7.7.1.m1" intent=":literal"><semantics><msub><mi>e</mi><mi>t</mi></msub><annotation encoding="application/x-tex">e_{t}</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_left" id="S2.T1.7.7.2">Real-time Forecast Error (nMAE)</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.8.8">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.8.8.1"><math alttext="\theta" class="ltx_Math" display="inline" id="S2.T1.8.8.1.m1" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_left" id="S2.T1.8.8.2">Drift Allowance Threshold (SLA Boundary)</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.10.10">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.9.9.1"><math alttext="\Delta_{t}" class="ltx_Math" display="inline" id="S2.T1.9.9.1.m1" intent=":literal"><semantics><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\Delta_{t}</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_left" id="S2.T1.10.10.2">Drift Magnitude (<math alttext="e_{t}-\theta" class="ltx_Math" display="inline" id="S2.T1.10.10.2.m1" intent=":literal"><semantics><mrow><msub><mi>e</mi><mi>t</mi></msub><mo>−</mo><mi>θ</mi></mrow><annotation encoding="application/x-tex">e_{t}-\theta</annotation></semantics></math>)</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.11.11">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.11.11.1"><math alttext="R_{t}(s,a)" class="ltx_Math" display="inline" id="S2.T1.11.11.1.m1" intent=":literal"><semantics><mrow><msub><mi>R</mi><mi>t</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">R_{t}(s,a)</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_left" id="S2.T1.11.11.2">Instantaneous Reward Function</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.12.12">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.12.12.1"><math alttext="Q(s,a)" class="ltx_Math" display="inline" id="S2.T1.12.12.1.m1" intent=":literal"><semantics><mrow><mi>Q</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">Q(s,a)</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_left" id="S2.T1.12.12.2">State-action value function (Q-value)</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.13.13">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.13.13.1"><math alttext="\alpha" class="ltx_Math" display="inline" id="S2.T1.13.13.1.m1" intent=":literal"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_left" id="S2.T1.13.13.2">Learning rate</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.14.14">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.14.14.1"><math alttext="\gamma" class="ltx_Math" display="inline" id="S2.T1.14.14.1.m1" intent=":literal"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_left" id="S2.T1.14.14.2">Discount factor</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.16.16">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.15.15.1"><math alttext="\epsilon" class="ltx_Math" display="inline" id="S2.T1.15.15.1.m1" intent=":literal"><semantics><mi>ϵ</mi><annotation encoding="application/x-tex">\epsilon</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_left" id="S2.T1.16.16.2">Exploration probability for the <math alttext="\epsilon" class="ltx_Math" display="inline" id="S2.T1.16.16.2.m1" intent=":literal"><semantics><mi>ϵ</mi><annotation encoding="application/x-tex">\epsilon</annotation></semantics></math>-greedy policy</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.17.17">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.17.17.1"><math alttext="w_{i},C_{i}" class="ltx_Math" display="inline" id="S2.T1.17.17.1.m1" intent=":literal"><semantics><mrow><msub><mi>w</mi><mi>i</mi></msub><mo>,</mo><msub><mi>C</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">w_{i},C_{i}</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_left" id="S2.T1.17.17.2">Scaling weights and constant offsets for the reward function</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.18.18">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_b" id="S2.T1.18.18.1"><math alttext="\pi^{*}" class="ltx_Math" display="inline" id="S2.T1.18.18.1.m1" intent=":literal"><semantics><msup><mi>π</mi><mo>∗</mo></msup><annotation encoding="application/x-tex">\pi^{*}</annotation></semantics></math></th>
+<td class="ltx_td ltx_align_left ltx_border_b" id="S2.T1.18.18.2">Optimized Drift Orchestration Policy</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure class="ltx_float ltx_algorithm" id="alg1">
+<div class="ltx_listing ltx_lst_numbers_left ltx_listing" id="alg1.2">
+<div class="ltx_listingline" id="alg1.2.1">
+<div class="ltx_listing ltx_listing" id="alg1.2.1.1">
+<div class="ltx_listingline" id="alg1.l0">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l0.1.1.1" style="font-size:80%;">0:</span></span> 5G Traffic Stream <math alttext="W" class="ltx_Math" display="inline" id="alg1.l0.m1" intent=":literal"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>, Specialist Ensemble <math alttext="\{\mathcal{E}_{i}\}" class="ltx_Math" display="inline" id="alg1.l0.m2" intent=":literal"><semantics><mrow><mo stretchy="false">{</mo><msub><mi class="ltx_font_mathcaligraphic">ℰ</mi><mi>i</mi></msub><mo stretchy="false">}</mo></mrow><annotation encoding="application/x-tex">\{\mathcal{E}_{i}\}</annotation></semantics></math>, drift threshold <math alttext="\theta" class="ltx_Math" display="inline" id="alg1.l0.m3" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l0a">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l0a.1.1.1" style="font-size:80%;">0:</span></span> Optimized Orchestration Policy <math alttext="\pi^{*}" class="ltx_Math" display="inline" id="alg1.l0a.m1" intent=":literal"><semantics><msup><mi>π</mi><mo>∗</mo></msup><annotation encoding="application/x-tex">\pi^{*}</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l1">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l1.1.1.1" style="font-size:80%;">1:</span></span> <span class="ltx_text ltx_font_bold" id="alg1.l1.2">Initialize:</span> Q-table <math alttext="Q(s,a)\leftarrow 0" class="ltx_Math" display="inline" id="alg1.l1.m1" intent=":literal"><semantics><mrow><mrow><mi>Q</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>s</mi><mo>,</mo><mi>a</mi><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">←</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">Q(s,a)\leftarrow 0</annotation></semantics></math>, Learning rate <math alttext="\alpha" class="ltx_Math" display="inline" id="alg1.l1.m2" intent=":literal"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>, Discount factor <math alttext="\gamma" class="ltx_Math" display="inline" id="alg1.l1.m3" intent=":literal"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l2">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l2.1.1.1" style="font-size:80%;">2:</span></span> <span class="ltx_text ltx_font_bold" id="alg1.l2.2">for</span> each training episode <math alttext="m\in\{1,\dots,M\}" class="ltx_Math" display="inline" id="alg1.l2.m1" intent=":literal"><semantics><mrow><mi>m</mi><mo>∈</mo><mrow><mo stretchy="false">{</mo><mn>1</mn><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><mi>M</mi><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">m\in\{1,\dots,M\}</annotation></semantics></math> <span class="ltx_text ltx_font_bold" id="alg1.l2.3">do</span>
+</div>
+<div class="ltx_listingline" id="alg1.l3">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l3.1.1.1" style="font-size:80%;">3:</span></span>  <span class="ltx_text ltx_font_bold" id="alg1.l3.2">for</span> each discrete decision-making point <math alttext="t\in\{1,\dots,T\}" class="ltx_Math" display="inline" id="alg1.l3.m1" intent=":literal"><semantics><mrow><mi>t</mi><mo>∈</mo><mrow><mo stretchy="false">{</mo><mn>1</mn><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><mi>T</mi><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">t\in\{1,\dots,T\}</annotation></semantics></math> <span class="ltx_text ltx_font_bold" id="alg1.l3.3">do</span>
+</div>
+<div class="ltx_listingline" id="alg1.l4">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l4.1.1.1" style="font-size:80%;">4:</span></span>   Observe system state <math alttext="\mathbf{s}_{t}\in\mathcal{S}" class="ltx_Math" display="inline" id="alg1.l4.m1" intent=":literal"><semantics><mrow><msub><mi>𝐬</mi><mi>t</mi></msub><mo>∈</mo><mi class="ltx_font_mathcaligraphic">𝒮</mi></mrow><annotation encoding="application/x-tex">\mathbf{s}_{t}\in\mathcal{S}</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l5">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l5.1.1.1" style="font-size:80%;">5:</span></span>   Route incoming data to state-matched LSTM specialist <math alttext="\mathcal{E}_{s_{t}}" class="ltx_Math" display="inline" id="alg1.l5.m1" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℰ</mi><msub><mi>s</mi><mi>t</mi></msub></msub><annotation encoding="application/x-tex">\mathcal{E}_{s_{t}}</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l6">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l6.1.1.1" style="font-size:80%;">6:</span></span>   Compute forecast and evaluate nMAE <math alttext="e_{t}" class="ltx_Math" display="inline" id="alg1.l6.m1" intent=":literal"><semantics><msub><mi>e</mi><mi>t</mi></msub><annotation encoding="application/x-tex">e_{t}</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l7">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l7.1.1.1" style="font-size:80%;">7:</span></span>   Calculate drift magnitude <math alttext="\Delta_{t}=e_{t}-\theta" class="ltx_Math" display="inline" id="alg1.l7.m1" intent=":literal"><semantics><mrow><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo>=</mo><mrow><msub><mi>e</mi><mi>t</mi></msub><mo>−</mo><mi>θ</mi></mrow></mrow><annotation encoding="application/x-tex">\Delta_{t}=e_{t}-\theta</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l8">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l8.1.1.1" style="font-size:80%;">8:</span></span>   Select action <math alttext="a_{t}\in\{0,1\}" class="ltx_Math" display="inline" id="alg1.l8.m1" intent=":literal"><semantics><mrow><msub><mi>a</mi><mi>t</mi></msub><mo>∈</mo><mrow><mo stretchy="false">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">a_{t}\in\{0,1\}</annotation></semantics></math> using <math alttext="\epsilon" class="ltx_Math" display="inline" id="alg1.l8.m2" intent=":literal"><semantics><mi>ϵ</mi><annotation encoding="application/x-tex">\epsilon</annotation></semantics></math>-greedy strategy
+
+</div>
+<div class="ltx_listingline" id="alg1.l9">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l9.1.1.1" style="font-size:80%;">9:</span></span>   <span class="ltx_text ltx_font_bold" id="alg1.l9.2">if</span> <math alttext="a_{t}=1" class="ltx_Math" display="inline" id="alg1.l9.m1" intent=":literal"><semantics><mrow><msub><mi>a</mi><mi>t</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">a_{t}=1</annotation></semantics></math> <span class="ltx_text ltx_font_bold" id="alg1.l9.3">then</span>
+</div>
+<div class="ltx_listingline" id="alg1.l10">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l10.1.1.1" style="font-size:80%;">10:</span></span>    Update weights of <math alttext="\mathcal{E}_{s_{t}}" class="ltx_Math" display="inline" id="alg1.l10.m1" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℰ</mi><msub><mi>s</mi><mi>t</mi></msub></msub><annotation encoding="application/x-tex">\mathcal{E}_{s_{t}}</annotation></semantics></math> to restore accuracy
+
+</div>
+<div class="ltx_listingline" id="alg1.l11">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l11.1.1.1" style="font-size:80%;">11:</span></span>    <span class="ltx_text ltx_font_bold" id="alg1.l11.2">if</span> <math alttext="\Delta_{t}&gt;0" class="ltx_Math" display="inline" id="alg1.l11.m1" intent=":literal"><semantics><mrow><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\Delta_{t}&gt;0</annotation></semantics></math> <span class="ltx_text ltx_font_bold" id="alg1.l11.3">then</span>
+</div>
+<div class="ltx_listingline" id="alg1.l12">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l12.1.1.1" style="font-size:80%;">12:</span></span>     <math alttext="R_{t}(s_{t},a_{t})\leftarrow w_{1}|\Delta_{t}|+C_{1}" class="ltx_Math" display="inline" id="alg1.l12.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>R</mi><mi>t</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">←</mo><mrow><mrow><msub><mi>w</mi><mn>1</mn></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">|</mo><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo stretchy="false">|</mo></mrow></mrow><mo>+</mo><msub><mi>C</mi><mn>1</mn></msub></mrow></mrow><annotation encoding="application/x-tex">R_{t}(s_{t},a_{t})\leftarrow w_{1}|\Delta_{t}|+C_{1}</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l13">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l13.1.1.1" style="font-size:80%;">13:</span></span>    <span class="ltx_text ltx_font_bold" id="alg1.l13.2">else</span>
+</div>
+<div class="ltx_listingline" id="alg1.l14">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l14.1.1.1" style="font-size:80%;">14:</span></span>     <math alttext="R_{t}(s_{t},a_{t})\leftarrow-w_{3}|\Delta_{t}|-C_{3}" class="ltx_Math" display="inline" id="alg1.l14.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>R</mi><mi>t</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">←</mo><mrow><mrow><mo>−</mo><mrow><msub><mi>w</mi><mn>3</mn></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">|</mo><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo stretchy="false">|</mo></mrow></mrow></mrow><mo>−</mo><msub><mi>C</mi><mn>3</mn></msub></mrow></mrow><annotation encoding="application/x-tex">R_{t}(s_{t},a_{t})\leftarrow-w_{3}|\Delta_{t}|-C_{3}</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l15">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l15.1.1.1" style="font-size:80%;">15:</span></span>    <span class="ltx_text ltx_font_bold" id="alg1.l15.2">end</span> <span class="ltx_text ltx_font_bold" id="alg1.l15.3">if</span>
+</div>
+<div class="ltx_listingline" id="alg1.l16">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l16.1.1.1" style="font-size:80%;">16:</span></span>   <span class="ltx_text ltx_font_bold" id="alg1.l16.2">else</span>
+</div>
+<div class="ltx_listingline" id="alg1.l17">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l17.1.1.1" style="font-size:80%;">17:</span></span>    <span class="ltx_text ltx_font_bold" id="alg1.l17.2">if</span> <math alttext="\Delta_{t}\leq 0" class="ltx_Math" display="inline" id="alg1.l17.m1" intent=":literal"><semantics><mrow><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo>≤</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\Delta_{t}\leq 0</annotation></semantics></math> <span class="ltx_text ltx_font_bold" id="alg1.l17.3">then</span>
+</div>
+<div class="ltx_listingline" id="alg1.l18">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l18.1.1.1" style="font-size:80%;">18:</span></span>     <math alttext="R_{t}(s_{t},a_{t})\leftarrow w_{2}|\Delta_{t}|+C_{2}" class="ltx_Math" display="inline" id="alg1.l18.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>R</mi><mi>t</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">←</mo><mrow><mrow><msub><mi>w</mi><mn>2</mn></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">|</mo><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo stretchy="false">|</mo></mrow></mrow><mo>+</mo><msub><mi>C</mi><mn>2</mn></msub></mrow></mrow><annotation encoding="application/x-tex">R_{t}(s_{t},a_{t})\leftarrow w_{2}|\Delta_{t}|+C_{2}</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l19">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l19.1.1.1" style="font-size:80%;">19:</span></span>    <span class="ltx_text ltx_font_bold" id="alg1.l19.2">else</span>
+</div>
+<div class="ltx_listingline" id="alg1.l20">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l20.1.1.1" style="font-size:80%;">20:</span></span>     <math alttext="R_{t}(s_{t},a_{t})\leftarrow-w_{4}|\Delta_{t}|-C_{4}" class="ltx_Math" display="inline" id="alg1.l20.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>R</mi><mi>t</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">←</mo><mrow><mrow><mo>−</mo><mrow><msub><mi>w</mi><mn>4</mn></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">|</mo><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo stretchy="false">|</mo></mrow></mrow></mrow><mo>−</mo><msub><mi>C</mi><mn>4</mn></msub></mrow></mrow><annotation encoding="application/x-tex">R_{t}(s_{t},a_{t})\leftarrow-w_{4}|\Delta_{t}|-C_{4}</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l21">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l21.1.1.1" style="font-size:80%;">21:</span></span>    <span class="ltx_text ltx_font_bold" id="alg1.l21.2">end</span> <span class="ltx_text ltx_font_bold" id="alg1.l21.3">if</span>
+</div>
+<div class="ltx_listingline" id="alg1.l22">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l22.1.1.1" style="font-size:80%;">22:</span></span>   <span class="ltx_text ltx_font_bold" id="alg1.l22.2">end</span> <span class="ltx_text ltx_font_bold" id="alg1.l22.3">if</span>
+</div>
+<div class="ltx_listingline" id="alg1.l23">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l23.1.1.1" style="font-size:80%;">23:</span></span>   Observe subsequent system state <math alttext="s^{\prime}" class="ltx_Math" display="inline" id="alg1.l23.m1" intent=":literal"><semantics><msup><mi>s</mi><mo>′</mo></msup><annotation encoding="application/x-tex">s^{\prime}</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l24">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l24.1.1.1" style="font-size:80%;">24:</span></span>   <span class="ltx_text ltx_font_bold" id="alg1.l24.2">Update Q-value:</span> <math alttext="Q(s_{t},a_{t})\leftarrow Q(s_{t},a_{t})+\alpha\left[R_{t}+\gamma\max_{a^{\prime}}Q(s^{\prime},a^{\prime})-Q(s_{t},a_{t})\right]" class="ltx_Math" display="inline" id="alg1.l24.m1" intent=":literal"><semantics><mrow><mrow><mi>Q</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">←</mo><mrow><mrow><mi>Q</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>+</mo><mrow><mi>α</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo>[</mo><mrow><mrow><msub><mi>R</mi><mi>t</mi></msub><mo>+</mo><mrow><mi>γ</mi><mo lspace="0.167em" rspace="0em">​</mo><mrow><msub><mi>max</mi><msup><mi>a</mi><mo>′</mo></msup></msub><mo lspace="0.167em">⁡</mo><mi>Q</mi></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msup><mi>s</mi><mo>′</mo></msup><mo>,</mo><msup><mi>a</mi><mo>′</mo></msup><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>−</mo><mrow><mi>Q</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>s</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>]</mo></mrow></mrow></mrow></mrow><annotation encoding="application/x-tex">Q(s_{t},a_{t})\leftarrow Q(s_{t},a_{t})+\alpha\left[R_{t}+\gamma\max_{a^{\prime}}Q(s^{\prime},a^{\prime})-Q(s_{t},a_{t})\right]</annotation></semantics></math>
+</div>
+<div class="ltx_listingline" id="alg1.l25">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l25.1.1.1" style="font-size:80%;">25:</span></span>  <span class="ltx_text ltx_font_bold" id="alg1.l25.2">end</span> <span class="ltx_text ltx_font_bold" id="alg1.l25.3">for</span>
+</div>
+<div class="ltx_listingline" id="alg1.l26">
+<span class="ltx_tag ltx_tag_listingline"><span class="ltx_text" id="alg1.l26.1.1.1" style="font-size:80%;">26:</span></span> <span class="ltx_text ltx_font_bold" id="alg1.l26.2">end</span> <span class="ltx_text ltx_font_bold" id="alg1.l26.3">for</span>
+</div>
+</div>
+</div>
+</div>
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_float"><span class="ltx_text ltx_font_bold" id="alg1.3.1.1">Algorithm 1</span> </span>RL-Based Adaptive Drift Handling</figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S2.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S2.SS3.4.1.1">II-C</span> </span><span class="ltx_text ltx_font_italic" id="S2.SS3.5.2">Proposed Algorithm</span>
+</h3>
+<div class="ltx_para" id="S2.SS3.p1">
+<p class="ltx_p" id="S2.SS3.p1.8">Algorithm <a class="ltx_ref" href="#alg1" title="In II-B Objective Function and Learning Strategy ‣ II System Model and RL Problem Formulation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">1</span></a> takes the incoming user traffic stream <math alttext="W" class="ltx_Math" display="inline" id="S2.SS3.p1.1.m1" intent=":literal"><semantics><mi>W</mi><annotation encoding="application/x-tex">W</annotation></semantics></math>, the specialist LSTM ensemble <math alttext="{\mathcal{E}_{i}}" class="ltx_Math" display="inline" id="S2.SS3.p1.2.m2" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℰ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">{\mathcal{E}_{i}}</annotation></semantics></math>, and the drift threshold <math alttext="\theta" class="ltx_Math" display="inline" id="S2.SS3.p1.3.m3" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math> as inputs and outputs an optimized drift orchestration policy <math alttext="\pi^{*}" class="ltx_Math" display="inline" id="S2.SS3.p1.4.m4" intent=":literal"><semantics><msup><mi>π</mi><mo>∗</mo></msup><annotation encoding="application/x-tex">\pi^{*}</annotation></semantics></math>.
+The proposed approach processes the incoming traffic stream in a sequential manner and, at each decision step, the proposed approach observes the system state <math alttext="\mathbf{s_{t}}" class="ltx_Math" display="inline" id="S2.SS3.p1.5.m5" intent=":literal"><semantics><msub><mi>𝐬</mi><mi>𝐭</mi></msub><annotation encoding="application/x-tex">\mathbf{s_{t}}</annotation></semantics></math> based on discretized statistical features such as mean and variance (see line 4), which capture the current operating condition of the network.
+Then a state-matched LSTM specialist <math alttext="\mathcal{E}{s_{t}}" class="ltx_Math" display="inline" id="S2.SS3.p1.6.m6" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">ℰ</mi><mo lspace="0em" rspace="0em">​</mo><msub><mi>s</mi><mi>t</mi></msub></mrow><annotation encoding="application/x-tex">\mathcal{E}{s_{t}}</annotation></semantics></math> is chosen from the ensemble to generate predictions for the current traffic window and evaluates the prediction accuracy by computing the nMAE <math alttext="e_{t}" class="ltx_Math" display="inline" id="S2.SS3.p1.7.m7" intent=":literal"><semantics><msub><mi>e</mi><mi>t</mi></msub><annotation encoding="application/x-tex">e_{t}</annotation></semantics></math> (see lines 5–6).
+Afterwards, the drift magnitude <math alttext="\Delta_{t}=e_{t}-\theta" class="ltx_Math" display="inline" id="S2.SS3.p1.8.m8" intent=":literal"><semantics><mrow><msub><mi mathvariant="normal">Δ</mi><mi>t</mi></msub><mo>=</mo><mrow><msub><mi>e</mi><mi>t</mi></msub><mo>−</mo><mi>θ</mi></mrow></mrow><annotation encoding="application/x-tex">\Delta_{t}=e_{t}-\theta</annotation></semantics></math> is computed to quantify the deviation of the model performance from the acceptable SLA boundary (see line 7), where a positive value indicates the occurrence of drift.</p>
+</div>
+<div class="ltx_para" id="S2.SS3.p2">
+<p class="ltx_p" id="S2.SS3.p2.6">The RL agent selects an action <math alttext="a_{t}\in{0,1}" class="ltx_Math" display="inline" id="S2.SS3.p2.1.m1" intent=":literal"><semantics><mrow><msub><mi>a</mi><mi>t</mi></msub><mo>∈</mo><mrow><mn>0</mn><mo>,</mo><mn>1</mn></mrow></mrow><annotation encoding="application/x-tex">a_{t}\in{0,1}</annotation></semantics></math> using an <math alttext="\epsilon" class="ltx_Math" display="inline" id="S2.SS3.p2.2.m2" intent=":literal"><semantics><mi>ϵ</mi><annotation encoding="application/x-tex">\epsilon</annotation></semantics></math>-greedy strategy (see line 8), where the strategy balances exploration and exploitation to improve policy learning over time.
+The action <math alttext="a_{t}=1" class="ltx_Math" display="inline" id="S2.SS3.p2.3.m3" intent=":literal"><semantics><mrow><msub><mi>a</mi><mi>t</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">a_{t}=1</annotation></semantics></math> triggers retraining of the selected LSTM model to restore predictive accuracy, whereas the action <math alttext="a_{t}=0" class="ltx_Math" display="inline" id="S2.SS3.p2.4.m4" intent=":literal"><semantics><mrow><msub><mi>a</mi><mi>t</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">a_{t}=0</annotation></semantics></math> skips retraining to preserve computational resources.
+When the agent selects the retraining action, the proposed approach updates the weights of the corresponding LSTM specialist using the most recent traffic data (see lines 9–13), enabling the model to adapt to the new user data traffic.
+The proposed approach computes the reward <math alttext="R_{t}" class="ltx_Math" display="inline" id="S2.SS3.p2.5.m5" intent=":literal"><semantics><msub><mi>R</mi><mi>t</mi></msub><annotation encoding="application/x-tex">R_{t}</annotation></semantics></math> based on both the selected action and the drift magnitude (see lines 10–18), where the reward function assigns positive rewards to correct decisions, such as retraining under drift or skipping retraining under stable conditions, and assigns penalties to incorrect decisions, such as unnecessary retraining or failure to retrain during drift.
+After performing the action, the proposed approach observes the subsequent system state <math alttext="s^{\prime}" class="ltx_Math" display="inline" id="S2.SS3.p2.6.m6" intent=":literal"><semantics><msup><mi>s</mi><mo>′</mo></msup><annotation encoding="application/x-tex">s^{\prime}</annotation></semantics></math> and updates the Q-value using the Bellman update rule (lines 19–20), enabling the agent to iteratively refine action-value estimates and improve decision-making.</p>
+</div>
+<div class="ltx_para" id="S2.SS3.p3">
+<p class="ltx_p" id="S2.SS3.p3.1">Through repeated interaction with dynamic and varying traffic conditions, the learning process enables the agent to converge toward an optimal policy with the long-term benefit of improved prediction accuracy outweighs the associated computational cost.
+The proposed adaptive decision-making approach ensures efficient resource utilization while maintaining reliable AI/ML model performance in B5G networks.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">III </span><span class="ltx_text ltx_font_smallcaps" id="S3.1.1">Performance Evaluation</span>
+</h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1">This section presents the experimental setup used to evaluate the proposed approach.
+The evaluation aims to assess how effectively the proposed approach manages drift in real-time traffic scenarios while balancing predictive accuracy and computational cost.
+The proposed approach employs a specialist LSTM ensemble to address catastrophic forgetting observed in single-model approaches.
+The ensemble consists of multiple state-matched models, each capturing specific traffic patterns, enabling the system to adapt to new traffic conditions while retaining previously learned knowledge.
+Thus, improves robustness to dynamic traffic changes and enhancing predictive performance under dynamic network conditions.</p>
+</div>
+<div class="ltx_para" id="S3.p2">
+<p class="ltx_p" id="S3.p2.1">The experiment is conducted across eight distinct traffic scenarios generated from the Colosseum traffic dataset <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib20" title="ColO-RAN: Developing machine learning-based xApps for open RAN closed-loop control on programmable experimental platforms">4</a>]</cite>, which provides realistic and time-varying network conditions.
+Each traffic scenario exhibits significantly different mean and variance characteristics, thereby defining the system’s state space.
+Each time step in the dataset includes features — the number of active users, downlink (DL) traffic rate, and uplink (UL) traffic rate.
+The proposed approach selects the DL traffic rate as the primary prediction target, as it directly affects user QoS and plays a critical role in O-RAN resource management.
+The proposed approach pre-processes the dataset by selecting DL traffic corresponding to specific user counts and time steps to capture meaningful traffic variations. Figure. <a class="ltx_ref" href="#S3.F2" title="Figure 2 ‣ III Performance Evaluation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">2</span></a> illustrates the experimental workflow of the proposed Q-Learning-based ADORN approach.</p>
+</div>
+<figure class="ltx_figure" id="S3.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="223" id="S3.F2.g1" src="https://arxiv.org/html/2607.08443v1/x2.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Proposed Q-Learning based ADORN approach</figcaption>
+</figure>
+<div class="ltx_para" id="S3.p3">
+<p class="ltx_p" id="S3.p3.1">The RL environment defines state space based on statistical traffic features — mean and variance. Specifically, the continuous state space is discretized by rounding, mapping the environment into 8 distinct states.
+The action space consists of two actions: retrain and idle.
+The reward function guides the agent to learn an optimal trade-off between prediction accuracy and cumulative retraining actions.
+Table <a class="ltx_ref" href="#S3.T2" title="TABLE II ‣ III Performance Evaluation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">II</span></a> summarizes the Q-learning hyperparameters, and Table <a class="ltx_ref" href="#S3.T3" title="TABLE III ‣ III Performance Evaluation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">III</span></a> summarizes the LSTM ensemble configuration.
+The agent trains over 300 episodes, each consisting of sequential observations of traffic conditions.
+The proposed approach randomly shuffles traffic segments at the beginning of each episode to eliminate temporal bias and ensure that the learned policy depends only on statistical state representation rather than sequence ordering, which improves generalization and robustness under varying traffic conditions.</p>
+</div>
+<figure class="ltx_table" id="S3.T2">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE II: </span>Q-Learning Hyperparameters</figcaption>
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S3.T2.6">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T2.6.7.1">
+<th class="ltx_td ltx_align_justify ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t" id="S3.T2.6.7.1.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.6.7.1.1.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.6.7.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S3.T2.6.7.1.1.1.1.1">Parameter</span></span>
+</span>
+</th>
+<th class="ltx_td ltx_align_justify ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T2.6.7.1.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.6.7.1.2.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.6.7.1.2.1.1"><span class="ltx_text ltx_font_bold" id="S3.T2.6.7.1.2.1.1.1">Value</span></span>
+</span>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T2.1.1">
+<td class="ltx_td ltx_align_justify ltx_border_l ltx_border_r ltx_border_t" id="S3.T2.1.1.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.1.1.1.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.1.1.1.1.1">Learning Rate (<math alttext="\alpha" class="ltx_Math" display="inline" id="S3.T2.1.1.1.1.1.m1" intent=":literal"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>)</span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_r ltx_border_t" id="S3.T2.1.1.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.1.1.2.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.1.1.2.1.1">0.1</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.2.2">
+<td class="ltx_td ltx_align_justify ltx_border_l ltx_border_r ltx_border_t" id="S3.T2.2.2.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.2.2.1.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.2.2.1.1.1">Discount Factor (<math alttext="\gamma" class="ltx_Math" display="inline" id="S3.T2.2.2.1.1.1.m1" intent=":literal"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math>)</span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_r ltx_border_t" id="S3.T2.2.2.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.2.2.2.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.2.2.2.1.1">0.9</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.3.3">
+<td class="ltx_td ltx_align_justify ltx_border_l ltx_border_r ltx_border_t" id="S3.T2.3.3.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.3.3.1.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.3.3.1.1.1">Initial Exploration (<math alttext="\epsilon" class="ltx_Math" display="inline" id="S3.T2.3.3.1.1.1.m1" intent=":literal"><semantics><mi>ϵ</mi><annotation encoding="application/x-tex">\epsilon</annotation></semantics></math>)</span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_r ltx_border_t" id="S3.T2.3.3.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.3.3.2.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.3.3.2.1.1">1.0</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.6.8.1">
+<td class="ltx_td ltx_align_justify ltx_border_l ltx_border_r ltx_border_t" id="S3.T2.6.8.1.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.6.8.1.1.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.6.8.1.1.1.1">Epsilon Decay Rate</span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_r ltx_border_t" id="S3.T2.6.8.1.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.6.8.1.2.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.6.8.1.2.1.1">0.95</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.4.4">
+<td class="ltx_td ltx_align_justify ltx_border_l ltx_border_r ltx_border_t" id="S3.T2.4.4.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.4.4.1.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.4.4.1.1.1">Drift Threshold (<math alttext="\theta" class="ltx_Math" display="inline" id="S3.T2.4.4.1.1.1.m1" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>)</span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_r ltx_border_t" id="S3.T2.4.4.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.4.4.2.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.4.4.2.1.1">0.25</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.6.9.2">
+<td class="ltx_td ltx_align_justify ltx_border_l ltx_border_r ltx_border_t" id="S3.T2.6.9.2.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.6.9.2.1.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.6.9.2.1.1.1">Total Episodes</span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_r ltx_border_t" id="S3.T2.6.9.2.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.6.9.2.2.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.6.9.2.2.1.1">300</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.5.5">
+<td class="ltx_td ltx_align_justify ltx_border_l ltx_border_r ltx_border_t" id="S3.T2.5.5.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.5.5.1.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.5.5.1.1.1">Weighing Coefficient (<math alttext="w_{1},w_{2},w_{3},w_{4}" class="ltx_Math" display="inline" id="S3.T2.5.5.1.1.1.m1" intent=":literal"><semantics><mrow><msub><mi>w</mi><mn>1</mn></msub><mo>,</mo><msub><mi>w</mi><mn>2</mn></msub><mo>,</mo><msub><mi>w</mi><mn>3</mn></msub><mo>,</mo><msub><mi>w</mi><mn>4</mn></msub></mrow><annotation encoding="application/x-tex">w_{1},w_{2},w_{3},w_{4}</annotation></semantics></math>)</span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_r ltx_border_t" id="S3.T2.5.5.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.5.5.2.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.5.5.2.1.1">300, 100, 200, 500</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.6.6">
+<td class="ltx_td ltx_align_justify ltx_border_b ltx_border_l ltx_border_r ltx_border_t" id="S3.T2.6.6.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.6.6.1.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.6.6.1.1.1">Operational Constants (<math alttext="C_{1},C_{2},C_{3},C_{4}" class="ltx_Math" display="inline" id="S3.T2.6.6.1.1.1.m1" intent=":literal"><semantics><mrow><msub><mi>C</mi><mn>1</mn></msub><mo>,</mo><msub><mi>C</mi><mn>2</mn></msub><mo>,</mo><msub><mi>C</mi><mn>3</mn></msub><mo>,</mo><msub><mi>C</mi><mn>4</mn></msub></mrow><annotation encoding="application/x-tex">C_{1},C_{2},C_{3},C_{4}</annotation></semantics></math>)</span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_b ltx_border_r ltx_border_t" id="S3.T2.6.6.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T2.6.6.2.1">
+<span class="ltx_p ltx_align_center" id="S3.T2.6.6.2.1.1">50, 20, 50, 50</span>
+</span>
+</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure class="ltx_table" id="S3.T3">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE III: </span>LSTM Ensemble Hyperparameters</figcaption>
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S3.T3.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T3.1.1.1">
+<th class="ltx_td ltx_align_justify ltx_th ltx_th_column ltx_border_l ltx_border_r ltx_border_t" id="S3.T3.1.1.1.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.1.1.1.1">
+<span class="ltx_p ltx_align_center" id="S3.T3.1.1.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S3.T3.1.1.1.1.1.1.1">Parameter</span></span>
+</span>
+</th>
+<th class="ltx_td ltx_align_justify ltx_th ltx_th_column ltx_border_r ltx_border_t" id="S3.T3.1.1.1.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.1.1.2.1">
+<span class="ltx_p ltx_align_center" id="S3.T3.1.1.1.2.1.1"><span class="ltx_text ltx_font_bold" id="S3.T3.1.1.1.2.1.1.1">Value</span></span>
+</span>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T3.1.2.1">
+<td class="ltx_td ltx_align_justify ltx_border_l ltx_border_r ltx_border_t" id="S3.T3.1.2.1.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.2.1.1.1">
+<span class="ltx_p ltx_align_center" id="S3.T3.1.2.1.1.1.1">Sequence Length</span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_r ltx_border_t" id="S3.T3.1.2.1.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.2.1.2.1">
+<span class="ltx_p ltx_align_center" id="S3.T3.1.2.1.2.1.1">5</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.3.2">
+<td class="ltx_td ltx_align_justify ltx_border_l ltx_border_r ltx_border_t" id="S3.T3.1.3.2.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.3.2.1.1">
+<span class="ltx_p ltx_align_center" id="S3.T3.1.3.2.1.1.1">Hidden Units</span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_r ltx_border_t" id="S3.T3.1.3.2.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.3.2.2.1">
+<span class="ltx_p ltx_align_center" id="S3.T3.1.3.2.2.1.1">64</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.4.3">
+<td class="ltx_td ltx_align_justify ltx_border_l ltx_border_r ltx_border_t" id="S3.T3.1.4.3.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.4.3.1.1">
+<span class="ltx_p ltx_align_center" id="S3.T3.1.4.3.1.1.1">Number of Layers</span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_r ltx_border_t" id="S3.T3.1.4.3.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.4.3.2.1">
+<span class="ltx_p ltx_align_center" id="S3.T3.1.4.3.2.1.1">2</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.5.4">
+<td class="ltx_td ltx_align_justify ltx_border_l ltx_border_r ltx_border_t" id="S3.T3.1.5.4.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.5.4.1.1">
+<span class="ltx_p ltx_align_center" id="S3.T3.1.5.4.1.1.1">Dropout Rate</span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_r ltx_border_t" id="S3.T3.1.5.4.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.5.4.2.1">
+<span class="ltx_p ltx_align_center" id="S3.T3.1.5.4.2.1.1">0.2</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.6.5">
+<td class="ltx_td ltx_align_justify ltx_border_l ltx_border_r ltx_border_t" id="S3.T3.1.6.5.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.6.5.1.1">
+<span class="ltx_p ltx_align_center" id="S3.T3.1.6.5.1.1.1">Training Epochs</span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_r ltx_border_t" id="S3.T3.1.6.5.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.6.5.2.1">
+<span class="ltx_p ltx_align_center" id="S3.T3.1.6.5.2.1.1">150</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.7.6">
+<td class="ltx_td ltx_align_justify ltx_border_l ltx_border_r ltx_border_t" id="S3.T3.1.7.6.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.7.6.1.1">
+<span class="ltx_p ltx_align_center" id="S3.T3.1.7.6.1.1.1">Optimizer</span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_r ltx_border_t" id="S3.T3.1.7.6.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.7.6.2.1">
+<span class="ltx_p ltx_align_center" id="S3.T3.1.7.6.2.1.1">Adam</span>
+</span>
+</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.1.8.7">
+<td class="ltx_td ltx_align_justify ltx_border_b ltx_border_l ltx_border_r ltx_border_t" id="S3.T3.1.8.7.1">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.8.7.1.1">
+<span class="ltx_p ltx_align_center" id="S3.T3.1.8.7.1.1.1">Activation Function</span>
+</span>
+</td>
+<td class="ltx_td ltx_align_justify ltx_border_b ltx_border_r ltx_border_t" id="S3.T3.1.8.7.2">
+<span class="ltx_inline-block ltx_align_top" id="S3.T3.1.8.7.2.1">
+<span class="ltx_p ltx_align_center" id="S3.T3.1.8.7.2.1.1">ReLU</span>
+</span>
+</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S3.p4">
+<p class="ltx_p" id="S3.p4.1">To evaluate the effectiveness of the proposed approach, two baseline policies that represent extreme operational strategies — a Greedy Baseline and a Random Baseline — are considered for comparison.</p>
+<ul class="ltx_itemize" id="S3.I1">
+<li class="ltx_item" id="S3.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i1.p1">
+<p class="ltx_p" id="S3.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i1.p1.1.1">Greedy Baseline:</span> Prioritizes prediction accuracy without considering the number of retraining actions.
+The policy selects the retraining action at every decision step, which minimizes drift impact but incurs high computational overhead.</p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i2.p1">
+<p class="ltx_p" id="S3.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i2.p1.1.1">Random Baseline:</span> Selects actions randomly based on a uniform distribution.
+The policy does not incorporate system state or traffic dynamics and therefore lacks adaptive decision-making capability.</p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="S3.p5">
+<p class="ltx_p" id="S3.p5.1">To assess the performance of the proposed approach, three key performance metrics are considered, which are as follows:</p>
+<ul class="ltx_itemize" id="S3.I2">
+<li class="ltx_item" id="S3.I2.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I2.i1.p1">
+<p class="ltx_p" id="S3.I2.i1.p1.6"><span class="ltx_text ltx_font_bold" id="S3.I2.i1.p1.6.1">Normalized Mean Absolute Error (nMAE):</span> It measures forecasting accuracy by quantifying the difference between predicted and actual traffic values.</p>
+<table class="ltx_equation ltx_eqn_table" id="S3.Ex1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\text{nMAE}=\frac{1}{N}\sum_{t=1}^{N}\frac{|y_{t}-\hat{y}_{t}|}{\bar{y}}" class="ltx_Math" display="block" id="S3.Ex1.m1" intent=":literal"><semantics><mrow><mtext>nMAE</mtext><mo>=</mo><mrow><mfrac><mn>1</mn><mi>N</mi></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><munderover><mo movablelimits="false">∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><mfrac><mrow><mo stretchy="false">|</mo><mrow><msub><mi>y</mi><mi>t</mi></msub><mo>−</mo><msub><mover accent="true"><mi>y</mi><mo>^</mo></mover><mi>t</mi></msub></mrow><mo stretchy="false">|</mo></mrow><mover accent="true"><mi>y</mi><mo>¯</mo></mover></mfrac></mrow></mrow></mrow><annotation encoding="application/x-tex">\text{nMAE}=\frac{1}{N}\sum_{t=1}^{N}\frac{|y_{t}-\hat{y}_{t}|}{\bar{y}}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.I2.i1.p1.5">where, <math alttext="y_{t}" class="ltx_Math" display="inline" id="S3.I2.i1.p1.1.m1" intent=":literal"><semantics><msub><mi>y</mi><mi>t</mi></msub><annotation encoding="application/x-tex">y_{t}</annotation></semantics></math> denotes the actual traffic value at time step <math alttext="t" class="ltx_Math" display="inline" id="S3.I2.i1.p1.2.m2" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>, <math alttext="\hat{y}_{t}" class="ltx_Math" display="inline" id="S3.I2.i1.p1.3.m3" intent=":literal"><semantics><msub><mover accent="true"><mi>y</mi><mo>^</mo></mover><mi>t</mi></msub><annotation encoding="application/x-tex">\hat{y}_{t}</annotation></semantics></math> denotes the predicted value, <math alttext="\bar{y}" class="ltx_Math" display="inline" id="S3.I2.i1.p1.4.m4" intent=":literal"><semantics><mover accent="true"><mi>y</mi><mo>¯</mo></mover><annotation encoding="application/x-tex">\bar{y}</annotation></semantics></math> denotes the mean of the actual values, <math alttext="N" class="ltx_Math" display="inline" id="S3.I2.i1.p1.5.m5" intent=":literal"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math> is the total number of samples. <em class="ltx_emph ltx_font_italic" id="S3.I2.i1.p1.5.1">nMAE</em> also serves as an indicator for drift detection based on the pre-defined 25% threshold <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib17" title="Multilayer Concept Drift Detection Method Based on Model Explainability">8</a>]</cite>.</p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I2.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I2.i2.p1">
+<p class="ltx_p" id="S3.I2.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I2.i2.p1.1.1">Cumulative Reward:</span> It evaluates the effectiveness of the learned policy by aggregating rewards over time, which reflects how well the proposed approach balances prediction accuracy and cumulative retraining actions.</p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I2.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I2.i3.p1">
+<p class="ltx_p" id="S3.I2.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I2.i3.p1.1.1">Cumulative Retraining Actions:</span> It quantifies resource efficiency by counting the number of retraining actions, which highlights the ability of the proposed approach to reduce computational and operational overhead compared to baseline approaches.</p>
+</div>
+</li>
+</ul>
+</div>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S3.SS1.4.1.1">III-A</span> </span><span class="ltx_text ltx_font_italic" id="S3.SS1.5.2">Results</span>
+</h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1">Figure. <a class="ltx_ref" href="#S3.F3" title="Figure 3 ‣ III-A Results ‣ III Performance Evaluation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">3</span></a> depicts the cumulative retraining actions of the considered approaches across 300 training episodes.
+The curves are smoothed using a moving average with a window size of 10 episodes.
+The greedy baseline maintains a constant 8 retraining actions per episode, as the policy always selects the retraining action without considering computational overhead.
+The random baseline exhibits highly fluctuating behavior, with the smoothed cumulative retraining actions varying approximately 3.0 and 5.4 actions per episode (averaging 4.1 actions), due to stochastic decision-making without awareness of traffic dynamics.
+The proposed Q-learning-based approach demonstrates a consistent learning trend across episodes, with the number of retraining actions gradually decreasing from approximately 4–6 in the initial episodes to about 1–3 in the later episodes, indicating that the agent learns to avoid unnecessary retraining while maintaining predictive performance.</p>
+</div>
+<figure class="ltx_figure" id="S3.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="547" id="S3.F3.g1" src="https://arxiv.org/html/2607.08443v1/x3.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Cumulative Retraining Actions vs Episodes</figcaption>
+</figure>
+<figure class="ltx_figure" id="S3.F4"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="546" id="S3.F4.g1" src="https://arxiv.org/html/2607.08443v1/x4.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Normalized Mean Absolute Error vs Episodes</figcaption>
+</figure>
+<div class="ltx_para" id="S3.SS1.p2">
+<p class="ltx_p" id="S3.SS1.p2.12">Figure. <a class="ltx_ref" href="#S3.F4" title="Figure 4 ‣ III-A Results ‣ III Performance Evaluation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">4</span></a> presents the nMAE of the considered approaches across 300 training episodes, along with the predefined drift tolerance threshold.
+The curves are smoothed using a moving average with a window size of 10 episodes.
+The Greedy baseline achieves the lowest nMAE, gradually decreasing to approximately <math alttext="0.15" class="ltx_Math" display="inline" id="S3.SS1.p2.1.m1" intent=":literal"><semantics><mn>0.15</mn><annotation encoding="application/x-tex">0.15</annotation></semantics></math>–<math alttext="0.16" class="ltx_Math" display="inline" id="S3.SS1.p2.2.m2" intent=":literal"><semantics><mn>0.16</mn><annotation encoding="application/x-tex">0.16</annotation></semantics></math> (<math alttext="15\%" class="ltx_Math" display="inline" id="S3.SS1.p2.3.m3" intent=":literal"><semantics><mrow><mn>15</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">15\%</annotation></semantics></math>–<math alttext="16\%" class="ltx_Math" display="inline" id="S3.SS1.p2.4.m4" intent=":literal"><semantics><mrow><mn>16</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">16\%</annotation></semantics></math>) by the end of training due to continuous retraining at every step.
+The Random baseline stabilizes around <math alttext="0.18" class="ltx_Math" display="inline" id="S3.SS1.p2.5.m5" intent=":literal"><semantics><mn>0.18</mn><annotation encoding="application/x-tex">0.18</annotation></semantics></math>–<math alttext="0.19" class="ltx_Math" display="inline" id="S3.SS1.p2.6.m6" intent=":literal"><semantics><mn>0.19</mn><annotation encoding="application/x-tex">0.19</annotation></semantics></math> (<math alttext="18\%" class="ltx_Math" display="inline" id="S3.SS1.p2.7.m7" intent=":literal"><semantics><mrow><mn>18</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">18\%</annotation></semantics></math>–<math alttext="19\%" class="ltx_Math" display="inline" id="S3.SS1.p2.8.m8" intent=":literal"><semantics><mrow><mn>19</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">19\%</annotation></semantics></math>), but lacking stability due to stochastic decision-making.
+The proposed Q-learning-based approach converges to a stable nMAE of approximately <math alttext="0.17" class="ltx_Math" display="inline" id="S3.SS1.p2.9.m9" intent=":literal"><semantics><mn>0.17</mn><annotation encoding="application/x-tex">0.17</annotation></semantics></math>–<math alttext="0.18" class="ltx_Math" display="inline" id="S3.SS1.p2.10.m10" intent=":literal"><semantics><mn>0.18</mn><annotation encoding="application/x-tex">0.18</annotation></semantics></math> (<math alttext="17\%" class="ltx_Math" display="inline" id="S3.SS1.p2.11.m11" intent=":literal"><semantics><mrow><mn>17</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">17\%</annotation></semantics></math>–<math alttext="18\%" class="ltx_Math" display="inline" id="S3.SS1.p2.12.m12" intent=":literal"><semantics><mrow><mn>18</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">18\%</annotation></semantics></math>), remaining consistently below the drift threshold throughout training.
+Although the Greedy baseline achieves better accuracy, the proposed approach maintains comparable predictive performance while significantly reducing retraining cost, as observed in Fig. <a class="ltx_ref" href="#S3.F3" title="Figure 3 ‣ III-A Results ‣ III Performance Evaluation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">3</span></a>.</p>
+</div>
+<figure class="ltx_figure" id="S3.F5"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="546" id="S3.F5.g1" src="https://arxiv.org/html/2607.08443v1/x5.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Cumulative Reward vs Episodes</figcaption>
+</figure>
+<div class="ltx_para" id="S3.SS1.p3">
+<p class="ltx_p" id="S3.SS1.p3.10">Figure. <a class="ltx_ref" href="#S3.F5" title="Figure 5 ‣ III-A Results ‣ III Performance Evaluation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">5</span></a> depicts the cumulative reward as a function of the number of training episodes.
+During the early exploration phase (i.e., episodes <math alttext="1" class="ltx_Math" display="inline" id="S3.SS1.p3.1.m1" intent=":literal"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>–<math alttext="15" class="ltx_Math" display="inline" id="S3.SS1.p3.2.m2" intent=":literal"><semantics><mn>15</mn><annotation encoding="application/x-tex">15</annotation></semantics></math>), the proposed approach exhibits negative rewards, fluctuating between approximately <math alttext="-132" class="ltx_Math" display="inline" id="S3.SS1.p3.3.m3" intent=":literal"><semantics><mrow><mo>−</mo><mn>132</mn></mrow><annotation encoding="application/x-tex">-132</annotation></semantics></math> and <math alttext="-17" class="ltx_Math" display="inline" id="S3.SS1.p3.4.m4" intent=":literal"><semantics><mrow><mo>−</mo><mn>17</mn></mrow><annotation encoding="application/x-tex">-17</annotation></semantics></math>.
+From around episode <math alttext="20" class="ltx_Math" display="inline" id="S3.SS1.p3.5.m5" intent=":literal"><semantics><mn>20</mn><annotation encoding="application/x-tex">20</annotation></semantics></math>, the reward consistently remains positive, fluctuating between <math alttext="-5" class="ltx_Math" display="inline" id="S3.SS1.p3.6.m6" intent=":literal"><semantics><mrow><mo>−</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">-5</annotation></semantics></math> and <math alttext="321" class="ltx_Math" display="inline" id="S3.SS1.p3.7.m7" intent=":literal"><semantics><mn>321</mn><annotation encoding="application/x-tex">321</annotation></semantics></math>, which indicates that the agent begins to learn effective retraining policies.
+Beyond episode <math alttext="150" class="ltx_Math" display="inline" id="S3.SS1.p3.8.m8" intent=":literal"><semantics><mn>150</mn><annotation encoding="application/x-tex">150</annotation></semantics></math>, the reward stabilizes further, remaining within the range of <math alttext="80" class="ltx_Math" display="inline" id="S3.SS1.p3.9.m9" intent=":literal"><semantics><mn>80</mn><annotation encoding="application/x-tex">80</annotation></semantics></math> to <math alttext="184" class="ltx_Math" display="inline" id="S3.SS1.p3.10.m10" intent=":literal"><semantics><mn>184</mn><annotation encoding="application/x-tex">184</annotation></semantics></math>, demonstrating policy convergence.
+The Greedy baseline accumulates consistently negative rewards due to redundant retraining actions that incur penalties from unnecessary computational cost.
+The Random baseline exhibits highly unstable reward behavior, with frequent penalties caused by both false alarms and unnecessary retraining decisions.
+The proposed approach effectively learns a balanced retraining policy, outperforming the baseline methods in terms of both decision efficiency and long-term reward.</p>
+</div>
+<figure class="ltx_figure" id="S3.F6"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="553" id="S3.F6.g1" src="https://arxiv.org/html/2607.08443v1/x6.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>Mean Square Error vs Epochs</figcaption>
+</figure>
+<div class="ltx_para" id="S3.SS1.p4">
+<p class="ltx_p" id="S3.SS1.p4.5">Figure. <a class="ltx_ref" href="#S3.F6" title="Figure 6 ‣ III-A Results ‣ III Performance Evaluation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">6</span></a> illustrates the effectiveness of the proposed multi-expert ensemble architecture by presenting the Mean Squared Error (MSE) of eight specialized LSTM models over 140 training epochs.
+Each model corresponds to a specific traffic state.
+The results show a rapid decline in MSE during the initial 10–20 epochs, where most models reduce their initial errors from approximately <math alttext="0.25" class="ltx_Math" display="inline" id="S3.SS1.p4.1.m1" intent=":literal"><semantics><mn>0.25</mn><annotation encoding="application/x-tex">0.25</annotation></semantics></math>–<math alttext="0.67" class="ltx_Math" display="inline" id="S3.SS1.p4.2.m2" intent=":literal"><semantics><mn>0.67</mn><annotation encoding="application/x-tex">0.67</annotation></semantics></math> to below <math alttext="0.1" class="ltx_Math" display="inline" id="S3.SS1.p4.3.m3" intent=":literal"><semantics><mn>0.1</mn><annotation encoding="application/x-tex">0.1</annotation></semantics></math>, indicating fast convergence during early training.
+As training progresses, all models continue to converge smoothly, reaching stable MSE values between <math alttext="0.01" class="ltx_Math" display="inline" id="S3.SS1.p4.4.m4" intent=":literal"><semantics><mn>0.01</mn><annotation encoding="application/x-tex">0.01</annotation></semantics></math> and <math alttext="0.02" class="ltx_Math" display="inline" id="S3.SS1.p4.5.m5" intent=":literal"><semantics><mn>0.02</mn><annotation encoding="application/x-tex">0.02</annotation></semantics></math> after approximately 60–100 epochs.
+All eight models exhibit consistent convergence behavior.
+The proposed approach effectively mitigates catastrophic forgetting by assigning each model to a specific traffic state, instead of relying on a single generalized model.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">IV </span><span class="ltx_text ltx_font_smallcaps" id="S4.1.1">Conclusions and Future Work</span>
+</h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1">The proposed work introduces ADORN, a Q-learning-based adaptive drift handling approach for O-RAN that formulates the retraining decision as a sequential decision-making problem, enabling intelligent, selective model updates based on real-time system conditions.
+Experimental results demonstrate an effective balance between forecasting accuracy and computational efficiency.
+Moreover, the observed reward convergence confirms that the Q-learning agent learns a stable and efficient policy under non-stationary traffic conditions.
+The discretized state space restricts scalability in highly dynamic environments with continuous traffic variations, and the use of tabular Q-learning limits generalization to unseen states.
+Future work will address these limitations by exploring Deep Reinforcement Learning (DRL) to enable learning over large continuous state spaces for drift management in large-scale O-RAN deployments.</p>
+</div>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">V </span><span class="ltx_text ltx_font_smallcaps" id="S5.1.1">Acknowledgement</span>
+</h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1">This work has been partially supported by TTDF “SMARTRIC6G: Smart Drift-Handling Enabler for RAN Intelligent Controllers in 6G Networks (TTDF/6G/422)” project.</p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib3">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">V. Gudepu, V. R. Chintapalli, P. Castoldi, L. Valcarenghi, B. R. Tamma, and K. Kondepu</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">The Drift Handling Framework for Open Radio Access Networks: An Experimental Evaluation</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Computer Networks</span>, <span class="ltx_text ltx_bib_pages"> pp. 110290</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="I Introduction ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib4">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Liu, F. Bronzino, P. Schmitt, A. N. Bhagoji, N. Feamster, H. G. Crespo, T. Coyle, and B. Ward</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">LEAF: Navigating Concept Drift in Cellular Networks</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Proceedings of the ACM on Networking</span> <span class="ltx_text ltx_bib_volume">1</span> (<span class="ltx_text ltx_bib_number">CoNEXT2</span>), <span class="ltx_text ltx_bib_pages"> pp. 1–24</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p5.1" title="I Introduction ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib6">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Lu, A. Liu, F. Dong, F. Gu, J. Gama, and G. Zhang</span><span class="ltx_text ltx_bib_year"> (2018)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Learning under Concept Drift: A Review</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE transactions on knowledge and data engineering</span> <span class="ltx_text ltx_bib_volume">31</span> (<span class="ltx_text ltx_bib_number">12</span>), <span class="ltx_text ltx_bib_pages"> pp. 2346–2363</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="I Introduction ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib20">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Polese, L. Bonati, S. D’Oro, S. Basagni, and T. Melodia</span><span class="ltx_text ltx_bib_year"> (2022)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">ColO-RAN: Developing machine learning-based xApps for open RAN closed-loop control on programmable experimental platforms</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Transactions on Mobile Computing</span> <span class="ltx_text ltx_bib_volume">22</span> (<span class="ltx_text ltx_bib_number">10</span>), <span class="ltx_text ltx_bib_pages"> pp. 5787–5800</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.p2.1" title="III Performance Evaluation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">§III</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib1">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Polese, L. Bonati, S. D’oro, S. Basagni, and T. Melodia</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Understanding O-RAN: Architecture, interfaces, algorithms, security, and research challenges</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Communications Surveys &amp; Tutorials</span> <span class="ltx_text ltx_bib_volume">25</span> (<span class="ltx_text ltx_bib_number">2</span>), <span class="ltx_text ltx_bib_pages"> pp. 1376–1411</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="I Introduction ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib18">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Saurav, P. Malhotra, V. TV, N. Gugulothu, L. Vig, P. Agarwal, and G. Shroff</span><span class="ltx_text ltx_bib_year"> (2018)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Online anomaly detection with concept drift adaptation using recurrent neural networks</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the ACM India Joint International Conference on Data Science and Management of Data</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_series">CODS-COMAD ’18</span>, <span class="ltx_text ltx_bib_pages"> pp. 78–87</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p4.1" title="I Introduction ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib16">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">R. S. Sutton and A. G. Barto</span><span class="ltx_text ltx_bib_year"> (2018)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Reinforcement learning: An introduction second edition</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Adaptive computation and machine learning: The MIT Press, Cambridge, MA and London</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.5" title="II-B Objective Function and Learning Strategy ‣ II System Model and RL Problem Formulation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">§<span class="ltx_text">II-B</span></span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib17">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">H. Zhang, X. Chen, M. Hu, and V. Sugumaran</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Multilayer Concept Drift Detection Method Based on Model Explainability</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Access</span> <span class="ltx_text ltx_bib_volume">12</span> (<span class="ltx_text ltx_bib_number"></span>), <span class="ltx_text ltx_bib_pages"> pp. 190791–190808</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.I2.i1.p1.5" title="In III Performance Evaluation ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">1st item</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib7">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">K. Zhang, A. T. Bui, and D. W. Apley</span><span class="ltx_text ltx_bib_year"> (2020)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Concept Drift Monitoring and Diagnostics of Supervised Learning Models via Score Vectors</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2012.06916</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="I Introduction ‣ ADORN: Adaptive Drift handling for Open RAN using Reinforcement Learning"><span class="ltx_text ltx_ref_tag">§I</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo">
+    Experimental support, please
+    <a class="ltx_ref" href="https://arxiv.org/html/./2607.08443v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a>
+    for errors. Generated by
+    <a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2>Instructions for reporting errors</h2>
+<p>We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</p>
+<ul>
+<li>Click the "Report Issue" <span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span> button, located in the page header.</li>
+</ul>
+<p><strong>Tip:</strong> You can select the relevant text first, to include it in your report.</p>
+<p>Our team has already identified <a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a>. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</p>
+<p>Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a <a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a>, and welcome <a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer><footer class="ds-site-footer">
+<div class="ds-site-footer-grid">
+<div class="ds-site-footer-main">
+<div class="ds-site-footer-ack">
+        We gratefully acknowledge support from
+        our <strong>major funders</strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong>member institutions</strong></a><span class="ack-member-inline" hidden="">, <strong></strong></span>,
+        and all contributors.
+      </div>
+<nav aria-label="Site navigation" class="ds-site-footer-links">
+<a href="https://info.arxiv.org/about">About</a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help">Help</a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/contact.html">Contact</a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/subscribe">Subscribe</a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/license/index.html">Copyright</a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/policies/privacy_policy.html">Privacy</a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/web_accessibility.html">Accessibility</a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://status.arxiv.org" rel="noopener noreferrer" target="_blank">Operational Status<span class="is-sr-only"> (opens in new tab)</span></a>
+</nav>
+</div>
+<div aria-label="Major funders" class="ds-site-footer-funders">
+<div class="ds-site-footer-funders-label">Major funding support from</div>
+<div class="ds-site-footer-funders-logos">
+<img alt="Simons Foundation" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png"/>
+<img alt="Schmidt Sciences" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/schmidt-sciences.png"/>
+</div>
+</div>
+</div>
+</footer><div id="fixed-buttons-container">
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
