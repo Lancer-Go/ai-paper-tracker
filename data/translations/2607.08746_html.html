@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title>Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph</title>
+<!--Generated on Thu Jul  9 17:27:16 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.-->
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+    // Pre-apply spinout-banner dismissal here, before the banner paints, so it
+    // never flashes in only to be hidden later by the deferred arxiv-header.js.
+    // Key matches arxiv-header.js: "arxiv-banner-dismissed:" + data-banner-name.
+    if (localStorage.getItem('arxiv-banner-dismissed:spinout-nonprofit')) {
+      document.documentElement.setAttribute("data-banner-dismissed", "");
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/><link href="https://arxiv.org/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626" media="screen" rel="stylesheet" type="text/css"/><style>
+  /* Banner pre-dismissal (set above before paint -> no flash-then-hide) and
+     reading-mode chrome hiding. */
+  html[data-banner-dismissed] .ds-announcement { display: none; }
+  html[data-reading-mode="enabled"] .ds-announcement,
+  html[data-reading-mode="enabled"] .ds-site-footer { display: none; }
+  /* Keep the announcement text dark on the Open-Blue band in both colour themes
+     (otherwise it inherits the paper's warm-wash text in dark mode and washes out). */
+  .ds-announcement-text { color: var(--arxiv-ink, #1c1a17); }
+</style>
+<script defer="" src="https://arxiv.org/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2607.08746" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2607.08746" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title">Report GitHub Issue</h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title">Title:</label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription">Content selection saved. Describe the issue below:</p>
+<label for="description">Description:</label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report">Submit without GitHub</button>
+<button class="modal-submit" type="submit" value="github-report">Submit in GitHub</button>
+</footer>
+</form>
+</dialog><div aria-label="Announcement" class="ds-announcement" data-banner-name="spinout-nonprofit" id="announcement-banner" role="region">
+<img alt="" aria-hidden="true" class="ds-announcement-glyph" src="https://arxiv.org/static/base/1.0.1/images/icons/smileybones-small.svg"/>
+<span class="ds-announcement-text">arXiv is now an independent nonprofit!</span>
+<a class="ds-announcement-link" href="https://info.arxiv.org/about">Learn more</a>
+<button aria-label="Dismiss announcement" class="ds-announcement-close" type="button">×</button>
+</div>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/"><img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/base/1.0.1/images/arxiv-logo-primary-light.svg" width="100"/>
+<span class="sr-only">Back to arXiv</span>
+</a>
+</div>
+<!--TOC, dark mode, links-->
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank">Why HTML?</a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only">Report Issue</span></a>
+<!--back to abstract-->
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2607.08746v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only">Back to Abstract</span>
+</a>
+<!-- PDF download link -->
+<a class="header-button" href="https://arxiv.org/pdf/2607.08746v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only">Download PDF</span></a>
+<!-- navigational table of contents toggle -->
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<!--- collapsable header / reading mode toggle -->
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<!--- colored theme toggle -->
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Related Work</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Graph Algorithms on UMAP’s kNN Graph</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S2.SS1" title="In 2 Graph Algorithms on UMAP’s kNN Graph ‣ Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.1 </span>PageRank for Representative Selection</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S2.SS1.SSS1" title="In 2.1 PageRank for Representative Selection ‣ 2 Graph Algorithms on UMAP’s kNN Graph ‣ Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.1.1 </span>Evaluation: PageRank</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S2.SS2" title="In 2 Graph Algorithms on UMAP’s kNN Graph ‣ Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.2 </span>k-Core Decomposition for Density Hierarchy</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S2.SS2.SSS1" title="In 2.2 k-Core Decomposition for Density Hierarchy ‣ 2 Graph Algorithms on UMAP’s kNN Graph ‣ Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.2.1 </span>Evaluation: k-Core</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S2.SS3" title="In 2 Graph Algorithms on UMAP’s kNN Graph ‣ Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.3 </span>Clustering Coefficient for Local Cohesion</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S2.SS3.SSS1" title="In 2.3 Clustering Coefficient for Local Cohesion ‣ 2 Graph Algorithms on UMAP’s kNN Graph ‣ Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.3.1 </span>Evaluation: Clustering Coefficient</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S3" title="In Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Implementation</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Conclusion and Discussion</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_acknowledgements"><a class="ltx_ref" href="#S4.acknowledgements1" title="In 4 Conclusion and Discussion ‣ Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_title">Acknowledgements</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr">
+    License: CC BY 4.0
+  </a>
+<div id="watermark-tr">
+arXiv:2607.08746v1 [cs.LG] 09 Jul 2026</div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<div class="ltx_para" id="p1">
+<span class="ltx_ERROR undefined" id="p1.4">\onlineid</span>
+<p class="ltx_p" id="p1.3">0<span class="ltx_ERROR undefined" id="p1.3.3">\vgtccategory</span>Research<span class="ltx_ERROR undefined" id="p1.3.4">\vgtcinsertpkg</span><span class="ltx_ERROR undefined" id="p1.3.5">\teaser</span><img alt="[Uncaptioned image]" class="ltx_graphics ltx_centering ltx_img_landscape" height="281" id="p1.1.g1" src="https://arxiv.org/html/2607.08746v1/figures/crownjewel.png" width="598"/>
+<span class="ltx_text ltx_caption ltx_align_center" id="p1.3.2">Standard graph algorithms applied to UMAP’s internal <math alttext="k" class="ltx_Math" display="inline" id="p1.2.1.m1" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>NN graph reveal structure lost in 2D scatter plot layouts.
+<span class="ltx_text ltx_font_bold" id="p1.3.2.1">A.</span> PageRank on the Fashion MNIST <math alttext="k" class="ltx_Math" display="inline" id="p1.3.2.m2" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>NN graph identifies representative data points. The highest-scoring points exhibit prototypical appearances, while the lowest-scoring points display atypical variations. Top 500 points shown in high saturation.
+<span class="ltx_text ltx_font_bold" id="p1.3.2.2">B.</span> k-core decomposition reveals distinct sub-categories in the “bag” class (e.g., messenger bags, waist packs, heavy textures) through filtering for a coreness of 6 from the dense mass of points in the 2D scatter plot layout. Grayscale images inverted for clarity.</span></p>
+</div>
+<h1 class="ltx_title ltx_title_document">Dimensionality Reduction Meets Network Science: 
+<br class="ltx_break"/>Sensemaking on UMAP’s kNN Graph </h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Duen Horng (Polo) Chau
+<br class="ltx_break"/><span class="ltx_text" id="1.1.1" style="font-size:70%;">Apple </span>
+</span><span class="ltx_author_notes">e-mail: polochau@apple.com</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Donghao Ren
+<br class="ltx_break"/><span class="ltx_text" id="2.1.1" style="font-size:70%;">Apple </span>
+</span><span class="ltx_author_notes">e-mail: donghao@apple.com</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Fred Hohman
+<br class="ltx_break"/><span class="ltx_text" id="3.1.1" style="font-size:70%;">Apple </span>
+</span><span class="ltx_author_notes">e-mail: fredhohman@apple.com</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Dominik Moritz
+<br class="ltx_break"/><span class="ltx_text" id="4.1.1" style="font-size:70%;">Apple </span>
+</span><span class="ltx_author_notes">e-mail: domoritz@apple.com</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract">Abstract</h6>
+<p class="ltx_p">While UMAP is widely used for exploring high-dimensional data, typical workflows focus on its lower-dimensional embedding, largely overlooking the rich <math alttext="k" class="ltx_Math" display="inline" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-nearest-neighbor (kNN) graph that UMAP constructs internally.
+This graph encodes the data manifold in its original high-dimensional space, <span class="ltx_text ltx_font_italic">before</span> the distortion that UMAP’s 2D projection introduces.
+We demonstrate the untapped potential of this internal representation, showing how standard graph algorithms applied to this graph enhance data sensemaking:
+(1) <span class="ltx_text ltx_font_italic">PageRank</span> identifies representative data points,
+(2) <span class="ltx_text ltx_font_italic">k-core decomposition</span> reveals dense core regions versus sparse periphery, and
+(3) <span class="ltx_text ltx_font_italic">clustering coefficient</span> detects tight-knit neighborhoods with highly-similar data points.
+Through quantitative and qualitative evaluation on MNIST and Fashion MNIST, we show that these graph-based analyses are not only practical but also competitive with or complementary to purpose-built methods (e.g., <math alttext="k" class="ltx_Math" display="inline" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-medoids for exemplar selection, HDBSCAN for density-based clustering).</p>
+</div>
+<div class="ltx_classification">
+<h6 class="ltx_title ltx_title_classification">keywords: </h6>Dimensionality reduction, graph algorithms, UMAP, kNN graph, sensemaking.
+</div>
+<div class="ltx_para" id="p2">
+<p class="ltx_p" id="p2.1">Introduction</p>
+</div>
+<div class="ltx_para" id="p3">
+<p class="ltx_p" id="p3.1">UMAP <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">2018arXivUMAP</span>]</cite> is among the most widely used tools for visually exploring high-dimensional data.
+Yet the 2D scatter plot output by UMAP is typically treated as the sole analytical artifact <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">espadoto2019toward</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">jeon2025stop</span>]</cite>.</p>
+</div>
+<div class="ltx_para" id="p4">
+<p class="ltx_p" id="p4.5"><span class="ltx_text ltx_font_bold" id="p4.5.1">UMAP’s discarded kNN graph.</span>
+Before producing a 2D layout, UMAP builds a weighted directed graph that models the data manifolds’ local geometry (<a class="ltx_ref" href="#S0.F1" title="In Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_tag">Fig.</span> <span class="ltx_text ltx_ref_tag">1</span></a>).
+For each point, it finds <math alttext="k" class="ltx_Math" display="inline" id="p4.1.m1" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> nearest neighbors in high-dimensional space, then applies a density-adaptive normalization:
+each point’s bandwidth <math alttext="\sigma_{i}" class="ltx_Math" display="inline" id="p4.2.m2" intent=":literal"><semantics><msub><mi>σ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\sigma_{i}</annotation></semantics></math> is calibrated to its local density, transforming raw distances into <span class="ltx_text ltx_font_italic" id="p4.5.2">membership strengths</span> in <math alttext="[0,1]" class="ltx_Math" display="inline" id="p4.3.m3" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[0,1]</annotation></semantics></math> that are comparable across sparse and dense regions <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">2018arXivUMAP</span>]</cite>.
+Every point has exactly <math alttext="k" class="ltx_Math" display="inline" id="p4.4.m4" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> outgoing edges, but in-degree varies: points deemed similar by many others receive more incoming edges, while dissimilar ones are nominated by few.
+We call this the <span class="ltx_text ltx_font_bold" id="p4.5.3">kNN graph</span> for short.
+This <math alttext="k" class="ltx_Math" display="inline" id="p4.5.m5" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>NN graph encodes the manifold’s connectivity far more faithfully than the 2D scatter plot layout that UMAP subsequently optimizes from it <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">coenenunderstanding</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">jeon2025stop</span>]</cite>—yet after layout optimization, the graph is typically set aside.
+We argue it should be retained as a <span class="ltx_text ltx_font_bold" id="p4.5.4">first-class</span> analytical resource.</p>
+</div>
+<div class="ltx_para" id="p5">
+<p class="ltx_p" id="p5.1"><span class="ltx_text ltx_font_bold" id="p5.1.1">Sensemaking from kNN graph.</span>
+Because the <math alttext="k" class="ltx_Math" display="inline" id="p5.1.m1" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>NN graph faithfully reflects the high-dimensional manifold, standard graph algorithms can be applied to answer sensemaking questions—about representativeness, density structure, and local cohesion—that the 2D scatter plot alone cannot.</p>
+</div>
+<div class="ltx_para ltx_noindent" id="p6">
+<p class="ltx_p" id="p6.1">Our work makes two major contributions:</p>
+<ol class="ltx_enumerate" id="S0.I1">
+<li class="ltx_item" id="S0.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span>
+<div class="ltx_para" id="S0.I1.i1.p1">
+<p class="ltx_p" id="S0.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S0.I1.i1.p1.1.1">Elevating UMAP’s kNN graph to a first-class analytical resource,</span>
+bridging dimensionality reduction and network science.
+Instead of treating this graph as a disposable intermediate,
+this perspective enables direct application of standard graph algorithms
+to leverage the high-dimensional manifold encoded <span class="ltx_text ltx_font_italic" id="S0.I1.i1.p1.1.2">before</span> projection distortion, enabling complementary sensemaking beyond what 2D scatter plot layouts provide:
+(1) <span class="ltx_text ltx_font_italic" id="S0.I1.i1.p1.1.3">PageRank</span> <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">brin1998anatomy</span>]</cite> identifies globally representative points via transitive centrality: a node ranks high when many high-ranking nodes nominate it as a neighbor;
+(2) <span class="ltx_text ltx_font_italic" id="S0.I1.i1.p1.1.4">k-core decomposition</span> <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">batagelj2003an</span>]</cite> reveals dense core regions versus sparse periphery;
+and
+(3) <span class="ltx_text ltx_font_italic" id="S0.I1.i1.p1.1.5">clustering coefficient</span> <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">watts1998collective</span>]</cite> detects tight-knit micro neighborhoods with highly-similar data points.</p>
+</div>
+</li>
+<li class="ltx_item" id="S0.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span>
+<div class="ltx_para" id="S0.I1.i2.p1">
+<p class="ltx_p" id="S0.I1.i2.p1.2"><span class="ltx_text ltx_font_bold" id="S0.I1.i2.p1.2.1">Quantitative and qualitative evidence of effectiveness.</span>
+On the MNIST and Fashion MNIST datasets,
+graph-based analyses prove competitive or complementary to purpose-built methods (e.g., <math alttext="k" class="ltx_Math" display="inline" id="S0.I1.i2.p1.1.m1" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-medoids <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">park2009simple</span>]</cite> for exemplar selection, HDBSCAN for density-based clustering):
+PageRank-selected data points achieve superior class balance to <math alttext="k" class="ltx_Math" display="inline" id="S0.I1.i2.p1.2.m2" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-medoids and rival on representativeness and downstream classification accuracy;
+k-core decomposition reveals a graduated subgraph hierarchy that discrete cluster labels (e.g., from HDBSCAN <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">mcinnes2017hdbscan</span>]</cite>) cannot capture;
+and clustering coefficient reveals distinct micro-clusters where points consider each other as mutual nearest neighbors.</p>
+</div>
+</li>
+</ol>
+</div>
+<figure class="ltx_figure" id="S0.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="312" id="S0.F1.g1" src="https://arxiv.org/html/2607.08746v1/figures/what-graph.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span><span class="ltx_text ltx_font_bold" id="S0.F1.7.1">UMAP’s 2D layout discards structural information preserved in its intermediate kNN graph.</span>
+<span class="ltx_text ltx_font_bold" id="S0.F1.8.2">A.</span> Original data with two Gaussian clusters of same point counts: one <span class="ltx_text" id="S0.F1.9.3" style="--ltx-fg-color:#BA2F29;">sparse</span> and one <span class="ltx_text" id="S0.F1.10.4" style="--ltx-fg-color:#3A6FB0;">dense</span>, with 15-NN graph overlaid (shorter edges darker).
+<span class="ltx_text ltx_font_bold" id="S0.F1.11.5">B.</span> Standard 2D UMAP normalizes local distances; clusters appear similar sized.
+<span class="ltx_text ltx_font_bold" id="S0.F1.12.6">C.</span> Same layout, colored by graph-derived local density (inverse mean kNN distance in original space; darker = denser),
+recovering structure lost in projection.
+The graph also encodes centrality, connectivity hierarchy, and local cohesion (<a class="ltx_ref" href="#S2" title="2 Graph Algorithms on UMAP’s kNN Graph ‣ Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_tag">Section</span> <span class="ltx_text ltx_ref_tag">2</span></a>).</figcaption>
+</figure>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span>Related Work</h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="ltx_text ltx_font_bold" id="S1.p1.1.1">Interpreting dimensionality reduction (DR).</span>
+Surveys of DR techniques have extensively cataloged quality metrics, distortion measures, and layout enrichment strategies <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">nonato2019multidimensional</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">espadoto2019toward</span>]</cite>, and recent work has highlighted persistent misinterpretation of DR outputs <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">jeon2025stop</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">coenenunderstanding</span>]</cite>.
+These efforts focus on improving or qualifying the 2D layout itself.
+We take a complementary path: rather than refining layout interpretation, we operate directly on the pre-projection kNN graph that UMAP <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">2018arXivUMAP</span>]</cite> constructs as an intermediate representation.</p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="ltx_text ltx_font_bold" id="S1.p2.1.1">Clustering and selection on embeddings.</span>
+Data analysis workflows commonly project data with UMAP and then apply clustering or selection on the low-dimensional output with HDBSCAN <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">mcinnes2017hdbscan</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">becht2019dimensionality</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">allaoui2020considerably</span>]</cite> or <math alttext="k" class="ltx_Math" display="inline" id="S1.p2.1.m1" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-medoids <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">park2009simple</span>]</cite>.
+These methods analyze the <em class="ltx_emph ltx_font_italic" id="S1.p2.1.2">projected</em> output.
+Our approach instead operates on UMAP’s pre-projection kNN graph, which encodes the high-dimensional manifold before layout optimization distorts it.</p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="ltx_text ltx_font_bold" id="S1.p3.1.1">kNN graphs in manifold learning.</span>
+Manifold learning methods such as Laplacian Eigenmaps <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">belkin2003laplacian</span>]</cite> and UMAP <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">2018arXivUMAP</span>]</cite> build explicit kNN graphs as an intermediate step, yet discard them after computing the embedding.
+We argue this graph should be retained, and show that classical graph algorithms—PageRank <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">brin1998anatomy</span>]</cite>, k-core decomposition <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">batagelj2003an</span>]</cite>, clustering coefficient <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">watts1998collective</span>]</cite>—applied to it yield sensemaking capabilities complementary to the 2D scatter plot.
+Our work also differs from domain-specific workflows (e.g., scanpy <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">wolf2018scanpy</span>]</cite>) that build a separate graph for community detection <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">traag2019louvain</span>]</cite>; we instead reuse UMAP’s own graph and apply complementary per-point scoring algorithms.</p>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span>Graph Algorithms on UMAP’s kNN Graph</h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.3">The UMAP <math alttext="k" class="ltx_Math" display="inline" id="S2.p1.1.m1" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>NN graph exhibits distinctive structural properties—fixed out-degree <math alttext="k" class="ltx_Math" display="inline" id="S2.p1.2.m2" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>, variable in-degree, and density-adaptive edge weights.
+These properties suggest graph algorithms for three sensemaking questions:
+<span class="ltx_text ltx_font_italic" id="S2.p1.3.1">PageRank</span> to identify representative data points (<a class="ltx_ref" href="#S2.SS1" title="2.1 PageRank for Representative Selection ‣ 2 Graph Algorithms on UMAP’s kNN Graph ‣ Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_tag">Section</span> <span class="ltx_text ltx_ref_tag">2.1</span></a>), <span class="ltx_text ltx_font_italic" id="S2.p1.3.2">k-core</span> decomposition to reveal dense regions (<a class="ltx_ref" href="#S2.SS2" title="2.2 k-Core Decomposition for Density Hierarchy ‣ 2 Graph Algorithms on UMAP’s kNN Graph ‣ Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_tag">Section</span> <span class="ltx_text ltx_ref_tag">2.2</span></a>), and the <span class="ltx_text ltx_font_italic" id="S2.p1.3.3">clustering coefficient</span> to detect cohesive local neighborhoods (<a class="ltx_ref" href="#S2.SS3" title="2.3 Clustering Coefficient for Local Cohesion ‣ 2 Graph Algorithms on UMAP’s kNN Graph ‣ Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_tag">Section</span> <span class="ltx_text ltx_ref_tag">2.3</span></a>).
+We evaluate our approach on MNIST <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">lecun1998gradient</span>]</cite> and Fashion MNIST <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xiao2017fashion</span>]</cite> (each containing 60,000 images across 10 classes), both widely established benchmarks for dimensionality reduction <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">espadoto2019toward</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">2018arXivUMAP</span>]</cite>.
+We compare our methods against <math alttext="k" class="ltx_Math" display="inline" id="S2.p1.3.m3" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-medoids <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">park2009simple</span>]</cite> and HDBSCAN <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">mcinnes2017hdbscan</span>]</cite>, standard baselines in this domain <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">charikar2023simple</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">kwon2025benchmarking</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">allaoui2020considerably</span>]</cite>.</p>
+</div>
+<section class="ltx_subsection" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span>PageRank for Representative Selection</h3>
+<div class="ltx_para" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.1">When exploring a UMAP projection, a natural first question is <span class="ltx_text ltx_font_italic" id="S2.SS1.p1.1.1">“which points best represent this data?”</span>
+Selecting representative data points, or <span class="ltx_text ltx_font_italic" id="S2.SS1.p1.1.2">exemplars</span>, helps build a mental model of the data, yet existing approaches are often ill-suited to this task.
+A common approach is to choose the point nearest to a cluster’s low-dimensional centroid (e.g., in 2D), relying on UMAP’s distorted geometry; the centroid of a stretched or compressed cluster may fall in an unrepresentative region.</p>
+</div>
+<div class="ltx_para" id="S2.SS1.p2">
+<p class="ltx_p" id="S2.SS1.p2.1">The kNN graph offers a natural alternative. Its in-degree encodes a point’s centrality in the manifold: a point with high in-degree is frequently nominated as a nearest neighbor by others, meaning many data points consider it representative of their local region. PageRank <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">brin1998anatomy</span>]</cite>—originally developed to identify authoritative web pages based on hyperlink structures—amplifies this signal transitively: a node scores high not only because many nodes point to it, but because <span class="ltx_text ltx_font_italic" id="S2.SS1.p2.1.1">those nodes</span> are themselves highly pointed-to.<span class="ltx_note ltx_role_footnote" id="footnote1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span>PageRank correlates strongly with weighted in-degree (<math alttext="\rho=0.93" class="ltx_Math" display="inline" id="footnote1.m1" intent=":literal"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0.93</mn></mrow><annotation encoding="application/x-tex">\rho=0.93</annotation></semantics></math>) but captures transitive structure beyond it: ranking points by the gap between their PageRank and in-degree ranks, the top <math alttext="1\%" class="ltx_Math" display="inline" id="footnote1.m2" intent=":literal"><semantics><mrow><mn>1</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">1\%</annotation></semantics></math> (points most boosted by PageRank) have <math alttext="4.3\times" class="ltx_math_unparsed" display="inline" id="footnote1.m3" intent=":literal"><semantics><mrow><mn>4.3</mn><mo lspace="0.222em">×</mo></mrow><annotation encoding="application/x-tex">4.3\times</annotation></semantics></math> higher mean neighbor-PageRank than the bottom <math alttext="1\%" class="ltx_Math" display="inline" id="footnote1.m4" intent=":literal"><semantics><mrow><mn>1</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">1\%</annotation></semantics></math>.
+We adopt PageRank as a principled, parameter-free formulation with decades of tooling support, and note that weighted in-degree may serve as an alternative for latency-sensitive work.</span></span></span></p>
+</div>
+<figure class="ltx_figure" id="S2.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="283" id="S2.F2.g1" src="https://arxiv.org/html/2607.08746v1/figures/pagerank-stability.png" width="539"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Data points’ PageRank rankings achieve high Spearman rank correlations across both datasets (mean <math alttext="\sim 0.95" class="ltx_Math" display="inline" id="S2.F2.3.m1" intent=":literal"><semantics><mrow><mi></mi><mo>∼</mo><mn>0.95</mn></mrow><annotation encoding="application/x-tex">\sim 0.95</annotation></semantics></math>) over <math alttext="20{\times}" class="ltx_math_unparsed" display="inline" id="S2.F2.4.m2" intent=":literal"><semantics><mrow><mn>20</mn><mo lspace="0.222em">×</mo></mrow><annotation encoding="application/x-tex">20{\times}</annotation></semantics></math> range of UMAP neighborhood sizes (5–100), confirming PageRank-selected representatives are not neighborhood-scale artifacts.</figcaption>
+</figure>
+<section class="ltx_subsubsection" id="S2.SS1.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.1.1 </span>Evaluation: PageRank</h4>
+<div class="ltx_para" id="S2.SS1.SSS1.p1">
+<p class="ltx_p" id="S2.SS1.SSS1.p1.11"><span class="ltx_text ltx_font_bold" id="S2.SS1.SSS1.p1.11.1">Stability of representatives across neighborhood sizes.</span>
+We run PageRank on the weighted kNN graph using UMAP’s density-adaptive membership strengths as edge weights (default damping factor: <math alttext="0.85" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p1.1.m1" intent=":literal"><semantics><mn>0.85</mn><annotation encoding="application/x-tex">0.85</annotation></semantics></math>).
+Because each point’s
+bandwidth <math alttext="\sigma_{i}" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p1.2.m2" intent=":literal"><semantics><msub><mi>σ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\sigma_{i}</annotation></semantics></math> is calibrated so that its total
+outgoing weight is approximately constant regardless of local density <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">2018arXivUMAP</span>]</cite>,
+PageRank reflects topological centrality rather than merely recapitulating local density.
+Since <math alttext="k" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p1.3.m3" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> (UMAP’s <span class="ltx_text ltx_font_typewriter" id="S2.SS1.SSS1.p1.11.2">n_neighbors</span>) controls graph construction, governing each point’s out-neighbors, we tested whether PageRank rankings are sensitive to this choice.
+We varied <math alttext="k" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p1.4.m4" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> across <math alttext="\{5,10,15,30,50,100\}" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p1.5.m5" intent=":literal"><semantics><mrow><mo stretchy="false">{</mo><mn>5</mn><mo>,</mo><mn>10</mn><mo>,</mo><mn>15</mn><mo>,</mo><mn>30</mn><mo>,</mo><mn>50</mn><mo>,</mo><mn>100</mn><mo stretchy="false">}</mo></mrow><annotation encoding="application/x-tex">\{5,10,15,30,50,100\}</annotation></semantics></math> (a <math alttext="20{\times}" class="ltx_math_unparsed" display="inline" id="S2.SS1.SSS1.p1.6.m6" intent=":literal"><semantics><mrow><mn>20</mn><mo lspace="0.222em">×</mo></mrow><annotation encoding="application/x-tex">20{\times}</annotation></semantics></math> range) and recomputed PageRank for each graph.
+As shown in <a class="ltx_ref" href="#S2.F2" title="In 2.1 PageRank for Representative Selection ‣ 2 Graph Algorithms on UMAP’s kNN Graph ‣ Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_tag">Figure</span> <span class="ltx_text ltx_ref_tag">2</span></a>, on both datasets, pairwise Spearman rank correlations remained high (MNIST: <math alttext="\rho\geq 0.84" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p1.7.m7" intent=":literal"><semantics><mrow><mi>ρ</mi><mo>≥</mo><mn>0.84</mn></mrow><annotation encoding="application/x-tex">\rho\geq 0.84</annotation></semantics></math>, mean <math alttext="0.95" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p1.8.m8" intent=":literal"><semantics><mn>0.95</mn><annotation encoding="application/x-tex">0.95</annotation></semantics></math>; Fashion MNIST: <math alttext="\rho\geq 0.82" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p1.9.m9" intent=":literal"><semantics><mrow><mi>ρ</mi><mo>≥</mo><mn>0.82</mn></mrow><annotation encoding="application/x-tex">\rho\geq 0.82</annotation></semantics></math>, mean <math alttext="0.94" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p1.10.m10" intent=":literal"><semantics><mn>0.94</mn><annotation encoding="application/x-tex">0.94</annotation></semantics></math>), confirming that the selected representatives are not artifacts of a particular neighborhood scale. We use <math alttext="k=15" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p1.11.m11" intent=":literal"><semantics><mrow><mi>k</mi><mo>=</mo><mn>15</mn></mrow><annotation encoding="application/x-tex">k=15</annotation></semantics></math>, which is also UMAP’s default, for subsequent experiments.
+<span class="ltx_ref ltx_ref_self"><span class="ltx_text ltx_ref_title">Dimensionality Reduction Meets Network Science: <span class="ltx_text"> </span>Sensemaking on UMAP’s kNN Graph</span></span>A shows that the highest-scoring points in each Fashion MNIST class exhibit prototypical appearances, while the lowest-scoring points display atypical variations.</p>
+</div>
+<figure class="ltx_figure" id="S2.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="412" id="S2.F3.g1" src="https://arxiv.org/html/2607.08746v1/x1.png" width="747"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>PageRank rivals <math alttext="k" class="ltx_Math" display="inline" id="S2.F3.2.m1" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-medoids on representativeness despite not optimizing the distance objective. Representativeness measured as mean cosine distance from each data point to its nearest selected representative (lower is better).</figcaption>
+</figure>
+<div class="ltx_para" id="S2.SS1.SSS1.p2">
+<p class="ltx_p" id="S2.SS1.SSS1.p2.4"><span class="ltx_text ltx_font_bold" id="S2.SS1.SSS1.p2.4.1">Representativeness and class balance.</span>
+We evaluated exemplar quality along two axes:
+(1) representativeness (mean cosine distance from each point to its nearest selected representative; lower is better) and
+(2) class balance (<em class="ltx_emph ltx_font_italic" id="S2.SS1.SSS1.p2.4.2">Jensen-Shannon divergence</em>, JSD, between the selected and global class distribution; lower is better).
+For a given budget <math alttext="s" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p2.1.m1" intent=":literal"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>,
+PageRank selects the <math alttext="s" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p2.2.m2" intent=":literal"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math> highest-scoring points;
+<math alttext="k" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p2.3.m3" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-medoids directly optimizes this distance objective, selecting <math alttext="s" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p2.4.m4" intent=":literal"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math> medoids (actual data points) that minimize total within-cluster distance<span class="ltx_note ltx_role_footnote" id="footnote2"><sup class="ltx_note_mark">2</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">2</sup><span class="ltx_tag ltx_tag_note">2</span><span class="ltx_text ltx_font_typewriter" id="footnote2.1">sklearn_extra.cluster.KMedoids</span> (“alternate” variant); exact PAM is intractable at <math alttext="n{=}60{,}000" class="ltx_Math" display="inline" id="footnote2.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mrow><mn>60</mn><mo>,</mo><mn>000</mn></mrow></mrow><annotation encoding="application/x-tex">n{=}60{,}000</annotation></semantics></math>.</span></span></span>—an objective PageRank does not optimize at all.</p>
+</div>
+<div class="ltx_para" id="S2.SS1.SSS1.p3">
+<p class="ltx_p" id="S2.SS1.SSS1.p3.16">On <span class="ltx_text ltx_font_italic" id="S2.SS1.SSS1.p3.16.1">representativeness</span> alone, as shown in <a class="ltx_ref" href="#S2.F3" title="In 2.1.1 Evaluation: PageRank ‣ 2.1 PageRank for Representative Selection ‣ 2 Graph Algorithms on UMAP’s kNN Graph ‣ Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_tag">Figure</span> <span class="ltx_text ltx_ref_tag">3</span></a>,
+<math alttext="k" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p3.1.m1" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-medoids held a modest advantage at tiny budgets (10, 25, 50),
+but PageRank’s topological selection rapidly approached <math alttext="k" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p3.2.m2" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-medoids’ as the budget <math alttext="s" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p3.3.m3" intent=":literal"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math> reached 100, still a small budget (<math alttext="0.17\%" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p3.4.m4" intent=":literal"><semantics><mrow><mn>0.17</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">0.17\%</annotation></semantics></math> of data).
+Crucially, as shown in <a class="ltx_ref" href="#S2.F4" title="In 2.1.1 Evaluation: PageRank ‣ 2.1 PageRank for Representative Selection ‣ 2 Graph Algorithms on UMAP’s kNN Graph ‣ Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_tag">Figure</span> <span class="ltx_text ltx_ref_tag">4</span></a>, this came with a <span class="ltx_text ltx_font_bold" id="S2.SS1.SSS1.p3.16.2">significant advantage in class balance</span>:
+at <math alttext="s\geq 200" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p3.5.m5" intent=":literal"><semantics><mrow><mi>s</mi><mo>≥</mo><mn>200</mn></mrow><annotation encoding="application/x-tex">s\geq 200</annotation></semantics></math> (<math alttext="0.3\%" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p3.6.m6" intent=":literal"><semantics><mrow><mn>0.3</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">0.3\%</annotation></semantics></math> of data), PageRank produced substantially lower JSD than <math alttext="k" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p3.7.m7" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-medoids, and the gap widened rapidly with <math alttext="s" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p3.8.m8" intent=":literal"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>.
+Notably, <math alttext="k" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p3.9.m9" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-medoids’ JSD worsened as <math alttext="s" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p3.10.m10" intent=":literal"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math> grew on Fashion MNIST (from <math alttext="0.20" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p3.11.m11" intent=":literal"><semantics><mn>0.20</mn><annotation encoding="application/x-tex">0.20</annotation></semantics></math> at <math alttext="s{=}50" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p3.12.m12" intent=":literal"><semantics><mrow><mi>s</mi><mo>=</mo><mn>50</mn></mrow><annotation encoding="application/x-tex">s{=}50</annotation></semantics></math> to <math alttext="0.36" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p3.13.m13" intent=":literal"><semantics><mn>0.36</mn><annotation encoding="application/x-tex">0.36</annotation></semantics></math> at <math alttext="s{=}500" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p3.14.m14" intent=":literal"><semantics><mrow><mi>s</mi><mo>=</mo><mn>500</mn></mrow><annotation encoding="application/x-tex">s{=}500</annotation></semantics></math>): because it optimizes geometric distance, additional medoids are disproportionately allocated to high-variance, spread-out classes, pulling the selection further from the global distribution. PageRank’s selection on the <math alttext="k" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p3.15.m15" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>NN graph produces significantly more proportional class representation, with JSD decreasing as <math alttext="s" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p3.16.m16" intent=":literal"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math> grows.</p>
+</div>
+<figure class="ltx_figure" id="S2.F4"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="419" id="S2.F4.g1" src="https://arxiv.org/html/2607.08746v1/x2.png" width="748"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>PageRank’s representatives achieve superior class balance vs <math alttext="k" class="ltx_Math" display="inline" id="S2.F4.3.m1" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-medoids, with a gap that rapidly widens after selecting only 200 top-scoring points (<math alttext="0.3\%" class="ltx_Math" display="inline" id="S2.F4.4.m2" intent=":literal"><semantics><mrow><mn>0.3</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">0.3\%</annotation></semantics></math> of data).</figcaption>
+</figure>
+<div class="ltx_para" id="S2.SS1.SSS1.p4">
+<p class="ltx_p" id="S2.SS1.SSS1.p4.8">We chose k-medoids over
+HDBSCAN because it directly optimizes the distance objective and selects actual data points.
+HDBSCAN’s <span class="ltx_text ltx_font_typewriter" id="S2.SS1.SSS1.p4.8.1">exemplars_</span> <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">mcinnes2017hdbscan</span>]</cite> are not a controllable selection mechanism:
+across a range of <span class="ltx_text ltx_font_typewriter" id="S2.SS1.SSS1.p4.8.2">min_cluster_size</span> values (<math alttext="25" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p4.1.m1" intent=":literal"><semantics><mn>25</mn><annotation encoding="application/x-tex">25</annotation></semantics></math>–<math alttext="5{,}000" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p4.2.m2" intent=":literal"><semantics><mrow><mn>5</mn><mo>,</mo><mn>000</mn></mrow><annotation encoding="application/x-tex">5{,}000</annotation></semantics></math>), HDBSCAN produced <math alttext="9{,}000" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p4.3.m3" intent=":literal"><semantics><mrow><mn>9</mn><mo>,</mo><mn>000</mn></mrow><annotation encoding="application/x-tex">9{,}000</annotation></semantics></math>–<math alttext="43{,}000" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p4.4.m4" intent=":literal"><semantics><mrow><mn>43</mn><mo>,</mo><mn>000</mn></mrow><annotation encoding="application/x-tex">43{,}000</annotation></semantics></math> exemplars (<math alttext="15" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p4.5.m5" intent=":literal"><semantics><mn>15</mn><annotation encoding="application/x-tex">15</annotation></semantics></math>–<math alttext="72\%" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p4.6.m6" intent=":literal"><semantics><mrow><mn>72</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">72\%</annotation></semantics></math> of the data) with no way to specify a target budget <math alttext="s" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p4.7.m7" intent=":literal"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>.
+By contrast, PageRank provides a continuous ranking that can be thresholded at any <math alttext="s" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p4.8.m8" intent=":literal"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>.</p>
+</div>
+<div class="ltx_para" id="S2.SS1.SSS1.p5">
+<p class="ltx_p" id="S2.SS1.SSS1.p5.10"><span class="ltx_text ltx_font_bold" id="S2.SS1.SSS1.p5.10.1">Downstream classification.</span>
+To test whether selected representatives preserve useful information, we
+trained an SVM with RBF kernel solely on the selected points and used it to classify all remaining points in the dataset,
+based on evaluation methodology from the dimensionality reduction literature <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">wang2021understanding</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">espadoto2019toward</span>]</cite>.
+While <math alttext="k" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p5.1.m1" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-medoids’ spatially optimized selections gave it some edge on SVM accuracy, PageRank remained competitive—within <math alttext="2" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p5.2.m2" intent=":literal"><semantics><mn>2</mn><annotation encoding="application/x-tex">2</annotation></semantics></math>–<math alttext="3" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p5.3.m3" intent=":literal"><semantics><mn>3</mn><annotation encoding="application/x-tex">3</annotation></semantics></math> percentage points at <math alttext="s\geq 200" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p5.4.m4" intent=":literal"><semantics><mrow><mi>s</mi><mo>≥</mo><mn>200</mn></mrow><annotation encoding="application/x-tex">s\geq 200</annotation></semantics></math> on Fashion MNIST (<a class="ltx_ref" href="#S2.F5" title="In 2.1.1 Evaluation: PageRank ‣ 2.1 PageRank for Representative Selection ‣ 2 Graph Algorithms on UMAP’s kNN Graph ‣ Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_tag">Fig.</span> <span class="ltx_text ltx_ref_tag">5</span></a>).
+On MNIST, both methods reached <math alttext="{\sim}84" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p5.5.m5" intent=":literal"><semantics><mrow><mi></mi><mo>∼</mo><mn>84</mn></mrow><annotation encoding="application/x-tex">{\sim}84</annotation></semantics></math>–<math alttext="89\%" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p5.6.m6" intent=":literal"><semantics><mrow><mn>89</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">89\%</annotation></semantics></math> at <math alttext="s{=}1000" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p5.7.m7" intent=":literal"><semantics><mrow><mi>s</mi><mo>=</mo><mn>1000</mn></mrow><annotation encoding="application/x-tex">s{=}1000</annotation></semantics></math>.
+This competitiveness is significant: PageRank computes a single global ranking by reusing the kNN graph UMAP has already built, which can then be thresholded at any budget <math alttext="s" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p5.8.m8" intent=":literal"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math> without recomputation.
+By contrast, <math alttext="k" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p5.9.m9" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-medoids must be re-run for each choice of <math alttext="s" class="ltx_Math" display="inline" id="S2.SS1.SSS1.p5.10.m10" intent=":literal"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>.</p>
+</div>
+<figure class="ltx_figure" id="S2.F5"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="404" id="S2.F5.g1" src="https://arxiv.org/html/2607.08746v1/x3.png" width="748"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>PageRank exemplars classify competitively vs <math alttext="k" class="ltx_Math" display="inline" id="S2.F5.3.m1" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-medoids. SVM-RBF trained on each method’s selected representatives, evaluated on all remaining points. PageRank ranks once, but <math alttext="k" class="ltx_Math" display="inline" id="S2.F5.4.m2" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-medoids must re-run for each budget.</figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_subsection" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span>k-Core Decomposition for Density Hierarchy</h3>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.1">Understanding which points lie in the dense core of a cluster versus its sparse periphery is critical for assessing data quality, identifying outliers, and gauging confidence in cluster membership <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">jeon2025stop</span>]</cite>.
+HDBSCAN <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">mcinnes2017hdbscan</span>]</cite>
+assigns each point a discrete cluster label but is not designed for distinguishing centrality <em class="ltx_emph ltx_font_italic" id="S2.SS2.p1.1.1">within</em> a cluster: a large cluster may contain both core and periphery members, all with the same label.</p>
+</div>
+<figure class="ltx_figure ltx_align_floatright" id="S2.SS2.1"><img alt="[Uncaptioned image]" class="ltx_graphics ltx_centering ltx_img_landscape" height="454" id="S2.SS2.1.g1" src="https://arxiv.org/html/2607.08746v1/figures/kcore-explain.png" width="598"/>
+</figure>
+<div class="ltx_para" id="S2.SS2.p2">
+<p class="ltx_p" id="S2.SS2.p2.4">k-core decomposition <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">batagelj2003an</span>]</cite> on the kNN graph provides a promising alternative.
+As shown in the right figure, iteratively removing nodes (and their edges) with the lowest degree in the remaining subgraph would assign each node a <span class="ltx_text ltx_font_italic" id="S2.SS2.p2.4.1">coreness</span> number (0, 1, 2, 3) which is the threshold at which it is removed.
+Higher core numbers indicate nodes embedded in progressively denser, more interconnected subgraphs. Lower numbers indicate more periphery.
+A subtlety of <math alttext="k" class="ltx_Math" display="inline" id="S2.SS2.p2.1.m1" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>NN graphs is that every node has exactly <math alttext="k" class="ltx_Math" display="inline" id="S2.SS2.p2.2.m2" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> outgoing edges, so any decomposition based on total degree (in + out) begins at a floor of <math alttext="k" class="ltx_Math" display="inline" id="S2.SS2.p2.3.m3" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math> and cannot distinguish truly peripheral nodes from moderately connected ones. We therefore decompose by in-degree alone (the number of other points that nominate a node as a neighbor) which varies naturally from 0 to well above <math alttext="k" class="ltx_Math" display="inline" id="S2.SS2.p2.4.m4" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>, producing a more discriminative hierarchy.</p>
+</div>
+<section class="ltx_subsubsection" id="S2.SS2.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.2.1 </span>Evaluation: k-Core</h4>
+<div class="ltx_para" id="S2.SS2.SSS1.p1">
+<p class="ltx_p" id="S2.SS2.SSS1.p1.7"><span class="ltx_text ltx_font_bold" id="S2.SS2.SSS1.p1.7.1">Structural characterization.</span>
+On MNIST, coreness ranged from 0 to 8 (with <math alttext="k{=}15" class="ltx_Math" display="inline" id="S2.SS2.SSS1.p1.1.m1" intent=":literal"><semantics><mrow><mi>k</mi><mo>=</mo><mn>15</mn></mrow><annotation encoding="application/x-tex">k{=}15</annotation></semantics></math>), with <math alttext="65\%" class="ltx_Math" display="inline" id="S2.SS2.SSS1.p1.2.m2" intent=":literal"><semantics><mrow><mn>65</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">65\%</annotation></semantics></math> of points in the middle shells (4–6) and only <math alttext="3\%" class="ltx_Math" display="inline" id="S2.SS2.SSS1.p1.3.m3" intent=":literal"><semantics><mrow><mn>3</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">3\%</annotation></semantics></math> peripheral.
+Fashion MNIST showed greater structural heterogeneity: <math alttext="18\%" class="ltx_Math" display="inline" id="S2.SS2.SSS1.p1.4.m4" intent=":literal"><semantics><mrow><mn>18</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">18\%</annotation></semantics></math> of points fell in the outermost shell.
+Per-class analysis revealed that structurally simple, self-similar classes occupy the innermost core: on MNIST, the highest shell contained exclusively digit-1 images, the class with the least visual variation.
+On Fashion MNIST, the innermost core was multi-class (Trouser <math alttext="29\%" class="ltx_Math" display="inline" id="S2.SS2.SSS1.p1.5.m5" intent=":literal"><semantics><mrow><mn>29</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">29\%</annotation></semantics></math>, Pullover <math alttext="27\%" class="ltx_Math" display="inline" id="S2.SS2.SSS1.p1.6.m6" intent=":literal"><semantics><mrow><mn>27</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">27\%</annotation></semantics></math>, Coat <math alttext="13\%" class="ltx_Math" display="inline" id="S2.SS2.SSS1.p1.7.m7" intent=":literal"><semantics><mrow><mn>13</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">13\%</annotation></semantics></math>), indicating interleaved dense regions.
+<span class="ltx_ref ltx_ref_self"><span class="ltx_text ltx_ref_title">Dimensionality Reduction Meets Network Science: <span class="ltx_text"> </span>Sensemaking on UMAP’s kNN Graph</span></span>B shows examples of k-core decomposition uncovering distinct sub-categories in the dense “bag” points (e.g., messenger bags, waist packs, heavy textures) by filtering for coreness = 6.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.SSS1.p2">
+<p class="ltx_p" id="S2.SS2.SSS1.p2.5"><span class="ltx_text ltx_font_bold" id="S2.SS2.SSS1.p2.5.1">Comparison with HDBSCAN.</span>
+We compared coreness against HDBSCAN membership probabilities using the recommended UMAP+HDBSCAN pipeline by McInnes.<span class="ltx_note ltx_role_footnote" id="footnote3"><sup class="ltx_note_mark">3</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">3</sup><span class="ltx_tag ltx_tag_note">3</span><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://umap-learn.readthedocs.io/en/latest/clustering.html" title="">https://umap-learn.readthedocs.io/en/latest/clustering.html</a>. UMAP (<span class="ltx_text ltx_font_typewriter" id="footnote3.1">n_neighbors=30</span>, <span class="ltx_text ltx_font_typewriter" id="footnote3.2">min_dist=0</span>) <math alttext="\rightarrow" class="ltx_Math" display="inline" id="footnote3.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> HDBSCAN (<span class="ltx_text ltx_font_typewriter" id="footnote3.3">min_cluster_size=500</span>, <span class="ltx_text ltx_font_typewriter" id="footnote3.4">min_samples=10</span>) on 2D projection.</span></span></span>
+HDBSCAN assigned nearly all points to clusters (<math alttext="{&lt;}1\%" class="ltx_Math" display="inline" id="S2.SS2.SSS1.p2.1.m1" intent=":literal"><semantics><mrow><mi></mi><mo>&lt;</mo><mrow><mn>1</mn><mo>%</mo></mrow></mrow><annotation encoding="application/x-tex">{&lt;}1\%</annotation></semantics></math> noise), but its membership probabilities became nearly uniform across all coreness shells (mean <math alttext="{\sim}0.93" class="ltx_Math" display="inline" id="S2.SS2.SSS1.p2.2.m2" intent=":literal"><semantics><mrow><mi></mi><mo>∼</mo><mn>0.93</mn></mrow><annotation encoding="application/x-tex">{\sim}0.93</annotation></semantics></math>, median <math alttext="1.0" class="ltx_Math" display="inline" id="S2.SS2.SSS1.p2.3.m3" intent=":literal"><semantics><mn>1.0</mn><annotation encoding="application/x-tex">1.0</annotation></semantics></math> everywhere), yielding Spearman <math alttext="\rho=0.04" class="ltx_Math" display="inline" id="S2.SS2.SSS1.p2.4.m4" intent=":literal"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0.04</mn></mrow><annotation encoding="application/x-tex">\rho=0.04</annotation></semantics></math> on MNIST and <math alttext="\rho={-}0.01" class="ltx_Math" display="inline" id="S2.SS2.SSS1.p2.5.m5" intent=":literal"><semantics><mrow><mi>ρ</mi><mo>=</mo><mrow><mo>−</mo><mn>0.01</mn></mrow></mrow><annotation encoding="application/x-tex">\rho={-}0.01</annotation></semantics></math> on Fashion MNIST.
+This is expected: HDBSCAN answers <span class="ltx_text ltx_font_italic" id="S2.SS2.SSS1.p2.5.2">which group?</span>, while k-core answers <span class="ltx_text ltx_font_italic" id="S2.SS2.SSS1.p2.5.3">where in the group?</span>. Membership probability measures confidence that a point belongs to a cluster, not how central it is within it.
+k-core, by contrast, produces a graduated hierarchy that distinguishes core from periphery within each cluster.</p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S2.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span>Clustering Coefficient for Local Cohesion</h3>
+<figure class="ltx_figure ltx_align_floatright" id="S2.SS3.1"><img alt="[Uncaptioned image]" class="ltx_graphics ltx_centering ltx_img_landscape" height="465" id="S2.SS3.1.g1" src="https://arxiv.org/html/2607.08746v1/x4.png" width="830"/>
+</figure>
+<div class="ltx_para" id="S2.SS3.p1">
+<p class="ltx_p" id="S2.SS3.p1.3">The <em class="ltx_emph ltx_font_italic" id="S2.SS3.p1.3.1">clustering coefficient</em> (CC) <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">watts1998collective</span>]</cite> acts as a microscopic lens, identifying tight-knit local neighborhoods.
+Each node’s CC (<math alttext="[0,1]" class="ltx_Math" display="inline" id="S2.SS3.p1.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[0,1]</annotation></semantics></math>) is the fraction of neighbor pairs that are connected, e.g.,
+CC is <math alttext="1" class="ltx_Math" display="inline" id="S2.SS3.p1.2.m2" intent=":literal"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math> if all neighbors form a clique; <math alttext="0" class="ltx_Math" display="inline" id="S2.SS3.p1.3.m3" intent=":literal"><mn>0</mn></math> if none are.
+A tight-knit region thus consists of points whose neighbors also list each other as nearest neighbors in high-dimensional space, yielding high CC.</p>
+</div>
+<section class="ltx_subsubsection" id="S2.SS3.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">2.3.1 </span>Evaluation: Clustering Coefficient</h4>
+<div class="ltx_para" id="S2.SS3.SSS1.p1">
+<p class="ltx_p" id="S2.SS3.SSS1.p1.8">On both datasets, CC was moderately correlated with k-core coreness (Spearman <math alttext="\rho=0.45" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p1.1.m1" intent=":literal"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0.45</mn></mrow><annotation encoding="application/x-tex">\rho=0.45</annotation></semantics></math> on MNIST, <math alttext="0.54" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p1.2.m2" intent=":literal"><semantics><mn>0.54</mn><annotation encoding="application/x-tex">0.54</annotation></semantics></math> on Fashion MNIST), PageRank (<math alttext="0.44" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p1.3.m3" intent=":literal"><semantics><mn>0.44</mn><annotation encoding="application/x-tex">0.44</annotation></semantics></math>, <math alttext="0.51" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p1.4.m4" intent=":literal"><semantics><mn>0.51</mn><annotation encoding="application/x-tex">0.51</annotation></semantics></math>), and local density (<math alttext="0.38" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p1.5.m5" intent=":literal"><semantics><mn>0.38</mn><annotation encoding="application/x-tex">0.38</annotation></semantics></math>, <math alttext="0.38" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p1.6.m6" intent=":literal"><semantics><mn>0.38</mn><annotation encoding="application/x-tex">0.38</annotation></semantics></math>), confirming CC captures related but non-redundant structure.
+By contrast, CC was nearly uncorrelated with HDBSCAN membership probabilities (<math alttext="\rho=0.02" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p1.7.m7" intent=":literal"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0.02</mn></mrow><annotation encoding="application/x-tex">\rho=0.02</annotation></semantics></math> on MNIST, <math alttext="-0.05" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p1.8.m8" intent=":literal"><semantics><mrow><mo>−</mo><mn>0.05</mn></mrow><annotation encoding="application/x-tex">-0.05</annotation></semantics></math> on Fashion MNIST), again reflecting that HDBSCAN measures cluster membership confidence, a fundamentally different question from local neighborhood cohesion.</p>
+</div>
+<div class="ltx_para" id="S2.SS3.SSS1.p2">
+<p class="ltx_p" id="S2.SS3.SSS1.p2.10">CC increased monotonically with coreness shell on both datasets: from <math alttext="0.19" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p2.1.m1" intent=":literal"><semantics><mn>0.19</mn><annotation encoding="application/x-tex">0.19</annotation></semantics></math> in the outermost shell to <math alttext="0.44" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p2.2.m2" intent=":literal"><semantics><mn>0.44</mn><annotation encoding="application/x-tex">0.44</annotation></semantics></math> in the innermost core on MNIST, and from <math alttext="0.26" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p2.3.m3" intent=":literal"><semantics><mn>0.26</mn><annotation encoding="application/x-tex">0.26</annotation></semantics></math> to <math alttext="0.75" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p2.4.m4" intent=":literal"><semantics><mn>0.75</mn><annotation encoding="application/x-tex">0.75</annotation></semantics></math> on Fashion MNIST.
+This relationship shows that k-core and CC are complementary: k-core identifies macro-scale cohesive subgraphs, while CC pinpoints micro-scale cliques within those subgraphs.
+Per-class analysis reinforced the structural narrative: digit 1 on MNIST had the highest mean CC (<math alttext="0.376" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p2.5.m5" intent=":literal"><semantics><mn>0.376</mn><annotation encoding="application/x-tex">0.376</annotation></semantics></math>), consistent with its role as the tightest, most self-similar class, while digit 8 had the lowest (<math alttext="0.234" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p2.6.m6" intent=":literal"><semantics><mn>0.234</mn><annotation encoding="application/x-tex">0.234</annotation></semantics></math>).
+Quantitatively, the top 5% of points by CC had mean neighborhood label purity of <math alttext="0.98" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p2.7.m7" intent=":literal"><semantics><mn>0.98</mn><annotation encoding="application/x-tex">0.98</annotation></semantics></math> (MNIST) and <math alttext="0.94" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p2.8.m8" intent=":literal"><semantics><mn>0.94</mn><annotation encoding="application/x-tex">0.94</annotation></semantics></math> (Fashion MNIST), vs. <math alttext="0.90\pm 0.004" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p2.9.m9" intent=":literal"><semantics><mrow><mn>0.90</mn><mo>±</mo><mn>0.004</mn></mrow><annotation encoding="application/x-tex">0.90\pm 0.004</annotation></semantics></math> and <math alttext="0.84\pm 0.005" class="ltx_Math" display="inline" id="S2.SS3.SSS1.p2.10.m10" intent=":literal"><semantics><mrow><mn>0.84</mn><mo>±</mo><mn>0.005</mn></mrow><annotation encoding="application/x-tex">0.84\pm 0.005</annotation></semantics></math> for random same-size samples (100 runs), confirming high CC identifies semantically coherent micro-neighborhoods, not just topological cliques.
+As illustrated in <a class="ltx_ref" href="#S2.F6" title="In 2.3.1 Evaluation: Clustering Coefficient ‣ 2.3 Clustering Coefficient for Local Cohesion ‣ 2 Graph Algorithms on UMAP’s kNN Graph ‣ Dimensionality Reduction Meets Network Science: Sensemaking on UMAP’s kNN Graph"><span class="ltx_text ltx_ref_tag">Figure</span> <span class="ltx_text ltx_ref_tag">6</span></a>,
+a UMAP projection of digit “6” appears as a monolithic mass, but filtering for high CC isolates distinct micro-neighborhoods of consistent handwriting styles (e.g., variations in tilt, loop size, stroke curvature).</p>
+</div>
+<figure class="ltx_figure" id="S2.F6"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="309" id="S2.F6.g1" src="https://arxiv.org/html/2607.08746v1/x5.png" width="705"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>Clustering coefficient (CC) isolates tight-knit handwriting styles of “6” (e.g., variations in tilt, loop size, stroke curvature).</figcaption>
+</figure>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span>Implementation</h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1">All three techniques reuse UMAP’s precomputed kNN arrays (indices,
+raw distances), avoiding neighbor recomputation.
+PageRank additionally converts these distances into edge weights
+via UMAP’s membership-strength computation<span class="ltx_note ltx_role_footnote" id="footnote4"><sup class="ltx_note_mark">4</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">4</sup><span class="ltx_tag ltx_tag_note">4</span>Each
+distance is normalized by per-point <math alttext="\sigma_{i}/\rho_{i}" class="ltx_Math" display="inline" id="footnote4.m1" intent=":literal"><semantics><mrow><msub><mi>σ</mi><mi>i</mi></msub><mo>/</mo><msub><mi>ρ</mi><mi>i</mi></msub></mrow><annotation encoding="application/x-tex">\sigma_{i}/\rho_{i}</annotation></semantics></math> parameters
+computed by UMAP’s <span class="ltx_text ltx_font_typewriter" id="footnote4.1">smooth_knn_dist</span> <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">mcinnes2018umap-software</span>]</cite>.</span></span></span>; k-core and clustering coefficient operate on the unweighted
+directed graph.</p>
+</div>
+<div class="ltx_para" id="S3.p2">
+<p class="ltx_p" id="S3.p2.14"><span class="ltx_text ltx_font_bold" id="S3.p2.14.1">Computational cost.</span>
+PageRank: <math alttext="O(nk\cdot T)" class="ltx_Math" display="inline" id="S3.p2.1.m1" intent=":literal"><semantics><mrow><mi>O</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><mrow><mi>n</mi><mo lspace="0em" rspace="0em">​</mo><mi>k</mi></mrow><mo lspace="0.222em" rspace="0.222em">⋅</mo><mi>T</mi></mrow><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">O(nk\cdot T)</annotation></semantics></math> where <math alttext="T" class="ltx_Math" display="inline" id="S3.p2.2.m2" intent=":literal"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math> is the number of power-iteration steps
+(typically <math alttext="{&lt;}100" class="ltx_Math" display="inline" id="S3.p2.3.m3" intent=":literal"><semantics><mrow><mi></mi><mo>&lt;</mo><mn>100</mn></mrow><annotation encoding="application/x-tex">{&lt;}100</annotation></semantics></math>).
+k-core: <math alttext="O(nk)" class="ltx_Math" display="inline" id="S3.p2.4.m4" intent=":literal"><semantics><mrow><mi>O</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><mi>n</mi><mo lspace="0em" rspace="0em">​</mo><mi>k</mi></mrow><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">O(nk)</annotation></semantics></math>.
+Clustering coefficient: <math alttext="O(nk^{2})" class="ltx_Math" display="inline" id="S3.p2.5.m5" intent=":literal"><semantics><mrow><mi>O</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><mi>n</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi>k</mi><mn>2</mn></msup></mrow><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">O(nk^{2})</annotation></semantics></math>.
+All are fast relative to UMAP’s own <math alttext="O(nk)" class="ltx_Math" display="inline" id="S3.p2.6.m6" intent=":literal"><semantics><mrow><mi>O</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><mi>n</mi><mo lspace="0em" rspace="0em">​</mo><mi>k</mi></mrow><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">O(nk)</annotation></semantics></math> neighbor search and
+<math alttext="O(n\cdot\mathit{epochs})" class="ltx_Math" display="inline" id="S3.p2.7.m7" intent=":literal"><semantics><mrow><mi>O</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><mi>n</mi><mo lspace="0.222em" rspace="0.222em">⋅</mo><mi>𝑒𝑝𝑜𝑐ℎ𝑠</mi></mrow><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">O(n\cdot\mathit{epochs})</annotation></semantics></math> layout optimization.
+On MNIST (<math alttext="n{=}60{,}000" class="ltx_Math" display="inline" id="S3.p2.8.m8" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mrow><mn>60</mn><mo>,</mo><mn>000</mn></mrow></mrow><annotation encoding="application/x-tex">n{=}60{,}000</annotation></semantics></math>, <math alttext="k{=}15" class="ltx_Math" display="inline" id="S3.p2.9.m9" intent=":literal"><semantics><mrow><mi>k</mi><mo>=</mo><mn>15</mn></mrow><annotation encoding="application/x-tex">k{=}15</annotation></semantics></math>), each technique’s wall-clock run time is under <math alttext="1" class="ltx_Math" display="inline" id="S3.p2.10.m10" intent=":literal"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math> s:
+PageRank <math alttext="0.8" class="ltx_Math" display="inline" id="S3.p2.11.m11" intent=":literal"><semantics><mn>0.8</mn><annotation encoding="application/x-tex">0.8</annotation></semantics></math> s, k-core <math alttext="0.6" class="ltx_Math" display="inline" id="S3.p2.12.m12" intent=":literal"><semantics><mn>0.6</mn><annotation encoding="application/x-tex">0.6</annotation></semantics></math> s, clustering coefficient <math alttext="0.7" class="ltx_Math" display="inline" id="S3.p2.13.m13" intent=":literal"><semantics><mn>0.7</mn><annotation encoding="application/x-tex">0.7</annotation></semantics></math> s.
+(Re-deriving UMAP’s membership strengths adds <math alttext="0.9" class="ltx_Math" display="inline" id="S3.p2.14.m14" intent=":literal"><semantics><mn>0.9</mn><annotation encoding="application/x-tex">0.9</annotation></semantics></math> s, which would vanish if UMAP exposed them.) All experiments were conducted on a MacBook Pro M4 Max with 64 GB RAM.</p>
+</div>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span>Conclusion and Discussion</h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.7">We have shown that UMAP’s internal kNN graph, typically set aside after layout optimization, is a rich analytical resource: PageRank, k-core decomposition, and clustering coefficient applied to it yield sensemaking complementary to the 2D scatter plot.
+These methods inherit UMAP’s <math alttext="k" class="ltx_Math" display="inline" id="S4.p1.1.m1" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>; PageRank rankings are highly stable across a <math alttext="20{\times}" class="ltx_math_unparsed" display="inline" id="S4.p1.2.m2" intent=":literal"><semantics><mrow><mn>20</mn><mo lspace="0.222em">×</mo></mrow><annotation encoding="application/x-tex">20{\times}</annotation></semantics></math> range (<math alttext="\rho\geq 0.84" class="ltx_Math" display="inline" id="S4.p1.3.m3" intent=":literal"><semantics><mrow><mi>ρ</mi><mo>≥</mo><mn>0.84</mn></mrow><annotation encoding="application/x-tex">\rho\geq 0.84</annotation></semantics></math>), with moderate stability for coreness (<math alttext="\rho\geq 0.89" class="ltx_Math" display="inline" id="S4.p1.4.m4" intent=":literal"><semantics><mrow><mi>ρ</mi><mo>≥</mo><mn>0.89</mn></mrow><annotation encoding="application/x-tex">\rho\geq 0.89</annotation></semantics></math>) and CC (<math alttext="\rho\geq 0.84" class="ltx_Math" display="inline" id="S4.p1.5.m5" intent=":literal"><semantics><mrow><mi>ρ</mi><mo>≥</mo><mn>0.84</mn></mrow><annotation encoding="application/x-tex">\rho\geq 0.84</annotation></semantics></math>) across adjacent values (e.g., <math alttext="k{=}15" class="ltx_Math" display="inline" id="S4.p1.6.m6" intent=":literal"><semantics><mrow><mi>k</mi><mo>=</mo><mn>15</mn></mrow><annotation encoding="application/x-tex">k{=}15</annotation></semantics></math> vs <math alttext="30" class="ltx_Math" display="inline" id="S4.p1.7.m7" intent=":literal"><semantics><mn>30</mn><annotation encoding="application/x-tex">30</annotation></semantics></math>).
+PageRank has been integrated into the open-source Embedding Atlas <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">ren2025embedding</span>]</cite> visualization, with k-core and clustering coefficient to follow.
+The proposed graph-based perspective extends naturally to other DR methods that construct kNN graphs (e.g., TriMap <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">amid2019trimap</span>]</cite>, PaCMAP <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">wang2021understanding</span>]</cite>),
+and graph algorithms beyond per-point scores (e.g., community detection <cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">traag2019louvain</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">blondel2008fast</span>]</cite>) are promising future directions.
+Our evaluation focuses on two standard benchmarks; future work may extend to additional domains (e.g., single-cell genomics, audio).
+We hope this work encourages the community to look beyond the scatter plot and into the graph that made it.</p>
+</div>
+<div class="ltx_acknowledgements" id="S4.acknowledgements1">
+<h6 class="ltx_title ltx_title_acknowledgements">Acknowledgements.</h6>We thank our colleagues, especially Yannick Assogba and Ruisi Su, for their feedback.
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo">
+    Experimental support, please
+    <a class="ltx_ref" href="https://arxiv.org/html/./2607.08746v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a>
+    for errors. Generated by
+    <a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2>Instructions for reporting errors</h2>
+<p>We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</p>
+<ul>
+<li>Click the "Report Issue" <span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span> button, located in the page header.</li>
+</ul>
+<p><strong>Tip:</strong> You can select the relevant text first, to include it in your report.</p>
+<p>Our team has already identified <a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a>. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</p>
+<p>Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a <a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a>, and welcome <a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer><footer class="ds-site-footer">
+<div class="ds-site-footer-grid">
+<div class="ds-site-footer-main">
+<div class="ds-site-footer-ack">
+        We gratefully acknowledge support from
+        our <strong>major funders</strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong>member institutions</strong></a><span class="ack-member-inline" hidden="">, <strong></strong></span>,
+        and all contributors.
+      </div>
+<nav aria-label="Site navigation" class="ds-site-footer-links">
+<a href="https://info.arxiv.org/about">About</a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help">Help</a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/contact.html">Contact</a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/subscribe">Subscribe</a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/license/index.html">Copyright</a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/policies/privacy_policy.html">Privacy</a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/web_accessibility.html">Accessibility</a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://status.arxiv.org" rel="noopener noreferrer" target="_blank">Operational Status<span class="is-sr-only"> (opens in new tab)</span></a>
+</nav>
+</div>
+<div aria-label="Major funders" class="ds-site-footer-funders">
+<div class="ds-site-footer-funders-label">Major funding support from</div>
+<div class="ds-site-footer-funders-logos">
+<img alt="Simons Foundation" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png"/>
+<img alt="Schmidt Sciences" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/schmidt-sciences.png"/>
+</div>
+</div>
+</div>
+</footer><div id="fixed-buttons-container">
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
