@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">AUTOPILOT VQA：对以事件为中心的行车记录仪理解的视觉语言模型进行基准测试</span><span class="original-text">AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 7 月 9 日星期四 17:41:32 生成 http://dlmf.nist.gov/LaTeXML/。</span><span class="original-text">Generated on Thu Jul  9 17:41:32 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+    // Pre-apply spinout-banner dismissal here, before the banner paints, so it
+    // never flashes in only to be hidden later by the deferred arxiv-header.js.
+    // Key matches arxiv-header.js: "arxiv-banner-dismissed:" + data-banner-name.
+    if (localStorage.getItem('arxiv-banner-dismissed:spinout-nonprofit')) {
+      document.documentElement.setAttribute("data-banner-dismissed", "");
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/><link href="https://arxiv.org/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626" media="screen" rel="stylesheet" type="text/css"/><style>
+  /* Banner pre-dismissal (set above before paint -> no flash-then-hide) and
+     reading-mode chrome hiding. */
+  html[data-banner-dismissed] .ds-announcement { display: none; }
+  html[data-reading-mode="enabled"] .ds-announcement,
+  html[data-reading-mode="enabled"] .ds-site-footer { display: none; }
+  /* Keep the announcement text dark on the Open-Blue band in both colour themes
+     (otherwise it inherits the paper's warm-wash text in dark mode and washes out). */
+  .ds-announcement-text { color: var(--arxiv-ink, #1c1a17); }
+</style>
+<script defer="" src="https://arxiv.org/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2607.08745" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2607.08745" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog><div aria-label="Announcement" class="ds-announcement" data-banner-name="spinout-nonprofit" id="announcement-banner" role="region">
+<img alt="" aria-hidden="true" class="ds-announcement-glyph" src="https://arxiv.org/static/base/1.0.1/images/icons/smileybones-small.svg"/>
+<span class="ds-announcement-text"><span class="translated-text">arXiv 现在是一个独立的非营利组织！</span><span class="original-text">arXiv is now an independent nonprofit!</span></span>
+<a class="ds-announcement-link" href="https://info.arxiv.org/about"><span class="translated-text">了解更多</span><span class="original-text">Learn more</span></a>
+<button aria-label="Dismiss announcement" class="ds-announcement-close" type="button">×</button>
+</div>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/"><img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/base/1.0.1/images/arxiv-logo-primary-light.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2607.08745v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2607.08745v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S2" title="In AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Related Work</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Dataset and Annotation</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In 3 Dataset and Annotation ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Source Material</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS2" title="In 3 Dataset and Annotation ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Annotation Schema</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS3" title="In 3 Dataset and Annotation ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.3 </span>Dataset Statistics</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Kaggle Competition and Results</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In 4 Kaggle Competition and Results ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>Task Definition</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS2" title="In 4 Kaggle Competition and Results ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2 </span>Evaluation Metrics</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS3" title="In 4 Kaggle Competition and Results ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3 </span>Leaderboard Overview</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS4" title="In 4 Kaggle Competition and Results ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.4 </span>Error Analysis</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS5" title="In 4 Kaggle Competition and Results ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.5 </span>Observed Trends</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS6" title="In 4 Kaggle Competition and Results ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.6 </span>Conclusion</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2607.08745v1 [cs.AI] 2026 年 7 月 9 日</span><span class="original-text">arXiv:2607.08745v1 [cs.AI] 09 Jul 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">AUTOPILOT VQA：对以事件为中心的行车记录仪理解的视觉语言模型进行基准测试</span><span class="original-text">AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+Siddharth Damodharan
+<br class="ltx_break"/>University of Colorado Colorado Springs
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Radhika Gupta
+<br class="ltx_break"/>University of Michigan
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Ali Alshami
+<br class="ltx_break"/>University of Colorado Colorado Springs
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Ryan Rabinowitz
+<br class="ltx_break"/>University of Notre Dame
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Jugal Kalita
+<br class="ltx_break"/>University of Colorado Colorado Springs
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">视觉语言模型、大语言模型和多模态大语言模型的最新进展改善了场景理解、决策、轨迹预测和视觉问答等自动驾驶任务。然而，评估这些模型是否能够可靠地推理安全关键事件仍然具有挑战性。为了解决这一差距，我们推出了 AUTOPILOT-VQA，这是一种以事件为中心的视觉问答基准，用于理解行车记录仪视频。该数据集通过围绕现实世界驾驶事件和接近事故设计的结构化问题来评估不同的系统。该基准涵盖多种安全相关类别，包括天气和照明条件、交通环境、道路布局、路面状态、标牌、涉及实体、事故发生、影响位置以及可避免性相关推理。通过要求模型回答有关上下文场景属性和事件级事件细节的基础问题，AUTOPILOT-VQA 超越了对象识别，转向了基于时间的、安全意识推理。该数据集作为 AUTOPILOT CVPR 2026 竞赛的一部分发布，为评估不同场景下自动驾驶系统的可靠性提供了标准化基准。我们的基准支持为现实世界的自动驾驶开发更具可解释性、稳健性和安全意识的视觉语言系统。</span><span class="original-text">Recent advances in Vision-Language Models, Large Language Models, and Multimodal Large Language Models have improved autonomous driving tasks such as scene understanding, decision making, trajectory prediction, and visual question answering. However, evaluating whether these models can reliably reason about safety-critical incidents remains challenging. To address this gap, we present AUTOPILOT-VQA, an incident-centric visual question answering benchmark for dashcam video understanding. The dataset evaluates different systems through structured questions designed around real-world driving incidents and near-incidents. The benchmark covers diverse safety-relevant categories, including weather and lighting conditions, traffic environment, road layout, road surface state, signage, involved entities, accident occurrence, impact location, and avoidability-related reasoning. By requiring models to answer grounded questions about both contextual scene properties and event-level incident details, AUTOPILOT-VQA moves beyond object recognition toward temporally grounded, safety-aware reasoning. The dataset is released as part of the AUTOPILOT CVPR 2026 competition and provides a standardized benchmark for assessing the reliability of autonomous driving systems in different scenarios. Our benchmark support developments for more interpretable, robust, and safety-conscious vision-language systems for real-world autonomous driving.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<figure class="ltx_figure" id="S1.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="342" id="S1.F1.g1" src="https://arxiv.org/html/2607.08745v1/VQA.png" width="343"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S1.F1.2.1.1" style="font-size:90%;">Figure 1</span>: </span><span class="ltx_text" id="S1.F1.3.2" style="font-size:90%;">
+Overview of the VQA-Autopilot dataset annotation schema. The visualization illustrates the hierarchical structure of annotation categories, including environmental conditions, traffic context, incident types, outcomes, and associated attributes. This figure provides a high-level conceptual summary of the dataset design.
+</span></figcaption>
+</figure>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">自动驾驶车辆依靠对复杂交通场景的准确解释来确保在现实环境中安全可靠的运行。在日常驾驶中，自动驾驶系统必须处理大量多模式传感器数据，同时响应动态和不确定的条件，包括周围交通行为、道路几何形状、行人、障碍物以及天气或能见度变化。场景理解中的错误可能会传播到规划和控制中，从而导致不安全或错误的驾驶决策。因此，强大的感知和情境推理仍然是自动驾驶汽车开发的核心挑战</span><span class="original-text">Autonomous vehicles rely on accurate interpretation of complex traffic scenes to ensure safe and reliable operation in real-world environments. In everyday driving, autonomous systems must process large volumes of multimodal sensor data while responding to dynamic and uncertain conditions, including surrounding traffic behavior, road geometry, pedestrians, obstacles, and weather or visibility changes. Errors in scene understanding can propagate to planning and control, leading to unsafe or incorrect driving decisions. Consequently, robust perception and contextual reasoning remain central challenges in autonomous vehicle development</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="Are we ready for autonomous driving? the kitti vision benchmark suite">6</a>, <a class="ltx_ref" href="#bib.bib7" title="Computer vision for autonomous vehicles: problems, datasets and state of the art">7</a>, <a class="ltx_ref" href="#bib.bib8" title="NuScenes: a multimodal dataset for autonomous driving">1</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">过去十年来，自动驾驶领域取得了实质性进展，这主要是由大规模公共数据集和标准化基准驱动的。 KITTI 等开源资源</span><span class="original-text">Substantial progress has been made in autonomous driving over the past decade, largely driven by large-scale public datasets and standardized benchmarks. Open-source resources such as KITTI</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="Are we ready for autonomous driving? the kitti vision benchmark suite">6</a>]</cite><span class="translated-text">, 城市景观</span><span class="original-text">, Cityscapes</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib9" title="The cityscapes dataset for semantic urban scene understanding">4</a>]</cite><span class="translated-text">,BDD100K</span><span class="original-text">, BDD100K</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib10" title="BDD100K: a diverse driving dataset for heterogeneous multitask learning">12</a>]</cite>, nuScenes <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="NuScenes: a multimodal dataset for autonomous driving">1</a>]</cite><span class="translated-text">, 阿尔戈宇宙</span><span class="original-text">, Argoverse</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib11" title="Argoverse: 3d tracking and forecasting with rich maps">2</a>]</cite><span class="translated-text">，以及 Waymo 开放数据集</span><span class="original-text">, and the Waymo Open Dataset</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib12" title="Scalability in perception for autonomous driving: waymo open dataset">10</a>]</cite><span class="translated-text">加速了物体检测、跟踪、车道理解、定位和轨迹预测方面的研究。这些基准使现代自动驾驶系统能够在常规驾驶条件和结构化城市环境下实现强大的性能。</span><span class="original-text">have accelerated research in object detection, tracking, lane understanding, localization, and trajectory forecasting. These benchmarks have enabled modern autonomous systems to achieve strong performance under routine driving conditions and structured urban environments.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">尽管取得了这些进步，但罕见的安全关键事件仍然是自动驾驶系统最具挑战性的场景之一。事故、未遂事件和其他危险事件通常是由多个相互作用的因素引起的，而不是单一的感知故障。理解此类场景需要的不仅仅是检测可见物体或仅从视频中对事件进行分类。系统必须推理周围环境，识别所涉及的实体，解释道路使用者的行为，评估严重程度，并推断与紧急响应或预防行动相关的因素。此外，事故理解通常受益于基于语言的信息，例如自然语言场景描述或警察报告式摘要，它们可以提供有关故障、严重程度、涉及各方和事件进展的详细信息。由于这些事件很少发生，但后果却极其严重，因此结构化事故现场理解仍然是自动驾驶领域的一个重要的开放挑战</span><span class="original-text">Despite these advances, rare safety-critical incidents remain among the most challenging scenarios for autonomous driving systems. Accidents, near-misses, and other hazardous events often arise from multiple interacting factors rather than a single perception failure. Understanding such scenes requires more than detecting visible objects or classifying an event from video alone. A system must reason about the surrounding context, identify the entities involved, interpret road-user behavior, assess severity, and infer factors relevant to emergency response or preventive action. In addition, accident understanding often benefits from language-based information, such as natural-language scene descriptions or police-report-style summaries, which can provide details about fault, severity, involved parties, and incident progression. Because these events are infrequent but disproportionately consequential, structured accident-scene understanding remains an important open challenge in autonomous driving</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="Toward driving scene understanding: a dataset for learning driver behavior and causal reasoning">9</a>, <a class="ltx_ref" href="#bib.bib15" title="Vision-based traffic accident detection and anticipation: a survey">5</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">为了应对这一挑战，我们引入</span><span class="original-text">To address this challenge, we introduce</span><span class="ltx_text ltx_font_italic" id="S1.p4.1.1"><span class="translated-text">自动驾驶仪VQA</span><span class="original-text">Autopilot VQA</span></span><span class="translated-text">，自动驾驶中结构化事故现场理解的基准。该数据集包含 600 多个行车记录仪视频剪辑，涵盖碰撞、险情和无事故基线序列。每个片段都通过六个语义组进行注释，产生超过 6,000 个问答对，涵盖环境条件、道路配置、相关实体行为、事件类别、故障归因和影响特征。该基准旨在评估模型是否能够超越低级感知进行推理，并针对安全关键驾驶场景生成结构化答案。</span><span class="original-text">, a benchmark for structured accident-scene understanding in autonomous driving. The dataset contains more than 600 dashcam video clips spanning collisions, near-misses, and no-incident baseline sequences. Each clip is annotated through six semantic groups, resulting in more than 6,000 question-answer pairs that cover environmental conditions, road configuration, involved-entity behavior, incident category, fault attribution, and impact characterization. The benchmark is designed to evaluate whether models can reason beyond low-level perception and produce structured answers about safety-critical driving scenarios.</span></p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">我们通过 Kaggle 竞赛进一步建立了公共评估框架，使参与者能够在共享评分协议下开发和比较不同的建模流程。此设置支持可重复的评估，同时鼓励事故分析的多模式推理取得进展。</span><span class="original-text">We further establish a public evaluation framework through a Kaggle competition, enabling participants to develop and compare diverse modeling pipelines under a shared scoring protocol. This setting supports reproducible evaluation while encouraging progress on multimodal reasoning for accident analysis.</span></p>
+</div>
+<div class="ltx_para" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1"><span class="translated-text">总的来说，我们的贡献是三重的。首先，我们引入了一个以事故为中心的视觉问答基准，并为安全关键的交通场景提供结构化注释。其次，我们提供一个开放且有竞争力的评估平台，用于跨方法的可重复比较。第三，我们提出的实证结果强调了当前模型在自动驾驶的情境和安全关键推理方面的局限性。</span><span class="original-text">Overall, our contributions are threefold. First, we introduce an accident-centric visual question answering benchmark with structured annotations for safety-critical traffic scenes. Second, we provide an open and competitive evaluation platform for reproducible comparison across methods. Third, we present empirical results that highlight the limitations of current models in contextual and safety-critical reasoning for autonomous driving.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="translated-text">大规模数据集和标准化基准对于推进自动驾驶系统的计算机视觉至关重要，特别是在感知、跟踪、定位和交通场景理解方面</span><span class="original-text">Large-scale datasets and standardized benchmarks have been crucial to advancing computer vision for autonomous driving systems, particularly in perception, tracking, localization, and traffic scene understanding</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="Computer vision for autonomous vehicles: problems, datasets and state of the art">7</a>]</cite><span class="translated-text">。然而，其中许多任务仅关注日常驾驶条件，而复杂、安全关键环境中的高级推理仍有待探索。此外，理解主体交互、危险行为和事件背景需要超出常见感知框架所提供的能力。</span><span class="original-text">. However, many of these tasks focus only on routine driving conditions, while higher-level reasoning in complex, safety-critical environments remains unexplored. Furthermore, understanding agentic interactions, hazardous behaviors, and incident context requires capabilities beyond those provided by common perception frameworks.</span></p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="translated-text">最近的工作已经开始探索 VLM 的应用，以通过结构化评估框架驱动特定环境。例如，DrivingVQA 引入了一个视觉问答数据集，旨在评估模型在现实驾驶场景中的推理能力，强调当前模型在多模态推理方面遇到困难，并且严重依赖显着的视觉线索</span><span class="original-text">Recent work has begun to explore the application of VLMs to drive specific contexts through structured evaluation frameworks. For example, DrivingVQA introduces a visual question-answering data set designed to evaluate the reasoning of the model in real-world driving scenarios, highlighting that current models struggle with multimodal reasoning and rely heavily on salient visual cues</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="DRIVINGVQA: a dataset for interleaved visual chain-of-thought in real-world driving scenarios">3</a>]</cite><span class="translated-text">。此外，MetaVQA 提出了评估自动驾驶中的空间推理和场景理解的基准，证明先进模型表现出有限的空间意识和对动态环境的推理困难</span><span class="original-text">. Furthermore, MetaVQA proposes a benchmark for evaluating spatial reasoning and scene understanding in autonomous driving, demonstrating that advanced models exhibit limited spatial awareness and difficulty reasoning about dynamic environments</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="Embodied scene understanding for vision language models via metavqa">11</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.p3">
+<p class="ltx_p" id="S2.p3.1"><span class="translated-text">最近的基准（例如 NuPlanQA）提供了大规模评估框架，通过将任务分解为感知、空间推理和决策组件来推动场景理解。这些作品强调，当前的视觉语言模型很难推广到复杂的驾驶环境，特别是对于需要结构化推理和上下文理解的任务</span><span class="original-text">More recent benchmarks, such as NuPlanQA, provide large-scale evaluation frameworks to drive scene understanding by decomposing tasks into perception, spatial reasoning, and decision-making components. These works highlight that current vision-language models struggle to generalize to complex driving environments, particularly for tasks requiring structured reasoning and contextual understanding</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib4" title="Nuplanqa: a large-scale dataset and benchmark for multi-view driving scene understanding in multi-modal large language models">8</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.p4">
+<p class="ltx_p" id="S2.p4.1"><span class="translated-text">虽然之前的工作主要集中在模型开发或静态基准评估，但我们的工作开发了一个专注于事故场景的结构化数据集。它通过有竞争力的、开放的基准测试框架来评估绩效。通过利用 Kaggle 竞赛，我们获得了多种建模方法，并更广泛地了解不同方法如何在安全关键的驾驶任务中执行。</span><span class="original-text">While prior work primarily focuses on model development or static benchmark evaluation, our work develops a structured dataset focused on accident scenarios. It evaluates performance through a competitive, open benchmarking framework. By leveraging a Kaggle competition, we obtain diverse modeling approaches and gain broader insights into how different methods perform on safety-critical driving tasks.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">数据集和注释</span><span class="original-text">Dataset and Annotation</span></h2>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">源材料</span><span class="original-text">Source Material</span></h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">我们的评估基于 VQA-Autopilot 数据集，该数据集包含 600 多个行车记录仪视频剪辑，捕捉各种驾驶场景，从平安无事的高速公路驾驶到多车碰撞。至关重要的是，该数据集涵盖了完整的事故严重程度：大约 27% 的片段涉及直接碰撞，11% 的险情，17% 提前避免危险的情况，以及 27% 的无事故基线序列（见图 1）。这种平衡的覆盖范围阻止模型仅通过类先验利用来实现高精度。</span><span class="original-text">Our evaluation is built on the VQA-Autopilot dataset, which contains over 600 dashcam video clips capturing a wide range of driving scenarios, from uneventful highway driving to multi-vehicle collisions. Critically, the dataset covers the full incident severity spectrum: approximately 27% of clips involve direct collisions, 11% near-misses, 17% situations where a hazard was avoided in advance, and 27% no-incident baseline sequences (see Figure 1). This balanced coverage prevents models from achieving high accuracy through class prior exploitation alone.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span><span class="translated-text">注释模式</span><span class="original-text">Annotation Schema</span></h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">每个视频均由人工注释者在 9 个结构化问题组 (A-I) 中进行标记，总共产生 28 个子问题。这些类别涵盖环境条件（天气、时间、照明）、道路环境（交通环境、道路配置、车道结构、路面、交通管制存在）和事件特征（事件类别、主要和次要实体身份和行为、故障归因、预防措施和影响位置）。总共，这会在数据集中生成 6,000 多个带注释的问答对。</span><span class="original-text">Each video was labeled by human annotators across nine structured question groups (A–I), yielding 28 sub-questions in total. The categories span environmental conditions (weather, time of day, lighting), road context (traffic environment, road configuration, lane structure, road surface, traffic control presence), and incident characterization (incident category, primary and secondary entity identity and behavior, fault attribution, prevention measures, and impact location). In total, this produces over 6,000 annotated question-answer pairs across the dataset.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span><span class="translated-text">数据集统计</span><span class="original-text">Dataset Statistics</span></h3>
+<figure class="ltx_figure" id="S3.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="658" id="S3.F2.g1" src="https://arxiv.org/html/2607.08745v1/bigfigure.png" width="685"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S3.F2.2.1.1" style="font-size:90%;">Figure 2</span>: </span><span class="ltx_text" id="S3.F2.3.2" style="font-size:90%;">
+Environmental context statistics of the VQA-Autopilot dataset. This figure summarizes distributions across time of day, weather conditions, road surface state, road configuration, traffic control presence, and their co-occurrence. These distributions reflect realistic driving conditions and highlight the diversity required for evaluating contextual scene understanding.
+</span></figcaption>
+</figure>
+<div class="ltx_para" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.1"><span class="translated-text">如图 A-F 所示，数据集捕获了所有注释维度的真实多样性。大多数事件发生在白天（70%）晴朗或部分多云（68%）的条件下，反映了行车记录仪的自然部署。高速公路和交叉路口场景合计占数据集的 65%。主要事件实体包括其他车辆（31%）、动物（16%）、自我车辆故障场景（13%）以及弱势道路使用者，包括骑自行车者和行人（18%）。路面主要是干燥的 (83%)，17% 的片段中存在潮湿条件，主要是在雨天序列中。</span><span class="original-text">As shown in Figures A–F, the dataset captures realistic diversity across all annotation dimensions. The majority of incidents occur during daytime (70%) under clear or partly cloudy conditions (68%), reflecting naturalistic dashcam deployment. Highway and intersection scenarios together account for 65% of the dataset. Primary incident entities include other vehicles (31%), animals (16%), ego-vehicle fault scenarios (13%), and vulnerable road users, including cyclists and pedestrians (18%). Road surfaces are predominantly dry (83%), with wet conditions present in 17% of clips, predominantly in rainy weather sequences.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">Kaggle 竞赛及结果</span><span class="original-text">Kaggle Competition and Results</span></h2>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span><span class="translated-text">任务定义</span><span class="original-text">Task Definition</span></h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.1"><span class="translated-text">主办的 Kaggle 竞赛采用行车记录仪视频数据上的结构化视觉问答 (VQA) 任务的形式。在给定的驾驶视频中，描述近乎不雅和事故场景，参与者需要预测一组预定义问题的答案，这些问题捕捉场景的特定方面。</span><span class="original-text">The Hosted Kaggle Competition is formatted as a structured Visual Question Answering (VQA) task on dashcam video data. Within a given driving video, depicting both near-indecent and incident scenarios, participants are required to predict answers to a predefined set of questions that capture specific aspects of the scene.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p2">
+<p class="ltx_p" id="S4.SS1.p2.1"><span class="translated-text">向参与者提出的问题涵盖驾驶情境中的不同维度，包括环境条件（天气和时间）、场景情境（交通环境和道路配置）和事件特定属性（例如，参与方、事件行为和事件原因）。除了所包含的任务外，还有更高级别的推理任务，例如识别潜在的事件预防措施和具体影响点。</span><span class="original-text">The questions participants are given span different dimensions within the driving context, including environmental conditions (weather and time), scene context (traffic environment and road configuration), and incident-specific attributes (e.g., involved parties, incident behaviors, and causes of incidents). In addition to the included tasks, there are higher-level reasoning tasks, such as identifying potential incident-prevention measures and specific impact points.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p3">
+<p class="ltx_p" id="S4.SS1.p3.1"><span class="translated-text">对于每个视频，参与者必须输出一组与预定义答案类别相对应的固定整数值预测。这种结构可以实现提交之间的一致性，并确保对模型性能和理解进行细粒度评估</span><span class="original-text">For each video, participants must output a set of fixed, integer-valued predictions corresponding to a predefined answer category. This structure enables consistency across submissions and ensures fine-grained evaluation of model performance and understanding</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p4">
+<p class="ltx_p" id="S4.SS1.p4.1"><span class="translated-text">总体而言，该任务旨在评估以安全为中心的驾驶场景中的感知能力和更高层次的推理，重点是事故理解。</span><span class="original-text">Overall, the task is designed to evaluate both perceptual capabilities and higher-level reasoning in safety-centered driving scenarios, with an emphasis on accident understanding.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span><span class="translated-text">评估指标</span><span class="original-text">Evaluation Metrics</span></h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.1"><span class="translated-text">使用所有视觉问答 (VQA) 领域的平均每个问题准确度来评估提交内容。对于每个问题，准确性计算为测试集中正确预测的比例。</span><span class="original-text">Submissions are evaluated using mean per-question accuracy across all visual question answering (VQA) fields. For each question, accuracy is calculated as the proportion of correct predictions across the test set.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p2">
+<p class="ltx_p" id="S4.SS2.p2.3"><span class="translated-text">让</span><span class="original-text">Let</span><math alttext="Q" class="ltx_Math" display="inline" id="S4.SS2.p2.1.m1" intent=":literal"><semantics><mi>Q</mi><annotation encoding="application/x-tex">Q</annotation></semantics></math><span class="translated-text">表示问题总数，让</span><span class="original-text">denote the total number of questions and let</span><math alttext="\mathrm{Acc}q" class="ltx_Math" display="inline" id="S4.SS2.p2.2.m2" intent=":literal"><semantics><mrow><mi>Acc</mi><mo lspace="0em" rspace="0em">​</mo><mi>q</mi></mrow><annotation encoding="application/x-tex">\mathrm{Acc}q</annotation></semantics></math><span class="translated-text">代表问题的准确性</span><span class="original-text">represent the accuracy for question</span><math alttext="q" class="ltx_Math" display="inline" id="S4.SS2.p2.3.m3" intent=":literal"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math><span class="translated-text">。最终得分计算如下：</span><span class="original-text">. The final score is computed as:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S4.Ex1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\text{Score}=\frac{1}{Q}\sum_{q=1}^{Q}\mathrm{Acc}_{q}" class="ltx_Math" display="block" id="S4.Ex1.m1" intent=":literal"><semantics><mrow><mtext>Score</mtext><mo>=</mo><mrow><mfrac><mn>1</mn><mi>Q</mi></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><munderover><mo movablelimits="false">∑</mo><mrow><mi>q</mi><mo>=</mo><mn>1</mn></mrow><mi>Q</mi></munderover><msub><mi>Acc</mi><mi>q</mi></msub></mrow></mrow></mrow><annotation encoding="application/x-tex">\text{Score}=\frac{1}{Q}\sum_{q=1}^{Q}\mathrm{Acc}_{q}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+</div>
+<div class="ltx_para" id="S4.SS2.p3">
+<p class="ltx_p" id="S4.SS2.p3.1"><span class="translated-text">每个问题在最终得分中的权重相同，这样可以在场景理解的不同方面进行平衡评估。预测与预定义的答案类别相对应，从而可以在各种模型和方法之间进行一致的比较。</span><span class="original-text">Each question is weighted equally in the final score, this allow for a balanced evaluation across different aspects of scene understanding. Predictions correspond to predefined answer categories, allowing for consistent comparison across various models and approaches.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span><span class="translated-text">排行榜概览</span><span class="original-text">Leaderboard Overview</span></h3>
+<div class="ltx_para" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.1"><span class="translated-text">AUTOPILOT VQA 挑战赛吸引了社区的大力参与，共有 224 名注册参赛者、73 名活跃参与者、59 个团队以及总共 686 份提交作品。这种参与程度表明人们对以安全为中心的多模式推理任务有浓厚的兴趣。</span><span class="original-text">The AUTOPILOT VQA challenge attracted strong community participation, with 224 registered entrants, 73 active participants, 59 teams, and 686 total submissions. This level of engagement indicates substantial interest in safety-centered multimodal reasoning tasks.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS3.p2">
+<p class="ltx_p" id="S4.SS3.p2.1"><span class="translated-text">在公共排行榜阶段结束时，表现最好的团队得分为 0.65835，接下来的两支团队得分分别为 0.65505 和 0.65371。排名靠前的提交内容之间的差距很窄，这表明接近排行榜上限的性能提升越来越难以获得，并且可能需要仔细的优化、集成或更强大的多模态表示。</span><span class="original-text">At the close of the public leaderboard phase, the top-performing team achieved a score of 0.65835, with the next two teams scoring 0.65505 and 0.65371 respectively. The narrow margin separating the top submissions suggests that performance gains near the leaderboard ceiling were increasingly difficult to obtain and likely required careful optimization, ensembling, or stronger multimodal representations.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS3.p3">
+<p class="ltx_p" id="S4.SS3.p3.1"><span class="translated-text">对排行榜进行更广泛的审查揭示了分数的长尾分布。虽然有几个团队的准确率超过了 0.60，但许多提交的准确率都集中在 0.39-0.40 附近，这表明朴素的基线或部分优化的系统很难在整个问题集中泛化。</span><span class="original-text">A broader review of the leaderboard reveals a long-tailed distribution of scores. While several teams exceeded 0.60 accuracy, many submissions clustered near 0.39–0.40, indicating that naive baselines or partially optimized systems struggled to generalize across the full question set.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.4 </span><span class="translated-text">误差分析</span><span class="original-text">Error Analysis</span></h3>
+<div class="ltx_para" id="S4.SS4.p1">
+<p class="ltx_p" id="S4.SS4.p1.1"><span class="translated-text">尽管排行榜表现颇具竞争力，但中等的最高分表明许多问题类别仍然具有挑战性。错误可能集中在需要因果推理或细粒度关系推理的任务中，而不是简单的感知中。</span><span class="original-text">Despite competitive leaderboard performance, the moderate top score indicates that many question categories remain challenging. Errors are likely concentrated in tasks requiring causal inference or fine-grained relational reasoning rather than simple perception.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS4.p2">
+<p class="ltx_p" id="S4.SS4.p2.1"><span class="translated-text">例如，仅通过强大的视觉识别就可以解决识别天气、一天中的时间或广泛的交通环境的问题。相反，预测哪个实体可以阻止事件发生、确定与故障相关的行为或估计可能的影响区域需要对多个代理之间的交互进行时间理解和推理。</span><span class="original-text">For example, identifying weather, time of day, or broad traffic environment may be solvable through strong visual recognition alone. In contrast, predicting which entity could have prevented the incident, determining fault-relevant behaviors, or estimating likely impact regions requires temporal understanding and reasoning over interactions between multiple agents.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS4.p3">
+<p class="ltx_p" id="S4.SS4.p3.1"><span class="translated-text">该基准还包括未知和不适用的类，这会带来额外的复杂性。模型不仅必须学会对可见证据进行分类，还必须学会识别何时信息不足或何时问题不适用于场景。</span><span class="original-text">The benchmark also includes unknown and non-applicable classes, which introduce additional complexity. Models must learn not only to classify visible evidence, but also to recognize when insufficient information is present or when a question does not apply to the scenario.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS5">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.5 </span><span class="translated-text">观察到的趋势</span><span class="original-text">Observed Trends</span></h3>
+<div class="ltx_para" id="S4.SS5.p1">
+<p class="ltx_p" id="S4.SS5.p1.1"><span class="translated-text">排行榜结果显示了一些趋势。首先，竞争激烈的系统与该领域的其他系统之间似乎存在明显的区别，只有少数团队的平均准确度超过 0.60。这表明强大的性能可能取决于先进的模型适应，而不是直接的零样本提示。</span><span class="original-text">Several trends emerge from the leaderboard results. First, there appears to be a clear separation between highly competitive systems and the remainder of the field, with only a limited number of teams surpassing 0.60 mean accuracy. This suggests that strong performance likely depends on advanced model adaptation rather than direct zero-shot prompting.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS5.p2">
+<p class="ltx_p" id="S4.SS5.p2.1"><span class="translated-text">其次，顶级团队之间的密集聚集意味着接近当前绩效极限的回报递减。排行榜的微小改进可能对应于重大的工程工作，这表明即使对于强大的方法，基准仍然具有挑战性。</span><span class="original-text">Second, the dense clustering among top teams implies diminishing returns near current performance limits. Small leaderboard improvements may correspond to significant engineering effort, indicating that the benchmark remains challenging even for strong methods.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS5.p3">
+<p class="ltx_p" id="S4.SS5.p3.1"><span class="translated-text">第三，团队之间的巨大分数差异表明模型选择、预处理策略和结构化输出的处理发挥着重要作用。由于提交需要每个视频进行多个同步预测，因此强大的输出格式和任务分解可能会对最终结果产生重大影响。</span><span class="original-text">Third, the wide score variance across teams suggests that model selection, preprocessing strategy, and handling of structured outputs play an important role. Since submissions require multiple synchronized predictions per video, robust output formatting and task decomposition may materially affect final results.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS6">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.6 </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h3>
+<div class="ltx_para" id="S4.SS6.p1">
+<p class="ltx_p" id="S4.SS6.p1.1"><span class="translated-text">AUTOPILOT VQA 竞赛展示了多模式模型对于自动驾驶理解的前景和当前的局限性。虽然顶级系统实现了有意义的性能，但没有任何方法可以接近人类的可靠性，特别是考虑到任务的安全关键性质。</span><span class="original-text">The AUTOPILOT VQA competition demonstrates both the promise and current limitations of multimodal models for autonomous driving understanding. While top systems achieved meaningful performance, no method approached near-human reliability, particularly given the safety-critical nature of the task.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS6.p2">
+<p class="ltx_p" id="S4.SS6.p2.1"><span class="translated-text">这些结果表明，当前的 VLM 管道在感知方面仍然比在结构化推理方面更强。未来的进展可能需要明确模拟时间因果关系、代理交互、不确定性校准和分层决策的方法。</span><span class="original-text">These results suggest that current VLM pipelines remain stronger at perception than at structured reasoning. Future progress may require methods that explicitly model temporal causality, agent interactions, uncertainty calibration, and hierarchical decision-making.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS6.p3">
+<p class="ltx_p" id="S4.SS6.p3.1"><span class="translated-text">此外，Kaggle 等竞争性基准设置提供了一种宝贵的机制，可以快速评估更广泛的研究社区的各种方法。通过将开放参与与安全相关任务相结合，这些挑战可以加速实现更强大的自动驾驶智能的进展。</span><span class="original-text">Additionally, competitive benchmark settings such as Kaggle provide a valuable mechanism for rapidly evaluating diverse approaches from the broader research community. By combining open participation with safety-relevant tasks, such challenges can accelerate progress toward more robust autonomous driving intelligence.</span><span class="ltx_text" id="S4.SS6.p3.1.1" style="font-size:90%;"></span></p>
+</div>
+</section>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography" style="font-size:90%;">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib8">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">H. Caesar, V. Bankiti, A. H. Lang, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2020)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">NuScenes: a multimodal dataset for autonomous driving</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 11621–11631</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib11">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Chang, J. Lambert, P. Sangkloy, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2019)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Argoverse: 3d tracking and forecasting with rich maps</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 8748–8757</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib2">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">C. Corbière, S. Roburin, S. Montariol, A. Bosselut, and A. Alahi</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">DRIVINGVQA: a dataset for interleaved visual chain-of-thought in real-world driving scenarios</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Findings of the Association for Computational Linguistics: EACL 2026</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 3309–3333</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="2 Related Work ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib9">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Cordts, M. Omran, S. Ramos, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2016)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">The cityscapes dataset for semantic urban scene understanding</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 3213–3223</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib15">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Fang, J. Qiao, J. Xue, and Z. Li</span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Vision-based traffic accident detection and anticipation: a survey</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Transactions on Circuits and Systems for Video Technology</span> <span class="ltx_text ltx_bib_volume">34</span> (<span class="ltx_text ltx_bib_number">4</span>), <span class="ltx_text ltx_bib_pages"> pp. 1983–1999</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib6">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Geiger, P. Lenz, and R. Urtasun</span><span class="ltx_text ltx_bib_year"> (2012)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Are we ready for autonomous driving? the kitti vision benchmark suite</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 3354–3361</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib7">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Janai, F. Güney, A. Behl, and A. Geiger</span><span class="ltx_text ltx_bib_year"> (2017)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Computer vision for autonomous vehicles: problems, datasets and state of the art</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Foundations and Trends in Computer Graphics and Vision</span> <span class="ltx_text ltx_bib_volume">12</span> (<span class="ltx_text ltx_bib_number">1–3</span>), <span class="ltx_text ltx_bib_pages"> pp. 1–308</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.p1.1" title="2 Related Work ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib4">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Park, C. Cui, Y. Ma, A. Moradipari, R. Gupta, K. Han, and Z. Wang</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Nuplanqa: a large-scale dataset and benchmark for multi-view driving scene understanding in multi-modal large language models</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the IEEE/CVF International Conference on Computer Vision</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 8066–8076</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p3.1" title="2 Related Work ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib13">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">V. Ramanishka, Y. Chen, T. Misu, and K. Saenko</span><span class="ltx_text ltx_bib_year"> (2018)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Toward driving scene understanding: a dataset for learning driver behavior and causal reasoning</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 7699–7707</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib12">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">P. Sun, H. Kretzschmar, X. Dotiwalla, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2020)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Scalability in perception for autonomous driving: waymo open dataset</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 2446–2454</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib3">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">W. Wang, C. Duan, Z. Peng, Y. Liu, and B. Zhou</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Embodied scene understanding for vision language models via metavqa</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p2.1" title="2 Related Work ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib10">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">F. Yu, H. Chen, X. Wang, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2020)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">BDD100K: a diverse driving dataset for heterogeneous multitask learning</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 2636–2645</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ AUTOPILOT VQA: Benchmarking Vision-Language Models for Incident-Centric Dashcam Understanding"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2607.08745v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer><footer class="ds-site-footer">
+<div class="ds-site-footer-grid">
+<div class="ds-site-footer-main">
+<div class="ds-site-footer-ack"><span class="translated-text">我们衷心感谢来自
+        我们的</span><span class="original-text">We gratefully acknowledge support from
+        our</span><strong><span class="translated-text">主要资助者</span><span class="original-text">major funders</span></strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong><span class="translated-text">成员机构</span><span class="original-text">member institutions</span></strong></a><span class="ack-member-inline" hidden="">, <strong></strong></span><span class="translated-text">,
+        以及所有贡献者。</span><span class="original-text">,
+        and all contributors.</span></div>
+<nav aria-label="Site navigation" class="ds-site-footer-links">
+<a href="https://info.arxiv.org/about"><span class="translated-text">关于</span><span class="original-text">About</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help"><span class="translated-text">帮助</span><span class="original-text">Help</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/contact.html"><span class="translated-text">联系方式</span><span class="original-text">Contact</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/subscribe"><span class="translated-text">订阅</span><span class="original-text">Subscribe</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/license/index.html"><span class="translated-text">版权</span><span class="original-text">Copyright</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/policies/privacy_policy.html"><span class="translated-text">隐私</span><span class="original-text">Privacy</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/web_accessibility.html"><span class="translated-text">无障碍</span><span class="original-text">Accessibility</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://status.arxiv.org" rel="noopener noreferrer" target="_blank"><span class="translated-text">运营状况</span><span class="original-text">Operational Status</span><span class="is-sr-only"><span class="translated-text">（在新选项卡中打开）</span><span class="original-text">(opens in new tab)</span></span></a>
+</nav>
+</div>
+<div aria-label="Major funders" class="ds-site-footer-funders">
+<div class="ds-site-footer-funders-label"><span class="translated-text">主要资金支持来自</span><span class="original-text">Major funding support from</span></div>
+<div class="ds-site-footer-funders-logos">
+<a class="ds-funder-link" href="https://www.simonsfoundation.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.sfi.org.bm/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation International" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation-international.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.schmidtsciences.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Schmidt Sciences" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/schmidt-sciences.png"/>
+</a>
+</div>
+</div>
+</div>
+</footer><div id="fixed-buttons-container">
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
