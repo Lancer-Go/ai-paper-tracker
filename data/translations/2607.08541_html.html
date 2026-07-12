@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">VocaDet：通过视觉标记化和矢量数据库检索进行样本驱动的开放词汇对象检测和分割</span><span class="original-text">VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 7 月 9 日星期四 14:33:42 生成 http://dlmf.nist.gov/LaTeXML/。</span><span class="original-text">Generated on Thu Jul  9 14:33:42 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+    // Pre-apply spinout-banner dismissal here, before the banner paints, so it
+    // never flashes in only to be hidden later by the deferred arxiv-header.js.
+    // Key matches arxiv-header.js: "arxiv-banner-dismissed:" + data-banner-name.
+    if (localStorage.getItem('arxiv-banner-dismissed:spinout-nonprofit')) {
+      document.documentElement.setAttribute("data-banner-dismissed", "");
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/><link href="https://arxiv.org/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626" media="screen" rel="stylesheet" type="text/css"/><style>
+  /* Banner pre-dismissal (set above before paint -> no flash-then-hide) and
+     reading-mode chrome hiding. */
+  html[data-banner-dismissed] .ds-announcement { display: none; }
+  html[data-reading-mode="enabled"] .ds-announcement,
+  html[data-reading-mode="enabled"] .ds-site-footer { display: none; }
+  /* Keep the announcement text dark on the Open-Blue band in both colour themes
+     (otherwise it inherits the paper's warm-wash text in dark mode and washes out). */
+  .ds-announcement-text { color: var(--arxiv-ink, #1c1a17); }
+</style>
+<script defer="" src="https://arxiv.org/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2607.08541" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2607.08541" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog><div aria-label="Announcement" class="ds-announcement" data-banner-name="spinout-nonprofit" id="announcement-banner" role="region">
+<img alt="" aria-hidden="true" class="ds-announcement-glyph" src="https://arxiv.org/static/base/1.0.1/images/icons/smileybones-small.svg"/>
+<span class="ds-announcement-text"><span class="translated-text">arXiv 现在是一个独立的非营利组织！</span><span class="original-text">arXiv is now an independent nonprofit!</span></span>
+<a class="ds-announcement-link" href="https://info.arxiv.org/about"><span class="translated-text">了解更多</span><span class="original-text">Learn more</span></a>
+<button aria-label="Dismiss announcement" class="ds-announcement-close" type="button">×</button>
+</div>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/"><img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/base/1.0.1/images/arxiv-logo-primary-light.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2607.08541v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2607.08541v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S2" title="In VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Method</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S3" title="In VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Experiments</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S4" title="In VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Conclusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY-NC-ND 4.0</span><span class="original-text">License: CC BY-NC-ND 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2607.08541v1 [cs.CV] 2026 年 7 月 9 日</span><span class="original-text">arXiv:2607.08541v1 [cs.CV] 09 Jul 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">VocaDet：通过视觉标记化和矢量数据库检索进行样本驱动的开放词汇对象检测和分割</span><span class="original-text">VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">ZhiXin Sun
+<br class="ltx_break"/>PowerChina Zhongnan Engineering Corporation Limited 
+<br class="ltx_break"/><span class="ltx_text ltx_font_typewriter" id="id1.1.id1">sunzxjdi@gmail.com</span>
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">开放词汇对象检测和分割旨在识别超出预定义类别的任意对象。尽管最近的视觉语言和基于参考的方法显着推进了这一领域，但它们通常依赖于文本提示、有限的视觉示例或昂贵的特征匹配程序，这使得它们难以扩展到大型且不断扩展的对象存储库。在这项工作中，我们提出了 VocaDet，一种样本驱动的开放词汇对象检测和分割框架，可以直接从用户提供的正样本和负样本集合中学习对象概念，而无需模型重新训练。关键思想是将连续的视觉表示转换为离散的视觉词汇，并通过可扩展的矢量数据库执行高效的基于检索的识别。具体来说，我们采用 DINOv3 作为视觉特征提取器，并应用具有自适应聚类敏感性的凝聚聚类来生成多粒度视觉标记。这些视觉标记与位置偏置表示和空间拓扑信息一起作为可扩展对象存储器存储在矢量数据库中。在推理过程中，查询图像被转换为​​视觉标记，并与存储的对象内存进行有效匹配，以进行对象定位和分割。此外，引入背景过滤机制来去除频繁出现的背景图案并减少实际固定相机场景中的冗余检索操作。在 UA-DETRAC 数据集上的实验表明，VocaDet 在无需传统检测器训练的情况下即可实现有效的开放词汇检测性能，同时支持随着额外正样本和负样本的积累而不断扩展的识别能力。代码可在</span><span class="original-text">Open-vocabulary object detection and segmentation aim to recognize arbitrary objects beyond predefined categories. Although recent vision-language and reference-based approaches have significantly advanced this field, they often rely on text prompts, limited visual examples, or expensive feature matching procedures, making them difficult to scale to large and continuously expanding object repositories. In this work, we propose VocaDet, a sample-driven open-vocabulary object detection and segmentation framework that learns object concepts directly from user-provided positive and negative sample collections without model retraining. The key idea is to transform continuous visual representations into discrete visual vocabularies and perform efficient retrieval-based recognition through a scalable vector database. Specifically, we employ DINOv3 as the visual feature extractor and apply agglomerative clustering with adaptive clustering sensitivity to generate multi-granularity visual tokens. These visual tokens, together with position-debiased representations and spatial topology information, are stored as expandable object memories in a vector database. During inference, query images are converted into visual tokens and efficiently matched against the stored object memories for object localization and segmentation. Furthermore, a background filtering mechanism is introduced to remove frequently occurring background patterns and reduce redundant retrieval operations in practical fixed-camera scenarios. Experiments on the UA-DETRAC dataset demonstrate that VocaDet achieves effective open-vocabulary detection performance without conventional detector training, while supporting continuously expandable recognition capability as additional positive and negative samples are accumulated. Code is available at</span><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/sunzx97/VocaDet" title="">https://github.com/sunzx97/VocaDet</a>.</p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para ltx_noindent" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">对象检测和分割是计算机视觉中最基本、应用最广泛的任务之一。 YOLO系列凭借其强大的实时性能和成熟的工程部署</span><span class="original-text">Object detection and segmentation are among the most fundamental and widely applied tasks in computer vision. Owing to its strong real-time performance and mature engineering deployment, the YOLO series</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="Yolov3: an incremental improvement">11</a>, <a class="ltx_ref" href="#bib.bib2" title="Yolov10: real-time end-to-end object detection">14</a>]</cite><span class="translated-text">已在工业应用中得到广泛采用。然而，此类方法通常需要针对不同场景进行大规模数据收集和针对特定任务的训练，并且不可避免地会出现误报和漏报的情况。</span><span class="original-text">has been extensively adopted in industrial applications. However, such methods typically require large-scale data collection and task-specific training for different scenarios, and inevitably suffer from false positives and false negatives.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">最近，SAM3等方法</span><span class="original-text">Recently, methods such as SAM3</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="Sam 3: segment anything with concepts">1</a>]</cite><span class="translated-text">, 恐龙接地</span><span class="original-text">, Grounding DINO</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib4" title="Grounding dino: marrying dino with grounded pre-training for open-set object detection">7</a>]</cite><span class="translated-text">, 霸王龙2</span><span class="original-text">, T-Rex2</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib5" title="T-rex2: towards generic object detection via text-visual prompt synergy, 2024">6</a>]</cite><span class="translated-text">, 恐龙-X</span><span class="original-text">, DINO-X</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="Dino-x: a unified vision model for open-world object detection and understanding">12</a>]</cite><span class="translated-text">和 INSID3</span><span class="original-text">, and INSID3</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="INSID3: training-free in-context segmentation with dinov3">2</a>]</cite><span class="translated-text">通过文本提示或视觉提示引入了上下文感知检测和分割，从而实现了开放词汇识别。然而，这些方法通常需要明确的视觉提示输入或视觉提示与目标图像之间的重复相似性计算，这限制了它们对大参考上下文的可扩展性并阻碍了有效的推理。</span><span class="original-text">have introduced context-aware detection and segmentation via text prompts or visual prompts, enabling open-vocabulary recognition. Nevertheless, these approaches usually require explicit visual prompt inputs or repeated similarity computation between visual prompts and target images, which limits their scalability to large reference contexts and prevents efficient inference.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">此外，最近的方法如 Rex-Thinker</span><span class="original-text">In addition, recent approaches such as Rex-Thinker</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="Rex-thinker: grounded object referring via chain-of-thought reasoning">4</a>]</cite><span class="translated-text">和雷克斯-奥姆尼</span><span class="original-text">and Rex-Omni</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib9" title="Detect anything via next point prediction">5</a>]</cite><span class="translated-text">利用多模态大语言模型进一步提高开放域检测能力。
+与我们的方法最相关的是免培训</span><span class="original-text">exploit multimodal large language models to further improve open-domain detection capabilities.
+Most relevant to our approach is Training-free</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib10" title="No time to train! training-free reference-based instance segmentation">3</a>]</cite><span class="translated-text">，它引入了一种免训练的参考图像驱动的实例分割框架。
+通过利用冷冻的 DINOv2</span><span class="original-text">, which introduces a training-free reference image-driven instance segmentation framework.
+By leveraging frozen DINOv2</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib11" title="Dinov2: learning robust visual features without supervision">9</a>]</cite><span class="translated-text">SAM2 的语义特征和类别不可知的分割能力</span><span class="original-text">semantic features and the category-agnostic segmentation capability of SAM2</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib12" title="Sam 2: segment anything in images and videos">10</a>]</cite><span class="translated-text">，它构建了一个具有特征聚合和语义感知匹配的特征存储库。
+仅给定少量参考图像，该方法就实现了自动实例级分割的跨域泛化。</span><span class="original-text">, it constructs a feature memory bank with feature aggregation and semantic-aware matching.
+Given only a small number of reference images, this method achieves cross-domain generalization for automatic instance-level segmentation.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">然而，现有的方法在用户提供大规模正负样本集合并期望系统自动从这些样本中学习以实现任意图像中高效、准确的目标检索的场景中仍然受到限制。</span><span class="original-text">However, existing approaches remain limited in scenarios where users provide large-scale positive and negative sample collections and expect the system to automatically learn from these samples for efficient and accurate target retrieval in arbitrary images.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">为了解决这些限制，我们提出了一种大规模样本驱动的开放词汇对象检测和分割框架。该方法直接从用户提供的大型正负样本存储库中学习目标概念，并对目标图像进行高效的匹配和检测。</span><span class="original-text">To address these limitations, we propose a large-scale sample-driven open-vocabulary object detection and segmentation framework. The method learns target concepts directly from user-provided large positive and negative sample repositories and performs efficient matching and detection in target images.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1"><span class="translated-text">具体来说，我们采用 DINOv3</span><span class="original-text">Specifically, we employ DINOv3</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="Dinov3">13</a>]</cite><span class="translated-text">作为视觉特征提取器并应用凝聚聚类</span><span class="original-text">as the visual feature extractor and apply agglomerative clustering</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="Modern hierarchical, agglomerative clustering algorithms">8</a>]</cite><span class="translated-text">基于提取的特征将图像量化为离散的视觉标记。通过应用不同的聚类阈值，我们进一步构建了视觉标记的层次表示，形成离散标记集及其相应的拓扑结构。相同的管道应用于正样本集和负样本集，将它们转换为视觉标记节点或拓扑图，然后将其存储在向量数据库中。</span><span class="original-text">on extracted features to quantize images into discrete visual tokens. By applying different clustering thresholds, we further construct a hierarchical representation of visual tokens, forming both discrete token sets and their corresponding topological structures. The same pipeline is applied to positive and negative sample sets, converting them into visual token nodes or topological graphs, which are then stored in a vector database.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p7">
+<p class="ltx_p" id="S1.p7.1"><span class="translated-text">在推理过程中，输入图像或视频首先被转换为视觉标记表示。然后根据向量数据库检索每个标记，以找到最相关的正样本标记和负样本标记。如果令牌节点或局部拓扑结构与存储的表示相匹配且相似度高于预定义阈值，则相应区域被识别为目标对象。</span><span class="original-text">During inference, the input image or video is first transformed into a visual token representation. Each token is then retrieved against the vector database to find the most relevant positive and negative sample tokens. If a token node or local topological structure matches the stored representations with similarity above a predefined threshold, the corresponding region is identified as a target object.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p8">
+<p class="ltx_p" id="S1.p8.1"><span class="translated-text">随着用户逐步扩展正样本和负样本存储库，所提出的方法不断改进，从而逐渐获得更好的识别性能。同时，通过利用高效的矢量数据库检索，该系统能够在大规模样本设置下实现快速检测和分割。</span><span class="original-text">The proposed method continuously improves as users incrementally expand the positive and negative sample repositories, leading to progressively better recognition performance. Meanwhile, by leveraging efficient vector database retrieval, the system enables fast detection and segmentation under large-scale sample settings.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">方法</span><span class="original-text">Method</span></h2>
+<div class="ltx_para ltx_noindent" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="translated-text">所提出的 VocaDet 框架的总体架构如图 1 所示。</span><span class="original-text">The overall architecture of the proposed VocaDet framework is illustrated in Fig.</span><a class="ltx_ref" href="#S2.F1" title="Figure 1 ‣ 2 Method ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">。
+给定输入图像，DINOv3</span><span class="original-text">.
+Given an input image, DINOv3</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="Dinov3">13</a>]</cite><span class="translated-text">首先用于提取密集的语义视觉特征。
+与依赖预定义对象类别的传统对象检测器不同，VocaDet 通过离散化连续特征表示来构建数据驱动的视觉词汇表。
+具体来说，我们应用凝聚聚类</span><span class="original-text">is first utilized to extract dense semantic visual features.
+Unlike conventional object detectors that rely on predefined object categories, VocaDet constructs a data-driven visual vocabulary by discretizing continuous feature representations.
+Specifically, we apply agglomerative clustering</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="Modern hierarchical, agglomerative clustering algorithms">8</a>]</cite><span class="translated-text">提取的特征并引入聚类敏感度参数来自适应控制生成的视觉词的粒度。
+为了提高检测效率，引入背景过滤层来去除与不相关区域相关的视觉词。
+然后使用剩余的前景视觉词在矢量数据库（例如 Milvus）中执行基于相似性的检索</span><span class="original-text">to the extracted features and introduce a clustering sensitivity parameter to adaptively control the granularity of the generated visual words.
+To improve detection efficiency, a background filtering layer is introduced to remove visual words associated with irrelevant regions.
+The remaining foreground visual words are then used to perform similarity-based retrieval in a vector database such as Milvus</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib15" title="Milvus: a purpose-built vector data management system">15</a>]</cite><span class="translated-text">，其中存储前景和背景对象原型。
+通过比较检索到的候选者，如果前景对象表示满足预定义的相似度阈值，则相应的视觉词被视为目标对象的证据。
+与这些匹配的视觉词相对应的空间簇被进一步利用来定位对象并生成初步边界框。
+最后，应用非极大值抑制（NMS）层来合并高度重叠的预测并获得最终的检测结果。</span><span class="original-text">, where both foreground and background object prototypes are stored.
+By comparing the retrieved candidates, if a foreground object representation satisfies the predefined similarity threshold, the corresponding visual words are regarded as evidence of the target object.
+The spatial clusters corresponding to these matched visual words are further exploited to localize objects and generate preliminary bounding boxes.
+Finally, a Non-Maximum Suppression (NMS) layer is applied to merge highly overlapped predictions and obtain the final detection results.</span></p>
+</div>
+<figure class="ltx_figure" id="S2.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="174" id="S2.F1.g1" src="https://arxiv.org/html/2607.08541v1/vocDect.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Overview of the proposed VocaDet framework. Given an input image, DINOv3 is first used to extract dense visual features, which are discretized into visual words through agglomerative clustering. A background filtering layer removes irrelevant visual words, while the remaining foreground visual words are retrieved against the vector database for object matching. The matched visual clusters are then converted into bounding boxes, followed by Non-Maximum Suppression (NMS) to obtain the final detection results.</figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="translated-text">我们建立基于INSID3的矢量数据库</span><span class="original-text">We build the vector database based on INSID3</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="INSID3: training-free in-context segmentation with dinov3">2</a>]</cite><span class="translated-text">，它由三个主要阶段组成：
+视觉特征提取、视觉词汇构建和位置偏差特征存储。</span><span class="original-text">, which consists of three main stages:
+visual feature extraction, visual vocabulary construction, and position-debiased feature storage.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p3">
+<p class="ltx_p" id="S2.p3.1"><span class="translated-text">具体来说，给定输入图像，我们首先使用 DINOv3 提取密集的视觉特征</span><span class="original-text">Specifically, given an input image, we first extract dense visual features using DINOv3</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="Dinov3">13</a>]</cite><span class="translated-text">。
+然后通过凝聚聚类算法将提取的特征分组为视觉词</span><span class="original-text">.
+The extracted features are then grouped into visual words through an agglomerative clustering algorithm</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="Modern hierarchical, agglomerative clustering algorithms">8</a>]</cite><span class="translated-text">。
+由于同一对象可能包含具有相似视觉特征的空间上不连续的区域，
+我们根据空间连通性进一步将具有相同视觉模式的断开连接的簇分离成独立的对象实例。</span><span class="original-text">.
+Since the same object may contain spatially disconnected regions with similar visual characteristics,
+we further separate disconnected clusters with identical visual patterns into independent object instances according to their spatial connectivity.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p4">
+<p class="ltx_p" id="S2.p4.1"><span class="translated-text">为了减少特征匹配过程中空间偏差的影响，我们采用INSID3中提出的位置去偏差策略</span><span class="original-text">To reduce the influence of spatial bias during feature matching, we adopt the position debiasing strategy proposed in INSID3</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="INSID3: training-free in-context segmentation with dinov3">2</a>]</cite><span class="translated-text">将原始 DINOv3 特征转换为位置去偏表示。
+存储在向量数据库中的特征和推理期间的查询特征都使用这些位置去偏特征来表示。</span><span class="original-text">to transform the original DINOv3 features into position-debiased representations.
+Both the features stored in the vector database and the query features during inference are represented using these position-debiased features.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p5">
+<p class="ltx_p" id="S2.p5.1"><span class="translated-text">向量数据库的构建需要人工注释。
+该数据库旨在存储目标对象（正样本）和背景区域（负样本）。
+给定输入图像，首先由 DINOv3 提取视觉特征</span><span class="original-text">The construction of the vector database requires human annotation.
+The database is designed to store both target objects (positive samples) and background regions (negative samples).
+Given an input image, the visual features are first extracted by DINOv3</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="Dinov3">13</a>]</cite><span class="translated-text">并使用凝聚聚类离散化为视觉词</span><span class="original-text">and discretized into visual words using agglomerative clustering</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="Modern hierarchical, agglomerative clustering algorithms">8</a>]</cite><span class="translated-text">。
+然后，用户可以通过不同的注释形式指定目标区域，包括点、边界框和掩模。</span><span class="original-text">.
+Users can then specify target regions through different annotation forms, including points, bounding boxes, and masks.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p6">
+<p class="ltx_p" id="S2.p6.1"><span class="translated-text">对于基于点的注释，包含所选点的簇直接添加到矢量数据库中。
+对于基于边界框或掩模的注释，仅选择其区域大部分包含在注释区域内的簇。
+具体来说，如果超过 90% 的聚类区域被边界框或掩模覆盖，则相应的聚类特征将被存储为对象表示。</span><span class="original-text">For point-based annotation, the cluster containing the selected point is directly added to the vector database.
+For bounding-box or mask-based annotation, only clusters whose regions are mostly contained within the annotated area are selected.
+Specifically, if more than 90% of a cluster region is covered by the bounding box or mask, the corresponding cluster feature is stored as an object representation.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p7">
+<p class="ltx_p" id="S2.p7.1"><span class="translated-text">当同一注释区域中包含多个聚类区域时，它们的空间拓扑另外保存在矢量数据库中。
+具体来说，如果两个簇满足覆盖约束并且在空间上相连，则它们的相互连接关系被记录在</span><span class="original-text">When multiple clustered regions are included in the same annotation area, their spatial topology is additionally preserved in the vector database.
+Specifically, if two clusters satisfy the coverage constraint and are spatially connected, their mutual connectivity relationship is recorded in an</span><span class="ltx_text ltx_font_italic" id="S2.p7.1.1"><span class="translated-text">索引列表</span><span class="original-text">indexList</span></span><span class="translated-text">场。
+例如，如果簇 1 和簇 2 都包含在注释对象区域内，并且簇 1 连接到簇 2，则两个簇的特征条目都存储在数据库中。
+同时，Cluster 2的标识符被添加到</span><span class="original-text">field.
+For example, if Cluster 1 and Cluster 2 are both contained within the annotated object region and Cluster 1 is connected to Cluster 2, the feature entries of both clusters are stored in the database.
+Meanwhile, the identifier of Cluster 2 is added to the</span><span class="ltx_text ltx_font_italic" id="S2.p7.1.2"><span class="translated-text">索引列表</span><span class="original-text">indexList</span></span><span class="translated-text">Cluster 1的标识符，并将Cluster 1的标识符添加到</span><span class="original-text">of Cluster 1, and the identifier of Cluster 1 is added to the</span><span class="ltx_text ltx_font_italic" id="S2.p7.1.3"><span class="translated-text">索引列表</span><span class="original-text">indexList</span></span><span class="translated-text">属于集群 2。</span><span class="original-text">of Cluster 2.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p8">
+<p class="ltx_p" id="S2.p8.6"><span class="translated-text">在推理过程中，只有同时满足特征相似性和拓扑一致性时，查询视觉词才被认为是有效匹配。
+例如，假设两个查询集群</span><span class="original-text">During inference, a query visual word is considered a valid match only when both feature similarity and topological consistency are satisfied.
+For example, suppose two query clusters</span><math alttext="A" class="ltx_Math" display="inline" id="S2.p8.1.m1" intent=":literal"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="B" class="ltx_Math" display="inline" id="S2.p8.2.m2" intent=":literal"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math><span class="translated-text">分别使用向量数据库中存储的簇 1 和簇 2 获得高于预定义阈值的相似度分数。
+仅当 Cluster</span><span class="original-text">achieve similarity scores higher than the predefined threshold with Cluster 1 and Cluster 2 stored in the vector database, respectively.
+The retrieval result is accepted only if Cluster</span><math alttext="A" class="ltx_Math" display="inline" id="S2.p8.3.m3" intent=":literal"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math><span class="translated-text">和集群</span><span class="original-text">and Cluster</span><math alttext="B" class="ltx_Math" display="inline" id="S2.p8.4.m4" intent=":literal"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math><span class="translated-text">保留与 Cluster 1 和 Cluster 2 相同的邻接关系。
+在这种情况下，匹配的簇</span><span class="original-text">preserve the same adjacency relationship as Cluster 1 and Cluster 2.
+In this case, the matched clusters</span><math alttext="A" class="ltx_Math" display="inline" id="S2.p8.5.m5" intent=":literal"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="B" class="ltx_Math" display="inline" id="S2.p8.6.m6" intent=":literal"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math><span class="translated-text">共同视为检测到的对象实例。</span><span class="original-text">are jointly regarded as a detected object instance.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p9">
+<p class="ltx_p" id="S2.p9.1"><span class="translated-text">由于不同的聚类敏感性产生不同的视觉词汇粒度，
+我们构建了对应于不同聚类敏感性设置的多个向量数据库。
+在推理过程中，使用与目标数据库相同的聚类敏感度对查询特征进行聚类，
+并且检索仅在相应的矢量数据库内进行。
+该策略可以在不同粒度级别下实现灵活的对象表示和检索。</span><span class="original-text">Since different clustering sensitivities produce different visual vocabulary granularities,
+we construct multiple vector databases corresponding to different clustering sensitivity settings.
+During inference, the query features are clustered using the same clustering sensitivity as the target database,
+and retrieval is performed only within the corresponding vector database.
+This strategy enables flexible object representation and retrieval under different granularity levels.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p10">
+<p class="ltx_p" id="S2.p10.1"><span class="translated-text">在实际工程场景中，监控摄像头往往部署在固定地点，所拍摄的场景大部分时间主要由静态背景区域组成。
+在这种情况下，直接针对向量数据库查询所有视觉词会引入大量的冗余计算，特别是当重复检索大量背景特征时。
+为了提高检测效率，我们引入了背景过滤层，在矢量数据库检索之前去除背景相关的视觉词。</span><span class="original-text">In practical engineering scenarios, surveillance cameras are often deployed at fixed locations, where the captured scenes mainly consist of static background regions for most of the time.
+Directly querying all visual words against the vector database in such scenarios would introduce substantial redundant computation, especially when a large number of background features are repeatedly retrieved.
+To improve detection efficiency, we introduce a background filtering layer to remove background-related visual words before vector database retrieval.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p11">
+<p class="ltx_p" id="S2.p11.1"><span class="translated-text">具体来说，背景过滤层维护存储代表性背景视觉词的背景特征存储器。
+给定输入图像，DINOv3</span><span class="original-text">Specifically, the background filtering layer maintains a background feature memory that stores representative background visual words.
+Given an input image, DINOv3</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="Dinov3">13</a>]</cite><span class="translated-text">首先提取视觉特征，然后通过凝聚聚类算法将其离散化为视觉词</span><span class="original-text">is first used to extract visual features, which are then discretized into visual words through an agglomerative clustering algorithm</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="Modern hierarchical, agglomerative clustering algorithms">8</a>]</cite><span class="translated-text">。
+生成的视觉词最初与存储在背景特征存储器中的所有背景向量进行比较。
+如果查询视觉词与背景向量之间的相似度得分超过预定义阈值，则该视觉词被视为背景区域并从后续向量数据库检索中排除。
+仅剩余的视觉词被转发到对象向量数据库以进行进一步匹配。</span><span class="original-text">.
+The generated visual words are initially compared with all background vectors stored in the background feature memory.
+If the similarity score between a query visual word and a background vector exceeds a predefined threshold, the visual word is regarded as a background region and excluded from subsequent vector database retrieval.
+Only the remaining visual words are forwarded to the object vector database for further matching.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p12">
+<p class="ltx_p" id="S2.p12.1"><span class="translated-text">为了适应动态环境变化，后台特征内存在线更新。
+对于每个输入帧，将提取的视觉词与当前背景特征存储器中存储的所有向量进行比较。</span><span class="original-text">To adapt to dynamic environmental changes, the background feature memory is updated online.
+For each input frame, the extracted visual words are compared with all vectors stored in the current background feature memory.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p13">
+<p class="ltx_p" id="S2.p13.1"><span class="translated-text">更新过程遵循匹配和替换策略。
+具体来说，与当前帧的相似度分数超过预定义阈值的背景向量被认为是匹配并保留的。
+不匹配的背景向量被从记忆中删除，而当前帧中成功匹配背景记忆的视觉词被视为背景观察。</span><span class="original-text">The update process follows a matching-and-replacement strategy.
+Specifically, background vectors whose similarity scores with the current frame exceed the predefined threshold are considered matched and retained.
+The unmatched background vectors are removed from the memory, while the visual words from the current frame that successfully match the background memory are regarded as background observations.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p14">
+<p class="ltx_p" id="S2.p14.1"><span class="translated-text">剩余的不匹配的视觉词由对象向量数据库进一步处理。
+如果不匹配的视觉词被检索为存储在对象向量数据库中的负样本（背景向量），或者与最相关的正对象向量达到高于预定义阈值的相似性分数，则将其视为背景特征并添加到背景特征存储器中。</span><span class="original-text">The remaining unmatched visual words are further processed by the object vector database.
+If an unmatched visual word is retrieved as a negative sample (background vector) stored in the object vector database, or achieves a similarity score higher than the predefined threshold with the most relevant positive object vector, it is considered a background feature and added to the background feature memory.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p15">
+<p class="ltx_p" id="S2.p15.1"><span class="translated-text">通过这种在线背景过滤机制，在矢量数据库检索之前有效消除冗余背景查询，显着减少计算开销，同时保持准确的目标检测性能。</span><span class="original-text">Through this online background filtering mechanism, redundant background queries are effectively eliminated before vector database retrieval, significantly reducing computational overhead while maintaining accurate object detection performance.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p16">
+<p class="ltx_p" id="S2.p16.1"><span class="translated-text">从矢量数据库中检索到的匹配视觉簇首先根据其空间分布转换为对象边界框。
+然而，由于 VocaDet 在多个聚类敏感度设置下进行聚类，因此同一图像可能会生成不同粒度的视觉词。
+这些多粒度视觉词与相应的向量数据库独立匹配，这可能会导致同一对象出现多个重叠的边界框。</span><span class="original-text">The matched visual clusters retrieved from the vector database are first converted into object bounding boxes according to their spatial distributions.
+However, since VocaDet performs clustering under multiple clustering sensitivity settings, the same image may generate visual words with different granularities.
+These multi-granularity visual words are independently matched with their corresponding vector databases, which may lead to multiple overlapping bounding boxes for the same object.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p17">
+<p class="ltx_p" id="S2.p17.1"><span class="translated-text">为了获得一致的检测结果，在向量检索之后应用非极大值抑制（NMS）层。
+通过考虑候选框之间的置信度分数和空间重叠，抑制冗余检测，并选择剩余的边界框作为最终的对象预测。</span><span class="original-text">To obtain consistent detection results, a Non-Maximum Suppression (NMS) layer is applied after vector retrieval.
+By considering the confidence scores and spatial overlap between candidate boxes, redundant detections are suppressed, and the remaining bounding boxes are selected as the final object predictions.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">实验</span><span class="original-text">Experiments</span></h2>
+<div class="ltx_para ltx_noindent" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="translated-text">我们在 UA-DETRAC 数据集上评估提出的 VocaDet 框架</span><span class="original-text">We evaluate the proposed VocaDet framework on the UA-DETRAC dataset</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib16" title="UA-detrac: a new benchmark and protocol for multi-object detection and tracking">16</a>]</cite><span class="translated-text">。
+实验结果表明，VocaDet 在不需要传统模型训练的情况下实现了有竞争力的检测性能。
+更重要的是，与固定类别检测器不同，VocaDet的性能可以通过扩展向量数据库中存储的正负样本集来不断提高。
+随着更多有代表性的对象示例的积累，构建的视觉记忆变得更加全面，从而导致更准确的目标检索。</span><span class="original-text">.
+The experimental results demonstrate that VocaDet achieves competitive detection performance without requiring conventional model training.
+More importantly, unlike fixed-category detectors, the performance of VocaDet can be continuously improved by expanding the positive and negative sample sets stored in the vector database.
+As more representative object examples are accumulated, the constructed visual memory becomes more comprehensive, leading to more accurate target retrieval.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.p2">
+<p class="ltx_p" id="S3.p2.1"><span class="translated-text">然而，我们也观察到所提出的方法的固有局限性。
+具体来说，当属于同一类别的多个空间相邻的对象出现在图像中时，它们可能会被错误地合并到单个检测实例中。
+出现此问题的原因是所提出的方法主要依赖于视觉特征相似性和空间聚类，缺乏足够的判别信息来分离具有高度相似外观的相邻实例。</span><span class="original-text">However, we also observe an inherent limitation of the proposed approach.
+Specifically, when multiple spatially adjacent objects belonging to the same category appear in an image, they may be incorrectly merged into a single detection instance.
+This issue occurs because the proposed method primarily relies on visual feature similarity and spatial clustering, which lack sufficient discriminative information to separate neighboring instances with highly similar appearances.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h2>
+<div class="ltx_para ltx_noindent" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">在这项工作中，我们提出了 VocaDet，一种样本驱动的开放词汇对象检测和分割框架，可通过视觉标记化和矢量数据库检索实现灵活的目标识别。通过利用 DINOv3 视觉表示、自适应凝聚聚类、位置偏置特征表示和拓扑感知对象记忆，VocaDet 直接从用户提供的正样本和负样本中学习对象概念，无需模型重新训练。此外，所提出的背景过滤机制通过减少冗余背景查询来提高实际固定相机场景中的检索效率。 UA-DETRAC数据集上的实验结果表明，VocaDet为开放词汇感知提供了有效且可扩展的解决方案，可以通过扩展样本库来不断提高识别能力。然而，作为样本驱动的框架，矢量数据库的初始构建可能会遇到冷启动问题，有限的样本导致难以准确地表征对象类别的分布并建立可靠的特征边界。在未来的工作中，我们将研究向量数据库中样本的分布模式，并探索组织视觉记忆和发现更具辨别力的类别边界的自适应策略，从而减少在初始部署阶段对手动收集样本的依赖。</span><span class="original-text">In this work, we propose VocaDet, a sample-driven open-vocabulary object detection and segmentation framework that enables flexible target recognition through visual tokenization and vector database retrieval. By leveraging DINOv3 visual representations, adaptive agglomerative clustering, position-debiased feature representations, and topology-aware object memories, VocaDet learns object concepts directly from user-provided positive and negative samples without requiring model retraining. Furthermore, the proposed background filtering mechanism improves retrieval efficiency in practical fixed-camera scenarios by reducing redundant background queries. Experimental results on the UA-DETRAC dataset demonstrate that VocaDet provides an effective and scalable solution for open-vocabulary perception, where recognition capability can be continuously improved by expanding the sample repository. However, as a sample-driven framework, the initial construction of the vector database may suffer from the cold-start problem, where limited samples make it difficult to accurately characterize the distribution of object categories and establish reliable feature boundaries. In future work, we will investigate the distribution patterns of samples within the vector database and explore adaptive strategies for organizing visual memories and discovering more discriminative category boundaries, thereby reducing the dependency on manually collected samples during the initial deployment stage.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib3">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">N. Carion, L. Gustafson, Y. Hu, S. Debnath, R. Hu, D. Suris, C. Ryali, K. V. Alwala, H. Khedr, A. Huang, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Sam 3: segment anything with concepts</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2511.16719</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib7">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">C. Cuttano, G. Trivigno, C. Reich, D. Cremers, C. Masone, and S. Roth</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">INSID3: training-free in-context segmentation with dinov3</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 21638–21648</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.p2.1" title="2 Method ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§2</span></a>,
+<a class="ltx_ref" href="#S2.p4.1" title="2 Method ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib10">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Espinosa, C. Yang, L. Ericsson, S. McDonagh, and E. J. Crowley</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">No time to train! training-free reference-based instance segmentation</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2507.02798</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib8">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Q. Jiang, X. Chen, Z. Zeng, J. Yu, and L. Zhang</span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Rex-thinker: grounded object referring via chain-of-thought reasoning</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2506.04034</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib9">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Q. Jiang, J. Huo, X. Chen, Y. Xiong, Z. Zeng, Y. Chen, T. Ren, J. Yu, and L. Zhang</span><span class="ltx_text ltx_bib_year"> (2026)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Detect anything via next point prediction</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 25472–25483</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib5">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">Q. Jiang, F. Li, Z. Zeng, T. Ren, S. Liu, and L. Zhang</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">T-rex2: towards generic object detection via text-visual prompt synergy, 2024</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">URL https://arxiv. org/abs/2403.14610</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib4">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">S. Liu, Z. Zeng, T. Ren, F. Li, H. Zhang, J. Yang, Q. Jiang, C. Li, J. Yang, H. Su, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Grounding dino: marrying dino with grounded pre-training for open-set object detection</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">European conference on computer vision</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 38–55</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib14">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">D. Müllner</span><span class="ltx_text ltx_bib_year"> (2011)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Modern hierarchical, agglomerative clustering algorithms</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:1109.2378</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p6.1" title="1 Introduction ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.p1.1" title="2 Method ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§2</span></a>,
+<a class="ltx_ref" href="#S2.p11.1" title="2 Method ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§2</span></a>,
+<a class="ltx_ref" href="#S2.p3.1" title="2 Method ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§2</span></a>,
+<a class="ltx_ref" href="#S2.p5.1" title="2 Method ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib11">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">M. Oquab, T. Darcet, T. Moutakanni, H. Vo, M. Szafraniec, V. Khalidov, P. Fernandez, D. Haziza, F. Massa, A. El-Nouby, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2023)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Dinov2: learning robust visual features without supervision</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2304.07193</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib12">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[10]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">N. Ravi, V. Gabeur, Y. Hu, R. Hu, C. Ryali, T. Ma, H. Khedr, R. Rädle, C. Rolland, L. Gustafson, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Sam 2: segment anything in images and videos</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">International Conference on Learning Representations</span>,
+</span>
+<span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume">2025</span>, <span class="ltx_text ltx_bib_pages"> pp. 28085–28128</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib1">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[11]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Redmon and A. Farhadi</span><span class="ltx_text ltx_bib_year"> (2018)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Yolov3: an incremental improvement</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:1804.02767</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib6">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[12]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">T. Ren, Y. Chen, Q. Jiang, Z. Zeng, Y. Xiong, W. Liu, Z. Ma, J. Shen, Y. Gao, X. Jiang, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Dino-x: a unified vision model for open-world object detection and understanding</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2411.14347</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib13">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[13]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">O. Siméoni, H. V. Vo, M. Seitzer, F. Baldassarre, M. Oquab, C. Jose, V. Khalidov, M. Szafraniec, S. Yi, M. Ramamonjisoa, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2025)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Dinov3</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2508.10104</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p6.1" title="1 Introduction ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.p1.1" title="2 Method ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§2</span></a>,
+<a class="ltx_ref" href="#S2.p11.1" title="2 Method ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§2</span></a>,
+<a class="ltx_ref" href="#S2.p3.1" title="2 Method ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§2</span></a>,
+<a class="ltx_ref" href="#S2.p5.1" title="2 Method ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib2">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[14]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">A. Wang, H. Chen, L. Liu, K. Chen, Z. Lin, J. Han, and G. Ding</span><span class="ltx_text ltx_bib_year"> (2024)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Yolov10: real-time end-to-end object detection</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Advances in neural information processing systems</span> <span class="ltx_text ltx_bib_volume">37</span>, <span class="ltx_text ltx_bib_pages"> pp. 107984–108011</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib15">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[15]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">J. Wang, X. Yi, R. Guo, H. Jin, P. Xu, S. Li, X. Wang, X. Guo, C. Li, X. Xu, <span class="ltx_text ltx_bib_etal">et al.</span></span><span class="ltx_text ltx_bib_year"> (2021)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Milvus: a purpose-built vector data management system</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 2021 international conference on management of data</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 2614–2627</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="2 Method ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib16">
+<span class="ltx_tag ltx_bib_key ltx_role_refnum ltx_tag_bibitem">[16]</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_author">L. Wen, D. Du, Z. Cai, Z. Lei, M. Chang, H. Qi, J. Lim, M. Yang, and S. Lyu</span><span class="ltx_text ltx_bib_year"> (2020)</span>
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">UA-detrac: a new benchmark and protocol for multi-object detection and tracking</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Computer Vision and Image Understanding</span> <span class="ltx_text ltx_bib_volume">193</span>, <span class="ltx_text ltx_bib_pages"> pp. 102907</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.p1.1" title="3 Experiments ‣ VocaDet: Sample-Driven Open-Vocabulary Object Detection and Segmentation via Visual Tokenization and Vector Database Retrieval"><span class="ltx_text ltx_ref_tag">§3</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2607.08541v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer><footer class="ds-site-footer">
+<div class="ds-site-footer-grid">
+<div class="ds-site-footer-main">
+<div class="ds-site-footer-ack"><span class="translated-text">我们衷心感谢来自
+        我们的</span><span class="original-text">We gratefully acknowledge support from
+        our</span><strong><span class="translated-text">主要资助者</span><span class="original-text">major funders</span></strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong><span class="translated-text">成员机构</span><span class="original-text">member institutions</span></strong></a><span class="ack-member-inline" hidden="">, <strong></strong></span><span class="translated-text">,
+        以及所有贡献者。</span><span class="original-text">,
+        and all contributors.</span></div>
+<nav aria-label="Site navigation" class="ds-site-footer-links">
+<a href="https://info.arxiv.org/about"><span class="translated-text">关于</span><span class="original-text">About</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help"><span class="translated-text">帮助</span><span class="original-text">Help</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/contact.html"><span class="translated-text">联系方式</span><span class="original-text">Contact</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/subscribe"><span class="translated-text">订阅</span><span class="original-text">Subscribe</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/license/index.html"><span class="translated-text">版权</span><span class="original-text">Copyright</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/policies/privacy_policy.html"><span class="translated-text">隐私</span><span class="original-text">Privacy</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/web_accessibility.html"><span class="translated-text">无障碍</span><span class="original-text">Accessibility</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://status.arxiv.org" rel="noopener noreferrer" target="_blank"><span class="translated-text">运营状况</span><span class="original-text">Operational Status</span><span class="is-sr-only"><span class="translated-text">（在新选项卡中打开）</span><span class="original-text">(opens in new tab)</span></span></a>
+</nav>
+</div>
+<div aria-label="Major funders" class="ds-site-footer-funders">
+<div class="ds-site-footer-funders-label"><span class="translated-text">主要资金支持来自</span><span class="original-text">Major funding support from</span></div>
+<div class="ds-site-footer-funders-logos">
+<a class="ds-funder-link" href="https://www.simonsfoundation.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.sfi.org.bm/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation International" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation-international.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.schmidtsciences.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Schmidt Sciences" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/schmidt-sciences.png"/>
+</a>
+</div>
+</div>
+</div>
+</footer><div id="fixed-buttons-container">
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
