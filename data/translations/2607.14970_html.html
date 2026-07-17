@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">通过 GradientSHAP 和隐式微分解释过程控制优化建议</span><span class="original-text">Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 7 月 16 日星期四 10:58:28 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Thu Jul 16 10:58:28 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css" rel="stylesheet" type="text/css"/>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+    // Pre-apply spinout-banner dismissal here, before the banner paints, so it
+    // never flashes in only to be hidden later by the deferred arxiv-header.js.
+    // Key matches arxiv-header.js: "arxiv-banner-dismissed:" + data-banner-name.
+    if (localStorage.getItem('arxiv-banner-dismissed:spinout-nonprofit')) {
+      document.documentElement.setAttribute("data-banner-dismissed", "");
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/><link href="https://arxiv.org/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626" media="screen" rel="stylesheet" type="text/css"/><style>
+  /* Banner pre-dismissal (set above before paint -> no flash-then-hide) and
+     reading-mode chrome hiding. */
+  html[data-banner-dismissed] .ds-announcement { display: none; }
+  html[data-reading-mode="enabled"] .ds-announcement,
+  html[data-reading-mode="enabled"] .ds-site-footer { display: none; }
+  /* Keep the announcement text dark on the Open-Blue band in both colour themes
+     (otherwise it inherits the paper's warm-wash text in dark mode and washes out). */
+  .ds-announcement-text { color: var(--arxiv-ink, #1c1a17); }
+</style>
+<script defer="" src="https://arxiv.org/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2607.14970" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2607.14970" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog><div aria-label="Announcement" class="ds-announcement" data-banner-name="spinout-nonprofit" id="announcement-banner" role="region">
+<img alt="" aria-hidden="true" class="ds-announcement-glyph" src="https://arxiv.org/static/base/1.0.1/images/icons/smileybones-small.svg"/>
+<span class="ds-announcement-text"><span class="translated-text">arXiv 现在是一个独立的非营利组织！</span><span class="original-text">arXiv is now an independent nonprofit!</span></span>
+<a class="ds-announcement-link" href="https://info.arxiv.org/about"><span class="translated-text">了解更多</span><span class="original-text">Learn more</span></a>
+<button aria-label="Dismiss announcement" class="ds-announcement-close" type="button">×</button>
+</div>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/"><img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/base/1.0.1/images/arxiv-logo-primary-light.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2607.14970v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2607.14970v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S2" title="In Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Related Work</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Problem Formulation</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In 3 Problem Formulation ‣ Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>HPGR Parameter Optimisation</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS2" title="In 3 Problem Formulation ‣ Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Explanation Task</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Methodology</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In 4 Methodology ‣ Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>IFT for Sensitivity Computation</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS2" title="In 4 Methodology ‣ Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2 </span>GradientSHAP for Optimisation</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS3" title="In 4 Methodology ‣ Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3 </span>Narrative Generation with LLMs</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S5" title="In Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Results</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS1" title="In 5 Results ‣ Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5.1 </span>Sample Efficiency and Computational Performance</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS2" title="In 5 Results ‣ Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5.2 </span>GradientSHAP Validation</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S6" title="In Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6 </span>Explanations</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S6.SS1" title="In 6 Explanations ‣ Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6.1 </span>Scenario: Reduced Throughput with Coarser Feed*</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S7" title="In Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">7 </span>Conclusion</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_acknowledgements"><a class="ltx_ref" href="#S7.acknowledgements1" title="In 7 Conclusion ‣ Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title">Acknowledgements</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2607.14970v1 [cs.AI] 2026 年 7 月 16 日</span><span class="original-text">arXiv:2607.14970v1 [cs.AI] 16 Jul 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<div class="ltx_para" id="p1">
+<span class="ltx_ERROR undefined" id="p1.1"><span class="translated-text">\版权条款</span><span class="original-text">\copyrightclause</span></span>
+<p class="ltx_p" id="p1.2"><span class="translated-text">本文版权归作者所有。
+知识共享许可归属 4.0 允许使用
+国际（CC BY 4.0）。</span><span class="original-text">Copyright for this paper by its authors.
+Use permitted under Creative Commons License Attribution 4.0
+International (CC BY 4.0).</span><span class="ltx_ERROR undefined" id="p1.2.1"><span class="translated-text">\会议</span><span class="original-text">\conference</span></span><span class="translated-text">最新成果，演示和博士联盟，与第四届可解释人工智能世界会议同期举行：2026 年 7 月 1 日至 3 日，巴西福塔莱萨</span><span class="original-text">Late-breaking work, Demos and Doctoral Consortium, colocated with the 4th World Conference on eXplainable Artificial Intelligence: July 01–03, 2026, Fortaleza, Brazil</span></p>
+</div>
+<div class="ltx_para" id="p2">
+<p class="ltx_p" id="p2.1"><span class="translated-text">[电子邮件=paul.darm@strath.ac.uk，
+]</span><span class="original-text">[email=paul.darm@strath.ac.uk,
+]</span></p>
+</div>
+<div class="ltx_para" id="p3">
+<p class="ltx_p" id="p3.1"><span class="translated-text">[电子邮件=cem.alpturk@mail.weir,
+]</span><span class="original-text">[email=cem.alpturk@mail.weir,
+]</span></p>
+</div>
+<div class="ltx_para" id="p4">
+<p class="ltx_p" id="p4.1"><span class="translated-text">[电子邮件=kenneth.ulrich@mail.weir,
+]</span><span class="original-text">[email=kenneth.ulrich@mail.weir,
+]</span></p>
+</div>
+<div class="ltx_para" id="p5">
+<p class="ltx_p" id="p5.1"><span class="translated-text">[电子邮件=william.duncan@mail.weir,
+]</span><span class="original-text">[email=william.duncan@mail.weir,
+]</span></p>
+</div>
+<div class="ltx_para" id="p6">
+<p class="ltx_p" id="p6.1"><span class="translated-text">[电子邮件=ali.anwar@strath.ac.uk，
+]</span><span class="original-text">[email=ali.anwar@strath.ac.uk,
+]</span></p>
+</div>
+<div class="ltx_para" id="p7">
+<p class="ltx_p" id="p7.1"><span class="translated-text">[电子邮件=annalisa.riccardi@strath.ac.uk，
+]</span><span class="original-text">[email=annalisa.riccardi@strath.ac.uk,
+]</span></p>
+</div>
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">通过 GradientSHAP 和隐式微分解释过程控制优化建议</span><span class="original-text">Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Paul Darm
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Cem Alpturk
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Kenneth Ulrich
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">William Duncan
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Ali Anwar
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Annalisa Riccardi
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_address">University of Strathclyde, Glasgow, United Kingdom
+</span>
+<span class="ltx_contact ltx_role_address">Weir, Glasgow, United Kingdom
+</span>
+<span class="ltx_contact ltx_role_address">Weir, Malmö, Sweden
+</span></span></span>
+</div>
+<div class="ltx_dates">(2026)</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">自动优化在工业流程中越来越多地采用，但设计这些算法的工程师和必须按照其建议采取行动的操作员之间仍然存在信任差距。 SHAP（SHapley Additive exPlanations）等可解释的人工智能方法已经改变了机器学习预测的可解释性；优化输出可以受益于类似的技术。我们提出了一种方法，将基于隐函数定理 (IFT) 的敏感性分析与 SHAP 归因和通过大型语言模型 (LLM) 的叙述生成相结合，生成为操作员量身定制的解释。我们的方法利用 IFT 来计算精确的参数灵敏度</span><span class="original-text">Automated optimisation is increasingly adopted in industrial processes, yet a trust gap persists between engineers who design these algorithms and operators who must act on their recommendations. Explainable AI methods like SHAP (SHapley Additive exPlanations) have transformed interpretability for machine learning predictions; optimisation outputs could benefit from similar techniques. We present an approach that integrates Implicit Function Theorem (IFT) based sensitivity analysis with SHAP attribution and narrative generation via Large Language Models (LLM), producing explanations tailored for operators. Our approach leverages IFT to compute exact parameter sensitivities</span><math alttext="\partial p^{*}/\partial x" class="ltx_Math" display="inline" intent=":literal"><semantics><mrow><mo rspace="0em">∂</mo><mrow><msup><mi>p</mi><mo>∗</mo></msup><mo>/</mo><mrow><mo lspace="0em" rspace="0em">∂</mo><mi>x</mi></mrow></mrow></mrow><annotation encoding="application/x-tex">\partial p^{*}/\partial x</annotation></semantics></math><span class="translated-text">从最优性条件出发，实现高效的 GradientSHAP 计算。对于具有 22 个特征的工业高压磨辊 (HPGR) 控制优化问题，我们实现了等效的 SHAP 属性（相关性</span><span class="original-text">from the optimality conditions, enabling efficient GradientSHAP computation. For an industrial High Pressure Grinding Roll (HPGR) control optimisation problem with 22 features, we achieve equivalent SHAP attributions (correlation</span><math alttext="&gt;" class="ltx_Math" display="inline" intent=":literal"><semantics><mo>&gt;</mo><annotation encoding="application/x-tex">&gt;</annotation></semantics></math><span class="translated-text">0.99（使用 KernelSHAP）超过 40</span><span class="original-text">0.99 with KernelSHAP) with over 40</span><math alttext="\times" class="ltx_Math" display="inline" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math><span class="translated-text">加速，实现实时自然语言解释。我们对工业场景进行验证，并提供领域专家对生成的解释的反馈。</span><span class="original-text">speedup, enabling real-time natural language explanations. We validate on industrial scenarios and present feedback from domain experts on generated explanations.</span></p>
+</div>
+<div class="ltx_classification">
+<h6 class="ltx_title ltx_title_classification"><span class="translated-text">关键词：</span><span class="original-text">keywords:</span></h6><span class="translated-text">可解释的人工智能</span><span class="original-text">Explainable AI</span><span class="ltx_ERROR undefined" id="id1.id1"><span class="translated-text">\九月</span><span class="original-text">\sep</span></span><span class="translated-text">可解释的优化</span><span class="original-text">Explainable Optimisation</span><span class="ltx_ERROR undefined" id="id2.id2"><span class="translated-text">\九月</span><span class="original-text">\sep</span></span><span class="translated-text">隐函数定理</span><span class="original-text">Implicit Function Theorem</span><span class="ltx_ERROR undefined" id="id3.id3"><span class="translated-text">\九月</span><span class="original-text">\sep</span></span><span class="translated-text">夏普</span><span class="original-text">SHAP</span><span class="ltx_ERROR undefined" id="id4.id4"><span class="translated-text">\九月</span><span class="original-text">\sep</span></span><span class="translated-text">敏感性分析</span><span class="original-text">Sensitivity Analysis</span><span class="ltx_ERROR undefined" id="id5.id5"><span class="translated-text">\九月</span><span class="original-text">\sep</span></span><span class="translated-text">法学硕士</span><span class="original-text">LLM</span><span class="ltx_ERROR undefined" id="id6.id6"><span class="translated-text">\九月</span><span class="original-text">\sep</span></span><span class="translated-text">高温高压再循环</span><span class="original-text">HPGR</span></div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">现代工业过程越来越依赖数学优化来进行操作控制，从而提供显着的经济和效率效益。然而，无缝采用面临着一个关键障碍：运营商常常不信任他们无法理解的自动建议</span><span class="original-text">Modern industrial processes increasingly rely on mathematical optimisation for operational control, offering significant economic and efficiency benefits. However, seamless adoption faces a critical barrier: operators often distrust automated recommendations they cannot understand</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="">1</a>]</cite><span class="translated-text">。在矿物加工等高风险应用中，安全和设备限制至关重要，解释可以让操作员在实施前验证建议，从而确保优化的参数带来更高效、更安全的操作。可解释人工智能 (XAI) 在解释机器学习模型预测方面取得了重大进展</span><span class="original-text">. In high-stakes applications such as mineral processing, where safety and equipment constraints are paramount, explanations can ensure that optimized parameters lead to more efficient and safe operation by enabling operators to validate recommendations before implementation.Explainable Artificial Intelligence (XAI) has made significant progress in interpreting machine learning model predictions</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="">2</a>, <a class="ltx_ref" href="#bib.bib3" title="">3</a>]</cite><span class="translated-text">。我们应用类似的原理来解释优化算法的输出，回答操作员的问题，例如：</span><span class="original-text">. We apply a similar philosophy to explain optimisation algorithm outputs, answering operator questions like:</span><span class="ltx_text ltx_font_italic" id="S1.p1.1.1"><span class="translated-text">“为什么优化器今天建议更高的压力？”</span><span class="original-text">“Why did the optimiser recommend higher pressure today?”</span></span> or <span class="ltx_text ltx_font_italic" id="S1.p1.1.2"><span class="translated-text">“哪些输入变化推动了这一速度建议？”</span><span class="original-text">“What input changes are driving this speed recommendation?”</span></span><span class="translated-text">通过以近似 SHAP 值的形式向法学硕士提供输入特征的属性。然后，法学硕士会根据 SHAP 值生成一个叙述，以解释参数设置发生变化的原因。</span><span class="original-text">by providing attributions of input features in form of approximated SHAP values to an LLM. The LLM then generates a narrative based on the SHAP values to explain why the parameters settings have changed.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">本文做出以下贡献：</span><span class="original-text">This paper makes the following contributions:</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<ol class="ltx_enumerate" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="ltx_text ltx_font_italic" id="S1.I1.i1.p1.1.1"><span class="translated-text">用于优化的 GradientSHAP：</span><span class="original-text">GradientSHAP for optimisation:</span></span><span class="translated-text">我们应用 GradientSHAP 通过推导所需的梯度来有效地解释优化算法的输出</span><span class="original-text">We apply GradientSHAP to explain optimisation algorithm outputs efficiently by deriving the required gradients</span><math alttext="\partial p^{*}/\partial x" class="ltx_Math" display="inline" id="S1.I1.i1.p1.1.m1" intent=":literal"><semantics><mrow><mo rspace="0em">∂</mo><mrow><msup><mi>p</mi><mo>∗</mo></msup><mo>/</mo><mrow><mo lspace="0em" rspace="0em">∂</mo><mi>x</mi></mrow></mrow></mrow><annotation encoding="application/x-tex">\partial p^{*}/\partial x</annotation></semantics></math><span class="translated-text">来自隐函数定理。</span><span class="original-text">from the Implicit Function Theorem.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="ltx_text ltx_font_italic" id="S1.I1.i2.p1.1.1"><span class="translated-text">基于SHAP的解释：</span><span class="original-text">SHAP-based explanations:</span></span><span class="translated-text">我们使用生成的属性为运营商 HPGR 过程的优化参数生成自然语言解释，并通过领域专家的反馈对其进行验证。</span><span class="original-text">We use the resulting attributions to generate natural language explanations for optimised parameters for an HPGR process for operators, validating it through feedback from domain experts.</span></p>
+</div>
+</li>
+</ol>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></h2>
+<div class="ltx_para" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="ltx_text ltx_font_italic" id="S2.p1.1.1"><span class="translated-text">机器学习的可解释性。</span><span class="original-text">Explainability for Machine Learning.</span></span><span class="translated-text">解释黑盒模型预测的挑战推动了可解释人工智能的广泛研究。
+夏普</span><span class="original-text">The challenge of interpreting black-box model predictions has driven extensive research in explainable AI.
+SHAP</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="">2</a>]</cite><span class="translated-text">提供具有局部准确性和一致性等属性的博弈论特征归因。渐变形状</span><span class="original-text">provides game-theoretic feature attributions with properties like local accuracy and consistency. GradientSHAP</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib4" title="">4</a>]</cite><span class="translated-text">通过沿着从基线到实例的路径积分梯度来计算归因，为可微模型提供效率。石灰</span><span class="original-text">computes attributions by integrating gradients along paths from baseline to instance, offering efficiency for differentiable models. LIME</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="">3</a>]</cite><span class="translated-text">通过扰动采样拟合局部代理模型。汉高等人。</span><span class="original-text">fits local surrogate models via perturbation sampling. Henkel et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib5" title="">5</a>]</cite><span class="translated-text">将 SHAP 应用于模型预测控制中的神经网络，以实现模型透明度。马滕斯等人。</span><span class="original-text">applied SHAP to neural networks within model predictive control for model transparency. Martens et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="">6</a>]</cite><span class="translated-text">证明法学硕士可以将数字归因转换为人类可读的叙述。</span><span class="original-text">demonstrated that LLMs can convert numerical attributions into human-readable narratives.</span></p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="ltx_text ltx_font_italic" id="S2.p2.1.1"><span class="translated-text">优化的可解释性。</span><span class="original-text">Explainability in Optimisation.</span></span><span class="translated-text">与用于 ML 的 XAI 不同，优化的可解释性仍处于萌芽阶段</span><span class="original-text">Unlike XAI for ML, explainability in optimisation remains nascent</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="">7</a>]</cite><span class="translated-text">。科里科夫等人。</span><span class="original-text">. Korikov et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="">8</a>]</cite><span class="translated-text">通过逆向优化探索反事实解释，确定最小的变化以使所需的解决方案达到最佳。比曼斯等人。</span><span class="original-text">explored counterfactual explanations via inverse optimisation, identifying minimal changes to make a desired solution optimal. Biemans et al.</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib9" title="">9</a>]</cite><span class="translated-text">提出了一种受 LIME 启发的采样方法，为供应链调度生成特征重要性归因，需要</span><span class="original-text">presented a LIME-inspired sampling approach to generate feature importance attributions for supply chain scheduling, requiring</span><math alttext="N" class="ltx_Math" display="inline" id="S2.p2.1.m1" intent=":literal"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math><span class="translated-text">根据解释优化解决。然后，法学硕士被用来为特定的供应链调度决策生成叙述。</span><span class="original-text">optimisation solves per explanation. An LLM was then used to generate narratives for specific supply chain scheduling decisions.</span></p>
+</div>
+<div class="ltx_para" id="S2.p3">
+<p class="ltx_p" id="S2.p3.1"><span class="ltx_text ltx_font_italic" id="S2.p3.1.1"><span class="translated-text">可微优化。</span><span class="original-text">Differentiable Optimisation.</span></span><span class="translated-text">越来越多的工作将优化问题视为大型学习系统中的可微分量，通过应用于最优性或 KKT 条件的隐函数定理来计算最优解的梯度</span><span class="original-text">A growing body of work treats optimisation problems as differentiable components within larger learning systems, computing gradients of optimal solutions via the implicit function theorem applied to optimality or KKT conditions</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib10" title="">10</a>, <a class="ltx_ref" href="#bib.bib11" title="">11</a>, <a class="ltx_ref" href="#bib.bib12" title="">12</a>]</cite><span class="translated-text">。这些方法可以从数据中端到端地学习成本函数、约束或动态。</span><span class="original-text">. These methods enable end-to-end learning of cost functions, constraints, or dynamics from data.</span></p>
+</div>
+<div class="ltx_para" id="S2.p4">
+<p class="ltx_p" id="S2.p4.1"><span class="translated-text">我们的工作位于这三条线的交叉点：我们应用隐式微分（与将优化器嵌入为可训练层相同的技术）来代替使用单个求解来计算精确的灵敏度，然后我们使用它来生成优化器建议的基于 SHAP 的叙述性解释。</span><span class="original-text">Our work sits at the intersection of these three lines: we apply implicit differentiation, the same technique used to embed optimisers as trainable layers, to instead compute exact sensitivities with a single solve, which we then use to generate SHAP-based narative explanations of optimiser recommendations.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">问题表述</span><span class="original-text">Problem Formulation</span></h2>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">高压辊磨机参数优化</span><span class="original-text">HPGR Parameter Optimisation</span></h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.2"><span class="translated-text">高压磨辊 (HPGR) 是选矿过程中的关键粉碎设备</span><span class="original-text">High Pressure Grinding Rolls (HPGR) are critical comminution equipment in mineral processing</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="">13</a>]</cite><span class="translated-text">，在高液压下在两个反向旋转辊之间破碎矿石（图 1）。</span><span class="original-text">, crushing ore between two counter-rotating rolls under high hydraulic pressure (Fig.</span><a class="ltx_ref" href="#S3.F1" title="Figure 1 ‣ 3.1 HPGR Parameter Optimisation ‣ 3 Problem Formulation ‣ Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">）。操作员必须不断调整两个控制参数，操作压力（</span><span class="original-text">). Operators must continuously adjust two control parameters, operating pressure (</span><math alttext="p_{\text{pressure}}" class="ltx_Math" display="inline" id="S3.SS1.p1.1.m1" intent=":literal"><semantics><msub><mi>p</mi><mtext>pressure</mtext></msub><annotation encoding="application/x-tex">p_{\text{pressure}}</annotation></semantics></math><span class="translated-text">）和圆周辊速度（</span><span class="original-text">) and peripheral roll speed (</span><math alttext="p_{\text{speed}}" class="ltx_Math" display="inline" id="S3.SS1.p1.2.m2" intent=":literal"><semantics><msub><mi>p</mi><mtext>speed</mtext></msub><annotation encoding="application/x-tex">p_{\text{speed}}</annotation></semantics></math><span class="translated-text">），在尊重设备限制的同时实现生产目标。</span><span class="original-text">), to achieve production targets while respecting equipment constraints.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F1"><span class="ltx_inline-block"><svg class="ltx_picture ltx_centering" height="195.09" id="S3.F1.pic1" overflow="visible" version="1.1" viewbox="0 0 267.18 195.09" width="267.18"><g stroke="#000000" style="--ltx-stroke-color:#000000;" transform="translate(0,195.09) matrix(1 0 0 -1 0 0) translate(88.56,0) translate(0,84.95)"><g fill="#D9D9D9" stroke-width="0.8pt" style="--ltx-fill-color:#D9D9D9;"><path d="M -47.24 0 M -15.75 0 C -15.75 17.4 -29.85 31.5 -47.24 31.5 C -64.64 31.5 -78.74 17.4 -78.74 0 C -78.74 -17.4 -64.64 -31.5 -47.24 -31.5 C -29.85 -31.5 -15.75 -17.4 -15.75 0 Z M -47.24 0"></path></g><g fill="#000000" style="--ltx-fill-color:#000000;"><g stroke-width="0.8pt"><path d="M -47.24 0 M -34.65 21.82 C -22.59 14.86 -18.47 -0.55 -25.42 -12.6 C -27.63 -16.43 -30.82 -19.61 -31.53 -20.02" style="fill:none"></path><g transform="matrix(-0.86601 -0.50003 0.50003 -0.86601 -31.53 -20.02)"><path d="M 3.6 0 L -2.16 2.88 L 0 0 L -2.16 -2.88" style="stroke:none"></path></g></g><g fill="#D9D9D9" stroke-width="0.8pt" style="--ltx-fill-color:#D9D9D9;"><path d="M 47.24 0 M 78.74 0 C 78.74 17.4 64.64 31.5 47.24 31.5 C 29.85 31.5 15.75 17.4 15.75 0 C 15.75 -17.4 29.85 -31.5 47.24 -31.5 C 64.64 -31.5 78.74 -17.4 78.74 0 Z M 47.24 0"></path></g><g stroke-width="0.8pt"><path d="M 47.24 0 M 34.65 21.82 C 22.59 14.86 18.47 -0.55 25.42 -12.6 C 27.63 -16.43 30.82 -19.61 31.53 -20.02" style="fill:none"></path><g transform="matrix(0.86601 -0.50003 0.50003 0.86601 31.53 -20.02)"><path d="M 3.6 0 L -2.16 2.88 L 0 0 L -2.16 -2.88" style="stroke:none"></path></g></g><g color="#0000FF" fill="#0000FF" stroke="#0000FF" stroke-width="0.8pt" style="--ltx-stroke-color:#0000FF;--ltx-fill-color:#0000FF;--ltx-fg-color:#0000FF;"><path d="M -50.39 0 L -35.09 0" style="fill:none"></path><g transform="matrix(1.0 0.0 0.0 1.0 -35.09 0)"><path d="M 3.6 0 L -2.16 2.88 L 0 0 L -2.16 -2.88" style="stroke:none"></path></g></g><g color="#0000FF" fill="#0000FF" stroke="#0000FF" stroke-width="0.8pt" style="--ltx-stroke-color:#0000FF;--ltx-fill-color:#0000FF;--ltx-fg-color:#0000FF;"><path d="M 50.39 0 L 35.09 0" style="fill:none"></path><g transform="matrix(-1.0 0.0 0.0 -1.0 35.09 0)"><path d="M 3.6 0 L -2.16 2.88 L 0 0 L -2.16 -2.88" style="stroke:none"></path></g></g><g stroke-width="0.4pt"><g fill="#0000FF" stroke="#0000FF" style="--ltx-stroke-color:#0000FF;--ltx-fill-color:#0000FF;" transform="matrix(1.0 0.0 0.0 1.0 -70.92 5.3)"><foreignobject color="#0000FF" height="9.92" overflow="visible" style="--ltx-fg-color:#0000FF;--ltx-fo-width:3.41em;--ltx-fo-height:0.43em;--ltx-fo-depth:0.29em;" transform="matrix(1 0 0 -1 0 5.96)" width="47.13"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><math alttext="p_{\text{pressure}}" class="ltx_Math" display="inline" id="S3.F1.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.m1" intent=":literal"><semantics><msub><mi>p</mi><mtext>pressure</mtext></msub><annotation encoding="application/x-tex">p_{\text{pressure}}</annotation></semantics></math></span></span></foreignobject></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 27.88 5.35)"><foreignobject height="8.82" overflow="visible" style="--ltx-fo-width:2.57em;--ltx-fo-height:0.42em;--ltx-fo-depth:0.27em;" transform="matrix(1 0 0 -1 0 5.36)" width="32.95"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><math alttext="p_{\text{speed}}" class="ltx_Math" display="inline" id="S3.F1.pic1.2.2.2.2.2.2.2.2.2.2.2.2.1.1.1.1.1.1.1.1.1.m1" intent=":literal"><semantics><msub><mi mathsize="0.900em">p</mi><mtext mathsize="0.900em">speed</mtext></msub><annotation encoding="application/x-tex">p_{\text{speed}}</annotation></semantics></math></span></span></foreignobject></g><g fill="#E6CCB3" stroke-width="0.8pt" style="--ltx-fill-color:#E6CCB3;"><path d="M -18.9 78.74 L 18.9 78.74 L 12.6 47.24 L -12.6 47.24 Z"></path></g><g stroke-width="0.8pt"><path d="M 0 88.19 L 0 79.85" style="fill:none"></path><g stroke-dasharray="none" stroke-dashoffset="0.0pt" stroke-linecap="round" stroke-linejoin="round" transform="matrix(0.0 -1.0 1.0 0.0 0 79.29)"><path d="M -3.54 4.32 C -2.9 1.73 -1.45 0.5 0 0 C -1.45 -0.5 -2.9 -1.73 -3.54 -4.32" style="fill:none"></path></g></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 -40.3 96.19)"><foreignobject height="12.45" overflow="visible" style="--ltx-fo-width:6.3em;--ltx-fo-height:0.73em;--ltx-fo-depth:0.24em;" transform="matrix(1 0 0 -1 0 9.34)" width="80.68"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S3.F1.pic1.3.3.3.3.3.3.3.3.3.3.3.3.1.1.1.1.1.1.1.1.1.1" style="font-size:90%;">Feed: <math alttext="x" class="ltx_Math" display="inline" id="S3.F1.pic1.3.3.3.3.3.3.3.3.3.3.3.3.1.1.1.1.1.1.1.1.1.1.m1" intent=":literal"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math> (PSD)</span></span></span></foreignobject></g><g stroke-width="0.8pt"><path d="M -15.75 -47.24 C -15.06 -47.24 -14.71 -45.86 -14.02 -45.86 C -13.52 -45.86 -13.09 -46.54 -12.63 -47.24 C -12.18 -47.95 -11.75 -48.63 -11.25 -48.63 C -10.75 -48.63 -10.32 -47.95 -9.87 -47.24 C -9.42 -46.54 -8.98 -45.86 -8.48 -45.86 C -7.98 -45.86 -7.55 -46.54 -7.1 -47.24 C -6.65 -47.95 -6.22 -48.63 -5.72 -48.63 C -5.22 -48.63 -4.78 -47.95 -4.33 -47.24 C -3.88 -46.54 -3.45 -45.86 -2.95 -45.86 C -2.45 -45.86 -2.02 -46.54 -1.57 -47.24 C -1.11 -47.95 -0.68 -48.63 -0.18 -48.63 C 0.32 -48.63 0.75 -47.95 1.2 -47.24 C 1.65 -46.54 2.09 -45.86 2.59 -45.86 C 3.09 -45.86 3.52 -46.54 3.97 -47.24 C 4.42 -47.95 4.85 -48.63 5.35 -48.63 C 5.85 -48.63 6.29 -47.95 6.74 -47.24 C 7.19 -46.54 7.62 -45.86 8.12 -45.86 C 8.62 -45.86 9.05 -46.54 9.5 -47.24 C 9.96 -47.95 10.39 -48.63 10.89 -48.63 C 11.58 -48.63 11.93 -47.24 12.62 -47.24 L 15.75 -47.24" style="fill:none"></path></g><g stroke-width="0.8pt"><path d="M 0 -47.24 L 0 -61.89" style="fill:none"></path><g stroke-dasharray="none" stroke-dashoffset="0.0pt" stroke-linecap="round" stroke-linejoin="round" transform="matrix(0.0 -1.0 1.0 0.0 0 -62.44)"><path d="M -3.54 4.32 C -2.9 1.73 -1.45 0.5 0 0 C -1.45 -0.5 -2.9 -1.73 -3.54 -4.32" style="fill:none"></path></g></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 -83.95 -77.22)"><foreignobject height="12.45" overflow="visible" style="--ltx-fo-width:13.09em;--ltx-fo-height:0.73em;--ltx-fo-depth:0.24em;" transform="matrix(1 0 0 -1 0 9.34)" width="167.51"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S3.F1.pic1.4.4.4.4.4.4.4.4.4.4.4.4.1.1.1.1.1.1.1.1.1.1" style="font-size:90%;">Product: <math alttext="y" class="ltx_Math" display="inline" id="S3.F1.pic1.4.4.4.4.4.4.4.4.4.4.4.4.1.1.1.1.1.1.1.1.1.1.m1" intent=":literal"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math> (throughput, D80)</span></span></span></foreignobject></g><g stroke-width="0.8pt"><path d="M -8.34 -12.6 L 8.34 -12.6" style="fill:none"></path><g stroke-dasharray="none" stroke-dashoffset="0.0pt" stroke-linecap="round" stroke-linejoin="round" transform="matrix(-1.0 0.0 0.0 -1.0 -8.9 -12.6)"><path d="M -3.54 4.32 C -2.9 1.73 -1.45 0.5 0 0 C -1.45 -0.5 -2.9 -1.73 -3.54 -4.32" style="fill:none"></path></g><g stroke-dasharray="none" stroke-dashoffset="0.0pt" stroke-linecap="round" stroke-linejoin="round" transform="matrix(1.0 0.0 0.0 1.0 8.9 -12.6)"><path d="M -3.54 4.32 C -2.9 1.73 -1.45 0.5 0 0 C -1.45 -0.5 -2.9 -1.73 -3.54 -4.32" style="fill:none"></path></g></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 -7.3 -26.77)"><foreignobject height="4.32" overflow="visible" style="--ltx-fo-width:1.55em;--ltx-fo-height:0.32em;--ltx-fo-depth:0.14em;" transform="matrix(1 0 0 -1 0 2.98)" width="14.61"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S3.F1.pic1.6.6.6.6.6.1.1" style="font-size:50%;">gap</span></span></span></foreignobject></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 115.13 35.05)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 26.27)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 17.66)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 17.66)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 8.51)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><foreignobject height="10.93" overflow="visible" style="--ltx-fo-width:4.23em;--ltx-fo-height:0.66em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 8.51)" width="54.15"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S3.F1.pic1.5.5.5.5.5.5.5.5.5.5.5.5.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1" style="font-size:90%;">Targets <math alttext="t" class="ltx_Math" display="inline" id="S3.F1.pic1.5.5.5.5.5.5.5.5.5.5.5.5.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.m1" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>:</span></span></span></foreignobject></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 17.66)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><foreignobject height="8.61" overflow="visible" style="--ltx-fo-width:4.95em;--ltx-fo-height:0.61em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 6.73)" width="54.56"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S3.F1.pic1.7.7.7.7.7.2.2.2.2.2.1.1.1" style="font-size:70%;">throughput</span></span></span></foreignobject></g></g></g></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 26.27)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><foreignobject height="8.61" overflow="visible" style="--ltx-fo-width:5.3em;--ltx-fo-height:0.61em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 6.73)" width="58.5"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S3.F1.pic1.8.8.8.8.8.3.3.1.1.1" style="font-size:70%;">product size</span></span></span></foreignobject></g></g></g></g><g stroke-width="0.8pt"><path d="M 103.94 -25.2 M 103.94 -19.66 L 103.94 19.66 C 103.94 22.72 106.42 25.2 109.47 25.2 L 167.69 25.2 C 170.75 25.2 173.23 22.72 173.23 19.66 L 173.23 -19.66 C 173.23 -22.72 170.75 -25.2 167.69 -25.2 L 109.47 -25.2 C 106.42 -25.2 103.94 -22.72 103.94 -19.66 Z M 173.23 25.2" style="fill:none"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 110.48 -3.04)"><foreignobject height="10.93" overflow="visible" style="--ltx-fo-width:4.39em;--ltx-fo-height:0.66em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 8.51)" width="56.21"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S3.F1.pic1.9.9.9.9.9.1.1" style="font-size:90%;">Optimizer</span></span></span></foreignobject></g><g color="#D9B38C" fill="#D9B38C" stroke="#D9B38C" style="--ltx-stroke-color:#D9B38C;--ltx-fill-color:#D9B38C;--ltx-fg-color:#D9B38C;"><path d="M -4.72 37.8 M -2.52 37.8 C -2.52 39.01 -3.51 40 -4.72 40 C -5.94 40 -6.93 39.01 -6.93 37.8 C -6.93 36.58 -5.94 35.59 -4.72 35.59 C -3.51 35.59 -2.52 36.58 -2.52 37.8 Z M -4.72 37.8" style="stroke:none"></path></g><g color="#D9B38C" fill="#D9B38C" stroke="#D9B38C" style="--ltx-stroke-color:#D9B38C;--ltx-fill-color:#D9B38C;--ltx-fg-color:#D9B38C;"><path d="M 3.78 40.95 M 5.98 40.95 C 5.98 42.16 5 43.15 3.78 43.15 C 2.56 43.15 1.57 42.16 1.57 40.95 C 1.57 39.73 2.56 38.74 3.78 38.74 C 5 38.74 5.98 39.73 5.98 40.95 Z M 3.78 40.95" style="stroke:none"></path></g><g color="#D9B38C" fill="#D9B38C" stroke="#D9B38C" style="--ltx-stroke-color:#D9B38C;--ltx-fill-color:#D9B38C;--ltx-fg-color:#D9B38C;"><path d="M 6.93 33.07 M 9.13 33.07 C 9.13 34.29 8.15 35.28 6.93 35.28 C 5.71 35.28 4.72 34.29 4.72 33.07 C 4.72 31.85 5.71 30.87 6.93 30.87 C 8.15 30.87 9.13 31.85 9.13 33.07 Z M 6.93 33.07" style="stroke:none"></path></g><g color="#D9B38C" fill="#D9B38C" stroke="#D9B38C" style="--ltx-stroke-color:#D9B38C;--ltx-fill-color:#D9B38C;--ltx-fg-color:#D9B38C;"><path d="M -2.52 26.77 M -0.31 26.77 C -0.31 27.99 -1.3 28.98 -2.52 28.98 C -3.74 28.98 -4.72 27.99 -4.72 26.77 C -4.72 25.55 -3.74 24.57 -2.52 24.57 C -1.3 24.57 -0.31 25.55 -0.31 26.77 Z M -2.52 26.77" style="stroke:none"></path></g><g color="#D9B38C" fill="#D9B38C" stroke="#D9B38C" style="--ltx-stroke-color:#D9B38C;--ltx-fill-color:#D9B38C;--ltx-fg-color:#D9B38C;"><path d="M 5.67 22.05 M 7.87 22.05 C 7.87 23.26 6.89 24.25 5.67 24.25 C 4.45 24.25 3.46 23.26 3.46 22.05 C 3.46 20.83 4.45 19.84 5.67 19.84 C 6.89 19.84 7.87 20.83 7.87 22.05 Z M 5.67 22.05" style="stroke:none"></path></g><g color="#D9B38C" fill="#D9B38C" stroke="#D9B38C" style="--ltx-stroke-color:#D9B38C;--ltx-fill-color:#D9B38C;--ltx-fg-color:#D9B38C;"><path d="M -5.67 17.32 M -3.46 17.32 C -3.46 18.54 -4.45 19.53 -5.67 19.53 C -6.89 19.53 -7.87 18.54 -7.87 17.32 C -7.87 16.11 -6.89 15.12 -5.67 15.12 C -4.45 15.12 -3.46 16.11 -3.46 17.32 Z M -5.67 17.32" style="stroke:none"></path></g><g color="#D9B38C" fill="#D9B38C" stroke="#D9B38C" style="--ltx-stroke-color:#D9B38C;--ltx-fill-color:#D9B38C;--ltx-fg-color:#D9B38C;"><path d="M 1.57 12.6 M 3.78 12.6 C 3.78 13.82 2.79 14.8 1.57 14.8 C 0.36 14.8 -0.63 13.82 -0.63 12.6 C -0.63 11.38 0.36 10.39 1.57 10.39 C 2.79 10.39 3.78 11.38 3.78 12.6 Z M 1.57 12.6" style="stroke:none"></path></g><g color="#D9B38C" fill="#D9B38C" stroke="#D9B38C" style="--ltx-stroke-color:#D9B38C;--ltx-fill-color:#D9B38C;--ltx-fg-color:#D9B38C;"><path d="M -3.15 6.3 M -0.94 6.3 C -0.94 7.52 -1.93 8.5 -3.15 8.5 C -4.37 8.5 -5.35 7.52 -5.35 6.3 C -5.35 5.08 -4.37 4.09 -3.15 4.09 C -1.93 4.09 -0.94 5.08 -0.94 6.3 Z M -3.15 6.3" style="stroke:none"></path></g><g color="#D2A679" fill="#D2A679" stroke="#D2A679" style="--ltx-stroke-color:#D2A679;--ltx-fill-color:#D2A679;--ltx-fg-color:#D2A679;"><path d="M -3.78 2.52 L 3.78 2.52 L 2.52 -15.75 L -2.52 -15.75 Z" style="stroke:none"></path></g><g color="#DFBF9F" fill="#DFBF9F" stroke="#DFBF9F" style="--ltx-stroke-color:#DFBF9F;--ltx-fill-color:#DFBF9F;--ltx-fg-color:#DFBF9F;"><path d="M -1.57 -20.47 M -0.32 -20.47 C -0.32 -19.78 -0.88 -19.21 -1.57 -19.21 C -2.27 -19.21 -2.83 -19.78 -2.83 -20.47 C -2.83 -21.17 -2.27 -21.73 -1.57 -21.73 C -0.88 -21.73 -0.32 -21.17 -0.32 -20.47 Z M -1.57 -20.47" style="stroke:none"></path></g><g color="#DFBF9F" fill="#DFBF9F" stroke="#DFBF9F" style="--ltx-stroke-color:#DFBF9F;--ltx-fill-color:#DFBF9F;--ltx-fg-color:#DFBF9F;"><path d="M 1.26 -24.57 M 2.52 -24.57 C 2.52 -23.87 1.96 -23.31 1.26 -23.31 C 0.56 -23.31 0 -23.87 0 -24.57 C 0 -25.26 0.56 -25.83 1.26 -25.83 C 1.96 -25.83 2.52 -25.26 2.52 -24.57 Z M 1.26 -24.57" style="stroke:none"></path></g><g color="#DFBF9F" fill="#DFBF9F" stroke="#DFBF9F" style="--ltx-stroke-color:#DFBF9F;--ltx-fill-color:#DFBF9F;--ltx-fg-color:#DFBF9F;"><path d="M 2.52 -28.98 M 3.78 -28.98 C 3.78 -28.28 3.22 -27.72 2.52 -27.72 C 1.82 -27.72 1.26 -28.28 1.26 -28.98 C 1.26 -29.67 1.82 -30.24 2.52 -30.24 C 3.22 -30.24 3.78 -29.67 3.78 -28.98 Z M 2.52 -28.98" style="stroke:none"></path></g><g color="#DFBF9F" fill="#DFBF9F" stroke="#DFBF9F" style="--ltx-stroke-color:#DFBF9F;--ltx-fill-color:#DFBF9F;--ltx-fg-color:#DFBF9F;"><path d="M -1.26 -31.5 M 0 -31.5 C 0 -30.8 -0.56 -30.24 -1.26 -30.24 C -1.96 -30.24 -2.52 -30.8 -2.52 -31.5 C -2.52 -32.19 -1.96 -32.76 -1.26 -32.76 C -0.56 -32.76 0 -32.19 0 -31.5 Z M -1.26 -31.5" style="stroke:none"></path></g><g color="#DFBF9F" fill="#DFBF9F" stroke="#DFBF9F" style="--ltx-stroke-color:#DFBF9F;--ltx-fill-color:#DFBF9F;--ltx-fg-color:#DFBF9F;"><path d="M 0 -35.28 M 1.26 -35.28 C 1.26 -34.58 0.7 -34.02 0 -34.02 C -0.7 -34.02 -1.26 -34.58 -1.26 -35.28 C -1.26 -35.97 -0.7 -36.54 0 -36.54 C 0.7 -36.54 1.26 -35.97 1.26 -35.28 Z M 0 -35.28" style="stroke:none"></path></g><g color="#DFBF9F" fill="#DFBF9F" stroke="#DFBF9F" style="--ltx-stroke-color:#DFBF9F;--ltx-fill-color:#DFBF9F;--ltx-fg-color:#DFBF9F;"><path d="M 1.89 -39.37 M 3.15 -39.37 C 3.15 -38.67 2.59 -38.11 1.89 -38.11 C 1.19 -38.11 0.63 -38.67 0.63 -39.37 C 0.63 -40.07 1.19 -40.63 1.89 -40.63 C 2.59 -40.63 3.15 -40.07 3.15 -39.37 Z M 1.89 -39.37" style="stroke:none"></path></g><g color="#DFBF9F" fill="#DFBF9F" stroke="#DFBF9F" style="--ltx-stroke-color:#DFBF9F;--ltx-fill-color:#DFBF9F;--ltx-fg-color:#DFBF9F;"><path d="M -0.94 -42.52 M 0.31 -42.52 C 0.31 -41.82 -0.25 -41.26 -0.94 -41.26 C -1.64 -41.26 -2.2 -41.82 -2.2 -42.52 C -2.2 -43.22 -1.64 -43.78 -0.94 -43.78 C -0.25 -43.78 0.31 -43.22 0.31 -42.52 Z M -0.94 -42.52" style="stroke:none"></path></g></g></g></g></svg></span>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>HPGR simplified schematic. Two counter-rotating rolls crush feed material under hydraulic pressure. The optimiser adjusts pressure and speed to minimise deviation from production targets given current feed properties.</figcaption>
+</figure>
+<div class="ltx_para" id="S3.SS1.p2">
+<p class="ltx_p" id="S3.SS1.p2.1"><span class="translated-text">参数优化问题表述为：</span><span class="original-text">The parameter optimisation problem is formulated as:</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p3">
+<table class="ltx_equation ltx_eqn_table" id="S3.E1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\min_{p\in\mathbb{R}^{2}}L(p,x,t)" class="ltx_Math" display="block" id="S3.E1.m1" intent=":literal"><semantics><mrow><mrow><munder><mi>min</mi><mrow><mi>p</mi><mo>∈</mo><msup><mi>ℝ</mi><mn>2</mn></msup></mrow></munder><mo lspace="0.167em">⁡</mo><mi>L</mi></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>p</mi><mo>,</mo><mi>x</mi><mo>,</mo><mi>t</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\min_{p\in\mathbb{R}^{2}}L(p,x,t)</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div class="ltx_para" id="S3.SS1.p4">
+<p class="ltx_p" id="S3.SS1.p4.1"><span class="translated-text">其中：</span><span class="original-text">where:</span></p>
+<ul class="ltx_itemize" id="S3.I1">
+<li class="ltx_item" id="S3.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i1.p1">
+<p class="ltx_p" id="S3.I1.i1.p1.1"><math alttext="p=[p_{\text{pressure}},p_{\text{speed}}]^{T}" class="ltx_Math" display="inline" id="S3.I1.i1.p1.1.m1" intent=":literal"><semantics><mrow><mi>p</mi><mo>=</mo><msup><mrow><mo stretchy="false">[</mo><msub><mi>p</mi><mtext>pressure</mtext></msub><mo>,</mo><msub><mi>p</mi><mtext>speed</mtext></msub><mo stretchy="false">]</mo></mrow><mi>T</mi></msup></mrow><annotation encoding="application/x-tex">p=[p_{\text{pressure}},p_{\text{speed}}]^{T}</annotation></semantics></math><span class="translated-text">是控制参数</span><span class="original-text">are control parameters</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i2.p1">
+<p class="ltx_p" id="S3.I1.i2.p1.1"><math alttext="x\in\mathbb{R}^{n}" class="ltx_Math" display="inline" id="S3.I1.i2.p1.1.m1" intent=":literal"><semantics><mrow><mi>x</mi><mo>∈</mo><msup><mi>ℝ</mi><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">x\in\mathbb{R}^{n}</annotation></semantics></math><span class="translated-text">是过程输入粒度分布 (PSD)，是标准筛尺寸下累积通过百分比的 20 维数组</span><span class="original-text">is the process input particle size distribution (PSD), a 20-dimensional array of cumulative passing percentages at standard sieve sizes</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i3.p1">
+<p class="ltx_p" id="S3.I1.i3.p1.1"><math alttext="t\in\mathbb{R}^{m}" class="ltx_Math" display="inline" id="S3.I1.i3.p1.1.m1" intent=":literal"><semantics><mrow><mi>t</mi><mo>∈</mo><msup><mi>ℝ</mi><mi>m</mi></msup></mrow><annotation encoding="application/x-tex">t\in\mathbb{R}^{m}</annotation></semantics></math><span class="translated-text">是生产目标（产量、产品细度）</span><span class="original-text">are production targets (throughput, product fineness)</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i4.p1">
+<p class="ltx_p" id="S3.I1.i4.p1.1"><math alttext="L(p,x,t)" class="ltx_Math" display="inline" id="S3.I1.i4.p1.1.m1" intent=":literal"><semantics><mrow><mi>L</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>p</mi><mo>,</mo><mi>x</mi><mo>,</mo><mi>t</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">L(p,x,t)</annotation></semantics></math><span class="translated-text">是衡量目标偏差的损失函数</span><span class="original-text">is a loss function measuring deviation from targets</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="S3.SS1.p5">
+<p class="ltx_p" id="S3.SS1.p5.1"><span class="translated-text">在实践中，操作边界限制了可行区域，但对于本文中的场景，最优解位于内部，使我们能够应用无约束敏感性分析。约束边界的扩展将在未来的工作中解决。</span><span class="original-text">In practice, operating bounds constrain the feasible region, but for the scenarios in this paper, optimal solutions lie in the interior, allowing us to apply unconstrained sensitivity analysis. Extension to constraint boundaries is addressed in future work.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p6">
+<p class="ltx_p" id="S3.SS1.p6.1"><span class="translated-text">损失函数</span><span class="original-text">The loss function</span><math alttext="L" class="ltx_Math" display="inline" id="S3.SS1.p6.1.m1" intent=":literal"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math><span class="translated-text">使用基于物理的人口平衡模型</span><span class="original-text">uses a physics-based population balance model</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="">13</a>]</cite><span class="translated-text">具有数据拟合的破碎参数，在 JAX 中实现并且完全可微分，可以预测吞吐量和产品细度（D80——小于该粒度的产品 80% 通过）。损失衡量与目标的加权偏差：</span><span class="original-text">with data-fitted breakage parameters, implemented in JAX and fully differentiable, that predicts throughput and product fineness (D80—the particle size below which 80% of the product passes). The loss measures weighted deviations from targets:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.Ex1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="L(p,x,t)=w_{1}(\hat{y}_{\text{throughput}}-t_{\text{throughput}})^{2}+w_{2}(\hat{y}_{\text{D80}}-t_{\text{D80}})^{2}" class="ltx_Math" display="block" id="S3.Ex1.m1" intent=":literal"><semantics><mrow><mrow><mi>L</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>p</mi><mo>,</mo><mi>x</mi><mo>,</mo><mi>t</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mrow><msub><mi>w</mi><mn>1</mn></msub><mo lspace="0em" rspace="0em">​</mo><msup><mrow><mo stretchy="false">(</mo><mrow><msub><mover accent="true"><mi>y</mi><mo>^</mo></mover><mtext>throughput</mtext></msub><mo>−</mo><msub><mi>t</mi><mtext>throughput</mtext></msub></mrow><mo stretchy="false">)</mo></mrow><mn>2</mn></msup></mrow><mo>+</mo><mrow><msub><mi>w</mi><mn>2</mn></msub><mo lspace="0em" rspace="0em">​</mo><msup><mrow><mo stretchy="false">(</mo><mrow><msub><mover accent="true"><mi>y</mi><mo>^</mo></mover><mtext>D80</mtext></msub><mo>−</mo><msub><mi>t</mi><mtext>D80</mtext></msub></mrow><mo stretchy="false">)</mo></mrow><mn>2</mn></msup></mrow></mrow></mrow><annotation encoding="application/x-tex">L(p,x,t)=w_{1}(\hat{y}_{\text{throughput}}-t_{\text{throughput}})^{2}+w_{2}(\hat{y}_{\text{D80}}-t_{\text{D80}})^{2}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span><span class="translated-text">解释任务</span><span class="original-text">Explanation Task</span></h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">给定两个操作点：</span><span class="original-text">Given two operating points:</span></p>
+<ul class="ltx_itemize" id="S3.I2">
+<li class="ltx_item" id="S3.I2.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I2.i1.p1">
+<p class="ltx_p" id="S3.I2.i1.p1.3"><span class="ltx_text ltx_font_italic" id="S3.I2.i1.p1.3.1"><span class="translated-text">基线：</span><span class="original-text">Baseline:</span></span><span class="translated-text">输入</span><span class="original-text">inputs</span><math alttext="x_{0}" class="ltx_Math" display="inline" id="S3.I2.i1.p1.1.m1" intent=":literal"><semantics><msub><mi>x</mi><mn>0</mn></msub><annotation encoding="application/x-tex">x_{0}</annotation></semantics></math><span class="translated-text">, 目标</span><span class="original-text">, targets</span><math alttext="t_{0}" class="ltx_Math" display="inline" id="S3.I2.i1.p1.2.m2" intent=":literal"><semantics><msub><mi>t</mi><mn>0</mn></msub><annotation encoding="application/x-tex">t_{0}</annotation></semantics></math><span class="translated-text">，最优参数</span><span class="original-text">, optimal parameters</span><math alttext="p_{0}^{*}=\arg\min_{p}L(p,x_{0},t_{0})" class="ltx_Math" display="inline" id="S3.I2.i1.p1.3.m3" intent=":literal"><semantics><mrow><msubsup><mi>p</mi><mn>0</mn><mo>∗</mo></msubsup><mo>=</mo><mrow><mrow><mi>arg</mi><mo lspace="0.167em">⁡</mo><mrow><msub><mi>min</mi><mi>p</mi></msub><mo lspace="0.167em">⁡</mo><mi>L</mi></mrow></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>p</mi><mo>,</mo><msub><mi>x</mi><mn>0</mn></msub><mo>,</mo><msub><mi>t</mi><mn>0</mn></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">p_{0}^{*}=\arg\min_{p}L(p,x_{0},t_{0})</annotation></semantics></math></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I2.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I2.i2.p1">
+<p class="ltx_p" id="S3.I2.i2.p1.3"><span class="ltx_text ltx_font_italic" id="S3.I2.i2.p1.3.1"><span class="translated-text">实例：</span><span class="original-text">Instance:</span></span><span class="translated-text">输入</span><span class="original-text">inputs</span><math alttext="x_{1}" class="ltx_Math" display="inline" id="S3.I2.i2.p1.1.m1" intent=":literal"><semantics><msub><mi>x</mi><mn>1</mn></msub><annotation encoding="application/x-tex">x_{1}</annotation></semantics></math><span class="translated-text">, 目标</span><span class="original-text">, targets</span><math alttext="t_{1}" class="ltx_Math" display="inline" id="S3.I2.i2.p1.2.m2" intent=":literal"><semantics><msub><mi>t</mi><mn>1</mn></msub><annotation encoding="application/x-tex">t_{1}</annotation></semantics></math><span class="translated-text">，最优参数</span><span class="original-text">, optimal parameters</span><math alttext="p_{1}^{*}=\arg\min_{p}L(p,x_{1},t_{1})" class="ltx_Math" display="inline" id="S3.I2.i2.p1.3.m3" intent=":literal"><semantics><mrow><msubsup><mi>p</mi><mn>1</mn><mo>∗</mo></msubsup><mo>=</mo><mrow><mrow><mi>arg</mi><mo lspace="0.167em">⁡</mo><mrow><msub><mi>min</mi><mi>p</mi></msub><mo lspace="0.167em">⁡</mo><mi>L</mi></mrow></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>p</mi><mo>,</mo><msub><mi>x</mi><mn>1</mn></msub><mo>,</mo><msub><mi>t</mi><mn>1</mn></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">p_{1}^{*}=\arg\min_{p}L(p,x_{1},t_{1})</annotation></semantics></math></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="S3.SS2.p2">
+<p class="ltx_p" id="S3.SS2.p2.2"><span class="translated-text">我们试图解释：</span><span class="original-text">We seek to explain:</span><span class="ltx_text ltx_font_italic" id="S3.SS2.p2.2.2"><span class="translated-text">为什么最优参数从</span><span class="original-text">Why did optimal parameters change from</span><math alttext="p_{0}^{*}" class="ltx_Math" display="inline" id="S3.SS2.p2.1.1.m1" intent=":literal"><semantics><msubsup><mi>p</mi><mn>0</mn><mo>∗</mo></msubsup><annotation encoding="application/x-tex">p_{0}^{*}</annotation></semantics></math> to <math alttext="p_{1}^{*}" class="ltx_Math" display="inline" id="S3.SS2.p2.2.2.m2" intent=":literal"><semantics><msubsup><mi>p</mi><mn>1</mn><mo>∗</mo></msubsup><annotation encoding="application/x-tex">p_{1}^{*}</annotation></semantics></math>?</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.p3">
+<p class="ltx_p" id="S3.SS2.p3.5"><span class="translated-text">具体来说，我们想要一个归因细分：</span><span class="original-text">Specifically, we want an attribution breakdown:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.Ex2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\Delta p^{*}=p_{1}^{*}-p_{0}^{*}=\sum_{i}\phi_{i}^{(x)}+\sum_{j}\phi_{j}^{(t)}" class="ltx_Math" display="block" id="S3.Ex2.m1" intent=":literal"><semantics><mrow><mrow><mi mathvariant="normal">Δ</mi><mo lspace="0em" rspace="0em">​</mo><msup><mi>p</mi><mo>∗</mo></msup></mrow><mo>=</mo><mrow><msubsup><mi>p</mi><mn>1</mn><mo>∗</mo></msubsup><mo>−</mo><msubsup><mi>p</mi><mn>0</mn><mo>∗</mo></msubsup></mrow><mo rspace="0.111em">=</mo><mrow><mrow><munder><mo movablelimits="false">∑</mo><mi>i</mi></munder><msubsup><mi>ϕ</mi><mi>i</mi><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></msubsup></mrow><mo rspace="0.055em">+</mo><mrow><munder><mo movablelimits="false">∑</mo><mi>j</mi></munder><msubsup><mi>ϕ</mi><mi>j</mi><mrow><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo></mrow></msubsup></mrow></mrow></mrow><annotation encoding="application/x-tex">\Delta p^{*}=p_{1}^{*}-p_{0}^{*}=\sum_{i}\phi_{i}^{(x)}+\sum_{j}\phi_{j}^{(t)}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS2.p3.4"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\phi_{i}^{(x)}" class="ltx_Math" display="inline" id="S3.SS2.p3.1.m1" intent=":literal"><semantics><msubsup><mi>ϕ</mi><mi>i</mi><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></msubsup><annotation encoding="application/x-tex">\phi_{i}^{(x)}</annotation></semantics></math><span class="translated-text">代表输入的贡献</span><span class="original-text">represents the contribution of input</span><math alttext="x_{i}" class="ltx_Math" display="inline" id="S3.SS2.p3.2.m2" intent=":literal"><semantics><msub><mi>x</mi><mi>i</mi></msub><annotation encoding="application/x-tex">x_{i}</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="\phi_{j}^{(t)}" class="ltx_Math" display="inline" id="S3.SS2.p3.3.m3" intent=":literal"><semantics><msubsup><mi>ϕ</mi><mi>j</mi><mrow><mo stretchy="false">(</mo><mi>t</mi><mo stretchy="false">)</mo></mrow></msubsup><annotation encoding="application/x-tex">\phi_{j}^{(t)}</annotation></semantics></math><span class="translated-text">代表目标的贡献</span><span class="original-text">represents the contribution of target</span><math alttext="t_{j}" class="ltx_Math" display="inline" id="S3.SS2.p3.4.m4" intent=":literal"><semantics><msub><mi>t</mi><mi>j</mi></msub><annotation encoding="application/x-tex">t_{j}</annotation></semantics></math>.</p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">方法论</span><span class="original-text">Methodology</span></h2>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span><span class="translated-text">用于灵敏度计算的 IFT</span><span class="original-text">IFT for Sensitivity Computation</span></h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.2"><span class="translated-text">让</span><span class="original-text">Let</span><math alttext="s=(x,t)" class="ltx_Math" display="inline" id="S4.SS1.p1.1.m1" intent=":literal"><semantics><mrow><mi>s</mi><mo>=</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo>,</mo><mi>t</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">s=(x,t)</annotation></semantics></math><span class="translated-text">表示过程输入和生产目标的组合向量。最优参数</span><span class="original-text">denote the combined vector of process inputs and production targets. The optimal parameters</span><math alttext="p^{*}(s)" class="ltx_Math" display="inline" id="S4.SS1.p1.2.m2" intent=":literal"><semantics><mrow><msup><mi>p</mi><mo>∗</mo></msup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">p^{*}(s)</annotation></semantics></math><span class="translated-text">由最优性条件隐式定义。对于无约束优化，一阶最优性需要：</span><span class="original-text">are implicitly defined by the optimality conditions. For unconstrained optimisation, first-order optimality requires:</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S4.Ex3">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\nabla_{p}L(p^{*},s)=0" class="ltx_Math" display="block" id="S4.Ex3.m1" intent=":literal"><semantics><mrow><mrow><mrow><msub><mo>∇</mo><mi>p</mi></msub><mi>L</mi></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msup><mi>p</mi><mo>∗</mo></msup><mo>,</mo><mi>s</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\nabla_{p}L(p^{*},s)=0</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+</div>
+<div class="ltx_para" id="S4.SS1.p2">
+<p class="ltx_p" id="S4.SS1.p2.2"><span class="translated-text">由隐函数定理，如果 Hessian</span><span class="original-text">By the Implicit Function Theorem, if the Hessian</span><math alttext="H=\nabla_{p}^{2}L(p^{*},s)" class="ltx_Math" display="inline" id="S4.SS1.p2.1.m1" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mrow><mrow><msubsup><mo rspace="0.167em">∇</mo><mi>p</mi><mn>2</mn></msubsup><mi>L</mi></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msup><mi>p</mi><mo>∗</mo></msup><mo>,</mo><mi>s</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">H=\nabla_{p}^{2}L(p^{*},s)</annotation></semantics></math><span class="translated-text">是非奇异的，那么</span><span class="original-text">is non-singular, then</span><math alttext="p^{*}(s)" class="ltx_Math" display="inline" id="S4.SS1.p2.2.m2" intent=":literal"><semantics><mrow><msup><mi>p</mi><mo>∗</mo></msup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">p^{*}(s)</annotation></semantics></math><span class="translated-text">是局部可微的：</span><span class="original-text">is locally differentiable:</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p3">
+<table class="ltx_equation ltx_eqn_table" id="S4.E2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\frac{\partial p^{*}}{\partial s}=-H^{-1}\cdot\frac{\partial^{2}L}{\partial p\partial s}\bigg|_{(p^{*},s)}" class="ltx_Math" display="block" id="S4.E2.m1" intent=":literal"><semantics><mrow><mfrac><mrow><mo rspace="0em">∂</mo><msup><mi>p</mi><mo>∗</mo></msup></mrow><mrow><mo rspace="0em">∂</mo><mi>s</mi></mrow></mfrac><mo>=</mo><mrow><mo>−</mo><msub><mrow><mrow><msup><mi>H</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo lspace="0.222em" rspace="0.222em">⋅</mo><mfrac><mrow><msup><mo>∂</mo><mn>2</mn></msup><mi>L</mi></mrow><mrow><mo rspace="0em">∂</mo><mrow><mi>p</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo rspace="0em">∂</mo><mi>s</mi></mrow></mrow></mrow></mfrac></mrow><mo maxsize="2.100em" minsize="2.100em" stretchy="true">|</mo></mrow><mrow><mo stretchy="false">(</mo><msup><mi>p</mi><mo>∗</mo></msup><mo>,</mo><mi>s</mi><mo stretchy="false">)</mo></mrow></msub></mrow></mrow><annotation encoding="application/x-tex">\frac{\partial p^{*}}{\partial s}=-H^{-1}\cdot\frac{\partial^{2}L}{\partial p\partial s}\bigg|_{(p^{*},s)}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div class="ltx_para" id="S4.SS1.p4">
+<p class="ltx_p" id="S4.SS1.p4.1"><span class="translated-text">参见 Dontchev 和 Rockafellar</span><span class="original-text">See Dontchev and Rockafellar</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="">14</a>]</cite><span class="translated-text">优化中隐式微分的一般理论。
+Hessian 矩阵计算一次；标量变量（水分、目标）一起批处理，而数组值输入 (PSD) 需要单独的批处理。通过 JAX 自动微分</span><span class="original-text">for the general theory of implicit differentiation in optimisation.
+The Hessian is computed once; scalar variables (moisture, targets) are batched together, while array-valued inputs (PSD) require a separate batch. Automatic differentiation via JAX</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib15" title="">15</a>]</cite><span class="translated-text">有效地计算这些，与优化求解相比，增加的开销可以忽略不计。</span><span class="original-text">computes these efficiently, adding negligible overhead compared to the optimisation solve.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span><span class="translated-text">用于优化的 GradientSHAP</span><span class="original-text">GradientSHAP for Optimisation</span></h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.3"><span class="translated-text">具有敏感性</span><span class="original-text">With sensitivities</span><math alttext="\partial p^{*}/\partial s" class="ltx_Math" display="inline" id="S4.SS2.p1.1.m1" intent=":literal"><semantics><mrow><mo rspace="0em">∂</mo><mrow><msup><mi>p</mi><mo>∗</mo></msup><mo>/</mo><mrow><mo lspace="0em" rspace="0em">∂</mo><mi>s</mi></mrow></mrow></mrow><annotation encoding="application/x-tex">\partial p^{*}/\partial s</annotation></semantics></math><span class="translated-text">通过 IFT 提供，我们应用 GradientSHAP</span><span class="original-text">available via IFT, we apply GradientSHAP</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="">2</a>]</cite><span class="translated-text">计算 SHAP 值。 GradientSHAP 沿着从基线到感兴趣实例的路径积分梯度。对于可微函数</span><span class="original-text">to compute SHAP values. GradientSHAP integrates gradients along a path from a baseline to the instance of interest. For a differentiable function</span><math alttext="h:\mathbb{R}^{d}\to\mathbb{R}" class="ltx_Math" display="inline" id="S4.SS2.p1.2.m2" intent=":literal"><semantics><mrow><mi>h</mi><mo lspace="0.278em" rspace="0.278em">:</mo><mrow><msup><mi>ℝ</mi><mi>d</mi></msup><mo stretchy="false">→</mo><mi>ℝ</mi></mrow></mrow><annotation encoding="application/x-tex">h:\mathbb{R}^{d}\to\mathbb{R}</annotation></semantics></math><span class="translated-text">，特征的 SHAP 值</span><span class="original-text">, the SHAP value for feature</span><math alttext="i" class="ltx_Math" display="inline" id="S4.SS2.p1.3.m3" intent=":literal"><semantics><mi>i</mi><annotation encoding="application/x-tex">i</annotation></semantics></math><span class="translated-text">是：</span><span class="original-text">is:</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p2">
+<table class="ltx_equation ltx_eqn_table" id="S4.E3">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\phi_{i}=(s_{i}-s_{i}^{\text{baseline}})\int_{\alpha=0}^{1}\frac{\partial h}{\partial s_{i}}\bigg|_{s^{\text{baseline}}+\alpha(s-s^{\text{baseline}})}d\alpha" class="ltx_Math" display="block" id="S4.E3.m1" intent=":literal"><semantics><mrow><msub><mi>ϕ</mi><mi>i</mi></msub><mo>=</mo><mrow><msub><mrow><mrow><mrow><mo stretchy="false">(</mo><mrow><msub><mi>s</mi><mi>i</mi></msub><mo>−</mo><msubsup><mi>s</mi><mi>i</mi><mtext>baseline</mtext></msubsup></mrow><mo stretchy="false">)</mo></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><msubsup><mo>∫</mo><mrow><mi>α</mi><mo>=</mo><mn>0</mn></mrow><mn>1</mn></msubsup><mfrac><mrow><mo rspace="0em">∂</mo><mi>h</mi></mrow><mrow><mo rspace="0em">∂</mo><msub><mi>s</mi><mi>i</mi></msub></mrow></mfrac></mrow></mrow><mo maxsize="2.100em" minsize="2.100em" stretchy="true">|</mo></mrow><mrow><msup><mi>s</mi><mtext>baseline</mtext></msup><mo>+</mo><mrow><mi>α</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><mi>s</mi><mo>−</mo><msup><mi>s</mi><mtext>baseline</mtext></msup></mrow><mo stretchy="false">)</mo></mrow></mrow></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mi>d</mi><mo lspace="0em" rspace="0em">​</mo><mi>α</mi></mrow></mrow><annotation encoding="application/x-tex">\phi_{i}=(s_{i}-s_{i}^{\text{baseline}})\int_{\alpha=0}^{1}\frac{\partial h}{\partial s_{i}}\bigg|_{s^{\text{baseline}}+\alpha(s-s^{\text{baseline}})}d\alpha</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(3)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div class="ltx_para" id="S4.SS2.p3">
+<p class="ltx_p" id="S4.SS2.p3.3"><span class="translated-text">在我们的例子中，</span><span class="original-text">In our case,</span><math alttext="h" class="ltx_Math" display="inline" id="S4.SS2.p3.1.m1" intent=":literal"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math><span class="translated-text">是最优参数函数</span><span class="original-text">is the optimal parameter function</span><math alttext="p^{*}(s)" class="ltx_Math" display="inline" id="S4.SS2.p3.2.m2" intent=":literal"><semantics><mrow><msup><mi>p</mi><mo>∗</mo></msup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">p^{*}(s)</annotation></semantics></math><span class="translated-text">，将输入和目标映射到最佳操作参数。与梯度容易获得的神经网络不同，计算</span><span class="original-text">, mapping inputs and targets to optimal operating parameters. Unlike neural networks where gradients are readily available, computing</span><math alttext="\partial p^{*}/\partial s" class="ltx_Math" display="inline" id="S4.SS2.p3.3.m3" intent=":literal"><semantics><mrow><mo rspace="0em">∂</mo><mrow><msup><mi>p</mi><mo>∗</mo></msup><mo>/</mo><mrow><mo lspace="0em" rspace="0em">∂</mo><mi>s</mi></mrow></mrow></mrow><annotation encoding="application/x-tex">\partial p^{*}/\partial s</annotation></semantics></math><span class="translated-text">因为优化器的输出是不可能直接实现的。 IFT 通过优化最优条件（方程式 1）进行微分来实现这一点。</span><span class="original-text">for an optimiser’s output is not directly possible. IFT enables this by differentiating through the optimality conditions (Eq.</span><a class="ltx_ref" href="#S4.E2" title="In 4.1 IFT for Sensitivity Computation ‣ 4 Methodology ‣ Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">），这反过来又使 GradientSHAP 比需要重复优化求解的 KernelSHAP 等黑盒方法具有理论上的效率增益。</span><span class="original-text">), which in turn enables GradientSHAP with theoretical efficiency gains over black-box methods such as KernelSHAP that require repeated optimisation solves.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span><span class="translated-text">法学硕士的叙事生成</span><span class="original-text">Narrative Generation with LLMs</span></h3>
+<div class="ltx_para" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.1"><span class="translated-text">我们使用 OpenAI (GPT-5) 将 SHAP 归因转换为操作员友好的叙述。提示提供有关 HPGR 物理和数值 SHAP 分解的领域知识；然后，法学硕士以具有操作意义的术语解释这些值。与代理模型方法不同，GradientSHAP 归因直接源自实际优化器的梯度，准确捕获最佳输出如何因每个输入的小扰动而变化，为忠实的解释提供原则基础。至关重要的是，LLM 充当数值归因的翻译者，而不是物理推理者：提示将其基于实际优化器计算的 SHAP 值，推荐的参数值来自优化器而不是 LLM，并且操作员在实施之前验证所有建议。</span><span class="original-text">We use OpenAI (GPT-5) to convert SHAP attributions into operator-friendly narratives. The prompt provides domain knowledge about HPGR physics and the numerical SHAP breakdown; the LLM then interprets these values in operationally meaningful terms. Unlike surrogate-model approaches, GradientSHAP attributions derive directly from gradients of the actual optimiser, capturing exactly how the optimal output would change for small perturbations of each input, providing a principled foundation for faithful explanations. Crucially, the LLM acts as a translator of numerical attributions, not a reasoner about physics: the prompt grounds it in SHAP values computed from the actual optimiser, recommended parameter values come from the optimiser rather than the LLM, and operators validate all recommendations before implementation.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span><span class="translated-text">结果</span><span class="original-text">Results</span></h2>
+<section class="ltx_subsection" id="S5.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.1 </span><span class="translated-text">样本效率和计算性能</span><span class="original-text">Sample Efficiency and Computational Performance</span></h3>
+<div class="ltx_para" id="S5.SS1.p1">
+<p class="ltx_p" id="S5.SS1.p1.1"><span class="translated-text">我们检查每种方法的收敛行为。图</span><span class="original-text">We examine convergence behavior of each approach. Figure</span><a class="ltx_ref" href="#S5.F2" title="Figure 2 ‣ 5.1 Sample Efficiency and Computational Performance ‣ 5 Results ‣ Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">显示 KernelSHAP 需要大约 100 个样本来减少方差，而图</span><span class="original-text">shows KernelSHAP requires approximately 100 samples to reduce variance, while Figure</span><a class="ltx_ref" href="#S5.F3" title="Figure 3 ‣ 5.1 Sample Efficiency and Computational Performance ‣ 5 Results ‣ Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">演示 GradientSHAP 只需 2-3 个路径积分样本即可产生稳定的结果。样品效率的这种差异产生超过 40</span><span class="original-text">demonstrates GradientSHAP produces stable results with as few as 2–3 path integration samples. This difference in sample efficiency yields over 40</span><math alttext="\times" class="ltx_Math" display="inline" id="S5.SS1.p1.1.m1" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math><span class="translated-text">加速比（表</span><span class="original-text">speedup (Table</span><a class="ltx_ref" href="#S5.T1" title="Table 1 ‣ 5.1 Sample Efficiency and Computational Performance ‣ 5 Results ‣ Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">）。 GradientSHAP 计时在样本计数中相对稳定，因为 Hessian 计算的昂贵 JAX 编译发生一次并在路径点之间分摊。</span><span class="original-text">). GradientSHAP timing is relatively stable across sample counts because the expensive JAX compilation of the Hessian computation occurs once and is amortised across path points.</span></p>
+</div>
+<figure class="ltx_figure" id="S5.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="281" id="S5.F2.g1" src="https://arxiv.org/html/2607.14970v1/figures/kernelshap_deviation_from_reference.png" width="381"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>KernelSHAP convergence: deviation from 1000-sample reference. Blue: 10 samples (wide spread); Orange: 100 samples (concentrated near zero). KernelSHAP requires approximately 100 samples for stable results.</figcaption>
+</figure>
+<figure class="ltx_figure" id="S5.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="120" id="S5.F3.g1" src="https://arxiv.org/html/2607.14970v1/figures/mean_psd_sample_count_comparison.png" width="381"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Sample count comparison for PSD SHAP values. Left: GradientSHAP shows rapid convergence with few samples. Right: KernelSHAP requires many more samples for stability.</figcaption>
+</figure>
+<figure class="ltx_table" id="S5.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Timing comparison between KernelSHAP and GradientSHAP. Speedup is relative to converged KernelSHAP (1000 samples).</figcaption>
+<table class="ltx_tabular ltx_centering ltx_align_middle" id="S5.T1.4">
+<tr class="ltx_tr" id="S5.T1.4.5">
+<td class="ltx_td ltx_align_left ltx_border_tt" id="S5.T1.4.5.1"><span class="ltx_text ltx_font_italic" id="S5.T1.4.5.1.1">Method</span></td>
+<td class="ltx_td ltx_align_left ltx_border_tt" id="S5.T1.4.5.2"><span class="ltx_text ltx_font_italic" id="S5.T1.4.5.2.1">Samples</span></td>
+<td class="ltx_td ltx_align_right ltx_border_tt" id="S5.T1.4.5.3"><span class="ltx_text ltx_font_italic" id="S5.T1.4.5.3.1">Mean Time (s)</span></td>
+<td class="ltx_td ltx_align_right ltx_border_tt" id="S5.T1.4.5.4"><span class="ltx_text ltx_font_italic" id="S5.T1.4.5.4.1">Speedup</span></td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.4.6">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S5.T1.4.6.1">KernelSHAP</td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S5.T1.4.6.2">10</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T1.4.6.3">20.5</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T1.4.6.4">–</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.4.7">
+<td class="ltx_td ltx_align_left" id="S5.T1.4.7.1">KernelSHAP</td>
+<td class="ltx_td ltx_align_left" id="S5.T1.4.7.2">100</td>
+<td class="ltx_td ltx_align_right" id="S5.T1.4.7.3">38.1</td>
+<td class="ltx_td ltx_align_right" id="S5.T1.4.7.4">–</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.1.1">
+<td class="ltx_td ltx_align_left" id="S5.T1.1.1.2">KernelSHAP</td>
+<td class="ltx_td ltx_align_left" id="S5.T1.1.1.3">1000</td>
+<td class="ltx_td ltx_align_right" id="S5.T1.1.1.4">362.9</td>
+<td class="ltx_td ltx_align_right" id="S5.T1.1.1.1">1.0<math alttext="\times" class="ltx_Math" display="inline" id="S5.T1.1.1.1.m1" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math> (ref)</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.2.2">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S5.T1.2.2.2">GradientSHAP</td>
+<td class="ltx_td ltx_align_left ltx_border_t" id="S5.T1.2.2.3">2</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T1.2.2.4">7.7</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T1.2.2.1">47.1<math alttext="\times" class="ltx_Math" display="inline" id="S5.T1.2.2.1.m1" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>
+</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.3.3">
+<td class="ltx_td ltx_align_left" id="S5.T1.3.3.2">GradientSHAP</td>
+<td class="ltx_td ltx_align_left" id="S5.T1.3.3.3">3</td>
+<td class="ltx_td ltx_align_right" id="S5.T1.3.3.4">8.0</td>
+<td class="ltx_td ltx_align_right" id="S5.T1.3.3.1">45.3<math alttext="\times" class="ltx_Math" display="inline" id="S5.T1.3.3.1.m1" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>
+</td>
+</tr>
+<tr class="ltx_tr" id="S5.T1.4.4">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S5.T1.4.4.2">GradientSHAP</td>
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S5.T1.4.4.3">5</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T1.4.4.4">8.6</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T1.4.4.1">42.2<math alttext="\times" class="ltx_Math" display="inline" id="S5.T1.4.4.1.m1" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math>
+</td>
+</tr>
+</table>
+</figure>
+</section>
+<section class="ltx_subsection" id="S5.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.2 </span><span class="translated-text">梯度SHAP验证</span><span class="original-text">GradientSHAP Validation</span></h3>
+<div class="ltx_para" id="S5.SS2.p1">
+<p class="ltx_p" id="S5.SS2.p1.1"><span class="translated-text">确定 GradientSHAP 用少量样本收敛后，我们现在通过与收敛的 KernelSHAP 进行比较来验证它是否产生正确的 SHAP 值</span><span class="original-text">Having established that GradientSHAP converges with few samples, we now validate that it produces correct SHAP values by comparing against converged KernelSHAP</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="">2</a>]</cite><span class="translated-text">跨 72 个基线实例对。图</span><span class="original-text">across 72 baseline-instance pairs. Figure</span><a class="ltx_ref" href="#S5.F4" title="Figure 4 ‣ 5.2 GradientSHAP Validation ‣ 5 Results ‣ Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">显示标量输入特征的相关图，表现出很强的一致性（</span><span class="original-text">shows correlation plots for scalar input features, demonstrating strong agreement (</span><math alttext="r&gt;0.99" class="ltx_Math" display="inline" id="S5.SS2.p1.1.m1" intent=":literal"><semantics><mrow><mi>r</mi><mo>&gt;</mo><mn>0.99</mn></mrow><annotation encoding="application/x-tex">r&gt;0.99</annotation></semantics></math><span class="translated-text">）在收敛的 KernelSHAP 和 GradientSHAP 之间，具有很少的路径积分样本。</span><span class="original-text">) between converged KernelSHAP and GradientSHAP with few path integration samples.</span></p>
+</div>
+<figure class="ltx_figure" id="S5.F4"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="401" id="S5.F4.g1" src="https://arxiv.org/html/2607.14970v1/figures/correlation_kernelshap_vs_gradshap_all.png" width="333"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>Correlation between converged KernelSHAP and GradientSHAP for scalar input features. Correlation exceeds 0.99 for all features except product target (pressure-independent), validating that GradientSHAP correctly approximates SHAP values.</figcaption>
+</figure>
+<div class="ltx_para" id="S5.SS2.p2">
+<p class="ltx_p" id="S5.SS2.p2.2"><span class="translated-text">对于数组值输入，图</span><span class="original-text">For array-valued inputs, Figure</span><a class="ltx_ref" href="#S5.F5" title="Figure 5 ‣ 5.2 GradientSHAP Validation ‣ 5 Results ‣ Explaining Process Control Optimisation Recommendations via GradientSHAP and Implicit Differentiation"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">比较 20 维粒度分布 (PSD) 数据集上的平均元素 SHAP 值。两种方法都会产生几乎相同的归因曲线，箱 7-10 周围的特征峰表明中等粒径对最佳参数的影响最强。 PSD 变化主要影响压力建议（SHAP 值</span><span class="original-text">compares element-wise SHAP values averaged over the dataset for the 20-dimensional particle size distribution (PSD). Both methods produce nearly identical attribution profiles, with characteristic peaks around bins 7–10 indicating that mid-range particle sizes have the strongest influence on optimal parameters. PSD changes primarily affect pressure recommendations (SHAP values</span><math alttext="\pm" class="ltx_Math" display="inline" id="S5.SS2.p2.1.m1" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math><span class="translated-text">0.10 bar），对速度的影响较弱（</span><span class="original-text">0.10 bar) with weaker effects on speed (</span><math alttext="\pm" class="ltx_Math" display="inline" id="S5.SS2.p2.2.m2" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math><span class="translated-text">0.2%）。紧密一致证实了 GradientSHAP 对于标量和数组值输入都正确地逼近 KernelSHAP。</span><span class="original-text">0.2%). The close agreement confirms that GradientSHAP correctly approximates KernelSHAP for both scalar and array-valued inputs.</span></p>
+</div>
+<figure class="ltx_figure" id="S5.F5"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="105" id="S5.F5.g1" src="https://arxiv.org/html/2607.14970v1/figures/elementwise_average_comparison_kernelshap_gradshap.png" width="333"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>Mean element-wise SHAP values for fresh feed PSD, averaged over the dataset. Left: pressure output; Right: speed output. KernelSHAP (1000 samples, blue) and GradientSHAP (5 samples, red) show excellent agreement across all 20 PSD bins.</figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span><span class="translated-text">说明</span><span class="original-text">Explanations</span></h2>
+<div class="ltx_para" id="S6.p1">
+<p class="ltx_p" id="S6.p1.1"><span class="translated-text">通过基于 IFT 的 GradientSHAP 计算出的 SHAP 属性用于为多个测试场景生成自然语言解释。我们从三名领域专家（两名工艺工程师和一名 HPGR 专家）那里收集了非正式的定性反馈，他们对解释的清晰度和实用性进行了评估。总的来说，他们发现生成的解释对于理解优化器建议特定参数更改的原因很有帮助且准确；计划将正式的用户研究作为未来的工作。</span><span class="original-text">The SHAP attributions computed via IFT-based GradientSHAP were used to generate natural language explanations for multiple test scenarios. We gathered informal qualitative feedback from three domain experts (two process engineers and one HPGR specialist), who evaluated the explanations for clarity and practical utility. Overall, they found the generated explanations helpful and accurate in capturing why the optimiser recommended specific parameter changes; a formal user study is planned as future work.</span></p>
+</div>
+<div class="ltx_para" id="S6.p2">
+<p class="ltx_p" id="S6.p2.1"><span class="translated-text">然而，评估也揭示了有效解释的重要设计原则。首先，专家们始终跳过详细的归因细分，并立即寻求最终建议；因此，在提供支持细节之前，解释应以一句话可操作的摘要开头。此外，返回原始 SHAP 值以及透明度的解释对于不熟悉该方法的从业者来说没有帮助；正如一位评论家指出的那样，</span><span class="original-text">However, the evaluation also revealed important design principles for effective explanations. First, experts consistently skipped detailed attribution breakdowns and sought the final recommendation immediately; explanations should therefore lead with a one-sentence actionable summary before presenting supporting details. In addition, returning raw SHAP values together with the explanation for transparency were unhelpful to practitioners unfamiliar with the method; as one reviewer noted,</span><span class="ltx_text ltx_font_italic" id="S6.p2.1.1"><span class="translated-text">‘作为一个没有
+对于 SHAP 的背景，“这些 SHAP 值的含义是什么”部分我不清楚。”</span><span class="original-text">‘As someone with no
+background in SHAP, the section ’What These SHAP Values Mean isn’t clear to me.”</span></span><span class="translated-text">。因此省略了原始 SHAP 值。最后，算法输出的技术精度以及因此的解释对于从业者来说没有用处，因为他们更喜欢百分比而不是原始单位（“最大速度的 73%”）、舍入值（“165 bar”而不是“166.8 bar”）。</span><span class="original-text">. So raw SHAP values were omitted. Finally, technical precision of the algorithm output and thus the explanation is not useful for practitioners which preferred percentages over raw units (“73% of max speed”), rounded values (“165 bar” not “166.8 bar”).</span></p>
+</div>
+<div class="ltx_para" id="S6.p3">
+<p class="ltx_p" id="S6.p3.1"><span class="translated-text">根据此反馈，解释生成被调整以纳入这些原则。以下场景演示了遵循这些原则的解释。</span><span class="original-text">Based on this feedback, the explanation generation was adapted to incorporate these principles. The following scenario demonstrates an explanation that follows these principles.</span></p>
+</div>
+<section class="ltx_subsection" id="S6.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">6.1 </span><span class="translated-text">场景：进料较粗导致吞吐量降低*</span><span class="original-text">Scenario: Reduced Throughput with Coarser Feed*</span></h3>
+<div class="ltx_para" id="S6.SS1.p1">
+<p class="ltx_p" id="S6.SS1.p1.1"><span class="translated-text">以下是我们的管道生成的一项解释的摘要：</span><span class="original-text">The following is a summarisation of one generated explanation by our pipeline:</span></p>
+</div>
+<div class="ltx_para" id="S6.SS1.p2">
+<p class="ltx_p" id="S6.SS1.p2.1"><span class="ltx_text ltx_font_italic" id="S6.SS1.p2.1.1"><span class="translated-text">工作点变化：</span><span class="original-text">Operating Point Change:</span></span></p>
+<ul class="ltx_itemize" id="S6.I1">
+<li class="ltx_item" id="S6.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S6.I1.i1.p1">
+<p class="ltx_p" id="S6.I1.i1.p1.2"><span class="translated-text">吞吐量目标：280</span><span class="original-text">Throughput target: 280</span><math alttext="\to" class="ltx_Math" display="inline" id="S6.I1.i1.p1.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math><span class="translated-text">270吨/小时（</span><span class="original-text">270 t/h (</span><math alttext="-" class="ltx_Math" display="inline" id="S6.I1.i1.p1.2.m2" intent=":literal"><semantics><mo>−</mo><annotation encoding="application/x-tex">-</annotation></semantics></math><span class="translated-text">10吨/小时）</span><span class="original-text">10 t/h)</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S6.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S6.I1.i2.p1">
+<p class="ltx_p" id="S6.I1.i2.p1.3"><span class="translated-text">产品细度（D80）目标：1450</span><span class="original-text">Product fineness (D80) target: 1450</span><math alttext="\to" class="ltx_Math" display="inline" id="S6.I1.i2.p1.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math> 1460 <math alttext="\mu" class="ltx_Math" display="inline" id="S6.I1.i2.p1.2.m2" intent=":literal"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math><span class="translated-text">米（+10</span><span class="original-text">m (+10</span><math alttext="\mu" class="ltx_Math" display="inline" id="S6.I1.i2.p1.3.m3" intent=":literal"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math><span class="translated-text">米，稍粗）</span><span class="original-text">m, slightly coarser)</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S6.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S6.I1.i3.p1">
+<p class="ltx_p" id="S6.I1.i3.p1.1"><span class="translated-text">进料 PSD：所有尺寸等级均较粗（筛切附近的细粉减少 1-2%）</span><span class="original-text">Feed PSD: coarser across all size classes (1–2% fewer fines near screen cut)</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="S6.SS1.p3">
+<p class="ltx_p" id="S6.SS1.p3.1"><span class="ltx_text ltx_font_italic" id="S6.SS1.p3.1.1"><span class="translated-text">建议调整：</span><span class="original-text">Recommended Adjustments:</span></span></p>
+<ul class="ltx_itemize" id="S6.I2">
+<li class="ltx_item" id="S6.I2.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S6.I2.i1.p1">
+<p class="ltx_p" id="S6.I2.i1.p1.3"><span class="translated-text">压力：125</span><span class="original-text">Pressure: 125</span><math alttext="\to" class="ltx_Math" display="inline" id="S6.I2.i1.p1.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math><span class="translated-text">122 巴（</span><span class="original-text">122 bar (</span><math alttext="-" class="ltx_Math" display="inline" id="S6.I2.i1.p1.2.m2" intent=":literal"><semantics><mo>−</mo><annotation encoding="application/x-tex">-</annotation></semantics></math><span class="translated-text">3巴）； 75%</span><span class="original-text">3 bar); 75%</span><math alttext="\to" class="ltx_Math" display="inline" id="S6.I2.i1.p1.3.m3" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math><span class="translated-text">范围的 70%</span><span class="original-text">70% of range</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S6.I2.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S6.I2.i2.p1">
+<p class="ltx_p" id="S6.I2.i2.p1.3"><span class="translated-text">速度：88%</span><span class="original-text">Speed: 88%</span><math alttext="\to" class="ltx_Math" display="inline" id="S6.I2.i2.p1.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math><span class="translated-text">最大的 87% (</span><span class="original-text">87% of max (</span><math alttext="-" class="ltx_Math" display="inline" id="S6.I2.i2.p1.2.m2" intent=":literal"><semantics><mo>−</mo><annotation encoding="application/x-tex">-</annotation></semantics></math><span class="translated-text">1%）； 65%</span><span class="original-text">1%); 65%</span><math alttext="\to" class="ltx_Math" display="inline" id="S6.I2.i2.p1.3.m3" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math><span class="translated-text">范围的 64%</span><span class="original-text">64% of range</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="S6.SS1.p4">
+<p class="ltx_p" id="S6.SS1.p4.1"><span class="ltx_text ltx_font_italic" id="S6.SS1.p4.1.1"><span class="translated-text">生成的解释（精简）：</span><span class="original-text">Generated Explanation (condensed):</span></span></p>
+</div>
+<div class="ltx_para" id="S6.SS1.p5">
+<blockquote class="ltx_quote" id="S6.SS1.p5.3">
+<p class="ltx_p" id="S6.SS1.p5.3.4"><span class="ltx_text ltx_font_italic" id="S6.SS1.p5.3.4.1"><span class="translated-text">一句话概括：</span><span class="original-text">One-sentence summary:</span></span><span class="translated-text">由于操作员想要较低的吞吐量和稍微粗糙的产品，因此系统建议降低压力和辊速，即使进料本身较粗糙。</span><span class="original-text">Because the operator wants lower throughput and a slightly coarser product, the system recommends backing off both pressure and roll speed, even though the feed itself is coarser.</span></p>
+<p class="ltx_p" id="S6.SS1.p5.2.2"><span class="ltx_text ltx_font_italic" id="S6.SS1.p5.1.1.1"><span class="translated-text">压力（</span><span class="original-text">Pressure (</span><math alttext="-" class="ltx_Math" display="inline" id="S6.SS1.p5.1.1.1.m1" intent=":literal"><semantics><mo>−</mo><annotation encoding="application/x-tex">-</annotation></semantics></math><span class="translated-text">3 巴）：</span><span class="original-text">3 bar):</span></span><span class="translated-text">经营者允许产品约10</span><span class="original-text">The operator allows the product to be about 10</span><math alttext="\mu" class="ltx_Math" display="inline" id="S6.SS1.p5.2.2.m1" intent=":literal"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math><span class="translated-text">m 更粗糙，因此 HPGR 不需要那么坚硬地粉碎，仅此一项就可以解释约 3.5 bar 的压力降低。较粗的进料（筛孔附近的细粉较少）部分抵消了这一影响，将压力推高了约 0.5 bar。最终结果：压力降低 3 bar。</span><span class="original-text">m coarser, so the HPGR does not need to crush as hard, this alone explains about 3.5 bar of pressure reduction. The coarser feed (fewer fines near the screen cut) partially offsets this, pushing pressure up by about 0.5 bar. Net result: pressure decreases by 3 bar.</span></p>
+<p class="ltx_p" id="S6.SS1.p5.3.3"><span class="ltx_text ltx_font_italic" id="S6.SS1.p5.3.3.1"><span class="translated-text">速度（</span><span class="original-text">Speed (</span><math alttext="-" class="ltx_Math" display="inline" id="S6.SS1.p5.3.3.1.m1" intent=":literal"><semantics><mo>−</mo><annotation encoding="application/x-tex">-</annotation></semantics></math><span class="translated-text">1%）：</span><span class="original-text">1%):</span></span><span class="translated-text">运营商明确希望减少吨位。为了实现这一点，辊子的速度应该稍微减慢。较低的吞吐量请求是速度降低约 1% 的明显原因。</span><span class="original-text">The operator explicitly wants less tonnage. To achieve that, the rolls should slow down slightly. The lower throughput request is the clear reason for reducing speed by about 1%.</span></p>
+<p class="ltx_p" id="S6.SS1.p5.3.5"><span class="translated-text">这两项变化都很小、稳定，并且完全在操作限制范围内。</span><span class="original-text">Both changes are small, stable, and well within operating limits.</span><span class="ltx_note ltx_role_footnote" id="footnote1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_tag ltx_tag_note">1</span><span class="ltx_text ltx_font_italic" id="footnote1.1"><span class="translated-text">*为保密而修改的值；亲属关系得以保留。</span><span class="original-text">*Values modified for confidentiality; relative relationships preserved.</span></span></span></span></span></p>
+</blockquote>
+</div>
+<div class="ltx_para" id="S6.SS1.p6">
+<p class="ltx_p" id="S6.SS1.p6.1"><span class="translated-text">这一解释展示了：(1) 以一句话摘要开头，(2) 明确的基线到新上下文，(3) SHAP 值转换为操作含义（“仅此一项就解释了大约 3.5 条”），以及 (4) 易于操作的单位（百分比、四舍五入值、屏幕截图参考）。</span><span class="original-text">This explanation demonstrates: (1) leading with a one-sentence summary, (2) explicit baseline-to-new context, (3) SHAP values translated to operational meaning (“this alone explains about 3.5 bar”), and (4) operator-friendly units (percentages, rounded values, screen cut reference).</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S7">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">7 </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h2>
+<div class="ltx_para" id="S7.p1">
+<p class="ltx_p" id="S7.p1.2"><span class="translated-text">本文首次提出了 GradientSHAP 的应用来解释优化建议，利用隐式函数定理进行有效的灵敏度计算。通过利用优化的数学结构而不是将其视为黑匣子，我们实现了 40 多个</span><span class="original-text">This paper presented the first application of GradientSHAP to explain optimisation recommendations, leveraging the Implicit Function Theorem for efficient sensitivity computation. By exploiting the mathematical structure of optimisation rather than treating it as a black box, we achieve over 40</span><math alttext="\times" class="ltx_Math" display="inline" id="S7.p1.1.m1" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math><span class="translated-text">与 KernelSHAP 相比，速度提高，同时保持相关性</span><span class="original-text">speedup compared to KernelSHAP while maintaining correlation</span><math alttext="&gt;" class="ltx_Math" display="inline" id="S7.p1.2.m2" intent=":literal"><semantics><mo>&gt;</mo><annotation encoding="application/x-tex">&gt;</annotation></semantics></math><span class="translated-text">SHAP 归因为 0.99。与基于法学硕士的叙述生成集成提供了从优化输出到操作员友好的解释的完整管道，并通过工艺工程师和工厂操作员的反馈进行验证。</span><span class="original-text">0.99 in SHAP attributions. Integration with LLM-based narrative generation provides a complete pipeline from optimisation outputs to operator-friendly explanations, validated through feedback from process engineers and plant operators.</span></p>
+</div>
+<div class="ltx_para" id="S7.p2">
+<p class="ltx_p" id="S7.p2.1"><span class="translated-text">当前方法的局限性在于它仅适用于无约束优化，其中解决方案位于可行区域的内部。扩展到约束问题需要通过完整的 Karush-Kuhn-Tucker (KKT) 系统进行微分来处理活动集中的变化</span><span class="original-text">A limitation of the current approach is that it applies only to unconstrained optimisation, where solutions lie in the interior of the feasible region. Extension to constrained problems requires differentiating through the full Karush–Kuhn–Tucker (KKT) system to handle changes in the active set</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="">14</a>]</cite><span class="translated-text">。此外，损失函数和过程模型都必须是可微的。 SHAP 值也是本地属性，这意味着生成的解释特定于基线实例对。虽然在 HPGR 上得到了证明，但该方法广泛适用于过程控制中的可微优化。未来的工作包括将该方法扩展到约束优化以及对生成的解释进行正式的用户研究。出于行业机密性，代码可应要求提供。</span><span class="original-text">. In addition, both the loss function and process model must be differentiable. SHAP values are also local attributions which means that the generated explanations are specific to a baseline-instance pair. While demonstrated on HPGR, the methodology applies broadly to differentiable optimisation in process control.Future work includes expanding the methodology to constrained optimisation and formal user studies of the generated explanations. Code is available on request due to industrial confidentiality.</span></p>
+</div>
+<div class="ltx_acknowledgements" id="S7.acknowledgements1">
+<h6 class="ltx_title ltx_title_acknowledgements"><span class="translated-text">致谢。</span><span class="original-text">Acknowledgements.</span></h6><span class="translated-text">我们感谢 Chris Zerr、Renato Oliveira 博士和 Monica Botha Hansson 对生成的解释提供的反馈。</span><span class="original-text">We thank Chris Zerr, Dr Renato Oliveira, and Monica Botha Hansson for their feedback regarding the generated explanations.</span></div>
+</section>
+<section class="ltx_section" id="Sx1">
+<h2 class="ltx_title ltx_title_section"><span class="translated-text">生成式人工智能宣言</span><span class="original-text">Declaration on Generative AI</span></h2>
+<div class="ltx_para" id="Sx1.p1">
+<p class="ltx_p" id="Sx1.p1.1"><span class="translated-text">在准备这项工作的过程中，作者使用 GPT-5 根据方法中所述的 SHAP 属性生成自然语言解释。 Claude Opus 4.6 用于纠正正文的语法和拼写错误。使用 Claude 后，作者根据需要审阅和编辑了内容，并对出版物的内容承担全部责任。</span><span class="original-text">During the preparation of this work, the authors used GPT-5 in order to generate natural language explanations from SHAP attributions as described in the methodology. Claude Opus 4.6 was used to correct grammar and spelling mistakes for the main text. After using Claude, the authors reviewed and edited the content as needed and takes full responsibility for the publication’s content.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist">
+<li class="ltx_bibitem" id="bib.bib1">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liu et al. [2023]</span>
+<span class="ltx_bibblock">
+J. Liu, K. Marriott,
+T. Dwyer, G. Tack,
+
+</span>
+<span class="ltx_bibblock">Increasing user trust in optimisation through
+feedback and interaction,
+
+</span>
+<span class="ltx_bibblock">ACM Transactions on Computer-Human Interaction
+29 (2023).
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib2">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lundberg and Lee [2017]</span>
+<span class="ltx_bibblock">
+S. M. Lundberg, S.-I. Lee,
+
+</span>
+<span class="ltx_bibblock">A unified approach to interpreting model
+predictions,
+
+</span>
+<span class="ltx_bibblock">in: Advances in Neural Information Processing
+Systems, 2017, pp. 4765–4774.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib3">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Ribeiro et al. [2016]</span>
+<span class="ltx_bibblock">
+M. T. Ribeiro, S. Singh,
+C. Guestrin,
+
+</span>
+<span class="ltx_bibblock">“why should i trust you?”: Explaining the
+predictions of any classifier,
+
+</span>
+<span class="ltx_bibblock">in: Proceedings of the 22nd ACM SIGKDD
+International Conference on Knowledge Discovery and Data Mining,
+2016, pp. 1135–1144.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib4">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Sundararajan et al. [2017]</span>
+<span class="ltx_bibblock">
+M. Sundararajan, A. Taly,
+Q. Yan,
+
+</span>
+<span class="ltx_bibblock">Axiomatic attribution for deep networks,
+
+</span>
+<span class="ltx_bibblock">in: International Conference on Machine
+Learning, PMLR, 2017, pp.
+3319–3328.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib5">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Henkel et al. [2024]</span>
+<span class="ltx_bibblock">
+C. Henkel, T. Gröb,
+T. Steens, T. Maciol,
+S. Niessen,
+
+</span>
+<span class="ltx_bibblock">Interpretable data-driven model predictive control of
+building energy systems using SHAP,
+
+</span>
+<span class="ltx_bibblock">Energy and AI 16
+(2024) 100336.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib6">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Martens et al. [2025]</span>
+<span class="ltx_bibblock">
+D. Martens, J. Hinns,
+C. Dams, M. Vergouwen,
+T. Evgeniou,
+
+</span>
+<span class="ltx_bibblock">Tell me a story! narrative-driven xai with large
+language models,
+
+</span>
+<span class="ltx_bibblock">Decision Support Systems 191
+(2025) 114402.
+doi:<a class="ltx_ref" href="https://arxiv.org/html/https:/doi.org/https://doi.org/10.1016/j.dss.2025.114402" title="">https://doi.org/10.1016/j.dss.2025.114402</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib7">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bock et al. [2024]</span>
+<span class="ltx_bibblock">
+K. W. Bock, K. Coussement,
+A. De Caigny, et al.,
+
+</span>
+<span class="ltx_bibblock">Explainable AI for operational research: A defining
+framework, methods, applications, and a research agenda,
+
+</span>
+<span class="ltx_bibblock">European Journal of Operational Research
+317 (2024) 249–272.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib8">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Korikov and Beck [2021]</span>
+<span class="ltx_bibblock">
+A. Korikov, J. C. Beck,
+
+</span>
+<span class="ltx_bibblock">Counterfactual explanations via inverse constraint
+programming,
+
+</span>
+<span class="ltx_bibblock">in: Leibniz International Proceedings in
+Informatics, volume 210, 2021, pp.
+1–17.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib9">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Biemans et al. [2026]</span>
+<span class="ltx_bibblock">
+B. Biemans, P. Troubil,
+I. Grau, W. P. Nuijten,
+
+</span>
+<span class="ltx_bibblock">Explainable optimization: Leveraging large language
+models for user-friendly explanations,
+
+</span>
+<span class="ltx_bibblock">in: xAI 2025, CCIS, volume
+2578, Springer, 2026,
+pp. 44–67.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib10">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Amos and Kolter [2017]</span>
+<span class="ltx_bibblock">
+B. Amos, J. Z. Kolter,
+
+</span>
+<span class="ltx_bibblock">OptNet: Differentiable optimization as a layer in
+neural networks,
+
+</span>
+<span class="ltx_bibblock">in: D. Precup, Y. W. Teh (Eds.),
+Proceedings of the 34th International Conference on
+Machine Learning, volume 70 of
+<span class="ltx_text ltx_font_italic" id="bib.bib10.1.1">Proceedings of Machine Learning Research</span>,
+PMLR, 2017, pp.
+136–145.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib11">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Agrawal et al. [2019]</span>
+<span class="ltx_bibblock">
+A. Agrawal, B. Amos,
+S. Barratt, S. Boyd,
+S. Diamond, Z. Kolter,
+
+</span>
+<span class="ltx_bibblock">Differentiable convex optimization layers,
+
+</span>
+<span class="ltx_bibblock">in: Advances in Neural Information Processing
+Systems, 2019.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib12">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Xu et al. [2023]</span>
+<span class="ltx_bibblock">
+M. Xu, T. Molloy,
+S. Gould,
+
+</span>
+<span class="ltx_bibblock">Revisiting implicit differentiation for learning
+problems in optimal control,
+
+</span>
+<span class="ltx_bibblock">in: Advances in Neural Information Processing
+Systems (NeurIPS), volume 36, 2023, pp.
+7979–7992.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib13">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dundar et al. [2013]</span>
+<span class="ltx_bibblock">
+H. Dundar, H. Benzer,
+N. Aydogan,
+
+</span>
+<span class="ltx_bibblock">Application of population balance model to HPGR
+crushing,
+
+</span>
+<span class="ltx_bibblock">Minerals Engineering 50–51
+(2013) 114–120.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib14">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Dontchev and Rockafellar [2014]</span>
+<span class="ltx_bibblock">
+A. L. Dontchev, R. T. Rockafellar,
+Implicit Functions and Solution Mappings: A View from
+Variational Analysis, Springer Series in Operations Research and Financial
+Engineering, 2 ed., Springer,
+2014.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib15">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Blondel et al. [2022]</span>
+<span class="ltx_bibblock">
+M. Blondel, Q. Berthet,
+M. Cuturi, R. Frostig,
+S. Hoyer, F. Llinares-Lopez,
+F. Pedregosa, J.-P. Vert,
+
+</span>
+<span class="ltx_bibblock">Efficient and modular implicit differentiation,
+
+</span>
+<span class="ltx_bibblock">in: Advances in Neural Information Processing
+Systems, volume 35, 2022, pp.
+5230–5242.
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2607.14970v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer><footer class="ds-site-footer">
+<div class="ds-site-footer-grid">
+<div class="ds-site-footer-main">
+<div class="ds-site-footer-ack"><span class="translated-text">我们衷心感谢来自
+        我们的</span><span class="original-text">We gratefully acknowledge support from
+        our</span><strong><span class="translated-text">主要资助者</span><span class="original-text">major funders</span></strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong><span class="translated-text">成员机构</span><span class="original-text">member institutions</span></strong></a><span class="ack-member-inline" hidden="">, <strong></strong></span><span class="translated-text">,
+        以及所有贡献者。</span><span class="original-text">,
+        and all contributors.</span></div>
+<nav aria-label="Site navigation" class="ds-site-footer-links">
+<a href="https://info.arxiv.org/about"><span class="translated-text">关于</span><span class="original-text">About</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help"><span class="translated-text">帮助</span><span class="original-text">Help</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/contact.html"><span class="translated-text">联系方式</span><span class="original-text">Contact</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/subscribe"><span class="translated-text">订阅</span><span class="original-text">Subscribe</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/license/index.html"><span class="translated-text">版权</span><span class="original-text">Copyright</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/policies/privacy_policy.html"><span class="translated-text">隐私</span><span class="original-text">Privacy</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/web_accessibility.html"><span class="translated-text">无障碍</span><span class="original-text">Accessibility</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://status.arxiv.org" rel="noopener noreferrer" target="_blank"><span class="translated-text">运营状况</span><span class="original-text">Operational Status</span><span class="is-sr-only"><span class="translated-text">（在新选项卡中打开）</span><span class="original-text">(opens in new tab)</span></span></a>
+</nav>
+</div>
+<div aria-label="Major funders" class="ds-site-footer-funders">
+<div class="ds-site-footer-funders-label"><span class="translated-text">主要资金支持来自</span><span class="original-text">Major funding support from</span></div>
+<div class="ds-site-footer-funders-logos">
+<a class="ds-funder-link" href="https://www.simonsfoundation.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.sfi.org.bm/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation International" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation-international.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.schmidtsciences.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Schmidt Sciences" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/schmidt-sciences.png"/>
+</a>
+</div>
+</div>
+</div>
+</footer><div id="fixed-buttons-container">
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
