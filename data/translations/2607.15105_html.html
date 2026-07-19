@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="en" prefix="dcterms: http://purl.org/dc/terms/">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">使用有限 VRAM 进行长上下文微调</span><span class="original-text">Long-Context Fine-Tuning with Limited VRAM</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 7 月 16 日星期四 15:09:28 生成 http://dlmf.nist.gov/LaTeXML/。</span><span class="original-text">Generated on Thu Jul 16 15:09:28 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<span class="translated-text">文档创建于 2026 年 7 月。</span><span class="original-text">Document created on July 2026.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+    // Pre-apply spinout-banner dismissal here, before the banner paints, so it
+    // never flashes in only to be hidden later by the deferred arxiv-header.js.
+    // Key matches arxiv-header.js: "arxiv-banner-dismissed:" + data-banner-name.
+    if (localStorage.getItem('arxiv-banner-dismissed:spinout-nonprofit')) {
+      document.documentElement.setAttribute("data-banner-dismissed", "");
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/><link href="https://arxiv.org/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626" media="screen" rel="stylesheet" type="text/css"/><style>
+  /* Banner pre-dismissal (set above before paint -> no flash-then-hide) and
+     reading-mode chrome hiding. */
+  html[data-banner-dismissed] .ds-announcement { display: none; }
+  html[data-reading-mode="enabled"] .ds-announcement,
+  html[data-reading-mode="enabled"] .ds-site-footer { display: none; }
+  /* Keep the announcement text dark on the Open-Blue band in both colour themes
+     (otherwise it inherits the paper's warm-wash text in dark mode and washes out). */
+  .ds-announcement-text { color: var(--arxiv-ink, #1c1a17); }
+</style>
+<script defer="" src="https://arxiv.org/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2607.15105" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2607.15105" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog><div aria-label="Announcement" class="ds-announcement" data-banner-name="spinout-nonprofit" id="announcement-banner" role="region">
+<img alt="" aria-hidden="true" class="ds-announcement-glyph" src="https://arxiv.org/static/base/1.0.1/images/icons/smileybones-small.svg"/>
+<span class="ds-announcement-text"><span class="translated-text">arXiv 现在是一个独立的非营利组织！</span><span class="original-text">arXiv is now an independent nonprofit!</span></span>
+<a class="ds-announcement-link" href="https://info.arxiv.org/about"><span class="translated-text">了解更多</span><span class="original-text">Learn more</span></a>
+<button aria-label="Dismiss announcement" class="ds-announcement-close" type="button">×</button>
+</div>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/"><img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/base/1.0.1/images/arxiv-logo-primary-light.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2607.15105v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2607.15105v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Method</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS1" title="In 2 Method ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.1 </span>Exact-token hierarchical routing</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS2" title="In 2 Method ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.2 </span>Segment-wise backward and tiered KV storage</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS3" title="In 2 Method ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.3 </span>Matched dense and HGA training</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S3" title="In Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Experimental Setup</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Results</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In 4 Results ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>Trainable context on the same GPU</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS2" title="In 4 Results ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2 </span>Training efficiency</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS3" title="In 4 Results ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3 </span>Quality at equal training context</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS4" title="In 4 Results ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.4 </span>Quality and routing cost as context grows</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS5" title="In 4 Results ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.5 </span>Routing sparsity and cache behavior</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS6" title="In 4 Results ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.6 </span>Retrieval under dense attention</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S5" title="In Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Related Work</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S6" title="In Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6 </span>Limitations</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S6.SS1" title="In 6 Limitations ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6.1 </span>Long-horizon causal leakage</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S6.SS2" title="In 6 Limitations ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6.2 </span>Experimental limitations</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S7" title="In Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">7 </span>Conclusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2607.15105v1 [cs.AI] 2026 年 7 月 16 日</span><span class="original-text">arXiv:2607.15105v1 [cs.AI] 16 Jul 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">使用有限 VRAM 进行长上下文微调</span><span class="original-text">Long-Context Fine-Tuning with Limited VRAM</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Vladimir Fedosov  Aleksandr Sazhin  Artemiy Grinenko  Frank Woernle
+<br class="ltx_break"/>
+BMW Group
+<br class="ltx_break"/><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://github.com/vfedosov77/HierarchicalGlobalAttention" title="">https://github.com/vfedosov77/HierarchicalGlobalAttention</a>
+</span></span>
+</div>
+<div class="ltx_dates"><span class="translated-text">（2026 年 7 月）</span><span class="original-text">(July 2026)</span></div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">参数高效的微调减少了模型和优化器的内存，但密集的注意力仍然使长训练序列变得昂贵。我们将分层全局注意力（HGA）与分段反向传播和分层 KV 存储相结合。只有活动段在 VRAM 中保持可微分；旧的 KV 被分离到 RAM 或 NVMe 中，HGA 为每个查询块加载一组有界的精确历史令牌。在具有 4 位 QLoRA 和 PG19 的 Qwen3-8B 上，16 GB Quadro RTX 5000 上的密集训练适合 2,048 个令牌，但在 4,096 个令牌时失败，而 HGA 在 15.28 GB 峰值 VRAM 下达到 16,384 个令牌。在评估中，同一适配器在该卡上运行 131,072 个令牌； VRAM 不是恒定的，而是随着驻留块摘要缓慢增长，因此 RAM 和 NVMe 容量设置了超出这些长度的实际限制。在共享的 2K 训练长度下，HGA 训练和密集训练的适配器在相同的密集注意力读数下获得 2.7405 和 2.7383 nat，而库存模型获得 2.9541。在此边界上，HGA 训练已经稍快一些（217.75 与 207.02 令牌/秒），并且 HGA 与密集吞吐量的比率从 1K 提高到 2K；由于 HGA 使每个代币的参与历史集保持大致恒定，而每个代币的密集工作量不断增长，因此我们预计这种领先优势会随着上下文的增长而扩大。密集注意力用于主要质量和检索比较，以便它们衡量学习权重并与标准生成框架保持兼容。 HGA还可用于检索和生成；优化的生产级服务实施正在开发中。</span><span class="original-text">Parameter-efficient fine-tuning reduces model and optimizer memory, but dense attention still makes long training sequences expensive. We combine Hierarchical Global Attention (HGA) with segment-wise backpropagation and tiered KV storage. Only the active segment remains differentiable in VRAM; older KV is detached into RAM or NVMe, and HGA loads a bounded set of exact historical tokens for each query block. On Qwen3-8B with 4-bit QLoRA and PG19, dense training on a 16 GB Quadro RTX 5000 fits 2,048 tokens but fails at 4,096, whereas HGA reaches 16,384 tokens with 15.28 GB peak VRAM. Under evaluation the same adapter runs through 131,072 tokens on this card; VRAM is not constant but grows gently with the resident chunk summaries, so RAM and NVMe capacity set the practical limit beyond these lengths. At the shared 2K training length, HGA-trained and dense-trained adapters obtain 2.7405 and 2.7383 nat under the same dense-attention readout, while the stock model obtains 2.9541. At this boundary HGA training is already marginally faster (217.75 vs. 207.02 tokens/s), and the HGA-to-dense throughput ratio improves from 1K to 2K; because HGA keeps the attended historical set per token approximately constant while dense work per token grows, we expect this lead to widen as context grows. Dense attention is used for the main quality and retrieval comparisons so that they measure the learned weights and remain compatible with standard generation frameworks. HGA can also be used for retrieval and generation; an optimized production-grade serving implementation is under development.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_font_bold ltx_title_section" style="font-size:120%;"><span class="translated-text">1  简介</span><span class="original-text">1  Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">长上下文适应通常受到注意力和反向传播状态的限制，而不是受可训练适配器参数数量的限制。确切的边界取决于模型大小、量化、GPU 容量和内核，但故障模式是通用的：一旦模型权重消耗了大部分 VRAM，则序列相关的训练状态就几乎没有剩余。 QLoRA</span><span class="original-text">Long-context adaptation is often limited by attention and backpropagation state rather than by the number of trainable adapter parameters. The exact boundary depends on model size, quantization, GPU capacity, and kernels, but the failure mode is general: once model weights consume most VRAM, little remains for sequence-dependent training state. QLoRA</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="">3</a>]</cite><span class="translated-text">通过量化冻结权重和训练低秩适配器来移动这个边界，但仍然必须集中注意力来处理完整的历史记录。</span><span class="original-text">moves this boundary by quantizing frozen weights and training low-rank adapters, but dense attention must still process the full history.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">磁头GA</span><span class="original-text">HGA</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="">1</a>]</cite><span class="translated-text">取代模型的标准注意力，而不改变其预训练的 Q/K/V/O 预测。它首先将查询块路由到相关的历史块和组，然后计算对所选块的注意力</span><span class="original-text">replaces a model’s standard attention without changing its pretrained Q/K/V/O projections. It first routes a query block to relevant historical chunks and groups, then computes attention over the selected</span><em class="ltx_emph ltx_font_italic" id="S1.p2.1.1"><span class="translated-text">确切的标记</span><span class="original-text">exact token</span></em><span class="translated-text">K/V。在这里，我们将 HGA 与截断时间反向传播 (TBPTT) 和外部 KV 存储结合起来。</span><span class="original-text">K/V. Here we combine HGA with truncated backpropagation through time (TBPTT) and external KV storage.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">我们的主要结果是：</span><span class="original-text">Our main results are:</span></p>
+<ul class="ltx_itemize" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="translated-text">HGA 一次训练一个段。只有该段在 VRAM 中携带梯度；从外部存储器读取旧令牌的一小部分路由子集。在我们的设置中，这将可训练上下文从 2K 提高到 16K。</span><span class="original-text">HGA trains one segment at a time. Only that segment carries gradients in VRAM; a small routed subset of older tokens is read from external memory. In our setup, this raises the trainable context from 2K to 16K.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="translated-text">在两种方法都适合的 2K 下，HGA 和密集训练具有相同的吞吐量，并且在常见的密集注意力读出下产生几乎无法区分的适配器。</span><span class="original-text">At 2K, where both methods fit, HGA and dense training have the same throughput and produce practically indistinguishable adapters under a common dense-attention readout.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1"><span class="translated-text">在固定路由预算的情况下，HGA 每个 token 的历史注意力工作量大致独立于上下文总长度。因此，我们预计 HGA 会比较长序列上的密集注意力更快。</span><span class="original-text">With a fixed routing budget, HGA’s historical attention work per token is approximately independent of total context length. We therefore expect HGA to become faster than dense attention on longer sequences.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i4.p1">
+<p class="ltx_p" id="S1.I1.i4.p1.1"><span class="translated-text">生成的适配器可以在推理时使用原始的密集注意力或 HGA。我们使用密集推理来进行与现有服务框架的主要比较和兼容性；生产级路由服务正在进行中。</span><span class="original-text">The resulting adapter can use either the original dense attention or HGA at inference. We use dense inference for the main comparisons and compatibility with existing serving frameworks; production-grade routed serving is ongoing work.</span></p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_font_bold ltx_title_section" style="font-size:120%;"><span class="translated-text">2  方法</span><span class="original-text">2  Method</span></h2>
+<section class="ltx_subsection" id="S2.SS1">
+<h3 class="ltx_title ltx_font_bold ltx_title_subsection"><span class="translated-text">2.1 精确令牌分层路由</span><span class="original-text">2.1 Exact-token hierarchical routing</span></h3>
+<div class="ltx_para" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.1"><span class="translated-text">上下文被分为 64 个 token 的块和更小的组；图</span><span class="original-text">The context is divided into 64-token chunks and smaller groups; Figure</span><a class="ltx_ref" href="#S2.F1" title="Figure 1 ‣ 2.1 Exact-token hierarchical routing ‣ 2 Method ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">说明了 8 个标记组。两种尺寸均可配置。 HGA 根据模型现有的投影键构建两个级别的键摘要：</span><span class="original-text">illustrates 8-token groups. Both sizes are configurable. HGA builds two levels of key summaries from the model’s existing projected keys:</span></p>
+<ol class="ltx_enumerate" id="S2.I1">
+<li class="ltx_item" id="S2.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span>
+<div class="ltx_para" id="S2.I1.i1.p1">
+<p class="ltx_p" id="S2.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S2.I1.i1.p1.1.1"><span class="translated-text">块选择。</span><span class="original-text">Chunk selection.</span></span><span class="translated-text">每个封闭的 64 个令牌块的紧凑摘要保留在 VRAM 中。除了固定接收器和本地窗口之外，当前查询块对这些摘要进行评分并选择最相关的块。</span><span class="original-text">A compact summary for every closed 64-token chunk remains in VRAM. The current query block scores these summaries and selects the most relevant chunks, in addition to fixed sink and local windows.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span>
+<div class="ltx_para" id="S2.I1.i2.p1">
+<p class="ltx_p" id="S2.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S2.I1.i2.p1.1.1"><span class="translated-text">分组选择。</span><span class="original-text">Group selection.</span></span><span class="translated-text">选定的块在组级别打开。 8 个令牌组的摘要保存在更大的 VRAM 缓存中；缺失的摘要是从 RAM 或 NVMe 中获取的。路由器选择所选块内的最佳组。</span><span class="original-text">The selected chunks are opened at group level. Summaries of 8-token groups are kept in a larger VRAM cache; missing summaries are fetched from RAM or NVMe. The router selects the best groups inside the chosen chunks.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S2.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">3.</span>
+<div class="ltx_para" id="S2.I1.i3.p1">
+<p class="ltx_p" id="S2.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S2.I1.i3.p1.1.1"><span class="translated-text">确切的象征性关注。</span><span class="original-text">Exact-token attention.</span></span><span class="translated-text">只有所选组的确切令牌 K/V 才会加载到路由工作集中。摘要向量永远不会用作注意力值或输出标记。</span><span class="original-text">Only the exact token K/V of the selected groups is loaded into the routed working set. Summary vectors are never used as attention values or output tokens.</span></p>
+</div>
+</li>
+</ol>
+</div>
+<div class="ltx_para" id="S2.SS1.p2">
+<p class="ltx_p" id="S2.SS1.p2.1"><span class="translated-text">路由选择在没有梯度跟踪的情况下运行，而 K/V 收集和精确令牌注意力仍然是可微的。包装器通过引用保留预训练的投影模块，并且不添加学习的路由器权重，因此梯度会在密集和 HGA 训练中更新相同的 Q/K/V/O 和 MLP 投影。</span><span class="original-text">Routing selection runs without gradient tracking, while K/V gathering and exact-token attention remain differentiable. The wrapper keeps the pretrained projection modules by reference and adds no learned router weights, so gradients update the same Q/K/V/O and MLP projections in both dense and HGA training.</span></p>
+</div>
+<figure class="ltx_figure" id="S2.F1"><span class="ltx_inline-block"><svg class="ltx_picture ltx_centering" height="133.54" id="S2.F1.pic1" overflow="visible" version="1.1" viewbox="0 0 696.06 133.54" width="696.06"><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,133.54) matrix(1 0 0 -1 0 0) translate(71.15,0) translate(0,102.17)"><g stroke-width="0.4pt"><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 -66.54 -4.32)"><foreignobject height="8.65" overflow="visible" style="--ltx-fo-width:9.09em;--ltx-fo-height:0.59em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 8.65)" width="133.9"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text ltx_font_bold" id="S2.F1.pic1.3.3.3.3.1.1" style="font-size:90%;">One historical chunk</span></span></span></foreignobject></g><g fill="#EDEDFF" style="--ltx-fill-color:#EDEDFF;"><path d="M 121.52 10.43 L 108.18 10.43 C 105.13 10.43 102.65 7.96 102.65 4.9 L 102.65 -4.9 C 102.65 -7.96 105.13 -10.43 108.18 -10.43 L 121.52 -10.43 C 124.58 -10.43 127.06 -7.96 127.06 -4.9 L 127.06 4.9 C 127.06 7.96 124.58 10.43 121.52 10.43 Z M 102.65 -10.43"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 112.1 -3.12)"><foreignobject height="6.24" overflow="visible" style="--ltx-fo-width:0.5em;--ltx-fo-height:0.57em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 6.24)" width="5.52"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S2.F1.pic1.4.4.4.4.1.1" style="font-size:70%;">8</span></span></span></foreignobject></g><g fill="#EDEDFF" style="--ltx-fill-color:#EDEDFF;"><path d="M 145.93 10.43 L 132.59 10.43 C 129.54 10.43 127.06 7.96 127.06 4.9 L 127.06 -4.9 C 127.06 -7.96 129.54 -10.43 132.59 -10.43 L 145.93 -10.43 C 148.99 -10.43 151.47 -7.96 151.47 -4.9 L 151.47 4.9 C 151.47 7.96 148.99 10.43 145.93 10.43 Z M 127.06 -10.43"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 136.5 -3.12)"><foreignobject height="6.24" overflow="visible" style="--ltx-fo-width:0.5em;--ltx-fo-height:0.57em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 6.24)" width="5.52"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S2.F1.pic1.5.5.5.5.1.1" style="font-size:70%;">8</span></span></span></foreignobject></g><g fill="#EDEDFF" style="--ltx-fill-color:#EDEDFF;"><path d="M 170.34 10.43 L 157 10.43 C 153.95 10.43 151.47 7.96 151.47 4.9 L 151.47 -4.9 C 151.47 -7.96 153.95 -10.43 157 -10.43 L 170.34 -10.43 C 173.4 -10.43 175.88 -7.96 175.88 -4.9 L 175.88 4.9 C 175.88 7.96 173.4 10.43 170.34 10.43 Z M 151.47 -10.43"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 160.91 -3.12)"><foreignobject height="6.24" overflow="visible" style="--ltx-fo-width:0.5em;--ltx-fo-height:0.57em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 6.24)" width="5.52"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S2.F1.pic1.6.6.6.6.1.1" style="font-size:70%;">8</span></span></span></foreignobject></g><g fill="#EDEDFF" style="--ltx-fill-color:#EDEDFF;"><path d="M 194.75 10.43 L 181.41 10.43 C 178.35 10.43 175.88 7.96 175.88 4.9 L 175.88 -4.9 C 175.88 -7.96 178.35 -10.43 181.41 -10.43 L 194.75 -10.43 C 197.81 -10.43 200.29 -7.96 200.29 -4.9 L 200.29 4.9 C 200.29 7.96 197.81 10.43 194.75 10.43 Z M 175.88 -10.43"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 185.32 -3.12)"><foreignobject height="6.24" overflow="visible" style="--ltx-fo-width:0.5em;--ltx-fo-height:0.57em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 6.24)" width="5.52"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S2.F1.pic1.7.7.7.7.1.1" style="font-size:70%;">8</span></span></span></foreignobject></g><g fill="#EDEDFF" style="--ltx-fill-color:#EDEDFF;"><path d="M 219.16 10.43 L 205.82 10.43 C 202.76 10.43 200.29 7.96 200.29 4.9 L 200.29 -4.9 C 200.29 -7.96 202.76 -10.43 205.82 -10.43 L 219.16 -10.43 C 222.22 -10.43 224.7 -7.96 224.7 -4.9 L 224.7 4.9 C 224.7 7.96 222.22 10.43 219.16 10.43 Z M 200.29 -10.43"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 209.73 -3.12)"><foreignobject height="6.24" overflow="visible" style="--ltx-fo-width:0.5em;--ltx-fo-height:0.57em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 6.24)" width="5.52"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S2.F1.pic1.8.8.8.8.1.1" style="font-size:70%;">8</span></span></span></foreignobject></g><g fill="#EDEDFF" style="--ltx-fill-color:#EDEDFF;"><path d="M 243.57 10.43 L 230.23 10.43 C 227.17 10.43 224.7 7.96 224.7 4.9 L 224.7 -4.9 C 224.7 -7.96 227.17 -10.43 230.23 -10.43 L 243.57 -10.43 C 246.63 -10.43 249.1 -7.96 249.1 -4.9 L 249.1 4.9 C 249.1 7.96 246.63 10.43 243.57 10.43 Z M 224.7 -10.43"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 234.14 -3.12)"><foreignobject height="6.24" overflow="visible" style="--ltx-fo-width:0.5em;--ltx-fo-height:0.57em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 6.24)" width="5.52"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S2.F1.pic1.9.9.9.9.1.1" style="font-size:70%;">8</span></span></span></foreignobject></g><g fill="#EDEDFF" style="--ltx-fill-color:#EDEDFF;"><path d="M 267.98 10.43 L 254.64 10.43 C 251.58 10.43 249.1 7.96 249.1 4.9 L 249.1 -4.9 C 249.1 -7.96 251.58 -10.43 254.64 -10.43 L 267.98 -10.43 C 271.04 -10.43 273.51 -7.96 273.51 -4.9 L 273.51 4.9 C 273.51 7.96 271.04 10.43 267.98 10.43 Z M 249.1 -10.43"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 258.55 -3.12)"><foreignobject height="6.24" overflow="visible" style="--ltx-fo-width:0.5em;--ltx-fo-height:0.57em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 6.24)" width="5.52"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S2.F1.pic1.10.10.10.10.1.1" style="font-size:70%;">8</span></span></span></foreignobject></g><g fill="#EDEDFF" style="--ltx-fill-color:#EDEDFF;"><path d="M 292.39 10.43 L 279.05 10.43 C 275.99 10.43 273.51 7.96 273.51 4.9 L 273.51 -4.9 C 273.51 -7.96 275.99 -10.43 279.05 -10.43 L 292.39 -10.43 C 295.45 -10.43 297.92 -7.96 297.92 -4.9 L 297.92 4.9 C 297.92 7.96 295.45 10.43 292.39 10.43 Z M 273.51 -10.43"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 282.96 -3.12)"><foreignobject height="6.24" overflow="visible" style="--ltx-fo-width:0.5em;--ltx-fo-height:0.57em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 6.24)" width="5.52"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S2.F1.pic1.11.11.11.11.1.1" style="font-size:70%;">8</span></span></span></foreignobject></g><path d="M 296.82 14.86 L 103.76 14.86 C 100.7 14.86 98.22 12.38 98.22 9.33 L 98.22 -9.33 C 98.22 -12.38 100.7 -14.86 103.76 -14.86 L 296.82 -14.86 C 299.87 -14.86 302.35 -12.38 302.35 -9.33 L 302.35 9.33 C 302.35 12.38 299.87 14.86 296.82 14.86 Z M 98.22 -14.86" style="fill:none"></path><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 102.37 0)"><foreignobject height="21.42" overflow="visible" style="--ltx-fo-width:14.15em;--ltx-fo-height:0.77em;--ltx-fo-depth:0.77em;" transform="matrix(1 0 0 -1 0 10.71)" width="195.83"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_top" id="S2.F1.pic1.12.12.12.12.1.1" style="width:17.75em;">
+<span class="ltx_p" id="S2.F1.pic1.12.12.12.12.1.1.1"></span>
+</span></span></span></foreignobject></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 158.56 20.03)"><foreignobject height="6.73" overflow="visible" style="--ltx-fo-width:6.74em;--ltx-fo-height:0.54em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 6.73)" width="84.48"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text ltx_font_bold" id="S2.F1.pic1.13.13.13.13.1.1" style="font-size:70%;">64-token chunk</span></span></span></foreignobject></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 150.91 -26.75)"><foreignobject height="8.61" overflow="visible" style="--ltx-fo-width:9.01em;--ltx-fo-height:0.61em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 6.73)" width="99.35"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S2.F1.pic1.14.14.14.14.1.1" style="font-size:70%;">eight 8-token groups</span></span></span></foreignobject></g><g fill="#F5F5F5" style="--ltx-fill-color:#F5F5F5;"><path d="M 46.4 -68.54 L -7.03 -68.54 C -10.09 -68.54 -12.57 -71.02 -12.57 -74.08 L -12.57 -94.51 C -12.57 -97.56 -10.09 -100.04 -7.03 -100.04 L 46.4 -100.04 C 49.46 -100.04 51.94 -97.56 51.94 -94.51 L 51.94 -74.08 C 51.94 -71.02 49.46 -68.54 46.4 -68.54 Z M -12.57 -100.04"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 -8.42 -89.69)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 12.68)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 5.96)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 10.73 0)"><text transform="matrix(1 0 0 -1 0 0)">current</text></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 12.69)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><text transform="matrix(1 0 0 -1 0 0)">query block</text></g></g></g></g><g fill="#EBFFEB" style="--ltx-fill-color:#EBFFEB;"><path d="M 196.56 -68.54 L 85.59 -68.54 C 82.53 -68.54 80.05 -71.02 80.05 -74.08 L 80.05 -94.51 C 80.05 -97.56 82.53 -100.04 85.59 -100.04 L 196.56 -100.04 C 199.62 -100.04 202.1 -97.56 202.1 -94.51 L 202.1 -74.08 C 202.1 -71.02 199.62 -68.54 196.56 -68.54 Z M 80.05 -100.04"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 89.51 -95.32)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 22.06)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 13.45)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 13.45)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 6.73)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 23.24 0)"><text transform="matrix(1 0 0 -1 0 0)">all 64-token</text></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 13.46)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><text transform="matrix(1 0 0 -1 0 0)">chunk-key summaries</text></g></g></g></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 22.07)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0.42 0)"><foreignobject height="6.73" overflow="visible" style="--ltx-fo-width:8.19em;--ltx-fo-height:0.54em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 6.73)" width="102.64"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text ltx_font_bold" id="S2.F1.pic1.15.15.15.15.1.1.1.1.1" style="font-size:70%;">resident in VRAM</span></span></span></foreignobject></g></g></g></g><g fill="#FFFFE0" style="--ltx-fill-color:#FFFFE0;"><path d="M 358.15 -66.69 L 235.74 -66.69 C 232.69 -66.69 230.21 -69.17 230.21 -72.22 L 230.21 -96.36 C 230.21 -99.42 232.69 -101.9 235.74 -101.9 L 358.15 -101.9 C 361.2 -101.9 363.68 -99.42 363.68 -96.36 L 363.68 -72.22 C 363.68 -69.17 361.2 -66.69 358.15 -66.69 Z M 230.21 -101.9"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 234.36 -95.32)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 24.48)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 15.34)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 15.34)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 6.73)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 19.13 0)"><text transform="matrix(1 0 0 -1 0 0)">8-token group-key</text></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 15.34)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><text transform="matrix(1 0 0 -1 0 0)">summary cache in VRAM</text></g></g></g></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 24.48)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 1.09 0)"><text transform="matrix(1 0 0 -1 0 0)">misses from RAM/NVMe</text></g></g></g></g><g fill="#FFF0E0" style="--ltx-fill-color:#FFF0E0;"><path d="M 500.43 -67.09 L 397.33 -67.09 C 394.27 -67.09 391.79 -69.57 391.79 -72.63 L 391.79 -95.96 C 391.79 -99.01 394.27 -101.49 397.33 -101.49 L 500.43 -101.49 C 503.49 -101.49 505.97 -99.01 505.97 -95.96 L 505.97 -72.63 C 505.97 -69.57 503.49 -67.09 500.43 -67.09 Z M 391.79 -101.49"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 404.4 -94.92)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 23.68)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 13.99)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0.84 0)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 13.99)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 6.73)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 10.22 0)"><text transform="matrix(1 0 0 -1 0 0)">selected exact</text></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 13.99)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><text transform="matrix(1 0 0 -1 0 0)">token K/V loaded</text></g></g></g></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 23.67)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><text transform="matrix(1 0 0 -1 0 0)">from RAM/NVMe</text></g></g></g></g><g fill="#FFEDED" style="--ltx-fill-color:#FFEDED;"><path d="M 619.1 -68.54 L 539.62 -68.54 C 536.56 -68.54 534.08 -71.02 534.08 -74.08 L 534.08 -94.51 C 534.08 -97.56 536.56 -100.04 539.62 -100.04 L 619.1 -100.04 C 622.15 -100.04 624.63 -97.56 624.63 -94.51 L 624.63 -74.08 C 624.63 -71.02 622.15 -68.54 619.1 -68.54 Z M 534.08 -100.04"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 551.55 -90.91)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 13.24)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 6.73)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><text transform="matrix(1 0 0 -1 0 0)">exact-token</text></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 13.24)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 5.81 0)"><text transform="matrix(1 0 0 -1 0 0)">attention</text></g></g></g></g></g><g stroke-width="0.8pt"><path d="M 52.21 -84.29 L 71.19 -84.29" style="fill:none"></path><g stroke-dasharray="none" stroke-dashoffset="0.0pt" stroke-linejoin="miter" transform="matrix(1.0 0.0 0.0 1.0 71.19 -84.29)"><path d="M 6.37 0 C 5.58 0.19 2.15 1.28 0 2.46 L 0 -2.46 C 2.15 -1.28 5.58 -0.19 6.37 0 Z"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 53.96 -79.13)"><foreignobject height="4.17" overflow="visible" style="--ltx-fo-width:2.18em;--ltx-fo-height:0.38em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 4.17)" width="24.06"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S2.F1.pic1.16.16.16.1.1.1" style="font-size:70%;">score</span></span></span></foreignobject></g></g><g stroke-width="0.8pt"><path d="M 202.37 -84.29 L 221.35 -84.29" style="fill:none"></path><g stroke-dasharray="none" stroke-dashoffset="0.0pt" stroke-linejoin="miter" transform="matrix(1.0 0.0 0.0 1.0 221.35 -84.29)"><path d="M 6.37 0 C 5.58 0.19 2.15 1.28 0 2.46 L 0 -2.46 C 2.15 -1.28 5.58 -0.19 6.37 0 Z"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 203.26 -77.24)"><foreignobject height="8.61" overflow="visible" style="--ltx-fo-width:2.28em;--ltx-fo-height:0.59em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 6.73)" width="25.8"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S2.F1.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1" style="font-size:70%;">top-<math alttext="k" class="ltx_Math" display="inline" id="S2.F1.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.m1" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math></span></span></span></foreignobject></g></g><g stroke-width="0.8pt"><path d="M 363.96 -84.29 L 382.94 -84.29" style="fill:none"></path><g stroke-dasharray="none" stroke-dashoffset="0.0pt" stroke-linejoin="miter" transform="matrix(1.0 0.0 0.0 1.0 382.94 -84.29)"><path d="M 6.37 0 C 5.58 0.19 2.15 1.28 0 2.46 L 0 -2.46 C 2.15 -1.28 5.58 -0.19 6.37 0 Z"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 364.84 -77.24)"><foreignobject height="8.61" overflow="visible" style="--ltx-fo-width:2.28em;--ltx-fo-height:0.59em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 6.73)" width="25.8"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S2.F1.pic1.2.2.2.2.2.2.2.2.2.2.2.2.1.1.1.1.1.1.1.1.1.1.1.1" style="font-size:70%;">top-<math alttext="k" class="ltx_Math" display="inline" id="S2.F1.pic1.2.2.2.2.2.2.2.2.2.2.2.2.1.1.1.1.1.1.1.1.1.1.1.1.m1" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math></span></span></span></foreignobject></g></g><g stroke-width="0.8pt"><path d="M 506.24 -84.29 L 525.22 -84.29" style="fill:none"></path><g stroke-dasharray="none" stroke-dashoffset="0.0pt" stroke-linejoin="miter" transform="matrix(1.0 0.0 0.0 1.0 525.22 -84.29)"><path d="M 6.37 0 C 5.58 0.19 2.15 1.28 0 2.46 L 0 -2.46 C 2.15 -1.28 5.58 -0.19 6.37 0 Z"></path></g></g><g stroke-width="0.8pt"><g stroke-dasharray="3.0pt,3.0pt" stroke-dashoffset="0.0pt"><path d="M 200.29 -15.14 L 200.29 -34.82 L 141.07 -34.82 L 141.07 -59.69" style="fill:none"></path></g><g stroke-dasharray="none" stroke-dashoffset="0.0pt" stroke-linejoin="miter" transform="matrix(0.0 -1.0 1.0 0.0 141.07 -59.69)"><path d="M 6.37 0 C 5.58 0.19 2.15 1.28 0 2.46 L 0 -2.46 C 2.15 -1.28 5.58 -0.19 6.37 0 Z"></path></g></g></g></svg></span>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Two-level HGA routing. Compact chunk summaries are always available in VRAM; group summaries use a larger VRAM cache. Summaries select regions, while the final attention uses exact token K/V only. The diagram shows 8-token groups and 64-token chunks.</figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S2.SS2">
+<h3 class="ltx_title ltx_font_bold ltx_title_subsection"><span class="translated-text">2.2 分段后向分层KV存储</span><span class="original-text">2.2 Segment-wise backward and tiered KV storage</span></h3>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.2"><span class="translated-text">长度序列</span><span class="original-text">A sequence of length</span><math alttext="L" class="ltx_Math" display="inline" id="S2.SS2.p1.1.m1" intent=":literal"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math><span class="translated-text">被分成长度的片段</span><span class="original-text">is split into segments of length</span><math alttext="S" class="ltx_Math" display="inline" id="S2.SS2.p1.2.m2" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math><span class="translated-text">。每个分段都会关注其本地令牌和 HGA 从提交的历史记录中选择的令牌，计算语言模型损失，并立即向后运行。在段边界处，其历史 K/V 在下一个段之前分离。后面的段可以读取前面的内容，但渐变不会跨越段边界。这是 TBPTT</span><span class="original-text">. Each segment attends to its local tokens and to HGA-selected tokens from the committed history, computes the language-model loss, and immediately runs backward. At the segment boundary, its historical K/V is detached before the next segment. Later segments can read earlier content, but gradients do not cross segment boundaries. This is TBPTT</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib9" title="">9</a>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S2.SS2.p2">
+<p class="ltx_p" id="S2.SS2.p2.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ 2.2 Segment-wise backward and tiered KV storage ‣ 2 Method ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">总结了内存层次结构。报告的实验使用 RAM 支持的历史记录。该存储库还包含一个文件系统支持的存储，其中 RAM 是磁盘上的有界页面缓存，适用于 NVMe。</span><span class="original-text">summarizes the memory hierarchy. The reported experiments use RAM-backed history. The repository also contains a filesystem-backed store in which RAM is a bounded page cache over disk, suitable for NVMe.</span></p>
+</div>
+<figure class="ltx_figure" id="S2.F2"><span class="ltx_inline-block"><svg class="ltx_picture ltx_centering" height="61.58" id="S2.F2.pic1" overflow="visible" version="1.1" viewbox="0 0 693.93 61.58" width="693.93"><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,61.58) matrix(1 0 0 -1 0 0) translate(143.98,0) translate(0,30.79)"><g stroke-width="0.4pt"><g fill="#F2F2FF" style="--ltx-fill-color:#F2F2FF;"><path d="M 138.17 30.51 L -138.17 30.51 C -141.23 30.51 -143.71 28.03 -143.71 24.98 L -143.71 -24.98 C -143.71 -28.03 -141.23 -30.51 -138.17 -30.51 L 138.17 -30.51 C 141.23 -30.51 143.71 -28.03 143.71 -24.98 L 143.71 24.98 C 143.71 28.03 141.23 30.51 138.17 30.51 Z M -143.71 -30.51"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 -139.09 -21.79)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 46.01)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 34.25)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 34.25)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 21.79)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 30.41 0)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 21.79)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 9.34)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 59.99 0)"><foreignobject height="12.45" overflow="visible" style="--ltx-fo-width:6.61em;--ltx-fo-height:0.63em;--ltx-fo-depth:0.21em;" transform="matrix(1 0 0 -1 0 9.34)" width="97.4"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text ltx_font_bold" id="S2.F2.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1" style="font-size:90%;">GPU / VRAM</span></span></span></foreignobject></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 21.79)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><text transform="matrix(1 0 0 -1 0 0)">quantized model + adapters/optimizer</text></g></g></g></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 34.25)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><text transform="matrix(1 0 0 -1 0 0)">active differentiable segment + routed exact K/V</text></g></g></g></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 46.01)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 4.16 0)"><text transform="matrix(1 0 0 -1 0 0)">all chunk summaries + cached group summaries</text></g></g></g></g><g fill="#F0FFF0" style="--ltx-fill-color:#F0FFF0;"><path d="M 366.05 30.51 L 195.07 30.51 C 192.01 30.51 189.54 28.03 189.54 24.98 L 189.54 -24.98 C 189.54 -28.03 192.01 -30.51 195.07 -30.51 L 366.05 -30.51 C 369.11 -30.51 371.59 -28.03 371.59 -24.98 L 371.59 24.98 C 371.59 28.03 369.11 30.51 366.05 30.51 Z M 189.54 -30.51"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 194.15 -19.15)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 40.72)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 29.65)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 4.31 0)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 29.65)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 17.88)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 14.5 0)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 17.88)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 8.54)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 31.87 0)"><foreignobject height="8.54" overflow="visible" style="--ltx-fo-width:4.85em;--ltx-fo-height:0.58em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 8.54)" width="71.46"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text ltx_font_bold" id="S2.F2.pic1.2.2.2.2.1.1.1.1.1.1.1.1.1.1.1" style="font-size:90%;">Host RAM</span></span></span></foreignobject></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 17.88)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><text transform="matrix(1 0 0 -1 0 0)">detached historical K/V</text></g></g></g></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 29.65)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><text transform="matrix(1 0 0 -1 0 0)">nonresident group summaries</text></g></g></g></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 40.72)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><text transform="matrix(1 0 0 -1 0 0)">bounded page cache for NVMe</text></g></g></g></g><g fill="#FFF5EB" style="--ltx-fill-color:#FFF5EB;"><path d="M 544.14 30.51 L 417.05 30.51 C 413.99 30.51 411.51 28.03 411.51 24.98 L 411.51 -24.98 C 411.51 -28.03 413.99 -30.51 417.05 -30.51 L 544.14 -30.51 C 547.2 -30.51 549.67 -28.03 549.67 -24.98 L 549.67 24.98 C 549.67 28.03 547.2 30.51 544.14 30.51 Z M 411.51 -30.51"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 416.13 -13.66)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 29.75)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 21.1)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><g class="ltx_tikzmatrix" transform="matrix(1 0 0 -1 0 21.1)"><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 9.34)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 0 0)"><foreignobject height="12.45" overflow="visible" style="--ltx-fo-width:8.75em;--ltx-fo-height:0.63em;--ltx-fo-depth:0.21em;" transform="matrix(1 0 0 -1 0 9.34)" width="128.94"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text ltx_font_bold" id="S2.F2.pic1.3.3.3.3.1.1.1.1.1.1.1.1" style="font-size:90%;">Filesystem / NVMe</span></span></span></foreignobject></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 21.1)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 22.31 0)"><text transform="matrix(1 0 0 -1 0 0)">full cold record</text></g></g></g></g></g><g class="ltx_tikzmatrix_row" transform="matrix(1 0 0 1 0 29.75)"><g class="ltx_tikzmatrix_col ltx_nopad_l ltx_nopad_r" transform="matrix(1 0 0 -1 16.42 0)"><text transform="matrix(1 0 0 -1 0 0)">optional spill tier</text></g></g></g></g></g><g stroke-width="0.8pt"><path d="M 152.56 0 L 180.68 0" style="fill:none"></path><g stroke-dasharray="none" stroke-dashoffset="0.0pt" stroke-linejoin="miter" transform="matrix(-1.0 0.0 0.0 -1.0 152.56 0)"><path d="M 6.37 0 C 5.58 0.19 2.15 1.28 0 2.46 L 0 -2.46 C 2.15 -1.28 5.58 -0.19 6.37 0 Z"></path></g><g stroke-dasharray="none" stroke-dashoffset="0.0pt" stroke-linejoin="miter" transform="matrix(1.0 0.0 0.0 1.0 180.68 0)"><path d="M 6.37 0 C 5.58 0.19 2.15 1.28 0 2.46 L 0 -2.46 C 2.15 -1.28 5.58 -0.19 6.37 0 Z"></path></g><g fill="#FFFFFF" style="--ltx-fill-color:#FFFFFF;"><path d="M 139.55 1.94 h 54.14 v 12.45 h -54.14 Z" style="stroke:none"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 140.94 5.74)"><text transform="matrix(1 0 0 -1 0 0)">exact K/V</text></g></g><g stroke-width="0.8pt"><path d="M 380.45 0 L 402.66 0" style="fill:none"></path><g stroke-dasharray="none" stroke-dashoffset="0.0pt" stroke-linejoin="miter" transform="matrix(-1.0 0.0 0.0 -1.0 380.45 0)"><path d="M 6.37 0 C 5.58 0.19 2.15 1.28 0 2.46 L 0 -2.46 C 2.15 -1.28 5.58 -0.19 6.37 0 Z"></path></g><g stroke-dasharray="none" stroke-dashoffset="0.0pt" stroke-linejoin="miter" transform="matrix(1.0 0.0 0.0 1.0 402.66 0)"><path d="M 6.37 0 C 5.58 0.19 2.15 1.28 0 2.46 L 0 -2.46 C 2.15 -1.28 5.58 -0.19 6.37 0 Z"></path></g><g fill="#FFFFFF" style="--ltx-fill-color:#FFFFFF;"><path d="M 376.94 1.94 h 29.21 v 8.82 h -29.21 Z" style="stroke:none"></path></g><g fill="#000000" stroke="#000000" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="matrix(1.0 0.0 0.0 1.0 378.33 5.2)"><foreignobject height="6.05" overflow="visible" style="--ltx-fo-width:2.4em;--ltx-fo-height:0.38em;--ltx-fo-depth:0.17em;" transform="matrix(1 0 0 -1 0 4.17)" width="26.45"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content"><span class="ltx_text" id="S2.F2.pic1.4.4.4.1.1.1" style="font-size:70%;">pages</span></span></span></foreignobject></g></g></g></svg></span>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Tiered training state. VRAM contains the model, the active gradient segment, routed exact K/V, all chunk summaries, and a cache of group summaries. Historical capacity grows in RAM or NVMe rather than in VRAM.</figcaption>
+</figure>
+<div class="ltx_para" id="S2.SS2.p3">
+<p class="ltx_p" id="S2.SS2.p3.2"><span class="translated-text">对于固定段长度和路由预算（VRAM 中的块摘要），</span><span class="original-text">For fixed segment length and routing budget (chunk summaries in VRAM),</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S2.E1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="M_{\mathrm{GPU}}\approx M_{\mathrm{model}}+M_{\mathrm{adapters/optimizer}}+O(S)+O(B_{\mathrm{route}})," class="ltx_Math" display="block" id="S2.E1.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>M</mi><mi>GPU</mi></msub><mo>≈</mo><mrow><msub><mi>M</mi><mi>model</mi></msub><mo>+</mo><msub><mi>M</mi><mrow><mi>adapters</mi><mo>/</mo><mi>optimizer</mi></mrow></msub><mo>+</mo><mrow><mi>O</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>S</mi><mo stretchy="false">)</mo></mrow></mrow><mo>+</mo><mrow><mi>O</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>B</mi><mi>route</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">M_{\mathrm{GPU}}\approx M_{\mathrm{model}}+M_{\mathrm{adapters/optimizer}}+O(S)+O(B_{\mathrm{route}}),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S2.SS2.p3.1"><span class="translated-text">而外部历史记录则随着增长</span><span class="original-text">while the external historical record grows as</span><math alttext="O(L)" class="ltx_Math" display="inline" id="S2.SS2.p3.1.m1" intent=":literal"><semantics><mrow><mi>O</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>L</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">O(L)</annotation></semantics></math><span class="translated-text">。因此该方法没有内置的 16K 上下文常量。我们通过 16K 进行测试，发现只要有足够的 RAM 和 NVMe 容量，任意上下文长度都没有根本障碍。</span><span class="original-text">. The method therefore has no built-in 16K context constant. We tested through 16K and see no fundamental obstacle to an arbitrary context length given sufficient RAM and NVMe capacity.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS3">
+<h3 class="ltx_title ltx_font_bold ltx_title_subsection"><span class="translated-text">2.3 匹配密集和HGA训练</span><span class="original-text">2.3 Matched dense and HGA training</span></h3>
+<div class="ltx_para" id="S2.SS3.p1">
+<p class="ltx_p" id="S2.SS3.p1.1"><span class="translated-text">我们使用相同的数据顺序、种子和超参数训练两个 QLoRA 适配器。唯一的区别是微调时使用的注意力：原始的密集模块或HGA。两个适配器都在两种注意力模式下进行评估。密集读数是学习权重质量的主要衡量标准；路由读数单独测量 HGA 选择的效果。</span><span class="original-text">We train two QLoRA adapters with identical data order, seed, and hyperparameters. The only difference is the attention used during fine-tuning: the original dense module or HGA. Both adapters are evaluated under both attention modes. Dense readout is the primary measure of learned-weight quality; routed readout separately measures the effect of HGA selection.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_font_bold ltx_title_section" style="font-size:120%;"><span class="translated-text">3  实验设置</span><span class="original-text">3  Experimental Setup</span></h2>
+<div class="ltx_para" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="translated-text">初步实验使用Qwen3-8B</span><span class="original-text">The primary experiment uses Qwen3-8B</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib2" title="">2</a>]</cite><span class="translated-text">、4 位 NF4 QLoRA 和官方 PG19 训练/验证拆分</span><span class="original-text">, 4-bit NF4 QLoRA, and the official PG19 train/validation splits</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib5" title="">5</a>]</cite><span class="translated-text">。质量运行使用 100 个优化器步骤和 32 个保留的 PG19 块。</span><span class="original-text">. Quality runs use 100 optimizer steps and 32 held-out PG19 blocks.</span></p>
+</div>
+<figure class="ltx_table" id="S3.tab1">
+<figcaption class="ltx_caption ltx_centering">Experimental configuration.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.tab1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.tab1.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="S3.tab1.1.1.1.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.1.1.1.1" style="font-size:90%;">Item</span></th>
+<th class="ltx_td ltx_nopad_r ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="S3.tab1.1.1.1.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.1.1.2.1" style="font-size:90%;">Value</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.tab1.1.2.1">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S3.tab1.1.2.1.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.2.1.1.1" style="font-size:90%;">Model</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_left ltx_border_t" id="S3.tab1.1.2.1.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.2.1.2.1" style="font-size:90%;">Qwen/Qwen3-8B, 4-bit NF4 QLoRA</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.tab1.1.3.2">
+<td class="ltx_td ltx_align_left" id="S3.tab1.1.3.2.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.3.2.1.1" style="font-size:90%;">LoRA targets</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_left" id="S3.tab1.1.3.2.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.3.2.2.1" style="font-size:90%;">Q, K, V, O, gate, up, down projections</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.tab1.1.4.3">
+<td class="ltx_td ltx_align_left" id="S3.tab1.1.4.3.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.4.3.1.1" style="font-size:90%;">Hardware</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_left" id="S3.tab1.1.4.3.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.4.3.2.1" style="font-size:90%;">Quadro RTX 5000, 16 GB (Turing SM7.5)</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.tab1.1.5.4">
+<td class="ltx_td ltx_align_left" id="S3.tab1.1.5.4.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.5.4.1.1" style="font-size:90%;">Dataset</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_left" id="S3.tab1.1.5.4.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.5.4.2.1" style="font-size:90%;">PG19, official train/validation splits</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.tab1.1.6.5">
+<td class="ltx_td ltx_align_left" id="S3.tab1.1.6.5.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.6.5.1.1" style="font-size:90%;">Retrieval</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_left" id="S3.tab1.1.6.5.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.6.5.2.1" style="font-size:90%;">RULER-style passkey, multikey, multivalue</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.tab1.1.7.6">
+<td class="ltx_td ltx_align_left" id="S3.tab1.1.7.6.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.7.6.1.1" style="font-size:90%;">Adapters</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_left" id="S3.tab1.1.7.6.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.7.6.2.1" style="font-size:90%;">qwen8b_routed_2k, qwen8b_dense_2k</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.tab1.1.8.7">
+<td class="ltx_td ltx_align_left" id="S3.tab1.1.8.7.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.8.7.1.1" style="font-size:90%;">Matched seed</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_left" id="S3.tab1.1.8.7.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.8.7.2.1" style="font-size:90%;">1337, identical data order</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.tab1.1.9.8">
+<td class="ltx_td ltx_align_left" id="S3.tab1.1.9.8.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.9.8.1.1" style="font-size:90%;">TBPTT segment</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_left" id="S3.tab1.1.9.8.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.9.8.2.1" style="font-size:90%;">2,048 tokens</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.tab1.1.10.9">
+<td class="ltx_td ltx_align_left" id="S3.tab1.1.10.9.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.10.9.1.1" style="font-size:90%;">Chunk size</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_left" id="S3.tab1.1.10.9.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.10.9.2.1" style="font-size:90%;">64 tokens</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.tab1.1.11.10">
+<td class="ltx_td ltx_align_left" id="S3.tab1.1.11.10.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.11.10.1.1" style="font-size:90%;">Default routing</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_left" id="S3.tab1.1.11.10.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.11.10.2.1" style="font-size:90%;">8 routed chunks</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.tab1.1.12.11">
+<td class="ltx_td ltx_align_left" id="S3.tab1.1.12.11.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.12.11.1.1" style="font-size:90%;">Precision / optimizer</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_left" id="S3.tab1.1.12.11.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.12.11.2.1" style="font-size:90%;">FP16 / PagedAdamW8bit</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.tab1.1.13.12">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S3.tab1.1.13.12.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S3.tab1.1.13.12.1.1" style="font-size:90%;">Environment</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_left ltx_border_bb" id="S3.tab1.1.13.12.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text ltx_font_typewriter" id="S3.tab1.1.13.12.2.1" style="font-size:90%;">PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_font_bold ltx_title_section" style="font-size:120%;"><span class="translated-text">4  结果</span><span class="original-text">4  Results</span></h2>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_font_bold ltx_title_subsection"><span class="translated-text">4.1 同一GPU上的可训练上下文</span><span class="original-text">4.1 Trainable context on the same GPU</span></h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.1"><span class="translated-text">每个上下文长度都在新的子进程中运行。密集注意力使用单个全序列前向； HGA 使用 2K 段和 RAM 支持的历史记录。</span><span class="original-text">Each context length is run in a fresh subprocess. Dense attention uses a single full-sequence forward; HGA uses 2K segments and RAM-backed history.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Training feasibility sweep on a 16 GB GPU.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T1.1.1.1">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T1.1.1.1.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.1.1.1.1" style="font-size:90%;">Sequence</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T1.1.1.1.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.1.1.2.1" style="font-size:90%;">HGA peak</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T1.1.1.1.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.1.1.3.1" style="font-size:90%;">HGA</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T1.1.1.1.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.1.1.4.1" style="font-size:90%;">Dense</span></th>
+<th class="ltx_td ltx_nopad_r ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T1.1.1.1.5" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.1.1.5.1" style="font-size:90%;">Selection density</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T1.1.2.1">
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T1.1.2.1.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.2.1.1.1" style="font-size:90%;">2,048</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T1.1.2.1.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.2.1.2.1" style="font-size:90%;">11.76 GB</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T1.1.2.1.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.2.1.3.1" style="font-size:90%;">OK</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T1.1.2.1.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.2.1.4.1" style="font-size:90%;">OK (11.56 GB)</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right ltx_border_t" id="S4.T1.1.2.1.5" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.2.1.5.1" style="font-size:90%;">59.4%</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.1.3.2">
+<td class="ltx_td ltx_align_right" id="S4.T1.1.3.2.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.3.2.1.1" style="font-size:90%;">4,096</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.3.2.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.3.2.2.1" style="font-size:90%;">14.69 GB</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.3.2.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.3.2.3.1" style="font-size:90%;">OK</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.3.2.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.3.2.4.1" style="font-size:90%;">OOM</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T1.1.3.2.5" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.3.2.5.1" style="font-size:90%;">32.9%</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.1.4.3">
+<td class="ltx_td ltx_align_right" id="S4.T1.1.4.3.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.4.3.1.1" style="font-size:90%;">8,192</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.4.3.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.4.3.2.1" style="font-size:90%;">15.26 GB</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.4.3.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.4.3.3.1" style="font-size:90%;">OK</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.4.3.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.4.3.4.1" style="font-size:90%;">OOM</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T1.1.4.3.5" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.4.3.5.1" style="font-size:90%;">17.2%</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.1.5.4">
+<td class="ltx_td ltx_align_right" id="S4.T1.1.5.4.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.5.4.1.1" style="font-size:90%;">16,384</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.5.4.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.5.4.2.1" style="font-size:90%;">15.28 GB</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.5.4.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.5.4.3.1" style="font-size:90%;">OK</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T1.1.5.4.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.5.4.4.1" style="font-size:90%;">OOM</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T1.1.5.4.5" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.5.4.5.1" style="font-size:90%;">8.7%</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.1.6.5">
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T1.1.6.5.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.6.5.1.1" style="font-size:90%;">32,768</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T1.1.6.5.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.6.5.2.1" style="font-size:90%;">–</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T1.1.6.5.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.6.5.3.1" style="font-size:90%;">OOM</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T1.1.6.5.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.6.5.4.1" style="font-size:90%;">OOM</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right ltx_border_bb" id="S4.T1.1.6.5.5" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T1.1.6.5.5.1" style="font-size:90%;">–</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S4.SS1.p2">
+<p class="ltx_p" id="S4.SS1.p2.1"><span class="translated-text">密集训练在 4K 时失败，而 HGA 在同一张卡上完成 4K、8K 和 16K。参与的历史令牌数量仅温和增长，因此随着总上下文的增长，所选比例从 59.4% 下降到 8.7%。最大验证点为16K；我们不将其视为方法限制。</span><span class="original-text">Dense training fails at 4K, whereas HGA completes 4K, 8K, and 16K on the same card. The number of attended historical tokens grows only mildly, so the selected fraction falls from 59.4% to 8.7% as total context grows. The largest validated point is 16K; we do not regard it as a method limit.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_font_bold ltx_title_subsection"><span class="translated-text">4.2 训练效率</span><span class="original-text">4.2 Training efficiency</span></h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S4.T2" title="Table 2 ‣ 4.2 Training efficiency ‣ 4 Results ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">报告两种模式都适合的逐阶段比较。两种测量都使用相同的权重；密集定时是通过禁用路由器获得的。</span><span class="original-text">reports a phase-by-phase comparison where both modes fit. Both measurements use the same weights; dense timing is obtained by disabling the router.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T2">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Per-step timing at short context (FP16). Median of ten runs after three warm-up iterations.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T2.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T2.1.1.1">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T2.1.1.1.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.1.1.1.1" style="font-size:90%;">Sequence</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_tt" id="S4.T2.1.1.1.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.1.1.2.1" style="font-size:90%;">Mode</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T2.1.1.1.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.1.1.3.1" style="font-size:90%;">Forward (ms)</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T2.1.1.1.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.1.1.4.1" style="font-size:90%;">Backward (ms)</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T2.1.1.1.5" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.1.1.5.1" style="font-size:90%;">Optimizer (ms)</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T2.1.1.1.6" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.1.1.6.1" style="font-size:90%;">Total (ms)</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T2.1.1.1.7" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.1.1.7.1" style="font-size:90%;">tok/s</span></th>
+<th class="ltx_td ltx_nopad_r ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T2.1.1.1.8" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.1.1.8.1" style="font-size:90%;">Peak GB</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T2.1.2.1">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_t" id="S4.T2.1.2.1.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.2.1.1.1" style="font-size:90%;">1,024</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r ltx_border_t" id="S4.T2.1.2.1.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.2.1.2.1" style="font-size:90%;">HGA</span></th>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T2.1.2.1.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.2.1.3.1" style="font-size:90%;">1,539.2</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T2.1.2.1.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.2.1.4.1" style="font-size:90%;">2,948.1</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T2.1.2.1.5" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.2.1.5.1" style="font-size:90%;">42.9</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T2.1.2.1.6" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.2.1.6.1" style="font-size:90%;">4,540.2</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T2.1.2.1.7" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.2.1.7.1" style="font-size:90%;">225.54</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right ltx_border_t" id="S4.T2.1.2.1.8" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.2.1.8.1" style="font-size:90%;">10.84</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.1.3.2">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row" id="S4.T2.1.3.2.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.3.2.1.1" style="font-size:90%;">1,024</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r" id="S4.T2.1.3.2.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.3.2.2.1" style="font-size:90%;">Dense</span></th>
+<td class="ltx_td ltx_align_right" id="S4.T2.1.3.2.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.3.2.3.1" style="font-size:90%;">1,160.0</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T2.1.3.2.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.3.2.4.1" style="font-size:90%;">2,423.6</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T2.1.3.2.5" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.3.2.5.1" style="font-size:90%;">48.0</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T2.1.3.2.6" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.3.2.6.1" style="font-size:90%;">3,627.1</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T2.1.3.2.7" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.3.2.7.1" style="font-size:90%;">282.32</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T2.1.3.2.8" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.3.2.8.1" style="font-size:90%;">10.84</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.1.4.3">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row" id="S4.T2.1.4.3.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.4.3.1.1" style="font-size:90%;">2,048</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_r" id="S4.T2.1.4.3.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.4.3.2.1" style="font-size:90%;">HGA</span></th>
+<td class="ltx_td ltx_align_right" id="S4.T2.1.4.3.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.4.3.3.1" style="font-size:90%;">3,224.4</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T2.1.4.3.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.4.3.4.1" style="font-size:90%;">6,077.0</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T2.1.4.3.5" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.4.3.5.1" style="font-size:90%;">48.8</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T2.1.4.3.6" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.4.3.6.1" style="font-size:90%;">9,405.3</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T2.1.4.3.7" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.4.3.7.1" style="font-size:90%;">217.75</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T2.1.4.3.8" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.4.3.8.1" style="font-size:90%;">11.76</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.1.5.4">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_bb" id="S4.T2.1.5.4.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.5.4.1.1" style="font-size:90%;">2,048</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_bb ltx_border_r" id="S4.T2.1.5.4.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.5.4.2.1" style="font-size:90%;">Dense</span></th>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T2.1.5.4.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.5.4.3.1" style="font-size:90%;">3,211.6</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T2.1.5.4.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.5.4.4.1" style="font-size:90%;">6,626.6</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T2.1.5.4.5" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.5.4.5.1" style="font-size:90%;">51.4</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T2.1.5.4.6" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.5.4.6.1" style="font-size:90%;">9,892.7</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T2.1.5.4.7" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.5.4.7.1" style="font-size:90%;">207.02</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right ltx_border_bb" id="S4.T2.1.5.4.8" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T2.1.5.4.8.1" style="font-size:90%;">11.56</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S4.SS2.p2">
+<p class="ltx_p" id="S4.SS2.p2.1"><span class="translated-text">在 1K 时，HGA 大约慢 20%（225.54 与 282.32 令牌/秒），因为路由开销尚未摊销，并且大部分短历史记录仍处于选择状态。在 2K 时，HGA 已经稍快一些（217.75 与 207.02 令牌/秒），因此 HGA 与密集吞吐量的比率在此范围内从 0.80 上升到 1.05 — 预测交叉的开始。对于固定的路由预算，HGA 每个 token 的注意力工作相对于上下文总长度大致恒定，而每个 token 的密集工作随着可见历史的增长而增长；随着上下文的增长，路由选择密度也会不断下降（表</span><span class="original-text">At 1K, HGA is about 20% slower (225.54 vs. 282.32 tokens/s) because routing overhead is not yet amortized and most of the short history remains selected. At 2K, HGA is already marginally faster (217.75 vs. 207.02 tokens/s), so the HGA-to-dense throughput ratio rises from 0.80 to 1.05 across this range — the onset of the predicted crossover. For a fixed routing budget, HGA’s attention work per token is approximately constant with respect to total context length, whereas dense work per token grows with the visible history; the routed selection density also keeps falling as context grows (Table</span><a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ 4.1 Trainable context on the same GPU ‣ 4 Results ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">），因此我们预计 HGA 在更长期的背景下会进一步领先。对于大型模型，相对于张量操作，小型路由工作集的传输预计也较小。然而，无法在此 GPU 上测量直接的长上下文时序交叉，因为密集训练已经耗尽了超过 2K 的内存。</span><span class="original-text">), so we expect HGA to pull further ahead at longer contexts. For large models, the transfer of a small routed working set is also expected to be small relative to the tensor operations. A direct long-context timing crossover cannot be measured on this GPU, however, because dense training already runs out of memory beyond 2K.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_font_bold ltx_title_subsection"><span class="translated-text">4.3 同等培训环境下的质量</span><span class="original-text">4.3 Quality at equal training context</span></h3>
+<div class="ltx_para" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.1"><span class="translated-text">两个适配器在 2K 下使用相同的数据顺序和种子进行 100 个步骤的训练。表</span><span class="original-text">The two adapters are trained for 100 steps at 2K with identical data order and seed. Table</span><a class="ltx_ref" href="#S4.T3" title="Table 3 ‣ 4.3 Quality at equal training context ‣ 4 Results ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">交叉评估两个适配器。密集列是学习权重的主要比较；路由减密集损失衡量同一适配器的选择成本。</span><span class="original-text">cross-evaluates both adapters. The dense column is the primary comparison of learned weights; routed-minus-dense loss measures the selection cost for the same adapter.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T3">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 3: </span>Quality at 2,048-token context on 32 held-out PG19 blocks.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T3.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T3.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T3.1.1.1.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T3.1.1.1.1.1" style="font-size:90%;">Attention during training</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T3.1.1.1.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T3.1.1.1.2.1" style="font-size:90%;">HGA eval (loss / PPL)</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T3.1.1.1.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T3.1.1.1.3.1" style="font-size:90%;">Dense eval (loss / PPL)</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T3.1.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T3.1.2.1.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T3.1.2.1.1.1" style="font-size:90%;">HGA</span></th>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T3.1.2.1.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T3.1.2.1.2.1" style="font-size:90%;">2.7433 / 15.538</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T3.1.2.1.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T3.1.2.1.3.1" style="font-size:90%;">2.7405 / 15.495</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T3.1.3.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T3.1.3.2.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T3.1.3.2.1.1" style="font-size:90%;">Dense</span></th>
+<td class="ltx_td ltx_align_right" id="S4.T3.1.3.2.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T3.1.3.2.2.1" style="font-size:90%;">2.7426 / 15.528</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T3.1.3.2.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T3.1.3.2.3.1" style="font-size:90%;">2.7383 / 15.461</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T3.1.4.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S4.T3.1.4.3.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T3.1.4.3.1.1" style="font-size:90%;">Stock</span></th>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T3.1.4.3.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T3.1.4.3.2.1" style="font-size:90%;">–</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T3.1.4.3.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T3.1.4.3.3.1" style="font-size:90%;">2.9541 / 19.185</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S4.SS3.p2">
+<p class="ltx_p" id="S4.SS3.p2.1"><span class="translated-text">在密集读出下，HGA 训练和密集训练的适配器仅相差 0.0022 nat。微调本身提供了更大的效果：相对于库存模型，最佳适配器将损失减少 0.216 nat，将困惑度减少 19.4%。这些结果支持 HGA 作为训练时的替代品；他们没有表明 HGA 训练比密集训练更好。</span><span class="original-text">The HGA-trained and dense-trained adapters differ by only 0.0022 nat under dense readout. Fine-tuning itself provides the larger effect: the best adapter reduces loss by 0.216 nat and perplexity by 19.4% relative to the stock model. These results support HGA as a training-time replacement; they do not show that HGA training is better than dense training.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS4">
+<h3 class="ltx_title ltx_font_bold ltx_title_subsection"><span class="translated-text">4.4 随着上下文的增长，质量和路由成本</span><span class="original-text">4.4 Quality and routing cost as context grows</span></h3>
+<div class="ltx_para" id="S4.SS4.p1">
+<p class="ltx_p" id="S4.SS4.p1.1"><span class="translated-text">表格</span><span class="original-text">Tables</span><a class="ltx_ref" href="#S4.T4" title="Table 4 ‣ 4.4 Quality and routing cost as context grows ‣ 4 Results ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">和</span><span class="original-text">and</span><a class="ltx_ref" href="#S4.T5" title="Table 5 ‣ 4.4 Quality and routing cost as context grows ‣ 4 Results ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">跨上下文长度评估两个适配器。除了 4K 之外，密集评估不适合该 GPU，因此这些行仅表征 HGA 评估。不同的上下文长度以不同的方式截断 PG19 文档；只有在相同上下文长度的适配器之间进行比较才有意义。</span><span class="original-text">evaluate both adapters across context lengths. Beyond 4K, dense evaluation does not fit on this GPU, so those rows characterize HGA evaluation only. Different context lengths truncate PG19 documents differently; only comparisons between adapters at the same context length are meaningful.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T4">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 4: </span>Adapter trained with HGA, evaluated at increasing context.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T4.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T4.1.1.1">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T4.1.1.1.1" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.1.1.1.1" style="font-size:70%;">Context</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T4.1.1.1.2" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.1.1.2.1" style="font-size:70%;">HGA eval (loss / PPL)</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T4.1.1.1.3" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.1.1.3.1" style="font-size:70%;">Dense eval (loss / PPL)</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T4.1.1.1.4" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.1.1.4.1" style="font-size:70%;">Routing cost</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T4.1.1.1.5" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.1.1.5.1" style="font-size:70%;">Density</span></th>
+<th class="ltx_td ltx_nopad_r ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T4.1.1.1.6" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.1.1.6.1" style="font-size:70%;">KV saving</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T4.1.2.1">
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T4.1.2.1.1" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.2.1.1.1" style="font-size:70%;">2,048</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T4.1.2.1.2" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.2.1.2.1" style="font-size:70%;">2.7432 / 15.537</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T4.1.2.1.3" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.2.1.3.1" style="font-size:70%;">2.7405 / 15.495</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T4.1.2.1.4" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.2.1.4.1" style="font-size:70%;">+0.0027</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T4.1.2.1.5" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.2.1.5.1" style="font-size:70%;">59.7%</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right ltx_border_t" id="S4.T4.1.2.1.6" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.2.1.6.1" style="font-size:70%;">40.3%</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.1.3.2">
+<td class="ltx_td ltx_align_right" id="S4.T4.1.3.2.1" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.3.2.1.1" style="font-size:70%;">4,096</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T4.1.3.2.2" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.3.2.2.1" style="font-size:70%;">2.7180 / 15.150</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T4.1.3.2.3" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.3.2.3.1" style="font-size:70%;">2.7085 / 15.006</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T4.1.3.2.4" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.3.2.4.1" style="font-size:70%;">+0.0096</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T4.1.3.2.5" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.3.2.5.1" style="font-size:70%;">33.1%</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T4.1.3.2.6" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.3.2.6.1" style="font-size:70%;">66.9%</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.1.4.3">
+<td class="ltx_td ltx_align_right" id="S4.T4.1.4.3.1" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.4.3.1.1" style="font-size:70%;">8,192</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T4.1.4.3.2" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.4.3.2.1" style="font-size:70%;">2.4339 / 11.404</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T4.1.4.3.3" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.4.3.3.1" style="font-size:70%;">OOM</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T4.1.4.3.4" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.4.3.4.1" style="font-size:70%;">–</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T4.1.4.3.5" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.4.3.5.1" style="font-size:70%;">17.3%</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T4.1.4.3.6" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.4.3.6.1" style="font-size:70%;">82.7%</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.1.5.4">
+<td class="ltx_td ltx_align_right" id="S4.T4.1.5.4.1" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.5.4.1.1" style="font-size:70%;">16,384</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T4.1.5.4.2" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.5.4.2.1" style="font-size:70%;">2.6443 / 14.074</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T4.1.5.4.3" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.5.4.3.1" style="font-size:70%;">OOM</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T4.1.5.4.4" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.5.4.4.1" style="font-size:70%;">–</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T4.1.5.4.5" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.5.4.5.1" style="font-size:70%;">8.8%</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T4.1.5.4.6" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.5.4.6.1" style="font-size:70%;">91.2%</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.1.6.5">
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T4.1.6.5.1" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.6.5.1.1" style="font-size:70%;">32,768</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T4.1.6.5.2" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.6.5.2.1" style="font-size:70%;">2.7407 / 15.498</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T4.1.6.5.3" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.6.5.3.1" style="font-size:70%;">OOM</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T4.1.6.5.4" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.6.5.4.1" style="font-size:70%;">–</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T4.1.6.5.5" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.6.5.5.1" style="font-size:70%;">4.4%</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right ltx_border_bb" id="S4.T4.1.6.5.6" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T4.1.6.5.6.1" style="font-size:70%;">95.6%</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure class="ltx_table" id="S4.T5">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 5: </span>Adapter trained with dense attention, evaluated under the same protocol.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T5.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T5.1.1.1">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T5.1.1.1.1" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.1.1.1.1" style="font-size:70%;">Context</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T5.1.1.1.2" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.1.1.2.1" style="font-size:70%;">HGA eval (loss / PPL)</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T5.1.1.1.3" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.1.1.3.1" style="font-size:70%;">Dense eval (loss / PPL)</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T5.1.1.1.4" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.1.1.4.1" style="font-size:70%;">Routing cost</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T5.1.1.1.5" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.1.1.5.1" style="font-size:70%;">Density</span></th>
+<th class="ltx_td ltx_nopad_r ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T5.1.1.1.6" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.1.1.6.1" style="font-size:70%;">KV saving</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T5.1.2.1">
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T5.1.2.1.1" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.2.1.1.1" style="font-size:70%;">2,048</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T5.1.2.1.2" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.2.1.2.1" style="font-size:70%;">2.7426 / 15.528</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T5.1.2.1.3" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.2.1.3.1" style="font-size:70%;">2.7383 / 15.460</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T5.1.2.1.4" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.2.1.4.1" style="font-size:70%;">+0.0044</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T5.1.2.1.5" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.2.1.5.1" style="font-size:70%;">59.7%</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right ltx_border_t" id="S4.T5.1.2.1.6" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.2.1.6.1" style="font-size:70%;">40.3%</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T5.1.3.2">
+<td class="ltx_td ltx_align_right" id="S4.T5.1.3.2.1" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.3.2.1.1" style="font-size:70%;">4,096</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T5.1.3.2.2" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.3.2.2.1" style="font-size:70%;">2.7189 / 15.164</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T5.1.3.2.3" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.3.2.3.1" style="font-size:70%;">2.7057 / 14.966</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T5.1.3.2.4" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.3.2.4.1" style="font-size:70%;">+0.0132</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T5.1.3.2.5" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.3.2.5.1" style="font-size:70%;">33.1%</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T5.1.3.2.6" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.3.2.6.1" style="font-size:70%;">66.9%</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T5.1.4.3">
+<td class="ltx_td ltx_align_right" id="S4.T5.1.4.3.1" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.4.3.1.1" style="font-size:70%;">8,192</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T5.1.4.3.2" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.4.3.2.1" style="font-size:70%;">2.4364 / 11.432</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T5.1.4.3.3" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.4.3.3.1" style="font-size:70%;">OOM</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T5.1.4.3.4" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.4.3.4.1" style="font-size:70%;">–</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T5.1.4.3.5" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.4.3.5.1" style="font-size:70%;">17.2%</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T5.1.4.3.6" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.4.3.6.1" style="font-size:70%;">82.8%</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T5.1.5.4">
+<td class="ltx_td ltx_align_right" id="S4.T5.1.5.4.1" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.5.4.1.1" style="font-size:70%;">16,384</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T5.1.5.4.2" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.5.4.2.1" style="font-size:70%;">2.6488 / 14.138</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T5.1.5.4.3" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.5.4.3.1" style="font-size:70%;">OOM</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T5.1.5.4.4" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.5.4.4.1" style="font-size:70%;">–</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T5.1.5.4.5" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.5.4.5.1" style="font-size:70%;">8.8%</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T5.1.5.4.6" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.5.4.6.1" style="font-size:70%;">91.2%</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T5.1.6.5">
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T5.1.6.5.1" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.6.5.1.1" style="font-size:70%;">32,768</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T5.1.6.5.2" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.6.5.2.1" style="font-size:70%;">2.7464 / 15.587</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T5.1.6.5.3" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.6.5.3.1" style="font-size:70%;">OOM</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T5.1.6.5.4" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.6.5.4.1" style="font-size:70%;">–</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T5.1.6.5.5" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.6.5.5.1" style="font-size:70%;">4.4%</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right ltx_border_bb" id="S4.T5.1.6.5.6" style="padding:0.2pt 4.2pt;"><span class="ltx_text" id="S4.T5.1.6.5.6.1" style="font-size:70%;">95.6%</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<figure class="ltx_table" id="S4.T6">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 6: </span>Direct equal-context comparison under dense readout, where dense evaluation fits.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T6.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T6.1.1.1">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T6.1.1.1.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T6.1.1.1.1.1" style="font-size:90%;">Context</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T6.1.1.1.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T6.1.1.1.2.1" style="font-size:90%;">Dense-trained PPL</span></th>
+<th class="ltx_td ltx_nopad_r ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T6.1.1.1.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T6.1.1.1.3.1" style="font-size:90%;">HGA-trained PPL</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T6.1.2.1">
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T6.1.2.1.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T6.1.2.1.1.1" style="font-size:90%;">2,048</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T6.1.2.1.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T6.1.2.1.2.1" style="font-size:90%;">15.460</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right ltx_border_t" id="S4.T6.1.2.1.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T6.1.2.1.3.1" style="font-size:90%;">15.495</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T6.1.3.2">
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T6.1.3.2.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T6.1.3.2.1.1" style="font-size:90%;">4,096</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T6.1.3.2.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T6.1.3.2.2.1" style="font-size:90%;">14.966</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right ltx_border_bb" id="S4.T6.1.3.2.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T6.1.3.2.3.1" style="font-size:90%;">15.006</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S4.SS4.p2">
+<p class="ltx_p" id="S4.SS4.p2.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S4.T6" title="Table 6 ‣ 4.4 Quality and routing cost as context grows ‣ 4 Results ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">是最干净的质量比较：在 2K 和 4K 下，两个适配器的一致性约为 0.04 PPL。较长上下文中的仅 HGA 行表明适配器在日益稀疏的选择下仍然可用，但它们不能替代密集基线。</span><span class="original-text">is the cleanest quality comparison: at both 2K and 4K, the two adapters agree within about 0.04 PPL. The HGA-only rows at longer contexts show that the adapter remains usable under increasingly sparse selection, but they are not a substitute for a dense baseline.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS5">
+<h3 class="ltx_title ltx_font_bold ltx_title_subsection"><span class="translated-text">4.5 路由稀疏性和缓存行为</span><span class="original-text">4.5 Routing sparsity and cache behavior</span></h3>
+<div class="ltx_para" id="S4.SS5.p1">
+<p class="ltx_p" id="S4.SS5.p1.1"><span class="translated-text">我们改变 4K 时选定块的数量。该实验的特点是路由评估，而不是上面的密集读出质量比较。</span><span class="original-text">We vary the number of selected chunks at 4K. This experiment characterizes routed evaluation, not the dense-readout quality comparison above.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T7">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 7: </span>Routing sparsity sweep at 4,096 tokens on 32 held-out PG19 blocks for the HGA-trained adapter. Dense reference: loss 2.7085, PPL 15.006.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T7.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T7.1.1">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T7.1.1.1" style="padding:0.25pt 4.2pt;">
+<span class="ltx_text" id="S4.T7.1.1.1.1" style="font-size:90%;">Top-</span><math alttext="k" class="ltx_Math" display="inline" id="S4.T7.1.1.1.m1" intent=":literal"><semantics><mi mathsize="0.900em">k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math><span class="ltx_text" id="S4.T7.1.1.1.2" style="font-size:90%;"> chunks</span>
+</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T7.1.1.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.1.2.1" style="font-size:90%;">HGA eval (loss / PPL)</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T7.1.1.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.1.3.1" style="font-size:90%;">Routing cost</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T7.1.1.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.1.4.1" style="font-size:90%;">Density</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T7.1.1.5" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.1.5.1" style="font-size:90%;">KV saving</span></th>
+<th class="ltx_td ltx_nopad_r ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T7.1.1.6" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.1.6.1" style="font-size:90%;">Cache hit</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T7.1.2.1">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_t" id="S4.T7.1.2.1.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.2.1.1.1" style="font-size:90%;">2</span></th>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T7.1.2.1.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.2.1.2.1" style="font-size:90%;">2.7530 / 15.690</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T7.1.2.1.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.2.1.3.1" style="font-size:90%;">+0.0446</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T7.1.2.1.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.2.1.4.1" style="font-size:90%;">18.8%</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T7.1.2.1.5" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.2.1.5.1" style="font-size:90%;">81.2%</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right ltx_border_t" id="S4.T7.1.2.1.6" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.2.1.6.1" style="font-size:90%;">87.7%</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T7.1.3.2">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row" id="S4.T7.1.3.2.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.3.2.1.1" style="font-size:90%;">4</span></th>
+<td class="ltx_td ltx_align_right" id="S4.T7.1.3.2.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.3.2.2.1" style="font-size:90%;">2.7334 / 15.385</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T7.1.3.2.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.3.2.3.1" style="font-size:90%;">+0.0249</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T7.1.3.2.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.3.2.4.1" style="font-size:90%;">24.1%</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T7.1.3.2.5" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.3.2.5.1" style="font-size:90%;">75.9%</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T7.1.3.2.6" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.3.2.6.1" style="font-size:90%;">91.5%</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T7.1.4.3">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row" id="S4.T7.1.4.3.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.4.3.1.1" style="font-size:90%;">8</span></th>
+<td class="ltx_td ltx_align_right" id="S4.T7.1.4.3.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.4.3.2.1" style="font-size:90%;">2.7180 / 15.150</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T7.1.4.3.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.4.3.3.1" style="font-size:90%;">+0.0096</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T7.1.4.3.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.4.3.4.1" style="font-size:90%;">33.1%</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T7.1.4.3.5" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.4.3.5.1" style="font-size:90%;">66.9%</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T7.1.4.3.6" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.4.3.6.1" style="font-size:90%;">93.8%</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T7.1.5.4">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row" id="S4.T7.1.5.4.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.5.4.1.1" style="font-size:90%;">16</span></th>
+<td class="ltx_td ltx_align_right" id="S4.T7.1.5.4.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.5.4.2.1" style="font-size:90%;">2.7126 / 15.068</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T7.1.5.4.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.5.4.3.1" style="font-size:90%;">+0.0041</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T7.1.5.4.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.5.4.4.1" style="font-size:90%;">33.0%</span></td>
+<td class="ltx_td ltx_align_right" id="S4.T7.1.5.4.5" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.5.4.5.1" style="font-size:90%;">67.0%</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T7.1.5.4.6" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.5.4.6.1" style="font-size:90%;">95.0%</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T7.1.6.5">
+<th class="ltx_td ltx_align_right ltx_th ltx_th_row ltx_border_bb" id="S4.T7.1.6.5.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.6.5.1.1" style="font-size:90%;">32</span></th>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T7.1.6.5.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.6.5.2.1" style="font-size:90%;">2.7108 / 15.042</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T7.1.6.5.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.6.5.3.1" style="font-size:90%;">+0.0024</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T7.1.6.5.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.6.5.4.1" style="font-size:90%;">32.6%</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T7.1.6.5.5" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.6.5.5.1" style="font-size:90%;">67.4%</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right ltx_border_bb" id="S4.T7.1.6.5.6" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T7.1.6.5.6.1" style="font-size:90%;">95.3%</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S4.SS5.p2">
+<p class="ltx_p" id="S4.SS5.p2.1"><span class="translated-text">在八个块的默认设置下，质量已经接近饱和。将预算减少到两个块可以节省 81.2% 的 KV 交互，并且相对于默认的 8 个块，困惑度提高 0.54（相对于最密集的 32 个块设置，困惑度提高 0.65）。缓存命中率保持在 87.7-95.3%，与图中的摘要/KV 缓存设计一致</span><span class="original-text">Quality is already close to saturation at the default setting of eight chunks. Reducing the budget to two chunks saves 81.2% of KV interactions and raises perplexity by 0.54 relative to the eight-chunk default (0.65 relative to the densest 32-chunk setting). Cache hit rate remains 87.7–95.3%, consistent with the summary/KV caching design in Figures</span><a class="ltx_ref" href="#S2.F1" title="Figure 1 ‣ 2.1 Exact-token hierarchical routing ‣ 2 Method ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">和</span><span class="original-text">and</span><a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ 2.2 Segment-wise backward and tiered KV storage ‣ 2 Method ‣ Long-Context Fine-Tuning with Limited VRAM"><span class="ltx_text ltx_ref_tag">2</span></a>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS6">
+<h3 class="ltx_title ltx_font_bold ltx_title_subsection"><span class="translated-text">4.6 密集注意力下的检索</span><span class="original-text">4.6 Retrieval under dense attention</span></h3>
+<div class="ltx_para" id="S4.SS6.p1">
+<p class="ltx_p" id="S4.SS6.p1.1"><span class="translated-text">我们使用 RULER 风格的精确匹配套件评估密钥、多密钥和多值检索</span><span class="original-text">We evaluate passkey, multikey, and multivalue retrieval with a RULER-style exact-match suite</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib6" title="">6</a>]</cite><span class="translated-text">。两个适配器都以原始的密集注意力读出。这隔离了基于 HGA 的微调是否改变了学习到的检索行为，而不是将其与路由选择召回混合。</span><span class="original-text">. Both adapters are read out with the original dense attention. This isolates whether HGA-based fine-tuning changed the learned retrieval behavior, rather than mixing it with routed-selection recall.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T8">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 8: </span>RULER-style retrieval recall (%), dense-attention readout for both adapters.</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T8.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T8.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T8.1.1.1.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.1.1.1.1" style="font-size:90%;">Attention during training</span></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T8.1.1.1.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.1.1.2.1" style="font-size:90%;">Task</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T8.1.1.1.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.1.1.3.1" style="font-size:90%;">4,096</span></th>
+<th class="ltx_td ltx_nopad_r ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S4.T8.1.1.1.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.1.1.4.1" style="font-size:90%;">8,192</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T8.1.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T8.1.2.1.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.2.1.1.1" style="font-size:90%;">HGA</span></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T8.1.2.1.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.2.1.2.1" style="font-size:90%;">Passkey</span></th>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S4.T8.1.2.1.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.2.1.3.1" style="font-size:90%;">100.0</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right ltx_border_t" id="S4.T8.1.2.1.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.2.1.4.1" style="font-size:90%;">100.0</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T8.1.3.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T8.1.3.2.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.3.2.1.1" style="font-size:90%;">HGA</span></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T8.1.3.2.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.3.2.2.1" style="font-size:90%;">Multikey</span></th>
+<td class="ltx_td ltx_align_right" id="S4.T8.1.3.2.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.3.2.3.1" style="font-size:90%;">100.0</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T8.1.3.2.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.3.2.4.1" style="font-size:90%;">100.0</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T8.1.4.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T8.1.4.3.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.4.3.1.1" style="font-size:90%;">HGA</span></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T8.1.4.3.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.4.3.2.1" style="font-size:90%;">Multivalue</span></th>
+<td class="ltx_td ltx_align_right" id="S4.T8.1.4.3.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.4.3.3.1" style="font-size:90%;">93.8</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T8.1.4.3.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.4.3.4.1" style="font-size:90%;">100.0</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T8.1.5.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T8.1.5.4.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.5.4.1.1" style="font-size:90%;">Dense</span></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T8.1.5.4.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.5.4.2.1" style="font-size:90%;">Passkey</span></th>
+<td class="ltx_td ltx_align_right" id="S4.T8.1.5.4.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.5.4.3.1" style="font-size:90%;">100.0</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T8.1.5.4.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.5.4.4.1" style="font-size:90%;">100.0</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T8.1.6.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T8.1.6.5.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.6.5.1.1" style="font-size:90%;">Dense</span></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T8.1.6.5.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.6.5.2.1" style="font-size:90%;">Multikey</span></th>
+<td class="ltx_td ltx_align_right" id="S4.T8.1.6.5.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.6.5.3.1" style="font-size:90%;">100.0</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right" id="S4.T8.1.6.5.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.6.5.4.1" style="font-size:90%;">100.0</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T8.1.7.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S4.T8.1.7.6.1" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.7.6.1.1" style="font-size:90%;">Dense</span></th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S4.T8.1.7.6.2" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.7.6.2.1" style="font-size:90%;">Multivalue</span></th>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S4.T8.1.7.6.3" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.7.6.3.1" style="font-size:90%;">100.0</span></td>
+<td class="ltx_td ltx_nopad_r ltx_align_right ltx_border_bb" id="S4.T8.1.7.6.4" style="padding:0.25pt 4.2pt;"><span class="ltx_text" id="S4.T8.1.7.6.4.1" style="font-size:90%;">93.8</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S4.SS6.p2">
+<p class="ltx_p" id="S4.SS6.p2.1"><span class="translated-text">每个适配器都会错过不同单元中 96 个植入值中的一个，因此结果没有证据表明 HGA 训练会损害密集注意力检索。 HGA 本身也可以执行检索和生成，正如配套工作和存储库原型所证明的那样。我们在这里使用密集读数，因为它提供了清晰的训练比较，并且可以立即使用现有的优化生成框架。生产级 HGA 服务引擎（包括与 vLLM 或 SGLang 等系统的高效集成）仍在开发中。</span><span class="original-text">Each adapter misses one of 96 planted values, in a different cell, so the result gives no evidence that HGA training harms dense-attention retrieval. HGA itself can also perform retrieval and generation, as demonstrated by the companion work and repository prototypes. We use dense readout here because it gives a clean training comparison and can immediately use existing optimized generation frameworks. A production-grade HGA serving engine, including efficient integration with systems such as vLLM or SGLang, is still under development.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_font_bold ltx_title_section" style="font-size:120%;"><span class="translated-text">5  相关工作</span><span class="original-text">5  Related Work</span></h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">洛拉</span><span class="original-text">LoRA</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib4" title="">4</a>]</cite><span class="translated-text">和 QLoRA</span><span class="original-text">and QLoRA</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="">3</a>]</cite><span class="translated-text">减少可训练参数和优化器内存。梯度检查点和 FlashAttention</span><span class="original-text">reduce trainable-parameter and optimizer memory. Gradient checkpointing and FlashAttention</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="">7</a>]</cite><span class="translated-text">减少激活物化，但密集注意力仍然执行所有查询键交互。龙洛拉</span><span class="original-text">reduce activation materialization, but dense attention still performs all query-key interactions. LongLoRA</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="">8</a>]</cite><span class="translated-text">在训练期间使用转移的稀疏注意力并恢复标准注意力进行推理。 HGA 对精确令牌使用基于内容的分层选择，并将其耦合到外部历史 KV 存储。经典TBPTT</span><span class="original-text">uses shifted sparse attention during training and restores standard attention for inference. HGA uses content-based hierarchical selection over exact tokens and couples it to an external historical KV store. Classical TBPTT</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib9" title="">9</a>]</cite><span class="translated-text">提供跨训练段使用的有界梯度历史机制。</span><span class="original-text">supplies the bounded-gradient-history mechanism used across training segments.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_font_bold ltx_title_section" style="font-size:120%;"><span class="translated-text">6  限制</span><span class="original-text">6  Limitations</span></h2>
+<section class="ltx_subsection" id="S6.SS1">
+<h3 class="ltx_title ltx_font_bold ltx_title_subsection"><span class="translated-text">6.1 长期因果泄漏</span><span class="original-text">6.1 Long-horizon causal leakage</span></h3>
+<div class="ltx_para" id="S6.SS1.p1">
+<p class="ltx_p" id="S6.SS1.p1.1"><span class="translated-text">在我们的实验中，当前的 HGA 训练实现对于最多约 1 亿个训练令牌的微调运行保持稳定。然而，更长的训练揭示了由于在块内跨令牌共享路由决策而导致的因果侧通道。特别是，为块选择的路由集取决于多个查询位置产生的分数。因此，较早的令牌可以获得有关从中选择或拒绝远程块的较晚令牌的间接信息。尽管该信号最初很弱，但在大约 100-2 亿次训练令牌之后，模型开始利用它来改进下一个令牌的预测，从而导致可测量的因果泄漏。因此，当前的实现适合在测试的训练范围内进行微调，但不适合从头开始预训练模型。我们的初步结果表明，严格因果路由变体可以消除此限制；其设计和评估留待未来工作。</span><span class="original-text">In our experiments, the current HGA training implementation remains stable for fine-tuning runs of up to approximately 100 million training tokens. However, substantially longer training reveals a causal side channel caused by sharing routing decisions across tokens within a chunk. In particular, the routing set selected for a chunk depends on scores produced by multiple query positions. An earlier token can therefore obtain indirect information about later tokens from which remote chunks were selected or rejected. Although this signal is initially weak, after approximately 100–200 million training tokens the model begins to exploit it to improve next-token prediction, resulting in measurable causal leakage. Consequently, the current implementation is suitable for fine-tuning within the tested training horizon, but not for pretraining a model from scratch. We have preliminary results indicating that a strictly causal routing variant can remove this limitation; its design and evaluation are left for future work.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S6.SS2">
+<h3 class="ltx_title ltx_font_bold ltx_title_subsection"><span class="translated-text">6.2 实验限制</span><span class="original-text">6.2 Experimental limitations</span></h3>
+<div class="ltx_para" id="S6.SS2.p1">
+<p class="ltx_p" id="S6.SS2.p1.1"><span class="translated-text">主要的上下文扩展实验使用一个模型和 GPU，训练持续 100 个优化器步骤。仅当密集训练适合时，匹配的密集训练基线才可用； 8K–16K 的质量无法与同一设备上的密集训练相比。 TBPTT 截断了分段边界上的梯度，尽管后面的分段仍然关注早期的精确 K/V。本研究中实施了 NVMe 支持的层，但未进行基准测试。最后，路由推理路径仍然是研究实现，而不是生产服务引擎。</span><span class="original-text">The main context-scaling experiment uses one model and GPU, and training lasts 100 optimizer steps. A matched dense-trained baseline is available only where dense training fits; quality at 8K–16K cannot be compared to dense training on the same device. TBPTT truncates gradients across segment boundaries, although later segments still attend to earlier exact K/V. The NVMe-backed tier is implemented but not benchmarked in this study. Finally, the routed inference path remains a research implementation rather than a production serving engine.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S7">
+<h2 class="ltx_title ltx_font_bold ltx_title_section" style="font-size:120%;"><span class="translated-text">7  结论</span><span class="original-text">7  Conclusion</span></h2>
+<div class="ltx_para" id="S7.p1">
+<p class="ltx_p" id="S7.p1.1"><span class="translated-text">HGA、分段反向传播和分层 KV 存储将 GPU 工作集与完整的训练历史记录分开。在报告的 Qwen3-8B/16 GB 配置中，这将可行的训练环境从 2K 扩展到 16K，同时保持密集读出适配器质量并在重叠边界匹配密集吞吐量。 HGA训练通过该卡上的16,384个令牌进行验证，HGA评估通过该卡上的131,072个令牌进行验证；驻留块摘要使 VRAM 缓慢增长</span><span class="original-text">HGA, segment-wise backpropagation, and tiered KV storage separate the GPU working set from the full training history. In the reported Qwen3-8B/16 GB configuration, this extends the feasible training context from 2K to 16K while preserving dense-readout adapter quality and matching dense throughput at the overlap boundary. HGA training is validated through 16,384 tokens and HGA evaluation through 131,072 tokens on this card; the resident chunk summaries make VRAM grow gently as</span><math alttext="O(L/c)" class="ltx_Math" display="inline" id="S7.p1.1.m1" intent=":literal"><semantics><mrow><mi>O</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><mi>L</mi><mo>/</mo><mi>c</mi></mrow><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">O(L/c)</annotation></semantics></math><span class="translated-text">，因此 RAM 和 NVMe 容量设置了超出这些长度的实际限制。由于每个代币的路由历史预算保持大致恒定，而每个代币的密集工作增长，并且 HGA 在 2K 重叠处已经稍微快一些，因此我们预计随着上下文的增长，它会变得比密集注意力更快。微调后，适配器可以使用现有生成框架的标准密集注意力或 HGA 检索/生成；为后者服务的优化生产正在进行中。</span><span class="original-text">, so RAM and NVMe capacity set the practical limit beyond these lengths. Because the routed historical budget per token remains approximately constant while dense work per token grows, and HGA is already marginally faster at the 2K overlap, we expect it to become faster than dense attention as context grows. After fine-tuning, the adapter can use either standard dense attention with existing generation frameworks or HGA retrieval/generation; optimized production serving for the latter is ongoing work.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist">
+<li class="ltx_bibitem" id="bib.bib1">
+<span class="ltx_tag ltx_tag_bibitem">[1]</span>
+<span class="ltx_bibblock">
+F. Woernle, V. Fedosov, and A. Grinenko.
+
+</span>
+<span class="ltx_bibblock">Hierarchical Global Attention: Drop-In Exact-Token Routing for Pretrained Long-Context Transformers.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib1.1.1">arXiv:2606.30709</em>, 2026.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib2">
+<span class="ltx_tag ltx_tag_bibitem">[2]</span>
+<span class="ltx_bibblock">
+A. Yang et al.
+
+</span>
+<span class="ltx_bibblock">Qwen3 Technical Report.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib2.1.1">arXiv:2505.09388</em>, 2025.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib3">
+<span class="ltx_tag ltx_tag_bibitem">[3]</span>
+<span class="ltx_bibblock">
+T. Dettmers, A. Pagnoni, A. Holtzman, and L. Zettlemoyer.
+
+</span>
+<span class="ltx_bibblock">QLoRA: Efficient Finetuning of Quantized LLMs.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib3.1.1">NeurIPS</em>, 2023.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib4">
+<span class="ltx_tag ltx_tag_bibitem">[4]</span>
+<span class="ltx_bibblock">
+E. Hu et al.
+
+</span>
+<span class="ltx_bibblock">LoRA: Low-Rank Adaptation of Large Language Models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib4.1.1">ICLR</em>, 2022.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib5">
+<span class="ltx_tag ltx_tag_bibitem">[5]</span>
+<span class="ltx_bibblock">
+J. Rae, A. Potapenko, S. Jayakumar, T. Hillier, and T. Lillicrap.
+
+</span>
+<span class="ltx_bibblock">Compressive Transformers for Long-Range Sequence Modelling.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib5.1.1">ICLR</em>, 2020.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib6">
+<span class="ltx_tag ltx_tag_bibitem">[6]</span>
+<span class="ltx_bibblock">
+C.-Y. Hsieh et al.
+
+</span>
+<span class="ltx_bibblock">RULER: What’s the Real Context Window Size of Your Long-Context Language Models?
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib6.1.1">arXiv:2404.06654</em>, 2024.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib7">
+<span class="ltx_tag ltx_tag_bibitem">[7]</span>
+<span class="ltx_bibblock">
+T. Dao, D. Fu, S. Ermon, A. Rudra, and C. Ré.
+
+</span>
+<span class="ltx_bibblock">FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib7.1.1">NeurIPS</em>, 2022.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib8">
+<span class="ltx_tag ltx_tag_bibitem">[8]</span>
+<span class="ltx_bibblock">
+Y. Chen et al.
+
+</span>
+<span class="ltx_bibblock">LongLoRA: Efficient Fine-Tuning of Long-Context Large Language Models.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib8.1.1">arXiv:2309.12307</em>, 2023.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib9">
+<span class="ltx_tag ltx_tag_bibitem">[9]</span>
+<span class="ltx_bibblock">
+R. Williams and D. Zipser.
+
+</span>
+<span class="ltx_bibblock">An Efficient Gradient-Based Algorithm for On-Line Training of Recurrent Network Trajectories.
+
+</span>
+<span class="ltx_bibblock"><em class="ltx_emph ltx_font_italic" id="bib.bib9.1.1">Neural Computation</em>, 2(4):490–501, 1990.
+
+</span>
+</li>
+</ul>
+</section><div about="" class="ltx_rdf" content="Vladimir Fedosov, Aleksandr Sazhin, Artemiy Grinenko, Frank Woernle" property="dcterms:creator"></div>
+<div about="" class="ltx_rdf" content="Long-Context Fine-Tuning with Limited VRAM" property="dcterms:title"></div>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2607.15105v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer><footer class="ds-site-footer">
+<div class="ds-site-footer-grid">
+<div class="ds-site-footer-main">
+<div class="ds-site-footer-ack"><span class="translated-text">我们衷心感谢来自
+        我们的</span><span class="original-text">We gratefully acknowledge support from
+        our</span><strong><span class="translated-text">主要资助者</span><span class="original-text">major funders</span></strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong><span class="translated-text">成员机构</span><span class="original-text">member institutions</span></strong></a><span class="ack-member-inline" hidden="">, <strong></strong></span><span class="translated-text">,
+        以及所有贡献者。</span><span class="original-text">,
+        and all contributors.</span></div>
+<nav aria-label="Site navigation" class="ds-site-footer-links">
+<a href="https://info.arxiv.org/about"><span class="translated-text">关于</span><span class="original-text">About</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help"><span class="translated-text">帮助</span><span class="original-text">Help</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/contact.html"><span class="translated-text">联系方式</span><span class="original-text">Contact</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/subscribe"><span class="translated-text">订阅</span><span class="original-text">Subscribe</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/license/index.html"><span class="translated-text">版权</span><span class="original-text">Copyright</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/policies/privacy_policy.html"><span class="translated-text">隐私</span><span class="original-text">Privacy</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/web_accessibility.html"><span class="translated-text">无障碍</span><span class="original-text">Accessibility</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://status.arxiv.org" rel="noopener noreferrer" target="_blank"><span class="translated-text">运营状况</span><span class="original-text">Operational Status</span><span class="is-sr-only"><span class="translated-text">（在新选项卡中打开）</span><span class="original-text">(opens in new tab)</span></span></a>
+</nav>
+</div>
+<div aria-label="Major funders" class="ds-site-footer-funders">
+<div class="ds-site-footer-funders-label"><span class="translated-text">主要资金支持来自</span><span class="original-text">Major funding support from</span></div>
+<div class="ds-site-footer-funders-logos">
+<a class="ds-funder-link" href="https://www.simonsfoundation.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.sfi.org.bm/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation International" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation-international.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.schmidtsciences.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Schmidt Sciences" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/schmidt-sciences.png"/>
+</a>
+</div>
+</div>
+</div>
+</footer><div id="fixed-buttons-container">
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
