@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">告诉我为什么（除了堵塞）：城市驾驶数据的探索性因果分析</span><span class="original-text">teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 7 月 16 日星期四 17:33:26 生成 http://dlmf.nist.gov/LaTeXML/。</span><span class="original-text">Generated on Thu Jul 16 17:33:26 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+    // Pre-apply spinout-banner dismissal here, before the banner paints, so it
+    // never flashes in only to be hidden later by the deferred arxiv-header.js.
+    // Key matches arxiv-header.js: "arxiv-banner-dismissed:" + data-banner-name.
+    if (localStorage.getItem('arxiv-banner-dismissed:spinout-nonprofit')) {
+      document.documentElement.setAttribute("data-banner-dismissed", "");
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/><link href="https://arxiv.org/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626" media="screen" rel="stylesheet" type="text/css"/><style>
+  /* Banner pre-dismissal (set above before paint -> no flash-then-hide) and
+     reading-mode chrome hiding. */
+  html[data-banner-dismissed] .ds-announcement { display: none; }
+  html[data-reading-mode="enabled"] .ds-announcement,
+  html[data-reading-mode="enabled"] .ds-site-footer { display: none; }
+  /* Keep the announcement text dark on the Open-Blue band in both colour themes
+     (otherwise it inherits the paper's warm-wash text in dark mode and washes out). */
+  .ds-announcement-text { color: var(--arxiv-ink, #1c1a17); }
+</style>
+<script defer="" src="https://arxiv.org/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2607.15254" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2607.15254" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog><div aria-label="Announcement" class="ds-announcement" data-banner-name="spinout-nonprofit" id="announcement-banner" role="region">
+<img alt="" aria-hidden="true" class="ds-announcement-glyph" src="https://arxiv.org/static/base/1.0.1/images/icons/smileybones-small.svg"/>
+<span class="ds-announcement-text"><span class="translated-text">arXiv 现在是一个独立的非营利组织！</span><span class="original-text">arXiv is now an independent nonprofit!</span></span>
+<a class="ds-announcement-link" href="https://info.arxiv.org/about"><span class="translated-text">了解更多</span><span class="original-text">Learn more</span></a>
+<button aria-label="Dismiss announcement" class="ds-announcement-close" type="button">×</button>
+</div>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/"><img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/base/1.0.1/images/arxiv-logo-primary-light.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2607.15254v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2607.15254v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Data and System Overview</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS1" title="In 2 Data and System Overview ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.1 </span>Event dataset from dashcam annotations</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S2.SS2" title="In 2 Data and System Overview ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.2 </span>System architecture</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S2.SS2.SSS0.Px1" title="In 2.2 System architecture ‣ 2 Data and System Overview ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title">Offline.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S2.SS2.SSS0.Px2" title="In 2.2 System architecture ‣ 2 Data and System Overview ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title">Online.</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Methods</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In 3 Methods ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Causal graph learning with PC and bootstrap</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS2" title="In 3 Methods ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Query parsing and DAG-based adjustment selection</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S3.SS3" title="In 3 Methods ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.3 </span>Effect estimation and Causal Cards</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS3.SSS0.Px1" title="In 3.3 Effect estimation and Causal Cards ‣ 3 Methods ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title">Linear regression (OLS).</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS3.SSS0.Px2" title="In 3.3 Effect estimation and Causal Cards ‣ 3 Methods ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title">DoWhy estimator.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS3.SSS0.Px3" title="In 3.3 Effect estimation and Causal Cards ‣ 3 Methods ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title">Causal Cards.</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Case Studies</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In 4 Case Studies ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>Weather and traffic density at urban intersections</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS2" title="In 4 Case Studies ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2 </span>Peak-hour effects on highway traffic density</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS3" title="In 4 Case Studies ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3 </span>Sensitivity to adjustment and balancing choices</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S5" title="In teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Discussion and Limitations</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：arXiv.org 永久非独占许可证</span><span class="original-text">License: arXiv.org perpetual non-exclusive license</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2607.15254v1 [cs.AI] 2026 年 7 月 16 日</span><span class="original-text">arXiv:2607.15254v1 [cs.AI] 16 Jul 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">告诉我为什么（只不过是果酱）：</span><span class="original-text">teLLMe Why (Ain’t Nothing but a Jam):</span><br class="ltx_break"/><span class="translated-text">城市驾驶数据的探索性因果分析</span><span class="original-text">Exploratory Causal Analysis of Urban Driving Data</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+Qiwei Li  Jorge Ortiz 
+<br class="ltx_break"/>Rutgers University, Department of Electrical and Computer Engineering 
+<br class="ltx_break"/><span class="ltx_text ltx_font_typewriter" id="id1.1.id1">qiwei.li, jorge.ortiz@rutgers.edu</span>
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">交通机构现在可以访问大量视频数据来研究安全和拥堵情况。这些数据大多数是观察性的，是在没有干预的情况下收集的，这引发了诸如“降雨将如何改变交通密度？”等因果问题。很难回答。我们推出了 teLLMe，一个用于城市驾驶数据集探索性因果分析的系统。该系统从根据行车记录仪注释构建的结构化事件表开始，并将因果结构学习与 PC 算法、基于引导的稳定性检查以及使用线性回归和 DoWhy 的查询特定效果估计相结合。通过模式感知的法学硕士将自然语言问题映射到结构化因果查询，使用户能够指定治疗、结果和亚群。 teLLMe 返回一张“因果卡”，其中总结了效果估计、调整集、DAG 支持和假设，后面是简短的自然语言解释。对 BDD 派生的交通事件的案例研究表明，该系统可以呈现涉及天气、高峰时段和交通密度的合理关系，同时使不确定性和建模选择变得明确。该系统被设计为假设生成和专家推理的工具，而不是明确因果关系的来源。</span><span class="original-text">Traffic agencies now have access to large volumes of video-derived data for studying safety and congestion. Most of these data are observational and collected without interventions, which makes causal questions such as “How would rain change traffic density?” difficult to answer. We present teLLMe, a system for exploratory causal analysis of urban driving datasets. The system starts from a structured event table built from dashcam annotations and combines causal structure learning with the PC algorithm, bootstrap-based stability checks, and query-specific effect estimation using linear regression and DoWhy. Natural-language questions are mapped to structured causal queries through a schema-aware LLM, enabling users to specify treatments, outcomes, and subpopulations. teLLMe returns a “Causal Card” that summarizes effect estimates, adjustment sets, DAG support, and assumptions, followed by a short natural-language explanation. Case studies on BDD-derived traffic events show that the system can surface plausible relationships involving weather, peak hours, and traffic density, while making uncertainty and modeling choices explicit. The system is designed as a tool for hypothesis generation and expert reasoning rather than a source of definitive causal claims.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">城市现在通过行车记录仪、闭路电视和移动设备生成大量视频。
+这些流捕获日常交通行为和环境条件，并提供
+研究安全和拥堵的丰富信息源。分析师经常想问因果关系
+有关此数据的疑问。例如，下雨会降低城市十字路口的交通密度吗？
+或者高峰时段是否会增加特定走廊的需求。然而，大多数视频是
+观察和收集而没有干预，这使得很难区分
+混杂因素和暴露差异的真正因果效应。</span><span class="original-text">Cities now generate large amounts of video through dashcams, CCTV, and mobile devices.
+These streams capture routine traffic behavior and environmental conditions, and they offer a
+rich source of information for studying safety and congestion. Analysts often want to ask causal
+questions about this data. For example, does rain reduce traffic density at urban intersections,
+or do peak-hour periods increase demand on specific corridors. Most video, however, is
+observational and collected without interventions, which makes it difficult to distinguish
+genuine causal effects from confounding and exposure differences.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">将原始视频转换为支持因果推理的变量会带来一些挑战。
+底层数据不平衡且混乱：天气、一天中的时间、场景类型和需求
+模式以不受设计控制的方式交互，并且某些组合很少出现。
+分析管道本身是多阶段的。物体检测必须聚合成
+事件级特征，必须推断出这些变量之间合理的因果结构，
+必须针对具体问题估计治疗效果。任何由此产生的估计也必须
+传达给不需要解释因果图或调整规则的从业者。</span><span class="original-text">Turning raw video into variables that support causal reasoning introduces several challenges.
+The underlying data are imbalanced and confounded: weather, time of day, scene type, and demand
+patterns interact in ways that are not controlled by design, and some combinations occur rarely.
+The analysis pipeline itself is multi-stage. Object detections must be aggregated into
+event-level features, a plausible causal structure among those variables must be inferred,
+and treatment effects must be estimated for specific questions. Any resulting estimates must also
+be communicated to practitioners who are not expected to interpret causal graphs or adjustment rules.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">我们引入了 teLLMe，这是一个将这些阶段连接到单个工作流程中的系统，用于探索性的
+城市驾驶数据的因果分析。系统总体架构如图所示
+图</span><span class="original-text">We introduce teLLMe, a system that connects these stages into a single workflow for exploratory
+causal analysis of urban driving data. The overall architecture of the system is shown in
+Figure</span><a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">。 teLLMe 从行车记录仪构建的结构化事件表开始
+注释并使用 PC 算法学习一组精选变量的因果图
+域约束和引导重采样。用户用自然语言提出问题。模式感知
+LLM 将每个问题转化为正式的因果查询，指定治疗、结果和
+子群体过滤器。 teLLMe 然后根据学习到的图选择后门调整集，
+使用线性回归和 DoWhy 估计平均治疗效果。结果呈现在
+报告效应估计、调整集、图表证据和关键假设的因果卡，
+接下来是简短的自然语言解释。</span><span class="original-text">. teLLMe starts from a structured event table built from dashcam
+annotations and learns a causal graph over a curated set of variables using the PC algorithm with
+domain constraints and bootstrap resampling. Users pose questions in natural language. A schema-aware
+LLM translates each question into a formal causal query specifying treatments, outcomes, and
+subpopulation filters. teLLMe then selects a backdoor adjustment set based on the learned graph and
+estimates average treatment effects using linear regression and DoWhy. The results are presented in a
+Causal Card that reports effect estimates, adjustment sets, graph evidence, and key assumptions,
+followed by a brief natural-language explanation.</span></p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">teLLMe 的贡献是将这些组件集成到一个查询驱动的系统中，该系统
+使因果假设变得明确并保持工作流程的可重复性。目标是支持
+从大型视频数据集中生成和检查合理的因果假设
+为领域专家提供一种结构化的方式来询问证据。</span><span class="original-text">The contribution of teLLMe is the integration of these components into a query-driven system that
+makes causal assumptions explicit and keeps the workflow reproducible. The goal is to support the
+generation and inspection of plausible causal hypotheses from large video-derived datasets and to
+give domain experts a structured way to interrogate the evidence.</span></p>
+</div>
+<figure class="ltx_figure" id="S1.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="134" id="S1.F1.g1" src="https://arxiv.org/html/2607.15254v1/Images-Re-teLLMe/work-flow-updated.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span><span class="ltx_text" id="S1.F1.2.1" style="font-size:90%;">teLLMe has an offline phase that aggregates dashcam annotations into fixed-length
+windows, constructs a structured event table, and learns a causal graph using the
+PC algorithm with domain constraints and bootstrap stability. Online, a schema-aware
+LLM converts natural-language questions into structured causal queries specifying
+treatment, control, outcome, and filters. The system selects a backdoor adjustment
+set from the learned DAG, filters the event table, and estimates effects with linear
+regression and DoWhy. It returns a Causal Card with effect estimates, adjustment sets,
+DAG evidence, and assumptions, followed by a brief explanation.
+</span></figcaption>
+</figure>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">数据和系统概述</span><span class="original-text">Data and System Overview</span></h2>
+<section class="ltx_subsection" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span><span class="translated-text">来自行车记录仪注释的事件数据集</span><span class="original-text">Event dataset from dashcam annotations</span></h3>
+<div class="ltx_para" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.1"><span class="translated-text">我们使用由大型行车记录仪语料库（例如 BDD100K）构建的结构化事件表</span><span class="original-text">We work with a structured event table built from a large dashcam corpus such as BDD100K</span><cite class="ltx_cite ltx_citemacro_citep">(Xu<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib19" title="End-to-end learning of driving models from large-scale video datasets">2017</a>)</cite><span class="translated-text">。
+原始检测和元数据被聚合到固定长度的窗口中，每个窗口由一行表示
+天气标签、场景类型、交通密度、高峰时段状态和基本时间指标
+（例如，工作日/周末和一天中的时间段）。交通密度计算为检测到的车辆数量
+每分钟。我们删除缺少标签的窗口并剪裁极值以避免异常值。
+由于天气和场景类型的某些组合很少见，因此我们使用以下方法创建一个平衡子集
+主要分析采用分层抽样，并保留完整数据集进行敏感性检查。</span><span class="original-text">.
+Raw detections and metadata are aggregated into fixed-length windows, each represented by a row with
+weather labels, scene type, traffic density, peak-hour status, and basic temporal indicators
+(e.g., weekday/weekend and time-of-day bins). Traffic density is computed as the count of detected vehicles
+per minute. We drop windows with missing labels and clip extreme values to avoid outliers.
+Because some combinations of weather and scene type are rare, we create a balanced subset using
+stratified sampling for the main analyses and retain the full dataset for sensitivity checks.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span><span class="translated-text">系统架构</span><span class="original-text">System architecture</span></h3>
+<div class="ltx_para" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1 Introduction ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">提供系统架构的概述。 teLLMe 围绕两个相互关联的阶段进行组织：离线发现阶段，为因果推理构建结构基础；在线查询阶段，将用户问题转化为结构化因果分析。离线阶段准备数据并学习具有稳定性信息的因果图，在线阶段解析用户查询，选择调整集并估计效果，为每个查询生成因果卡。</span><span class="original-text">provides an overview of the system architecture. teLLMe is organized around two linked stages: an offline discovery phase that builds the structural substrate for causal reasoning, and an online query phase that turns user questions into structured causal analyses. The offline stage prepares the data and learns a causal graph with stability information, and the online stage parses user queries, selects adjustment sets, and estimates effects, producing a Causal Card for each query.</span></p>
+</div>
+<section class="ltx_paragraph" id="S2.SS2.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">离线。</span><span class="original-text">Offline.</span></h4>
+<div class="ltx_para" id="S2.SS2.SSS0.Px1.p1">
+<p class="ltx_p" id="S2.SS2.SSS0.Px1.p1.1"><span class="translated-text">我们标准化变量，使用 PC 算法学习所选特征的因果图</span><span class="original-text">We standardize variables, learn a causal graph over selected features using the PC algorithm</span><cite class="ltx_cite ltx_citemacro_citep">(Spirtes<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib2" title="Causation, prediction, and search">2000</a>; Kalisch and Bühlmann, <a class="ltx_ref" href="#bib.bib20" title="Estimating high-dimensional directed acyclic graphs with the pc-algorithm">2007</a>)</cite><span class="translated-text">，应用域约束来排除不合理的情况
+方向，并运行引导重采样以记录边缘稳定性。由此产生的 DAG 和稳定性
+分数被存储以供以后使用。</span><span class="original-text">, apply domain constraints to rule out implausible
+directions, and run bootstrap resampling to record edge stability. The resulting DAG and stability
+scores are stored for later use.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S2.SS2.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">在线。</span><span class="original-text">Online.</span></h4>
+<div class="ltx_para" id="S2.SS2.SSS0.Px2.p1">
+<p class="ltx_p" id="S2.SS2.SSS0.Px2.p1.1"><span class="translated-text">用户提供自然语言问题。模式感知 LLM 将其转换为结构化因果查询
+具有治疗、结果和可选过滤器。系统根据以下条件选择后门调整集
+学习到的 DAG，相应地过滤事件表，并使用以下方法估计平均治疗效果
+线性回归和 DoWhy</span><span class="original-text">Users provide a natural-language question. A schema-aware LLM converts it into a structured causal query
+with a treatment, outcome, and optional filters. The system selects a backdoor adjustment set based on
+the learned DAG, filters the event table accordingly, and estimates an average treatment effect using
+linear regression and DoWhy</span><cite class="ltx_cite ltx_citemacro_citep">(Sharma and Kiciman, <a class="ltx_ref" href="#bib.bib21" title="DoWhy: an end-to-end library for causal inference">2020</a>)</cite><span class="translated-text">。输出是一个因果卡，报告效果估计，
+调整集、图表证据和假设，以及简短的自然语言解释。</span><span class="original-text">. The output is a Causal Card that reports effect estimates,
+adjustment sets, graph evidence, and assumptions, along with a short natural-language explanation.</span></p>
+</div>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">方法</span><span class="original-text">Methods</span></h2>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">使用 PC 和 bootstrap 进行因果图学习</span><span class="original-text">Causal graph learning with PC and bootstrap</span></h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">让</span><span class="original-text">Let</span><math alttext="V" class="ltx_Math" display="inline" id="S3.SS1.p1.1.m1" intent=":literal"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math><span class="translated-text">表示被认为与因果分析相关的事件级变量的子集，例如</span><span class="original-text">denote a subset of event-level variables deemed relevant for causal analysis, such as</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.Ex1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="V=\{\texttt{weather},\texttt{is\_peak\_hour},\texttt{traffic\_density},\texttt{scene\_type},\texttt{weekday},\texttt{time\_bin}\}." class="ltx_Math" display="block" id="S3.Ex1.m1" intent=":literal"><semantics><mrow><mrow><mi>V</mi><mo>=</mo><mrow><mo stretchy="false">{</mo><mtext class="ltx_mathvariant_monospace">weather</mtext><mo>,</mo><mtext class="ltx_mathvariant_monospace">is_peak_hour</mtext><mo>,</mo><mtext class="ltx_mathvariant_monospace">traffic_density</mtext><mo>,</mo><mtext class="ltx_mathvariant_monospace">scene_type</mtext><mo>,</mo><mtext class="ltx_mathvariant_monospace">weekday</mtext><mo>,</mo><mtext class="ltx_mathvariant_monospace">time_bin</mtext><mo stretchy="false">}</mo></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">V=\{\texttt{weather},\texttt{is\_peak\_hour},\texttt{traffic\_density},\texttt{scene\_type},\texttt{weekday},\texttt{time\_bin}\}.</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS1.p1.3"><span class="translated-text">我们将事件表视为来自联合分布的样本</span><span class="original-text">We treat the event table as samples from a joint distribution over</span><math alttext="V" class="ltx_Math" display="inline" id="S3.SS1.p1.2.m1" intent=":literal"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math><span class="translated-text">目标是学习有向无环图（DAG）</span><span class="original-text">and aim to learn a directed acyclic graph (DAG)</span><math alttext="G" class="ltx_Math" display="inline" id="S3.SS1.p1.3.m2" intent=":literal"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math><span class="translated-text">对这些变量之间的候选因果关系进行编码。</span><span class="original-text">that encodes candidate causal relationships among these variables.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p2">
+<p class="ltx_p" id="S3.SS1.p2.1"><span class="translated-text">我们使用PC算法</span><span class="original-text">We use the PC algorithm</span><cite class="ltx_cite ltx_citemacro_citep">(Spirtes<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib2" title="Causation, prediction, and search">2000</a>; Kalisch and Bühlmann, <a class="ltx_ref" href="#bib.bib20" title="Estimating high-dimensional directed acyclic graphs with the pc-algorithm">2007</a>)</cite><span class="translated-text">如实施于</span><span class="original-text">as implemented in</span><span class="ltx_text ltx_font_typewriter" id="S3.SS1.p2.1.1"><span class="translated-text">PGMPY</span><span class="original-text">pgmpy</span></span><span class="translated-text">。 PC从完全无向图开始</span><span class="original-text">. PC starts from a complete undirected graph over</span><math alttext="V" class="ltx_Math" display="inline" id="S3.SS1.p2.1.m1" intent=":literal"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math><span class="translated-text">并根据条件独立性测试迭代地删除边缘，然后使用一组逻辑规则定向剩余的边缘。我们通过整合领域知识</span><span class="original-text">and iteratively removes edges based on conditional independence tests, then orients the remaining edges using a set of logical rules. We incorporate domain knowledge through</span><em class="ltx_emph ltx_font_italic" id="S3.SS1.p2.1.2"><span class="translated-text">禁边</span><span class="original-text">forbidden edges</span></em><span class="translated-text">（例如，不允许边缘</span><span class="original-text">(e.g., disallowing edges from</span><span class="ltx_text ltx_font_typewriter" id="S3.SS1.p2.1.3"><span class="translated-text">交通密度</span><span class="original-text">traffic_density</span></span> to <span class="ltx_text ltx_font_typewriter" id="S3.SS1.p2.1.4"><span class="translated-text">天气</span><span class="original-text">weather</span></span><span class="translated-text">）并且，如果需要的话，</span><span class="original-text">) and, if desired,</span><em class="ltx_emph ltx_font_italic" id="S3.SS1.p2.1.5"><span class="translated-text">所需的边缘</span><span class="original-text">required edges</span></em><span class="translated-text">。用于 PC 的所有变量都根据所选独立性测试的需要进行离散化或编码。</span><span class="original-text">. All variables used for PC are discretized or encoded as needed for the chosen independence tests.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p3">
+<p class="ltx_p" id="S3.SS1.p3.6"><span class="translated-text">为了量化稳健性，我们执行简单的引导稳定性分析</span><span class="original-text">To quantify robustness, we perform a simple bootstrap stability analysis</span><cite class="ltx_cite ltx_citemacro_citep">(Spirtes<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib2" title="Causation, prediction, and search">2000</a>; Kalisch and Bühlmann, <a class="ltx_ref" href="#bib.bib20" title="Estimating high-dimensional directed acyclic graphs with the pc-algorithm">2007</a>)</cite><span class="translated-text">。我们画</span><span class="original-text">. We draw</span><math alttext="B=20" class="ltx_Math" display="inline" id="S3.SS1.p3.1.m1" intent=":literal"><semantics><mrow><mi>B</mi><mo>=</mo><mn>20</mn></mrow><annotation encoding="application/x-tex">B=20</annotation></semantics></math><span class="translated-text">事件表的引导重新采样（带替换），在每次重新采样时运行 PC，并记录每个有向边出现的频率。这会产生稳定性分数</span><span class="original-text">bootstrap resamples of the event table (with replacement), run PC on each resample, and record how often each directed edge appears. This yields a stability score</span><math alttext="s(e)\in[0,1]" class="ltx_Math" display="inline" id="S3.SS1.p3.2.m2" intent=":literal"><semantics><mrow><mrow><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>e</mi><mo stretchy="false">)</mo></mrow></mrow><mo>∈</mo><mrow><mo stretchy="false">[</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo stretchy="false">]</mo></mrow></mrow><annotation encoding="application/x-tex">s(e)\in[0,1]</annotation></semantics></math><span class="translated-text">对于每条边</span><span class="original-text">for each edge</span><math alttext="e" class="ltx_Math" display="inline" id="S3.SS1.p3.3.m3" intent=":literal"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math> in <math alttext="G" class="ltx_Math" display="inline" id="S3.SS1.p3.4.m4" intent=":literal"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math><span class="translated-text">，我们稍后会在因果卡中公开。直观上，边缘具有高</span><span class="original-text">, which we later expose in the Causal Cards. Intuitively, edges with high</span><math alttext="s(e)" class="ltx_Math" display="inline" id="S3.SS1.p3.5.m5" intent=":literal"><semantics><mrow><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>e</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">s(e)</annotation></semantics></math><span class="translated-text">在重采样下更稳定，而低边缘</span><span class="original-text">are more stable under resampling, while edges with low</span><math alttext="s(e)" class="ltx_Math" display="inline" id="S3.SS1.p3.6.m6" intent=":literal"><semantics><mrow><mi>s</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>e</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">s(e)</annotation></semantics></math><span class="translated-text">应谨慎对待。</span><span class="original-text">should be treated with caution.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span><span class="translated-text">查询解析和基于DAG的调整选择</span><span class="original-text">Query parsing and DAG-based adjustment selection</span></h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.7"><span class="translated-text">用户通过自然语言问题与 teLLMe 进行交互。为了在自由文本和固定数据集模式之间架起桥梁，我们定义了一个结构化的</span><span class="original-text">Users interact with teLLMe through natural-language questions. To bridge between free text and the fixed dataset schema, we define a structured</span><em class="ltx_emph ltx_font_italic" id="S3.SS2.p1.7.1"><span class="translated-text">因果查询</span><span class="original-text">Causal Query</span></em>:</p>
+<table class="ltx_equation ltx_eqn_table" id="S3.Ex2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="Q=(T,t^{\mathrm{treated}},t^{\mathrm{control}},Y,C)," class="ltx_Math" display="block" id="S3.Ex2.m1" intent=":literal"><semantics><mrow><mrow><mi>Q</mi><mo>=</mo><mrow><mo stretchy="false">(</mo><mi>T</mi><mo>,</mo><msup><mi>t</mi><mi>treated</mi></msup><mo>,</mo><msup><mi>t</mi><mi>control</mi></msup><mo>,</mo><mi>Y</mi><mo>,</mo><mi>C</mi><mo stretchy="false">)</mo></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">Q=(T,t^{\mathrm{treated}},t^{\mathrm{control}},Y,C),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS2.p1.6"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="T" class="ltx_Math" display="inline" id="S3.SS2.p1.1.m1" intent=":literal"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math><span class="translated-text">是治疗变量，</span><span class="original-text">is the treatment variable,</span><math alttext="t^{\mathrm{treated}}" class="ltx_Math" display="inline" id="S3.SS2.p1.2.m2" intent=":literal"><semantics><msup><mi>t</mi><mi>treated</mi></msup><annotation encoding="application/x-tex">t^{\mathrm{treated}}</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="t^{\mathrm{control}}" class="ltx_Math" display="inline" id="S3.SS2.p1.3.m3" intent=":literal"><semantics><msup><mi>t</mi><mi>control</mi></msup><annotation encoding="application/x-tex">t^{\mathrm{control}}</annotation></semantics></math><span class="translated-text">是两个值</span><span class="original-text">are two values of</span><math alttext="T" class="ltx_Math" display="inline" id="S3.SS2.p1.4.m4" intent=":literal"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>, <math alttext="Y" class="ltx_Math" display="inline" id="S3.SS2.p1.5.m5" intent=":literal"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math><span class="translated-text">是结果变量，并且</span><span class="original-text">is the outcome variable, and</span><math alttext="C" class="ltx_Math" display="inline" id="S3.SS2.p1.6.m6" intent=":literal"><semantics><mi>C</mi><annotation encoding="application/x-tex">C</annotation></semantics></math><span class="translated-text">是一组条件约束（例如，</span><span class="original-text">is a set of conditioning constraints (e.g.,</span><span class="ltx_text ltx_font_typewriter" id="S3.SS2.p1.6.1"><span class="translated-text">场景类型</span><span class="original-text">scene_type</span></span><span class="translated-text">= 交叉点，</span><span class="original-text">= intersection,</span><span class="ltx_text ltx_font_typewriter" id="S3.SS2.p1.6.2">is_peak_hour</span><span class="translated-text">= 1）。</span><span class="original-text">= 1).</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.p2">
+<p class="ltx_p" id="S3.SS2.p2.1"><span class="translated-text">我们使用 (i) 数据集模式（包括变量名称、类型和允许的分类值）和 (ii) 用户问题提示 LLM，并指示其输出</span><span class="original-text">We prompt an LLM with (i) the dataset schema, including variable names, types, and allowed categorical values, and (ii) the user question, and instruct it to output</span><math alttext="Q" class="ltx_Math" display="inline" id="S3.SS2.p2.1.m1" intent=":literal"><semantics><mi>Q</mi><annotation encoding="application/x-tex">Q</annotation></semantics></math><span class="translated-text">采用受约束的 JSON 格式。然后根据模式验证生成的规范：我们强制执行严格的类型检查，拒绝对未定义变量的引用，并丢弃无效的分类值。如果验证失败，系统将返回一个面向用户的错误，并可选择回退到模板子集的简单的基于规则的解析器。这种模式感知解析层对于防止幻列和保持因果查询基于实际数据集至关重要。</span><span class="original-text">in a constrained JSON format. The resulting specification is then validated against the schema: we enforce strict type checking, reject references to undefined variables, and discard invalid categorical values. If validation fails, the system returns a user-facing error and optionally falls back to a simple rule-based parser for a subset of templates. This schema-aware parsing layer is crucial for preventing hallucinated columns and keeping causal queries grounded in the actual dataset.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.p3">
+<p class="ltx_p" id="S3.SS2.p3.10"><span class="translated-text">给定</span><span class="original-text">Given</span><math alttext="Q" class="ltx_Math" display="inline" id="S3.SS2.p3.1.m1" intent=":literal"><semantics><mi>Q</mi><annotation encoding="application/x-tex">Q</annotation></semantics></math><span class="translated-text">和学习到的 DAG</span><span class="original-text">and the learned DAG</span><math alttext="G" class="ltx_Math" display="inline" id="S3.SS2.p3.2.m2" intent=":literal"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math><span class="translated-text">，我们选择一个后门调整集</span><span class="original-text">, we select a backdoor adjustment set</span><math alttext="Z" class="ltx_Math" display="inline" id="S3.SS2.p3.3.m3" intent=":literal"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math><span class="translated-text">对于治疗-结果对</span><span class="original-text">for the treatment–outcome pair</span><math alttext="(T,Y)" class="ltx_Math" display="inline" id="S3.SS2.p3.4.m4" intent=":literal"><semantics><mrow><mo stretchy="false">(</mo><mi>T</mi><mo>,</mo><mi>Y</mi><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">(T,Y)</annotation></semantics></math><span class="translated-text">。在最简单的实现中，我们从协变量的候选列表开始（例如，</span><span class="original-text">. In the simplest implementation, we start from a candidate list of covariates (e.g.,</span><span class="ltx_text ltx_font_typewriter" id="S3.SS2.p3.10.1"><span class="translated-text">场景类型</span><span class="original-text">scene_type</span></span>, <span class="ltx_text ltx_font_typewriter" id="S3.SS2.p3.10.2"><span class="translated-text">工作日</span><span class="original-text">weekday</span></span>, <span class="ltx_text ltx_font_typewriter" id="S3.SS2.p3.10.3"><span class="translated-text">时间_bin</span><span class="original-text">time_bin</span></span><span class="translated-text">）并包括那些父母</span><span class="original-text">) and include those that are parents of</span><math alttext="T" class="ltx_Math" display="inline" id="S3.SS2.p3.5.m5" intent=":literal"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math> or <math alttext="Y" class="ltx_Math" display="inline" id="S3.SS2.p3.6.m6" intent=":literal"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math> in <math alttext="G" class="ltx_Math" display="inline" id="S3.SS2.p3.7.m7" intent=":literal"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math><span class="translated-text">同时避免后代</span><span class="original-text">while avoiding descendants of</span><math alttext="T" class="ltx_Math" display="inline" id="S3.SS2.p3.8.m8" intent=":literal"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math><span class="translated-text">。该启发式近似于后门调整集</span><span class="original-text">. This heuristic approximates a backdoor adjustment set</span><cite class="ltx_cite ltx_citemacro_citep">(Pearl, <a class="ltx_ref" href="#bib.bib1" title="Causality">2009</a>)</cite><span class="translated-text">并对我们的建模选择进行编码，以决定在估计效果时要以哪些变量为条件</span><span class="original-text">and encodes our modeling choice about which variables to condition on when estimating the effect of</span><math alttext="T" class="ltx_Math" display="inline" id="S3.SS2.p3.9.m9" intent=":literal"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math> on <math alttext="Y" class="ltx_Math" display="inline" id="S3.SS2.p3.10.m10" intent=":literal"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span><span class="translated-text">效应估计和因果卡</span><span class="original-text">Effect estimation and Causal Cards</span></h3>
+<div class="ltx_para" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.1"><span class="translated-text">对于过滤后的数据集</span><span class="original-text">For the filtered dataset</span><math alttext="\mathcal{D}_{Q}" class="ltx_Math" display="inline" id="S3.SS3.p1.1.m1" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">𝒟</mi><mi>Q</mi></msub><annotation encoding="application/x-tex">\mathcal{D}_{Q}</annotation></semantics></math><span class="translated-text">，我们估计平均治疗效果</span><span class="original-text">, we estimate an average treatment effect</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.Ex3">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\tau_{Q}=\mathbb{E}[Y\mid do(T=t^{\mathrm{treated}}),C]-\mathbb{E}[Y\mid do(T=t^{\mathrm{control}}),C]," class="ltx_Math" display="block" id="S3.Ex3.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>τ</mi><mi>Q</mi></msub><mo>=</mo><mrow><mrow><mi>𝔼</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">[</mo><mrow><mi>Y</mi><mo>∣</mo><mrow><mrow><mi>d</mi><mo lspace="0em" rspace="0em">​</mo><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><mi>T</mi><mo>=</mo><msup><mi>t</mi><mi>treated</mi></msup></mrow><mo stretchy="false">)</mo></mrow></mrow><mo>,</mo><mi>C</mi></mrow></mrow><mo stretchy="false">]</mo></mrow></mrow><mo>−</mo><mrow><mi>𝔼</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">[</mo><mrow><mi>Y</mi><mo>∣</mo><mrow><mrow><mi>d</mi><mo lspace="0em" rspace="0em">​</mo><mi>o</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><mi>T</mi><mo>=</mo><msup><mi>t</mi><mi>control</mi></msup></mrow><mo stretchy="false">)</mo></mrow></mrow><mo>,</mo><mi>C</mi></mrow></mrow><mo stretchy="false">]</mo></mrow></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\tau_{Q}=\mathbb{E}[Y\mid do(T=t^{\mathrm{treated}}),C]-\mathbb{E}[Y\mid do(T=t^{\mathrm{control}}),C],</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS3.p1.3"><span class="translated-text">使用编码的假设</span><span class="original-text">using the assumptions encoded in</span><math alttext="G" class="ltx_Math" display="inline" id="S3.SS3.p1.2.m1" intent=":literal"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math><span class="translated-text">和选定的调整集</span><span class="original-text">and the selected adjustment set</span><math alttext="Z" class="ltx_Math" display="inline" id="S3.SS3.p1.3.m2" intent=":literal"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>.</p>
+</div>
+<section class="ltx_paragraph" id="S3.SS3.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">线性回归（OLS）。</span><span class="original-text">Linear regression (OLS).</span></h4>
+<div class="ltx_para" id="S3.SS3.SSS0.Px1.p1">
+<p class="ltx_p" id="S3.SS3.SSS0.Px1.p1.4"><span class="translated-text">我们拟合一个普通的最小二乘模型</span><span class="original-text">We fit an ordinary least squares model</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.Ex4">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="Y=\alpha+\beta T+\gamma^{\top}Z+\varepsilon," class="ltx_Math" display="block" id="S3.Ex4.m1" intent=":literal"><semantics><mrow><mrow><mi>Y</mi><mo>=</mo><mrow><mi>α</mi><mo>+</mo><mrow><mi>β</mi><mo lspace="0em" rspace="0em">​</mo><mi>T</mi></mrow><mo>+</mo><mrow><msup><mi>γ</mi><mo>⊤</mo></msup><mo lspace="0em" rspace="0em">​</mo><mi>Z</mi></mrow><mo>+</mo><mi>ε</mi></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">Y=\alpha+\beta T+\gamma^{\top}Z+\varepsilon,</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS3.SSS0.Px1.p1.3"><span class="translated-text">与分类变量</span><span class="original-text">with categorical variables in</span><math alttext="Z" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.1.m1" intent=":literal"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math><span class="translated-text">独热编码。系数</span><span class="original-text">one-hot encoded. The coefficient</span><math alttext="\beta" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.2.m2" intent=":literal"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math><span class="translated-text">被视为
+的估计</span><span class="original-text">is taken as the
+estimate of</span><math alttext="\tau_{Q}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.3.m3" intent=":literal"><semantics><msub><mi>τ</mi><mi>Q</mi></msub><annotation encoding="application/x-tex">\tau_{Q}</annotation></semantics></math><span class="translated-text">，我们报告其点估计、标准误差和置信度
+间隔。</span><span class="original-text">, and we report its point estimate, standard error, and confidence
+interval.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS3.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">DoWhy 估计器。</span><span class="original-text">DoWhy estimator.</span></h4>
+<div class="ltx_para" id="S3.SS3.SSS0.Px2.p1">
+<p class="ltx_p" id="S3.SS3.SSS0.Px2.p1.5"><span class="translated-text">我们还使用 DoWhy</span><span class="original-text">We also use DoWhy</span><cite class="ltx_cite ltx_citemacro_citep">(Sharma and Kiciman, <a class="ltx_ref" href="#bib.bib21" title="DoWhy: an end-to-end library for causal inference">2020</a>)</cite><span class="translated-text">构建一个</span><span class="original-text">to construct a</span><em class="ltx_emph ltx_font_italic" id="S3.SS3.SSS0.Px2.p1.5.1"><span class="translated-text">因果模型</span><span class="original-text">CausalModel</span></em><span class="translated-text">来自</span><span class="original-text">from</span><math alttext="\mathcal{D}_{Q}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px2.p1.1.m1" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">𝒟</mi><mi>Q</mi></msub><annotation encoding="application/x-tex">\mathcal{D}_{Q}</annotation></semantics></math><span class="translated-text">, 治疗</span><span class="original-text">, the treatment</span><math alttext="T" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px2.p1.2.m2" intent=":literal"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math><span class="translated-text">，结果</span><span class="original-text">, the outcome</span><math alttext="Y" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px2.p1.3.m3" intent=":literal"><semantics><mi>Y</mi><annotation encoding="application/x-tex">Y</annotation></semantics></math><span class="translated-text">，以及 DOT 版本
+学习到的有向无环图</span><span class="original-text">, and a DOT version of the
+learned DAG</span><math alttext="G" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px2.p1.4.m4" intent=":literal"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math><span class="translated-text">。该模型识别后门估计并通过以下方式估计它
+线性回归，给出第二个估计</span><span class="original-text">. The model identifies a backdoor estimand and estimates it via
+linear regression, giving a second estimate of</span><math alttext="\tau_{Q}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px2.p1.5.m5" intent=":literal"><semantics><msub><mi>τ</mi><mi>Q</mi></msub><annotation encoding="application/x-tex">\tau_{Q}</annotation></semantics></math><span class="translated-text">在同一个下
+调整设置。 DoWhy 支持其他估算器，包括
+逆倾向和双稳健方法，但我们使用线性回归
+与 OLS 基线的一致性。</span><span class="original-text">under the same
+adjustment set. DoWhy supports additional estimators, including
+inverse-propensity and doubly robust methods, but we use linear regression for
+consistency with the OLS baseline.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.SSS0.Px2.p2">
+<p class="ltx_p" id="S3.SS3.SSS0.Px2.p2.1"><span class="translated-text">（可选）我们引导</span><span class="original-text">Optionally, we bootstrap</span><math alttext="\mathcal{D}_{Q}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px2.p2.1.m1" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">𝒟</mi><mi>Q</mi></msub><annotation encoding="application/x-tex">\mathcal{D}_{Q}</annotation></semantics></math><span class="translated-text">检查估计的分布
+所选估计器的效果。这给出了稳定性的经验测量
+超出通常的标准误差。</span><span class="original-text">to examine the spread of the estimated
+effect for the chosen estimator. This gives an empirical measure of stability
+beyond the usual standard errors.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="199" id="S3.F2.g1" src="https://arxiv.org/html/2607.15254v1/Images-Re-teLLMe/causal-card-design.png" width="329"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Example Causal Card summarizing the query, effect estimate, adjustment set,
+DAG information, and a short explanation.</figcaption>
+</figure>
+</section>
+<section class="ltx_paragraph" id="S3.SS3.SSS0.Px3">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">因果卡。</span><span class="original-text">Causal Cards.</span></h4>
+<div class="ltx_para" id="S3.SS3.SSS0.Px3.p1">
+<p class="ltx_p" id="S3.SS3.SSS0.Px3.p1.1"><span class="translated-text">每个查询都总结在一个紧凑的因果卡中，其中包含已解析的变量，
+效果估计和置信区间、处理/对照样本大小、任何直接</span><span class="original-text">Each query is summarized in a compact Causal Card with the parsed variables, the
+effect estimate and confidence interval, treated/control sample sizes, any direct</span><math alttext="T\to Y" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px3.p1.1.m1" intent=":literal"><semantics><mrow><mi>T</mi><mo stretchy="false">→</mo><mi>Y</mi></mrow><annotation encoding="application/x-tex">T\to Y</annotation></semantics></math><span class="translated-text">边缘及其稳定性，以及相关注意事项。简短的自然语言
+解释是从这些字段生成的。</span><span class="original-text">edge and its stability, and relevant caveats. A brief natural-language
+explanation is generated from these fields.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS3.SSS0.Px3.p2">
+<p class="ltx_p" id="S3.SS3.SSS0.Px3.p2.1"><span class="translated-text">然后从卡片中生成简短的自然语言解释
+非技术用户。</span><span class="original-text">A short natural-language explanation is then generated from the card for
+non-technical users.</span></p>
+</div>
+<figure class="ltx_figure" id="S3.F3">
+<div class="ltx_flex_figure">
+<div class="ltx_flex_cell ltx_flex_size_1">
+<table class="ltx_tabular ltx_figure_panel ltx_guessed_headers ltx_align_middle" id="S3.F3.1">
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.F3.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_tt" id="S3.F3.1.1.1.1"><span class="ltx_text" id="S3.F3.1.1.1.1.1" style="font-size:90%;">Estimator</span></th>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S3.F3.1.1.1.2"><span class="ltx_text" id="S3.F3.1.1.1.2.1" style="font-size:90%;">ATE</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S3.F3.1.1.1.3"><span class="ltx_text" id="S3.F3.1.1.1.3.1" style="font-size:90%;">95% CI</span></td>
+<td class="ltx_td ltx_align_center ltx_border_tt" id="S3.F3.1.1.1.4"><span class="ltx_text" id="S3.F3.1.1.1.4.1" style="font-size:90%;">N (treated/control)</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.F3.1.2.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t" id="S3.F3.1.2.2.1"><span class="ltx_text" id="S3.F3.1.2.2.1.1" style="font-size:90%;">OLS</span></th>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S3.F3.1.2.2.2"><span class="ltx_text" id="S3.F3.1.2.2.2.1" style="font-size:90%;">0.024</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S3.F3.1.2.2.3"><span class="ltx_text" id="S3.F3.1.2.2.3.1" style="font-size:90%;">[0.014, 0.034]</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S3.F3.1.2.2.4"><span class="ltx_text" id="S3.F3.1.2.2.4.1" style="font-size:90%;">4,268 / 6,154</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="ltx_flex_break"></div>
+<div class="ltx_flex_cell ltx_flex_size_1">
+<table class="ltx_tabular ltx_centering ltx_figure_panel ltx_guessed_headers ltx_align_middle" id="S3.F3.2">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.F3.2.1.1">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.F3.2.1.1.1"><span class="ltx_text" id="S3.F3.2.1.1.1.1" style="font-size:90%;">is_peak_hour</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S3.F3.2.1.1.2"><span class="ltx_text" id="S3.F3.2.1.1.2.1" style="font-size:90%;">count</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S3.F3.2.1.1.3"><span class="ltx_text" id="S3.F3.2.1.1.3.1" style="font-size:90%;">mean</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S3.F3.2.1.1.4"><span class="ltx_text" id="S3.F3.2.1.1.4.1" style="font-size:90%;">std</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S3.F3.2.1.1.5"><span class="ltx_text" id="S3.F3.2.1.1.5.1" style="font-size:90%;">p25</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S3.F3.2.1.1.6"><span class="ltx_text" id="S3.F3.2.1.1.6.1" style="font-size:90%;">median</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S3.F3.2.1.1.7"><span class="ltx_text" id="S3.F3.2.1.1.7.1" style="font-size:90%;">p75</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S3.F3.2.1.1.8"><span class="ltx_text" id="S3.F3.2.1.1.8.1" style="font-size:90%;">min</span></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S3.F3.2.1.1.9"><span class="ltx_text" id="S3.F3.2.1.1.9.1" style="font-size:90%;">max</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.F3.2.2.1">
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.F3.2.2.1.1"><span class="ltx_text" id="S3.F3.2.2.1.1.1" style="font-size:90%;">0</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S3.F3.2.2.1.2"><span class="ltx_text" id="S3.F3.2.2.1.2.1" style="font-size:90%;">6154</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S3.F3.2.2.1.3"><span class="ltx_text" id="S3.F3.2.2.1.3.1" style="font-size:90%;">0.3827</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S3.F3.2.2.1.4"><span class="ltx_text" id="S3.F3.2.2.1.4.1" style="font-size:90%;">0.2466</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S3.F3.2.2.1.5"><span class="ltx_text" id="S3.F3.2.2.1.5.1" style="font-size:90%;">0.20</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S3.F3.2.2.1.6"><span class="ltx_text" id="S3.F3.2.2.1.6.1" style="font-size:90%;">0.35</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S3.F3.2.2.1.7"><span class="ltx_text" id="S3.F3.2.2.1.7.1" style="font-size:90%;">0.50</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S3.F3.2.2.1.8"><span class="ltx_text" id="S3.F3.2.2.1.8.1" style="font-size:90%;">0</span></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S3.F3.2.2.1.9"><span class="ltx_text" id="S3.F3.2.2.1.9.1" style="font-size:90%;">1</span></td>
+</tr>
+<tr class="ltx_tr" id="S3.F3.2.3.2">
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.F3.2.3.2.1"><span class="ltx_text" id="S3.F3.2.3.2.1.1" style="font-size:90%;">1</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S3.F3.2.3.2.2"><span class="ltx_text" id="S3.F3.2.3.2.2.1" style="font-size:90%;">4268</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S3.F3.2.3.2.3"><span class="ltx_text" id="S3.F3.2.3.2.3.1" style="font-size:90%;">0.5291</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S3.F3.2.3.2.4"><span class="ltx_text" id="S3.F3.2.3.2.4.1" style="font-size:90%;">0.2835</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S3.F3.2.3.2.5"><span class="ltx_text" id="S3.F3.2.3.2.5.1" style="font-size:90%;">0.30</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S3.F3.2.3.2.6"><span class="ltx_text" id="S3.F3.2.3.2.6.1" style="font-size:90%;">0.50</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S3.F3.2.3.2.7"><span class="ltx_text" id="S3.F3.2.3.2.7.1" style="font-size:90%;">0.75</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S3.F3.2.3.2.8"><span class="ltx_text" id="S3.F3.2.3.2.8.1" style="font-size:90%;">0</span></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S3.F3.2.3.2.9"><span class="ltx_text" id="S3.F3.2.3.2.9.1" style="font-size:90%;">1</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<figcaption class="ltx_caption ltx_centering" style="font-size:90%;"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>ATE summary (top) and outcome distribution (bottom) for peak-hour
+vs. off-peak on highway traffic density.</figcaption>
+</figure>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">案例研究</span><span class="original-text">Case Studies</span></h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">我们使用 BDD 派生事件数据集在几个代表性查询上说明 teLLMe。
+所有估计值和置信区间均来自指定的子群体和调整集。</span><span class="original-text">We illustrate teLLMe on several representative queries using the BDD-derived event dataset.
+All estimates and confidence intervals come from the specified subpopulations and adjustment sets.</span></p>
+</div>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span><span class="translated-text">城市十字路口的天气和交通密度</span><span class="original-text">Weather and traffic density at urban intersections</span></h3>
+<div class="ltx_para" id="S4.SS1.p1">
+<blockquote class="ltx_quote" id="S4.SS1.p1.1">
+<p class="ltx_p" id="S4.SS1.p1.1.1"><em class="ltx_emph ltx_font_italic" id="S4.SS1.p1.1.1.1"><span class="translated-text">阴雨天气和晴天对高峰时段城市十字路口的交通密度有何影响？</span><span class="original-text">What is the effect of rainy versus clear weather on traffic density at urban intersections during peak hours?</span></em></p>
+</blockquote>
+</div>
+<div class="ltx_para" id="S4.SS1.p2">
+<p class="ltx_p" id="S4.SS1.p2.1"><span class="translated-text">对于这个查询，处理的是天气，处理的是下雨
+条件和清晰作为对照。结果是交通密度，
+仅限于场景类型为城市交叉路口的窗口，并且
+高峰时段指标为一。调整模块选择一天中的时间并
+总对象。在此运行中，学习到的 DAG 不包含直接
+天气</span><span class="original-text">For this query, the treatment is weather, with rainy as the treated
+condition and clear as the control. The outcome is traffic density,
+restricted to windows where scene type is urban intersection and
+the peak-hour indicator is one. The adjustment module selects time of day and
+total objects. In this run, the learned DAG does not contain a direct
+weather</span><math alttext="\rightarrow" class="ltx_Math" display="inline" id="S4.SS1.p2.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math><span class="translated-text">交通密度边缘。</span><span class="original-text">traffic density edge.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.p3">
+<p class="ltx_p" id="S4.SS1.p3.3"><span class="translated-text">使用 OLS 和选定的调整集，估计效果为</span><span class="original-text">Using OLS with the selected adjustment set, the estimated effect is</span><math alttext="-0.036" class="ltx_Math" display="inline" id="S4.SS1.p3.1.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>0.036</mn></mrow><annotation encoding="application/x-tex">-0.036</annotation></semantics></math><span class="translated-text">与一个
+95% 置信区间来自</span><span class="original-text">with a
+95% confidence interval from</span><math alttext="-0.047" class="ltx_Math" display="inline" id="S4.SS1.p3.2.m2" intent=":literal"><semantics><mrow><mo>−</mo><mn>0.047</mn></mrow><annotation encoding="application/x-tex">-0.047</annotation></semantics></math> to <math alttext="-0.024" class="ltx_Math" display="inline" id="S4.SS1.p3.3.m3" intent=":literal"><semantics><mrow><mo>−</mo><mn>0.024</mn></mrow><annotation encoding="application/x-tex">-0.024</annotation></semantics></math><span class="translated-text">，基于 1,840 个下雨的窗户和
+7,681 个透明窗口。</span><span class="original-text">, based on 1,840 rainy windows and
+7,681 clear windows.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span><span class="translated-text">高峰时段对高速公路交通密度的影响</span><span class="original-text">Peak-hour effects on highway traffic density</span></h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<blockquote class="ltx_quote" id="S4.SS2.p1.1">
+<p class="ltx_p" id="S4.SS2.p1.1.1"><em class="ltx_emph ltx_font_italic" id="S4.SS2.p1.1.1.1"><span class="translated-text">晴朗天气下高峰时段如何影响高速公路的交通密度？</span><span class="original-text">How do peak-hour periods affect traffic density on highways under clear weather?</span></em></p>
+</blockquote>
+</div>
+<div class="ltx_para" id="S4.SS2.p2">
+<p class="ltx_p" id="S4.SS2.p2.1"><span class="translated-text">在这个查询中，处理是</span><span class="original-text">In this query, the treatment is</span><span class="ltx_text ltx_font_typewriter" id="S4.SS2.p2.1.1">is_peak_hour</span><span class="translated-text">结果是</span><span class="original-text">and the outcome is</span><span class="ltx_text ltx_font_typewriter" id="S4.SS2.p2.1.2"><span class="translated-text">交通密度</span><span class="original-text">traffic_density</span></span><span class="translated-text">。条件将数据限制为</span><span class="original-text">. The conditions restrict the data to</span><span class="ltx_text ltx_font_typewriter" id="S4.SS2.p2.1.3"><span class="translated-text">场景类型</span><span class="original-text">scene_type</span></span>=<span class="ltx_text ltx_font_typewriter" id="S4.SS2.p2.1.4"><span class="translated-text">高速公路</span><span class="original-text">highway</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_typewriter" id="S4.SS2.p2.1.5"><span class="translated-text">天气</span><span class="original-text">weather</span></span>=<span class="ltx_text ltx_font_typewriter" id="S4.SS2.p2.1.6"><span class="translated-text">清晰</span><span class="original-text">clear</span></span><span class="translated-text">。
+调节模块选择</span><span class="original-text">.
+The adjustment module selects</span><span class="ltx_text ltx_font_typewriter" id="S4.SS2.p2.1.7"><span class="translated-text">一天中的时间</span><span class="original-text">time_of_day</span></span>, <span class="ltx_text ltx_font_typewriter" id="S4.SS2.p2.1.8"><span class="translated-text">天气</span><span class="original-text">weather</span></span><span class="translated-text">, 和</span><span class="original-text">, and</span><span class="ltx_text ltx_font_typewriter" id="S4.SS2.p2.1.9"><span class="translated-text">总对象数</span><span class="original-text">total_objects</span></span><span class="translated-text">。该子群体学习到的 DAG 不包含
+直接</span><span class="original-text">. The learned DAG for this subpopulation does not contain a
+direct</span><span class="ltx_text ltx_font_typewriter" id="S4.SS2.p2.1.10">is_peak_hour</span> <math alttext="\rightarrow" class="ltx_Math" display="inline" id="S4.SS2.p2.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> <span class="ltx_text ltx_font_typewriter" id="S4.SS2.p2.1.11"><span class="translated-text">交通密度</span><span class="original-text">traffic_density</span></span><span class="translated-text">边缘。</span><span class="original-text">edge.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p3">
+<p class="ltx_p" id="S4.SS2.p3.1"><span class="translated-text">使用 OLS 和选定的调整集，估计效果为 0.024，
+95% 置信区间为 0.014 至 0.034，基于 4,268 个高峰时段窗口
+以及 6,154 个非高峰时段。</span><span class="original-text">Using OLS with the selected adjustment set, the estimated effect is 0.024 with a
+95% confidence interval from 0.014 to 0.034, based on 4,268 peak-hour windows
+and 6,154 off-peak windows.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span><span class="translated-text">对调整和平衡选择的敏感性</span><span class="original-text">Sensitivity to adjustment and balancing choices</span></h3>
+<div class="ltx_para" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.1"><span class="translated-text">我们将基于 DAG 的调整与固定调整集进行比较，并对不平衡的情况进行重复分析
+数据集。忽略 DAG 有时会产生更大的影响和更窄的间隔，这与
+调整不足。对不平衡数据的分析有时会产生更极端的估计，
+更大的不确定性。这些差异凸显了调整和抽样选择的影响；
+teLLMe 直接在因果卡中显示这些决定。</span><span class="original-text">We compare DAG-based adjustment with a fixed adjustment set and repeat analyses on the imbalanced
+dataset. Ignoring the DAG sometimes produces larger effects and narrower intervals, consistent with
+under-adjustment. Analyses on the imbalanced data occasionally produce more extreme estimates and
+greater uncertainty. These differences highlight the influence of adjustment and sampling choices;
+teLLMe surfaces these decisions directly in the Causal Cards.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span><span class="translated-text">讨论和限制</span><span class="original-text">Discussion and Limitations</span></h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">teLLMe 完全适用于观测事件数据，因此所有效果都取决于
+编码在学习的 DAG 和选定的调整集中的假设。几个
+重要因素——驾驶员意图、路面状况和天气严重程度——
+在行车记录仪镜头中无法观察到，这意味着报告的效果应该是
+被视为合理的解释而不是明确的因果关系。</span><span class="original-text">teLLMe works entirely with observational event data, so all effects depend on the
+assumptions encoded in the learned DAG and the selected adjustment sets. Several
+important factors—driver intent, road surface conditions, and weather severity—
+are not observable in dashcam footage, which means the reported effects should be
+treated as plausible explanations rather than definitive causal claims.</span></p>
+</div>
+<div class="ltx_para" id="S5.p2">
+<p class="ltx_p" id="S5.p2.1"><span class="translated-text">系统将事件窗口视为独立的，不会对时间或事件进行建模
+空间结构。流量模式通常取决于两者，并捕获这些
+依赖关系需要不同的因果发现方法和更丰富的数据。
+测量限制也限制了我们可以回答的问题。交通密度为
+计算简单，但更注重安全性，例如未遂事件
+措施，更难以仅从视频中可靠地得出。
+我们还没有与实践者一起评估因果卡。它们的设计目的是
+明确假设和不确定性，但我们还不知道分析师或
+规划者解释它们或他们认为什么形式的指导最有用。</span><span class="original-text">The system treats event windows as independent and does not model temporal or
+spatial structure. Traffic patterns often depend on both, and capturing those
+dependencies would require different causal discovery methods and richer data.
+Measurement limits also constrain the questions we can answer. Traffic density is
+straightforward to compute, but more safety-oriented surrogates, such as near-miss
+measures, are harder to derive reliably from video alone.
+We have not yet evaluated the Causal Cards with practitioners. They are designed to
+make assumptions and uncertainty clear, but we do not yet know how analysts or
+planners interpret them or what forms of guidance they find most useful.</span></p>
+</div>
+<div class="ltx_para" id="S5.p3">
+<p class="ltx_p" id="S5.p3.1"><span class="translated-text">除了这个独立的原型之外，teLLMe 还作为 Redddot 项目的一部分进行开发，Redddot 项目是一个更广泛的参与式城市安全和出行分析平台。 Redddot 致力于为规划者、研究人员和社区利益相关者提供异构城市数据的可解释视图，包括视频衍生事件、交通指标和地点的上下文信息。在此背景下，teLLMe 扮演着因果推理和解释模块的角色：它将行车记录仪衍生的事件表转变为可查询的“假设”分析，并且其因果卡可以与其他 Redddot 视图一起显示，以显示候选效果、不确定性和假设如何与特定位置和人群相关。这种联系将 teLLMe 的设计建立在具体的应用环境中，并突显了其围绕城市决策协调人类与人工智能协作的潜力。</span><span class="original-text">Beyond this standalone prototype, teLLMe is being developed as part of the Redddot project, a broader platform for participatory urban safety and mobility analytics. Redddot seeks to give planners, researchers, and community stakeholders access to interpretable views of heterogeneous urban data, including video-derived events, traffic indicators, and contextual information about places. Within this context, teLLMe plays the role of a causal reasoning and explanation module: it turns dashcam-derived event tables into queryable “what-if” analyses, and its Causal Cards can be surfaced alongside other Redddot views to show how candidate effects, uncertainty, and assumptions relate to specific locations and populations. This connection grounds teLLMe’s design in a concrete application setting and highlights its potential to mediate human–AI collaboration around urban decisions.</span></p>
+</div>
+<div class="ltx_para" id="S5.p4">
+<p class="ltx_p" id="S5.p4.1"><span class="translated-text">该管道为分析师和其他 Redddot 利益相关者提供了一种直接方法来测试视频衍生数据的特定因果问题，同时保持明确的假设。由此产生的估计旨在作为进一步分析和审议的输入，而不是最终答案。</span><span class="original-text">The pipeline gives analysts and other Redddot stakeholders a direct way to test specific causal questions on video-derived data while keeping assumptions explicit. The resulting estimates are intended as inputs to further analysis and deliberation, not final answers.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="Sx1">
+<h2 class="ltx_title ltx_title_section"><span class="translated-text">致谢</span><span class="original-text">Acknowledgements</span></h2>
+<div class="ltx_para" id="Sx1.p1">
+<p class="ltx_p" id="Sx1.p1.1"><span class="translated-text">这项工作得到了国家科学基金会（作为智能街景中心的一部分）根据合作协议 EEC-2133516 和 NSF 拨款号 2429672 的支持。</span><span class="original-text">This work was supported by the National Science Foundation as part of the Center for Smart Streetscapes under Cooperative Agreement EEC-2133516 and by NSF Grant No. 2429672.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib20">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">M. Kalisch and P. Bühlmann (2007)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Estimating high-dimensional directed acyclic graphs with the pc-algorithm</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Journal of Machine Learning Research</span> <span class="ltx_text ltx_bib_volume">8</span> (<span class="ltx_text ltx_bib_number">Mar</span>), <span class="ltx_text ltx_bib_pages"> pp. 613–636</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.SSS0.Px1.p1.1" title="Offline. ‣ 2.2 System architecture ‣ 2 Data and System Overview ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_tag">§2.2</span></a>,
+<a class="ltx_ref" href="#S3.SS1.p2.1" title="3.1 Causal graph learning with PC and bootstrap ‣ 3 Methods ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_tag">§3.1</span></a>,
+<a class="ltx_ref" href="#S3.SS1.p3.6" title="3.1 Causal graph learning with PC and bootstrap ‣ 3 Methods ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_tag">§3.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_book" id="bib.bib1">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">J. Pearl (2009)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Causality</span>.
+</span>
+<span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">Cambridge university press</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS2.p3.10" title="3.2 Query parsing and DAG-based adjustment selection ‣ 3 Methods ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_tag">§3.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib21">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">A. Sharma and E. Kiciman (2020)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">DoWhy: an end-to-end library for causal inference</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2011.04216</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.SSS0.Px2.p1.1" title="Online. ‣ 2.2 System architecture ‣ 2 Data and System Overview ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_tag">§2.2</span></a>,
+<a class="ltx_ref" href="#S3.SS3.SSS0.Px2.p1.5" title="DoWhy estimator. ‣ 3.3 Effect estimation and Causal Cards ‣ 3 Methods ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_tag">§3.3</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_book" id="bib.bib2">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">P. Spirtes, C. N. Glymour, and R. Scheines (2000)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Causation, prediction, and search</span>.
+</span>
+<span class="ltx_bibblock"> <span class="ltx_text ltx_bib_publisher">MIT press</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.SSS0.Px1.p1.1" title="Offline. ‣ 2.2 System architecture ‣ 2 Data and System Overview ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_tag">§2.2</span></a>,
+<a class="ltx_ref" href="#S3.SS1.p2.1" title="3.1 Causal graph learning with PC and bootstrap ‣ 3 Methods ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_tag">§3.1</span></a>,
+<a class="ltx_ref" href="#S3.SS1.p3.6" title="3.1 Causal graph learning with PC and bootstrap ‣ 3 Methods ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_tag">§3.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib19">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">H. Xu, Y. Gao, F. Yu, and T. Darrell (2017)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">End-to-end learning of driving models from large-scale video datasets</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">The IEEE Conference on Computer Vision and Pattern Recognition (CVPR)</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Event dataset from dashcam annotations ‣ 2 Data and System Overview ‣ teLLMe Why (Ain’t Nothing but a Jam): Exploratory Causal Analysis of Urban Driving Data"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2607.15254v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer><footer class="ds-site-footer">
+<div class="ds-site-footer-grid">
+<div class="ds-site-footer-main">
+<div class="ds-site-footer-ack"><span class="translated-text">我们衷心感谢来自
+        我们的</span><span class="original-text">We gratefully acknowledge support from
+        our</span><strong><span class="translated-text">主要资助者</span><span class="original-text">major funders</span></strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong><span class="translated-text">成员机构</span><span class="original-text">member institutions</span></strong></a><span class="ack-member-inline" hidden="">, <strong></strong></span><span class="translated-text">,
+        以及所有贡献者。</span><span class="original-text">,
+        and all contributors.</span></div>
+<nav aria-label="Site navigation" class="ds-site-footer-links">
+<a href="https://info.arxiv.org/about"><span class="translated-text">关于</span><span class="original-text">About</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help"><span class="translated-text">帮助</span><span class="original-text">Help</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/contact.html"><span class="translated-text">联系方式</span><span class="original-text">Contact</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/subscribe"><span class="translated-text">订阅</span><span class="original-text">Subscribe</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/license/index.html"><span class="translated-text">版权</span><span class="original-text">Copyright</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/policies/privacy_policy.html"><span class="translated-text">隐私</span><span class="original-text">Privacy</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/web_accessibility.html"><span class="translated-text">无障碍</span><span class="original-text">Accessibility</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://status.arxiv.org" rel="noopener noreferrer" target="_blank"><span class="translated-text">运营状况</span><span class="original-text">Operational Status</span><span class="is-sr-only"><span class="translated-text">（在新选项卡中打开）</span><span class="original-text">(opens in new tab)</span></span></a>
+</nav>
+</div>
+<div aria-label="Major funders" class="ds-site-footer-funders">
+<div class="ds-site-footer-funders-label"><span class="translated-text">主要资金支持来自</span><span class="original-text">Major funding support from</span></div>
+<div class="ds-site-footer-funders-logos">
+<a class="ds-funder-link" href="https://www.simonsfoundation.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.sfi.org.bm/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation International" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation-international.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.schmidtsciences.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Schmidt Sciences" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/schmidt-sciences.png"/>
+</a>
+</div>
+</div>
+</div>
+</footer><div id="fixed-buttons-container">
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
