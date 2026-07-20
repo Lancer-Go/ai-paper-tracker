@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">ComfyUI 中用于生成工作流的以知识为中心的代理</span><span class="original-text">Knowledge-Centric Agents for Workflow Generation in ComfyUI</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 7 月 17 日星期五 10:54:18 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Fri Jul 17 10:54:18 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+    // Pre-apply spinout-banner dismissal here, before the banner paints, so it
+    // never flashes in only to be hidden later by the deferred arxiv-header.js.
+    // Key matches arxiv-header.js: "arxiv-banner-dismissed:" + data-banner-name.
+    if (localStorage.getItem('arxiv-banner-dismissed:spinout-nonprofit')) {
+      document.documentElement.setAttribute("data-banner-dismissed", "");
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/><link href="https://arxiv.org/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626" media="screen" rel="stylesheet" type="text/css"/><style>
+  /* Banner pre-dismissal (set above before paint -> no flash-then-hide) and
+     reading-mode chrome hiding. */
+  html[data-banner-dismissed] .ds-announcement { display: none; }
+  html[data-reading-mode="enabled"] .ds-announcement,
+  html[data-reading-mode="enabled"] .ds-site-footer { display: none; }
+  /* Keep the announcement text dark on the Open-Blue band in both colour themes
+     (otherwise it inherits the paper's warm-wash text in dark mode and washes out). */
+  .ds-announcement-text { color: var(--arxiv-ink, #1c1a17); }
+</style>
+<script defer="" src="https://arxiv.org/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2607.15845" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2607.15845" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog><div aria-label="Announcement" class="ds-announcement" data-banner-name="spinout-nonprofit" id="announcement-banner" role="region">
+<img alt="" aria-hidden="true" class="ds-announcement-glyph" src="https://arxiv.org/static/base/1.0.1/images/icons/smileybones-small.svg"/>
+<span class="ds-announcement-text"><span class="translated-text">arXiv 现在是一个独立的非营利组织！</span><span class="original-text">arXiv is now an independent nonprofit!</span></span>
+<a class="ds-announcement-link" href="https://info.arxiv.org/about"><span class="translated-text">了解更多</span><span class="original-text">Learn more</span></a>
+<button aria-label="Dismiss announcement" class="ds-announcement-close" type="button">×</button>
+</div>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/"><img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/base/1.0.1/images/arxiv-logo-primary-light.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2607.15845v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2607.15845v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Related Work</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S2.SS0.SSS0.Px1" title="In 2 Related Work ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title">ComfyUI and Automatic ComfyUI Assistant.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S2.SS0.SSS0.Px2" title="In 2 Related Work ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title">LLMs and LLM-Agent.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Method</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In 3 Method ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Overview</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS2" title="In 3 Method ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Knowledge Inversion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS3" title="In 3 Method ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.3 </span>Knowledge Injection</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS4" title="In 3 Method ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.4 </span>Knowledge Inference</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS5" title="In 3 Method ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.5 </span>Discussion with Prior Works</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Experiments</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S4.SS1" title="In 4 Experiments ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>Settings</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS1.SSS0.Px1" title="In 4.1 Settings ‣ 4 Experiments ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title">Workflow Collection.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS2" title="In 4 Experiments ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2 </span>Evaluation Metrics</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS3" title="In 4 Experiments ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3 </span>Results</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S5" title="In Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Conclusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title">References</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_appendix"><a class="ltx_ref" href="#Pt0.A1" title="In Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">0.A </span>Workflow Structure Analysis</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_appendix"><a class="ltx_ref" href="#Pt0.A2" title="In Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">0.B </span>Comparison Methods</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_appendix">
+<a class="ltx_ref" href="#Pt0.A3" title="In Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">0.C </span>Dataset Analysis</span></a>
+<ol class="ltx_toclist ltx_toclist_appendix">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#Pt0.A3.SS1" title="In Appendix 0.C Dataset Analysis ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">0.C.1 </span>Training Dataset Analysis</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#Pt0.A3.SS2" title="In Appendix 0.C Dataset Analysis ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">0.C.2 </span>Test Dataset Analysis</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#Pt0.A3.SS3" title="In Appendix 0.C Dataset Analysis ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">0.C.3 </span>Comparative Analysis</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#Pt0.A3.SS3.SSS0.Px1" title="In 0.C.3 Comparative Analysis ‣ Appendix 0.C Dataset Analysis ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_title">Key Findings:</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2607.15845v1 [cs.AI] 2026 年 7 月 17 日</span><span class="original-text">arXiv:2607.15845v1 [cs.AI] 17 Jul 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line"><span class="ltx_note ltx_role_institutetext" id="id2"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type"><span class="translated-text">机构文本：</span><span class="original-text">institutetext:</span></span><sup class="ltx_sup" id="id1.1"><span class="ltx_text" id="id1.1.1" style="position:relative; bottom:-0.6pt;"><img alt="[Uncaptioned image]" class="ltx_graphics ltx_img_square" height="9" id="id1.1.1.g1" src="https://arxiv.org/html/2607.15845v1/figs/insait-trans.png" width="9"/></span></sup><span class="translated-text">INSAIT，索非亚大学“圣克莱门特·奥赫里德斯基”，</span><span class="original-text">INSAIT, Sofia University “St. Kliment Ohridski”,</span><sup class="ltx_sup" id="id2.2"><math alttext="\lozenge" class="ltx_Math" display="inline" id="id2.2.m1" intent=":literal"><semantics><mi mathvariant="normal">◆</mi><annotation encoding="application/x-tex">\lozenge</annotation></semantics></math></sup><span class="translated-text">奥多比研究</span><span class="original-text">Adobe Research</span><span class="ltx_text ltx_font_typewriter" id="id2.3">{zhendong.li, lei.sun, ruibo.ming, danda.paudel, luc.vangool, jinjin.gu}@insait.ai, hezhan@adobe.com</span>
+<br class="ltx_break"/>🖂 <span class="ltx_text ltx_font_italic" id="id2.4"><span class="translated-text">通讯作者。</span><span class="original-text">Corresponding authors.</span></span>
+</span></span></span>
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">ComfyUI 中用于生成工作流的以知识为中心的代理</span><span class="original-text">Knowledge-Centric Agents for Workflow Generation in ComfyUI</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+Zhendong Li <sup class="ltx_sup" id="id3.1.1"><span class="ltx_text" id="id3.1.1.1" style="position:relative; bottom:-0.6pt;"><img alt="[Uncaptioned image]" class="ltx_graphics ltx_img_square" height="9" id="id3.1.1.1.g1" src="https://arxiv.org/html/2607.15845v1/figs/insait-trans.png" width="9"/></span></sup>
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Lei Sun <sup class="ltx_sup" id="id4.1.1"><span class="ltx_text" id="id4.1.1.1" style="position:relative; bottom:-0.6pt;"><img alt="[Uncaptioned image]" class="ltx_graphics ltx_img_square" height="9" id="id4.1.1.1.g1" src="https://arxiv.org/html/2607.15845v1/figs/insait-trans.png" width="9"/></span>,🖂</sup>
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Ruibo Ming <sup class="ltx_sup" id="id5.1.1"><span class="ltx_text" id="id5.1.1.1" style="position:relative; bottom:-0.6pt;"><img alt="[Uncaptioned image]" class="ltx_graphics ltx_img_square" height="9" id="id5.1.1.1.g1" src="https://arxiv.org/html/2607.15845v1/figs/insait-trans.png" width="9"/></span></sup>
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">He Zhang <sup class="ltx_sup" id="id6.1.1"><math alttext="\lozenge" class="ltx_Math" display="inline" id="id6.1.1.m1" intent=":literal"><semantics><mi mathvariant="normal">◆</mi><annotation encoding="application/x-tex">\lozenge</annotation></semantics></math></sup>
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Danda Pani Paudel <sup class="ltx_sup" id="id7.1.1"><span class="ltx_text" id="id7.1.1.1" style="position:relative; bottom:-0.6pt;"><img alt="[Uncaptioned image]" class="ltx_graphics ltx_img_square" height="9" id="id7.1.1.1.g1" src="https://arxiv.org/html/2607.15845v1/figs/insait-trans.png" width="9"/></span></sup>
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Luc Van Gool <sup class="ltx_sup" id="id8.1.1"><span class="ltx_text" id="id8.1.1.1" style="position:relative; bottom:-0.6pt;"><img alt="[Uncaptioned image]" class="ltx_graphics ltx_img_square" height="9" id="id8.1.1.1.g1" src="https://arxiv.org/html/2607.15845v1/figs/insait-trans.png" width="9"/></span></sup>
+</span></span>
+<span class="ltx_author_before">  </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Jinjin Gu <sup class="ltx_sup" id="id9.1.1"><span class="ltx_text" id="id9.1.1.1" style="position:relative; bottom:-0.6pt;"><img alt="[Uncaptioned image]" class="ltx_graphics ltx_img_square" height="9" id="id9.1.1.1.g1" src="https://arxiv.org/html/2607.15845v1/figs/insait-trans.png" width="9"/></span>,🖂</sup>
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">ComfyUI 等视觉创作系统中的工作流生成不仅需要语法准确性，还需要对模块化组合进行专家级推理。
+现有的大型语言模型 (LLM) 方法通常将其视为直接文本到 JSON 的生成任务，面临着结构脆弱性的问题，并且缺乏有效设计所需的经验知识。
+我们认为，成功的工作流生成需要对知识本身进行建模，包括其结构、层次结构和推理动态。
+为此，我们提出了一个以知识为中心的框架，该框架学习</span><span class="original-text">Workflow generation in visual creation systems such as ComfyUI demands not only syntactic accuracy but also expert-level reasoning over modular compositions.
+Existing large language model (LLM) approaches often treat this as a direct text-to-JSON generation task, struggling with structural brittleness and lacking the experiential knowledge required for effective design.
+We argue that successful workflow generation requires modeling knowledge itself, including its structure, hierarchy, and reasoning dynamics.
+To this end, we propose a knowledge-centric framework that learns to</span><span class="ltx_text ltx_font_bold"><span class="translated-text">反转</span><span class="original-text">invert</span></span>, <span class="ltx_text ltx_font_bold"><span class="translated-text">注射</span><span class="original-text">inject</span></span><span class="translated-text">, 和</span><span class="original-text">, and</span><span class="ltx_text ltx_font_bold"><span class="translated-text">用知识推断</span><span class="original-text">infer with knowledge</span></span><span class="translated-text">跨越多个抽象级别。
+我们首先执行知识反演，从大量的现实世界工作流程中提取层次表示，从完整的伪代码和骨架到高级策略。
+然后，我们通过监督微调进行知识注入，教导模型从任务描述到策略，从策略到可执行结构进行推理。
+在推理过程中，模型执行可逆推理来合成可执行的工作流程，并通过自我完善来增强结构一致性。
+大量的实验表明，我们的方法产生的工作流比现有系统具有更丰富的节点多样性、更连贯的结构和更高的执行成功率，为知识驱动的代理工作流生成奠定了新的基础。</span><span class="original-text">across multiple abstraction levels.
+We first perform knowledge inversion to distill hierarchical representations, ranging from full pseudo-codes and skeletons to high-level strategies, from large collections of real-world workflows.
+We then conduct knowledge injection through supervised fine-tuning, teaching the model to reason from task descriptions to strategies and from strategies to executable structures.
+During inference, the model performs reversible reasoning to synthesize executable workflows, augmented by self-refinement for structural coherence.
+Extensive experiments demonstrate that our method produces workflows with richer node diversity, more coherent structures, and higher execution success rates than existing systems, establishing a new foundation for knowledge-driven, agentic workflow generation.</span></p>
+</div>
+<div class="ltx_logical-block" id="id11">
+<div class="ltx_para" id="id11.p1">
+<img alt="[Uncaptioned image]" class="ltx_graphics ltx_centering ltx_img_landscape" height="277" id="id10.g1" src="https://arxiv.org/html/2607.15845v1/x1.png" width="830"/>
+</div>
+<figure class="ltx_figure ltx_align_center" id="S0.F1">
+<figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S0.F1.2.1.1" style="font-size:90%;">Figure 1</span>: </span><span class="ltx_text" id="S0.F1.3.2" style="font-size:90%;">Given a user task instruction, our agent learns to construct and execute a complete ComfyUI workflow. Through knowledge inversion, it distills pseudo-code structures and workflow strategies from large collections of real workflows. During inference, During inference, the agent executes the generated workflow to produce a high-quality visual result. The example shows how the agent interprets a stylistic editing request, derives a high-level strategy, composes the corresponding ComfyUI graph, and executes it to generate the final output.</span></figcaption>
+</figure>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">现代计算机视觉模型的飞速发展已将可控图像生成、创建、编辑和处理从实验室原型稳步转变为能够满足复杂的现实世界需求的强大工具。
+在实践中，技术专家和艺术家通常需要组合和协调多个模型组件来完成这些任务。
+这产生了用于解决问题的非整体式模块化组合范例，其中不同的模块被编排成有向无环图（DAG）（通常称为工作流），并按顺序或有条件地执行。
+舒适用户界面</span><span class="original-text">The whirlwind of progress in modern computer vision models has steadily transformed controllable image generation, creation, editing, and processing from laboratory prototypes into powerful tools capable of addressing complex real-world demands.
+In practice, both technical experts and artists often need to combine and coordinate multiple model components to accomplish those tasks.
+This results in a non-monolithic, modular composition paradigm for problem solving, where different modules are orchestrated into a Directed Acyclic Graph (DAG), commonly referred to as a workflow, and executed sequentially or conditionally.
+ComfyUI</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">comfyanonymous2023comfyui</span>]</cite><span class="translated-text">体现了这一理念，并已成为广泛采用的可视化编程框架，用于在图像创建管道中构建此类工作流程。
+因此，开发能够自动生成和完善这些工作流程的智能代理不仅具有重大的实际意义，而且还提出了深刻的科学挑战。</span><span class="original-text">embodies this philosophy and has become a widely adopted visual programming framework for building such workflows in image creation pipelines.
+Developing intelligent agents that can automatically generate and refine these workflows is thus not only of great practical relevance but also poses deep scientific challenges.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">ComfyUI 工作流程可以完全表示为 JSON 配置，它指定所有节点、参数和互连。
+最近的几项研究尝试利用大型语言模型（LLM）自动生成这些配置</span><span class="original-text">A ComfyUI workflow can be fully represented as a JSON configuration, which specifies all nodes, parameters, and interconnections.
+Several recent studies have attempted to leverage large language models (LLMs) to generate these configurations automatically</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xue2025comfybench</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">gal2024comfygen</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">xu2025comfyuir1</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">guo2025comfymind</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">huang2025comfygpt</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">sobania2024comfygi</span>]</cite><span class="translated-text">。
+然而，生成有效且有效的工作流程与传统的代码或文本生成有着根本的不同。
+它需要从抽象概念设计到具体句法实现的多层次推理，每个推理都需要不同形式的知识和表示。</span><span class="original-text">.
+However, generating valid and effective workflows differs fundamentally from conventional code or text generation.
+It requires multi-level reasoning that spans from abstract conceptual design to concrete syntactic realization, each demanding distinct forms of knowledge and representation.</span></p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">在战略层面，工作流设计是一个开放式的、经验驱动的过程，而不是一个确定性的编程任务。
+ComfyUI 提供了丰富的节点类型和模型变体生态系统，每种类型和模型变体都表现出复杂且通常是非线性的行为。
+它们的组合产生了巨大的组合空间，其中微小的结构变化可以产生截然不同的结果。
+人类设计师在很大程度上依赖隐性专业知识、迭代实验和直觉来确定是否需要分割、如何安排处理分支或哪些控制模块应该交互。
+这种基于经验知识的启发式推理对于法学硕士来说纯粹从文本数据获取或复制仍然具有很大的挑战性。</span><span class="original-text">At the strategic level, workflow design is an open-ended and experience-driven process rather than a deterministic programming task.
+ComfyUI provides a rich ecosystem of node types and model variants, each exhibiting complex, often nonlinear behaviors.
+Their combinations yield an immense compositional space, where small structural changes can produce radically different outcomes.
+Human designers rely heavily on tacit expertise, iterative experimentation, and intuition to determine whether segmentation is needed, how to arrange processing branches, or which control modules should interact.
+Such heuristic reasoning, grounded in experiential knowledge, remains highly challenging for LLMs to acquire or reproduce purely from textual data.</span></p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">在结构层面，即使高级策略已知，将其转换为语法正确且可执行的 JSON 配置也会带来重大挑战。
+工作流是具有复杂输入输出依赖性的大型离散图。
+代理不仅必须推断正确的拓扑，还必须实例化有效的节点参数并维护类型安全的数据流。
+JSON 语法的脆弱性，加上可能的图形结构的组合爆炸，使得直接文本到配置的生成非常不可靠。
+链接错误或参数绑定不一致等小错误很容易导致工作流程无法执行。</span><span class="original-text">At the structural level, even when the high-level strategy is known, translating it into a syntactically correct and executable JSON configuration poses significant challenges.
+Workflows are large discrete graphs with intricate input–output dependencies.
+The agent must not only infer the correct topology but also instantiate valid node parameters and maintain type-safe data flow.
+The brittleness of JSON syntax, coupled with the combinatorial explosion of possible graph structures, makes direct text-to-configuration generation highly unreliable.
+Small mistakes such as misconnected links or inconsistent parameter bindings can easily make the workflow fail to execute.</span></p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">这些挑战共同揭示了更深层次的局限性：</span><span class="original-text">These challenges collectively reveal a deeper limitation:</span><span class="ltx_text ltx_font_italic" id="S1.p5.1.1"><span class="translated-text">现有的语言模型缺乏有关工作流组成的结构化、多层次的知识</span><span class="original-text">existing language models lack structured, multi-level knowledge about workflow composition</span></span><span class="translated-text">。
+虽然他们擅长表面级模式完成或简单的任务分解，但他们很难推理专家工作流程设计背后的层次依赖性、因果逻辑和经验启发法。
+此外，直接大规模注释这种隐性专业知识是非常不切实际的。
+为了克服这一差距，我们的主要贡献不是提出标准生成管道，而是</span><span class="original-text">.
+While they excel at surface-level pattern completion or straightforward task decomposition, they struggle to reason about the hierarchical dependencies, causal logic, and experiential heuristics that underlie expert workflow design.
+Furthermore, directly annotating such tacit expertise at scale is highly impractical.
+To overcome this gap, rather than proposing a standard generation pipeline, our main contribution is a</span><span class="ltx_text ltx_font_bold" id="S1.p5.1.2"><span class="translated-text">以知识为中心的范式</span><span class="original-text">knowledge-centric paradigm</span></span><span class="translated-text">。
+核心见解是</span><span class="original-text">.
+The core insight is</span><em class="ltx_emph ltx_font_italic" id="S1.p5.1.3"><span class="translated-text">知识反转</span><span class="original-text">Knowledge Inversion</span></em><span class="translated-text">：从原始的、未注释的工作流程开始，我们恢复缺失的领域知识，然后重用它来使法学硕士能够进行 CoT 式决策。</span><span class="original-text">: starting from raw, unannotated workflows, we recover the missing domain knowledge and subsequently reuse it to empower LLMs for CoT-style decision-making.</span></p>
+</div>
+<div class="ltx_para" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1"><span class="translated-text">我们的方法始于</span><span class="original-text">Our approach begins by</span><span class="ltx_text ltx_font_bold" id="S1.p6.1.1"><span class="translated-text">颠倒知识</span><span class="original-text">inverting knowledge</span></span><span class="translated-text">从大量真实工作流程中提取策略、结构和推理的分层表示；
+然后</span><span class="original-text">from large collections of real workflows to extract hierarchical representations of strategy, structure, and reasoning;
+then</span><span class="ltx_text ltx_font_bold" id="S1.p6.1.2"><span class="translated-text">注入</span><span class="original-text">injects</span></span><span class="translated-text">通过监督微调将知识提炼成语言模型；
+最后</span><span class="original-text">this distilled knowledge into language models through supervised fine-tuning;
+and finally</span><span class="ltx_text ltx_font_bold" id="S1.p6.1.3"><span class="translated-text">用知识推断</span><span class="original-text">infers with knowledge</span></span><span class="translated-text">，执行从任务描述到可执行工作流程的可逆推理。
+这种统一的范式将工作流生成从临时文本生成问题转变为知识推理的原则过程，为能够构建具有专家级可靠性的复杂视觉管道的代理系统铺平了道路。
+在实践中，我们策划了一系列高质量的 ComfyUI 工作流程作为培训和评估数据。
+实验结果表明，我们的方法产生的工作流程具有更丰富的节点多样性、更复杂但连贯的结构以及更准确的连接性。
+与现有方法相比，它成功解决任务的比例更高。</span><span class="original-text">, performing reversible reasoning from task descriptions to executable workflows.
+This unified paradigm transforms workflow generation from an ad-hoc text generation problem into a principled process of knowledge reasoning, paving the way for agentic systems capable of composing complex visual pipelines with expert-level reliability.
+In practice, we curate a collection of high-quality ComfyUI workflows to serve as both training and evaluation data.
+Experimental results demonstrate that our method produces workflows with richer node diversity, more complex yet coherent structures, and more accurate connectivity.
+Compared with existing approaches, it achieves a higher proportion of successfully solved tasks.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></h2>
+<section class="ltx_paragraph" id="S2.SS0.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">ComfyUI 和自动 ComfyUI 助手。</span><span class="original-text">ComfyUI and Automatic ComfyUI Assistant.</span></h4>
+<div class="ltx_para" id="S2.SS0.SSS0.Px1.p1">
+<p class="ltx_p" id="S2.SS0.SSS0.Px1.p1.1"><span class="translated-text">随着人工智能生成内容 (AIGC) 的不断发展</span><span class="original-text">As AI-generated content (AIGC) continues to advance</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">NEURIPS2020_4c5bcfec_diffusion</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">NEURIPS2021_49ad23d1_diffusion</span>]</cite><span class="translated-text">，越来越多的模型和任务正在出现，包括文本到图像的生成、可控合成和图像编辑</span><span class="original-text">, an increasing number of models and tasks, including text-to-image generation, controllable synthesis, and image editing, are emerging</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">kumari2023multi</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">ruiz2023dreambooth</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">li2023dreamedit</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">zhang2023adding</span>]</cite><span class="translated-text">。这种转变使社区从依赖单个模型转向组合多个模型来完成更复杂和定制的工作流程。因此，ComfyUI</span><span class="original-text">. This shift has moved the community from relying on a single model to composing multiple models to accomplish more complex and customized workflows. Consequently, ComfyUI</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">comfyanonymous2023comfyui</span>]</cite><span class="translated-text">因其灵活的、基于节点的设计而变得越来越受欢迎。 ComfyUI 将模块化功能节点连接到有向非循环工作流程中，使用户能够构建和重用复杂的 AIGC 管道。然而，这些工作流程很快就会变得复杂，通常涉及快速细化、前景-背景分割、超分辨率和许多其他操作的节点，这对自动化工作流程设计工具产生了强烈的需求。
+为了满足这一需求，出现了各种自动化工作流程设计工具</span><span class="original-text">has become increasingly popular for its flexible, node-based design. ComfyUI connects modular function nodes into directed acyclic workflows, enabling users to build and reuse complex AIGC pipelines. However, these workflows can quickly become complex, often involving nodes for prompt refinement, foreground–background segmentation, super-resolution, and many other operations, which creates a strong demand for automated workflow design tools.
+To address this need, a variety of automated workflow-design tools have emerged</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">gal2024comfygen</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">xu2025comfyuicopilot</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">sobania2024comfygi</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">chen2025symbolic</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">huang2025comfygpt</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">xu2025comfyuir1</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">xue2025comfybench</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">guo2025comfymind</span>]</cite><span class="translated-text">。 ComfyUI-副驾驶</span><span class="original-text">. ComfyUI-Copilot</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xu2025comfyuicopilot</span>]</cite><span class="translated-text">协助用户选择合适的参数和模型；康菲根</span><span class="original-text">assists users in selecting appropriate parameters and models; ComfyGen</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">gal2024comfygen</span>]</cite><span class="translated-text">特别关注文本到图像的生成；舒适长凳</span><span class="original-text">focuses specifically on text-to-image generation; ComfyBench</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xue2025comfybench</span>]</cite><span class="translated-text">和舒适心灵</span><span class="original-text">and ComfyMind</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">guo2025comfymind</span>]</cite><span class="translated-text">采用基于模板的组合策略，涵盖最常见的任务，后者提供树结构的回滚。与此同时，ComfyGPT</span><span class="original-text">adopt template-based composition strategies that cover most common tasks, with the latter offering tree-structured rollback. Meanwhile, ComfyGPT</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">huang2025comfygpt</span>]</cite><span class="translated-text">和ComfyUI-R1</span><span class="original-text">and ComfyUI-R1</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xu2025comfyuir1</span>]</cite><span class="translated-text">利用监督微调和 GRPO</span><span class="original-text">leverage supervised fine-tuning and GRPO</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">shao2024deepseekmath</span>]</cite><span class="translated-text">强化学习将工作流程设计知识注入法学硕士。然而，当社区出现新的工作流程时，这些方法必须重新训练，从而限制了它们未来扩展的灵活性和可扩展性。</span><span class="original-text">reinforcement learning to inject workflow-design knowledge into LLMs. However, when new workflows emerge from the community, these methods must be retrained, limiting their flexibility and scalability for future extensions.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S2.SS0.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">法学硕士和法学硕士代理。</span><span class="original-text">LLMs and LLM-Agent.</span></h4>
+<div class="ltx_para" id="S2.SS0.SSS0.Px2.p1">
+<p class="ltx_p" id="S2.SS0.SSS0.Px2.p1.1"><span class="translated-text">法学硕士迅速推进了自然语言的理解和生成。伯特</span><span class="original-text">LLMs have rapidly advanced natural language understanding and generation. BERT</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">devlin2019bert</span>]</cite><span class="translated-text">引入了双向掩码语言模型，极大地提高了上下文表示学习。 GPT系列</span><span class="original-text">introduced bidirectional masked language modeling, greatly improving contextual representation learning. The GPT series</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">brown2020language</span>]</cite><span class="translated-text">转向大规模自回归预训练，实现小样本和上下文学习。后来，ChatGPT 和 GPT-4</span><span class="original-text">shifted toward large-scale autoregressive pretraining, enabling few-shot and in-context learning. Later, ChatGPT and GPT-4</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">achiam2023gpt</span>]</cite><span class="translated-text">结合指令调整和 RLHF 来增强对齐和交互质量。最近的模型，如 LLaMA</span><span class="original-text">combined instruction tuning and RLHF to enhance alignment and interaction quality. Recent models such as LLaMA</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">touvron2023llama</span>]</cite><span class="translated-text">, 琪文</span><span class="original-text">, Qwen</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">yang2025qwen3</span>]</cite><span class="translated-text">, 双子座</span><span class="original-text">, Gemini</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">team2023gemini</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">comanici2025gemini</span>]</cite><span class="translated-text">进一步扩展推理、效率和多模式能力。
+建立在这些基础上，LLM驱动的代理已经成为能够感知环境、进行更广泛的规划并与各种外部工具交互的自治实体。</span><span class="original-text">further expand reasoning, efficiency, and multimodal capabilities.
+Building on these foundations, LLM-powered agents have emerged as autonomous entities capable of perceiving their environments, planning over extended horizons, and interacting with diverse external tools</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">franklin1996agent</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">achiam2023gpt</span>]</cite><span class="translated-text">。
+与传统的符号代理或基于强化学习的代理相比</span><span class="original-text">.
+Compared with traditional symbolic or RL-based agents</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">silver2018general</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">hwangbo2019learning</span>]</cite><span class="translated-text">，那些由法学硕士驱动的人表现出卓越的适应性、组合推理和任务泛化能力</span><span class="original-text">, those driven by LLMs exhibit superior adaptability, compositional reasoning, and task generalization</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">chen2023autoagents</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">li2024multimodal</span>]</cite><span class="translated-text">。最近的研究通过基于图的推理进一步增强了他们的自主性</span><span class="original-text">. Recent research has further enhanced their autonomy through graph-based reasoning</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">yao2024tree</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">besta2024graph</span>]</cite><span class="translated-text">、动态刀具利用率</span><span class="original-text">, dynamic tool utilization</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">qian2025toolrl</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">li2025torlscalingtoolintegratedrl</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">shen2024hugginggpt</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">wu2023visual</span>]</cite><span class="translated-text">和自我反思的学习机制</span><span class="original-text">, and self-reflective learning mechanisms</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">shinn2024reflexion</span>]</cite><span class="translated-text">。
+一些研究进一步探索代理工作流程的自动化优化。例如，GPTSwarm</span><span class="original-text">.
+Some studies further explore automated optimization of agentic workflows. For example, GPTSwarm</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">zhuge2024gptswarm</span>]</cite><span class="translated-text">将语言代理建模为可优化图中的节点，而 TextGrad</span><span class="original-text">models language agents as nodes in an optimizable graph, while TextGrad</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">yuksekgonul2024textgrad</span>]</cite><span class="translated-text">引入类似梯度的优化来迭代地细化提示和代理行为。此外，最近的工作研究了代理系统的可扩展评估策略</span><span class="original-text">introduces gradient-like optimization to iteratively refine prompts and agent behaviors. In addition, recent work investigates scalable evaluation strategies for agent systems</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">zhuge2024agent</span>]</cite><span class="translated-text">，同时</span><span class="original-text">, while</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">chen2024humans</span>]</cite><span class="translated-text">强调自动评估中的潜在偏差。
+这些LLM代理广泛应用于代码生成领域</span><span class="original-text">highlights potential biases in automated evaluation.
+These LLM-agents are applied widely in the areas of code generation</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">cursor2024</span>]</cite><span class="translated-text">, 保健</span><span class="original-text">, health care</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">luo2022biogpt</span>, <span class="ltx_ref ltx_missing_citation ltx_ref_self">singhal2023large</span>]</cite><span class="translated-text">和科学发现</span><span class="original-text">, and scientific discovery</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">taylor2022galactica</span>]</cite><span class="translated-text">。此外，作为一个具有挑战性和复杂性的问题，工作流生成也非常适合由 LLM 代理来解决，它可以分解任务、规划多步骤操作并跨工具进行协调。</span><span class="original-text">. Moreover, as a challenging and complex problem, workflow generation is also well-suited to be addressed by LLM agents, which can decompose tasks, plan multi-step actions, and coordinate across tools.</span></p>
+</div>
+<figure class="ltx_figure" id="S2.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="715" id="S2.F2.g1" src="https://arxiv.org/html/2607.15845v1/x2.png" width="813"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S2.F2.2.1.1" style="font-size:90%;">Figure 2</span>: </span><span class="ltx_text" id="S2.F2.3.2" style="font-size:90%;">Overview of our framework.
+The system consists of two symmetric phases.
+(1) Knowledge Inversion distills hierarchical representations from real ComfyUI workflows.
+(2) Knowledge Inference reverses this process to generate workflows from instructions via a strategy planner, pseudo-code generator, and rule-based reconstruction.</span></figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">方法</span><span class="original-text">Method</span></h2>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">概述</span><span class="original-text">Overview</span></h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">生成 ComfyUI 工作流程是一个复杂的问题，涉及多个推理和表示层。
+工作流被编码为 JSON 图，其中节点是功能模块，边描述数据或控制依赖关系。
+因此，工作流生成相当于生成一个有效且可执行的 JSON 文件，这比普通文本或代码生成要精致得多。</span><span class="original-text">Generating a ComfyUI workflow is a complex problem with several layers of reasoning and representation.
+A workflow is encoded as a JSON graph where nodes are functional modules and edges describe data or control dependencies.
+Hence, workflow generation is equivalent to producing a valid and executable JSON file, which is far more delicate than ordinary text or code generation.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p2">
+<p class="ltx_p" id="S3.SS1.p2.1"><span class="translated-text">这种复杂性体现在几个层面上。人类专家不会从任务指令直接跳转到 JSON。
+他们首先形成决定总体处理计划的高层策略。
+典型的决策包括是否需要分段、分支是否应单独处理内容、引入多少控件以及控件如何交互。
+这种高级策略需要大量的领域知识以及对视觉模型及其组合逻辑的直观理解。</span><span class="original-text">This complexity arises across several levels. Human experts do not jump from a task instruction directly to JSON.
+They first form a high level strategy that decides the overall processing plan.
+Typical decisions include whether segmentation is required, whether branches should process content separately, how many controls to introduce, and how controls interact.
+This high-level strategy requires substantial domain knowledge and intuitive understanding of visual models and their compositional logic.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p3">
+<p class="ltx_p" id="S3.SS1.p3.1"><span class="translated-text">给定策略，专家构建工作流拓扑，即模块的结构化连接。
+这一步也很困难，因为图可能非常大、​​离散且复杂。
+由于句法脆弱和组合爆炸，直接从文本生成 JSON 连接对于语言模型来说非常困难。
+拓扑形成后，就可以进行参数调优和详细的模块配置，相对而言更加规则驱动或基于模式。
+因此，工作流生成是一个多层次的过程，每个层次都带来不同的推理和学习挑战。
+例如，将拓扑转换为完整的工作流程可以是基于规则的，但从任务指令和策略中导出拓扑本身需要大量的知识和推理能力。</span><span class="original-text">Given the strategy, experts construct the workflow topology, that is, a structured connection of modules.
+This step is also difficult because the graph can be very large, discrete, and complex.
+Directly generating JSON connections from text is extremely hard for language models due to syntactic brittleness and combinatorial explosion.
+After the topology is formed, parameter tuning and detailed module configurations can be carried out, which are comparatively more rule-driven or pattern-based.
+Therefore, workflow generation is a multi-level process, where each level poses distinct reasoning and learning challenges.
+For example, translating topology into a full workflow can be rule-based, but deriving the topology itself from task instructions and strategies demands substantial knowledge and reasoning ability.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS1.p4">
+<p class="ltx_p" id="S3.SS1.p4.1"><span class="translated-text">我们方法的关键思想是逆向知识、注入知识以及跨这些层次级别的知识进行推断。
+我们系统地从大量现实世界工作流程中学习，提炼底层知识表示，并将它们集成到具有推理能力的代理系统中。</span><span class="original-text">The key idea of our approach is to inverse knowledge, inject knowledge, and infer with knowledge across these hierarchical levels.
+We systematically learn from large collections of real-world workflows, distill the underlying knowledge representations, and integrate them into a reasoning-capable agent system.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span><span class="translated-text">知识反转</span><span class="original-text">Knowledge Inversion</span></h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">此阶段的目标是将原始的异构工作流数据反演为一组可以通过语言模型或代理系统有效学习的分层知识表示。
+如图所示</span><span class="original-text">The goal of this stage is to inverse raw and heterogeneous workflow data into a set of hierarchical knowledge representations that can be effectively learned by language models or agent systems.
+As illustrated in Figure</span><a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ LLMs and LLM-Agent. ‣ 2 Related Work ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">（1），整个过程从下到上进行，逐步抽象和重组大量原始工作流程集合中包含的知识。</span><span class="original-text">(1), the entire process proceeds from the bottom to the top, progressively abstracting and reorganizing knowledge contained in large collections of raw workflows.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS2.p2">
+<ul class="ltx_itemize" id="S3.I1">
+<li class="ltx_item" id="S3.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i1.p1">
+<p class="ltx_p" id="S3.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i1.p1.1.1"><span class="translated-text">从原始工作流程到完整的伪代码。</span><span class="original-text">From raw workflow to full pseudo-code.</span></span><span class="translated-text">我们首先雇佣一个</span><span class="original-text">We first employ a</span><span class="ltx_text ltx_font_italic" id="S3.I1.i1.p1.1.2"><span class="translated-text">基于规则的正则化</span><span class="original-text">rule-based regularization</span></span><span class="translated-text">将每个工作流程转换为紧凑的机器可读格式的过程，称为</span><span class="original-text">procedure to convert each workflow into a compact, machine-readable format called</span><span class="ltx_text ltx_font_italic" id="S3.I1.i1.p1.1.3"><span class="translated-text">完整的伪代码</span><span class="original-text">Full Pseudo-code</span></span><span class="translated-text">。此表示保留所有模块名称、拓扑连接和参数值，同时删除语法和 ComfyUI 特定的样式信息。这一步不涉及任何学习，作为更高层次抽象的结构基础。</span><span class="original-text">. This representation preserves all module names, topological connections, and parameter values, while removing the syntactic and ComfyUI-specific styling information. This step does not involve any learning and serves as the structural foundation for higher-level abstraction.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i2.p1">
+<p class="ltx_p" id="S3.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i2.p1.1.1"><span class="translated-text">伪代码的骨架。</span><span class="original-text">To skeleton pseudo-code.</span></span><span class="translated-text">下一步从完整伪代码中抽象出低级实现细节。语言模型删除参数绑定和数值，同时保持工作流的功能拓扑。结果是</span><span class="original-text">The next step abstracts the low-level implementation details from the Full Pseudo-code. A language model removes parameter bindings and numerical values while maintaining the functional topology of the workflow. The result is a</span><span class="ltx_text ltx_font_italic" id="S3.I1.i2.p1.1.2"><span class="translated-text">骨架伪代码</span><span class="original-text">Skeleton Pseudo-code</span></span><span class="translated-text">它仅捕获基本的图形结构和执行流程，为结构感知学习提供了一个干净的目标。</span><span class="original-text">that captures only the essential graph structure and execution flow, providing a clean target for structure-aware learning.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i3.p1">
+<p class="ltx_p" id="S3.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i3.p1.1.1"><span class="translated-text">进行策略推理。</span><span class="original-text">To strategy reasoning.</span></span><span class="translated-text">给定抽象的骨架，我们使用大型语言模型来执行语义解释，以推断解释的底层推理痕迹</span><span class="original-text">Given the abstracted skeleton, we use large language models to perform semantic interpretation to infer the underlying reasoning traces that explain</span><em class="ltx_emph ltx_font_italic" id="S3.I1.i3.p1.1.2"><span class="translated-text">为什么</span><span class="original-text">why</span></em><span class="translated-text">工作流程就是以这种方式组织的。这个</span><span class="original-text">the workflow is organized in such a way. This</span><span class="ltx_text ltx_font_italic" id="S3.I1.i3.p1.1.3"><span class="translated-text">策略推理提取</span><span class="original-text">Strategy Reasoning Extraction</span></span><span class="translated-text">步骤重建了作者的决策过程。例如，为什么多个控件被融合，为什么分支被分开，或者为什么在去噪之后放置面部细节模块。输出是一个将拓扑主题与功能目的联系起来的结构化推理轨迹。</span><span class="original-text">step reconstructs the author’s decision-making process. For instance, why multiple controls are fused, why branches are separated, or why a face-detailing module is placed after denoising. The output is a structured reasoning trace that links topological motifs to functional purposes.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i4.p1">
+<p class="ltx_p" id="S3.I1.i4.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i4.p1.1.1"><span class="translated-text">走向高层战略。</span><span class="original-text">To high-level strategy.</span></span><span class="translated-text">然后将推断的推理轨迹总结为简洁的</span><span class="original-text">The inferred reasoning trace is then summarized into a concise</span><span class="ltx_text ltx_font_italic" id="S3.I1.i4.p1.1.2"><span class="translated-text">策略说明</span><span class="original-text">Strategy Description</span></span><span class="translated-text">，它代表专家可能口头描述的高级处理计划。该级别捕获工作流的整体解决方案逻辑，例如是否需要分段、哪些模块应该协作以及控件如何交互。</span><span class="original-text">, which represents the high-level processing plan that an expert might verbally describe. This level captures the overall solution logic of the workflow, such as whether segmentation is required, which modules should cooperate, and how controls interact.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i5" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i5.p1">
+<p class="ltx_p" id="S3.I1.i5.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i5.p1.1.1"><span class="translated-text">任务指令和输入。</span><span class="original-text">To task instruction and inputs.</span></span><span class="translated-text">由于大多数收集的工作流程缺乏明确的用户提示，我们进一步推断出相应的</span><span class="original-text">Since most collected workflows lack explicit user prompts, we further infer the corresponding</span><span class="ltx_text ltx_font_italic" id="S3.I1.i5.p1.1.2"><span class="translated-text">任务指令和输入规范</span><span class="original-text">task instruction and input specifications</span></span><span class="translated-text">培训所需。这是通过将生成的高级策略与检索到的示例对齐以及解码与工作流的结构和语义上下文一致的合理任务描述来实现的。结果是一个自然语言级的监督信号，可以重建每个工作流程背后的用户意图。</span><span class="original-text">required for training. This is achieved by aligning the generated high-level strategy with retrieved exemplars and by decoding plausible task descriptions consistent with the structural and semantic context of the workflow. The result is a natural-language-level supervision signal that reconstructs the user intent behind each workflow.</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="S3.SS2.p3">
+<p class="ltx_p" id="S3.SS2.p3.1"><span class="translated-text">这种分层反转提供了结构化知识，这些知识随后可以注入到大型语言模型中，并由代理推理框架用于工作流合成。
+每个级别都可以作为下游训练的硬目标或弱监督信号。</span><span class="original-text">This hierarchical inversion provides structured knowledge that can later be injected into large language models and utilized by agentic reasoning frameworks for workflow synthesis.
+Each level can serve as either a hard target or a weak supervision signal for downstream training.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span><span class="translated-text">知识注入</span><span class="original-text">Knowledge Injection</span></h3>
+<div class="ltx_para" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.1"><span class="translated-text">通过反演提取分层知识表示后，下一阶段是将它们注入语言模型中，以便模型可以在推理过程中利用这些知识。
+并非所有级别都需要知识注入。
+一些转换，例如填充详细参数或将骨架伪代码扩展为完整版本，可以通过现有模型先验或简单的基于规则的完成来处理。
+然而，涉及推理、创造力和实验的转换，例如从任务描述到策略的映射，或从策略到新伪代码的映射，需要显式的知识注入。
+因此，我们根据学习的必要性对知识注入过程进行分类：</span><span class="original-text">After the hierarchical knowledge representations are distilled through inversion, the next stage is to inject them into language models so that the models can utilize this knowledge during inference.
+Not all levels require knowledge injection.
+Some transformations, such as filling in detailed parameters or expanding a skeleton pseudo-code into a complete version, can be handled by existing model priors or simple rule-based completion.
+However, transitions that involve reasoning, creativity and experiments, such as mapping from a task description to a strategy, or from a strategy to a new pseudo-code, demand explicit knowledge injection.
+We therefore categorize the knowledge injection process according to its learning necessity:</span></p>
+<ul class="ltx_itemize" id="S3.I2">
+<li class="ltx_item" id="S3.I2.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I2.i1.p1">
+<p class="ltx_p" id="S3.I2.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I2.i1.p1.1.1"><span class="translated-text">任务</span><span class="original-text">Task</span><math alttext="\rightarrow" class="ltx_Math" display="inline" id="S3.I2.i1.p1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math><span class="translated-text">策略。</span><span class="original-text">Strategy.</span></span><span class="translated-text">这种转变编码了人类专家的经验知识，说明了他们如何分析任务、将其分解为子目标并相应地选择处理模块。
+由于这种推理涉及隐性专业知识而不是显式语法，因此通用模型无法可靠地推断出它。
+因此，有监督微调（SFT）对于注入这种经验驱动的知识至关重要。</span><span class="original-text">This transition encodes the experiential knowledge of human experts, illustrating how they analyze a task, decompose it into subgoals, and select processing modules accordingly.
+Since this reasoning involves tacit expertise rather than explicit syntax, it cannot be inferred reliably by general-purpose models.
+Supervised fine-tuning (SFT) is therefore essential to inject this experience-driven knowledge.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I2.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I2.i2.p1">
+<p class="ltx_p" id="S3.I2.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I2.i2.p1.1.1"><span class="translated-text">策略</span><span class="original-text">Strategy</span><math alttext="\rightarrow" class="ltx_Math" display="inline" id="S3.I2.i2.p1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math><span class="translated-text">骨架伪代码。</span><span class="original-text">Skeleton Pseudo-code.</span></span><span class="translated-text">将高级计划转化为可执行结构需要基本模型所缺乏的组合推理和图形构建技能。
+我们再次使用 SFT 来训练模型生成符合策略意图的结构化、语法有效的伪代码。
+此步骤使模型能够内化模块之间的拓扑模式和因果关系。</span><span class="original-text">Translating a high-level plan into executable structures requires compositional reasoning and graph construction skills that the base model lacks.
+We again employ SFT to teach the model to generate structured, syntactically valid pseudo-codes consistent with the strategy’s intent.
+This step enables the model to internalize topological patterns and causal relations between modules.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I2.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I2.i3.p1">
+<p class="ltx_p" id="S3.I2.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I2.i3.p1.1.1"><span class="translated-text">骷髅</span><span class="original-text">Skeleton</span><math alttext="\rightarrow" class="ltx_Math" display="inline" id="S3.I2.i3.p1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math><span class="translated-text">完整的伪代码。</span><span class="original-text">Full Pseudo-code.</span></span><span class="translated-text">该级别主要涉及参数恢复和风格补全，可以通过基于规则的扩展或轻量级提示来实现。
+它不需要额外的监督培训。</span><span class="original-text">This level mainly concerns parameter restoration and stylistic completion, which can be achieved through rule-based expansion or lightweight prompting.
+It does not require additional supervised training.</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="S3.SS3.p2">
+<p class="ltx_p" id="S3.SS3.p2.1"><span class="translated-text">我们强调 SFT 是知识注入的主要机制，因为它直接教导模型产生超出其预训练范围的新推理模式或表示。
+相比之下，GRPO 等强化式对齐方法主要对已经可行的生成空间内的局部偏好优化有效。
+在我们的设置中，目标是赋予模型新的功能，例如规划、分解和工作流构建，SFT 作为主要的知识载体。
+一些研究确实表明，在类似的环境中，SFT 继续在能力注入中发挥主导作用</span><span class="original-text">We emphasize that SFT is the primary mechanism for knowledge injection, as it directly teaches the model to produce new reasoning patterns or representations beyond its pretraining scope.
+By contrast, reinforcement-style alignment methods such as GRPO are mainly effective for local preference optimization within an already feasible generation space.
+In our setting, where the goal is to endow the model with new capabilities such as planning, decomposition, and workflow construction, SFT serves as the primary knowledge carrier.
+Some studies indeed demonstrate that in similar settings, SFT continues to play the dominant role for capability injection</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xu2025comfyuir1</span>]</cite>.</p>
+</div>
+<div class="ltx_para" id="S3.SS3.p3">
+<p class="ltx_p" id="S3.SS3.p3.1"><span class="translated-text">在实践中，我们微调了一个大型语言模型，Qwen3-14B</span><span class="original-text">In practice, we fine-tune a large language model, Qwen3-14B</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">yang2025qwen3</span>]</cite><span class="translated-text">，关于配对的例子</span><span class="original-text">, on paired examples of</span><span class="ltx_text ltx_font_italic" id="S3.SS3.p3.1.1"><span class="translated-text">（任务、策略）</span><span class="original-text">(task, strategy)</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_italic" id="S3.SS3.p3.1.2"><span class="translated-text">（策略，伪代码）</span><span class="original-text">(strategy, pseudo-code)</span></span><span class="translated-text">。
+在训练过程中，我们还引入了一个辅助目标</span><span class="original-text">.
+During training, we also introduce an auxiliary objective of</span><span class="ltx_text ltx_font_italic" id="S3.SS3.p3.1.3"><span class="translated-text">策略推理提取</span><span class="original-text">strategy reasoning extraction</span></span><span class="translated-text">，这要求模型生成解释每个战略决策的中间推理轨迹。
+该辅助任务对模型进行正则化，以学习专家推理的话语和逻辑结构，从而提高工作流合成过程中的可解释性和泛化性。</span><span class="original-text">, which requires the model to generate intermediate reasoning traces explaining each strategic decision.
+This auxiliary task regularizes the model to learn the discourse and logical structure of expert reasoning, thereby improving both interpretability and generalization during workflow synthesis.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.4 </span><span class="translated-text">知识推理</span><span class="original-text">Knowledge Inference</span></h3>
+<div class="ltx_para" id="S3.SS4.p1">
+<p class="ltx_p" id="S3.SS4.p1.1"><span class="translated-text">一旦语言模型配备了注入的知识，对新任务的推理本质上就变成了知识反转的逆过程，如图所示</span><span class="original-text">Once the language model has been equipped with the injected knowledge, inference on new tasks becomes essentially the reverse process of knowledge inversion, as illustrated in Figure</span><a class="ltx_ref" href="#S2.F2" title="Figure 2 ‣ LLMs and LLM-Agent. ‣ 2 Related Work ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">（2）。
+给定用户提供的任务指令和输入，系统首先调用</span><span class="original-text">(2).
+Given a user-provided task instruction and inputs, the system first invokes a</span><span class="ltx_text ltx_font_italic" id="S3.SS4.p1.1.1"><span class="translated-text">高层结构规划师</span><span class="original-text">High-Level Structure Planner</span></span><span class="translated-text">，一个经过 SFT 训练的模型，它执行策略推理以生成描述工作流的整体处理逻辑、分解和控制结构的高级策略。
+该策略反映了从大量真实工作流程中获得的经验知识。
+接下来，生成的策略被传递到</span><span class="original-text">, an SFT-trained model that performs strategic reasoning to produce a high-level strategy describing the overall processing logic, decomposition, and control structure of the workflow.
+The strategy reflects the distilled experiential knowledge obtained from the large corpus of real workflows.
+Next, the generated strategy is passed to a</span><span class="ltx_text ltx_font_italic" id="S3.SS4.p1.1.2"><span class="translated-text">伪代码生成器</span><span class="original-text">Pseudo-code Generator</span></span><span class="translated-text">，另一个 SFT 训练模型，将抽象计划转换为可执行的骨架伪代码。
+然后采用预训练模型根据每个模块的上下文语义填充参数和绑定，并使用适当的配置值恢复完整的伪代码。
+最后，基于规则的重构过程将完整的伪代码转换为功能齐全的 ComfyUI 工作流程，可以在目标系统中直接执行或可视化。</span><span class="original-text">, another SFT-trained model that converts the abstract plan into an executable skeleton pseudo-code.
+A pretrained model is then employed to fill in parameters and bindings based on the contextual semantics of each module, restoring a full pseudo-code with appropriate configuration values.
+Finally, the rule-based reconstruction procedure converts the full pseudo-code into a fully functional ComfyUI workflow, which can be directly executed or visualized in the target system.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS4.p2">
+<p class="ltx_p" id="S3.SS4.p2.1"><span class="translated-text">为了进一步提高鲁棒性，我们在策略规划和伪代码生成阶段之后结合了自我细化机制。
+该模型被提示重新评估和完善其自身的输出，纠正不完整的推理步骤并增强结构的连贯性。
+这种迭代细化导致更完整、逻辑一致且可执行的工作流程。</span><span class="original-text">To further improve robustness, we incorporate self-refinement mechanisms after both the strategy planning and pseudo-code generation stages.
+The model is prompted to re-evaluate and refine its own outputs, correcting incomplete reasoning steps and enhancing structural coherence.
+This iterative refinement leads to more complete, logically consistent, and executable workflows.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS5">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.5 </span><span class="translated-text">与先前作品的讨论</span><span class="original-text">Discussion with Prior Works</span></h3>
+<div class="ltx_para" id="S3.SS5.p1">
+<p class="ltx_p" id="S3.SS5.p1.1"><span class="translated-text">ComfyUI 的研究不断增多</span><span class="original-text">Across the growing body of research on ComfyUI</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xu2025comfyuir1</span>]</cite><span class="translated-text">在工作流生成过程中，存在一个共同的愿望：降低工作流构建的固有复杂性并注入能够进行结构化推理的领域知识。
+然而，先前的工作实现这一目标的方式有所不同。</span><span class="original-text">workflow generation, there exists a common aspiration: to reduce the inherent complexity of workflow construction and to inject domain knowledge that enables structured reasoning.
+Yet the ways the prior works operationalize this goal differ.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS5.p2">
+<p class="ltx_p" id="S3.SS5.p2.1"><span class="translated-text">早期框架，例如 ComfyAgent</span><span class="original-text">Early frameworks such as ComfyAgent</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xue2025comfybench</span>]</cite><span class="translated-text">和舒适心灵</span><span class="original-text">and ComfyMind</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">guo2025comfymind</span>]</cite><span class="translated-text">通过引入约束抽象来应对挑战。
+他们用预定义内部连接的元节点替换了原始节点级图，从而降低了组合复杂性。
+这种方法虽然可控，但由于将解决方案空间限制为手工设计的模式，不可避免地限制了表达能力。</span><span class="original-text">approach the challenge by introducing constrained abstractions.
+They replaced raw node-level graphs with meta-nodes whose internal connectivity was predefined, lowering combinatorial complexity.
+This approach, while controllable, inevitably limited expressiveness by constraining the solution space to handcrafted schemas.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS5.p3">
+<p class="ltx_p" id="S3.SS5.p3.1"><span class="translated-text">后续基于学习的系统，包括 ComfyGPT</span><span class="original-text">Subsequent learning-based systems, including ComfyGPT</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">huang2025comfygpt</span>]</cite><span class="translated-text">和ComfyUI-R1</span><span class="original-text">and ComfyUI-R1</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xu2025comfyuir1</span>]</cite><span class="translated-text">，将重点从符号简化转向数据驱动能力。
+他们没有修复结构模板，而是在大量工作流集合上训练语言或推理模型，以预测连接或直接从文本描述生成伪代码。
+然而，他们的知识仍然隐式地纠缠在模型参数中，使得跨抽象级别的解释、适应或重用变得困难。</span><span class="original-text">, shifted the focus from symbolic simplification to data-driven capability.
+Instead of fixing structural templates, they trained language or reasoning models on large collections of workflows to predict connections or generate pseudo-codes directly from textual descriptions.
+However, their knowledge remained implicitly entangled within model parameters, making it difficult to interpret, adapt, or reuse across levels of abstraction.</span></p>
+</div>
+<div class="ltx_para" id="S3.SS5.p4">
+<p class="ltx_p" id="S3.SS5.p4.1"><span class="translated-text">我们的框架有两个方向。
+我们没有简化问题或将知识隐藏在不透明的模型权重中，而是让知识本身成为中心表征货币。
+通过知识反演，我们将复杂的工作流程分解为捕获结构、策略和推理的层次表示。
+这种范例不仅降低了复杂性，而且还降低了复杂性。它通过将专家隐含的经验知识转化为显性的、可学习的和可重用的形式来对其进行重组。
+在此过程中，它将工作流生成从临时模式学习转向有原则的、以知识为中心的代理推理基础。</span><span class="original-text">Our framework departs from both directions.
+Rather than simplifying the problem or burying knowledge inside opaque model weights, we make knowledge itself the central representational currency.
+Through knowledge inversion, we decompose complex workflows into hierarchical representations that capture structure, strategy, and reasoning.
+This paradigm does not merely reduce complexity; it reorganizes it by transforming the implicit experiential knowledge of experts into explicit, learnable, and reusable forms.
+In doing so, it moves workflow generation from ad-hoc pattern learning toward a principled, knowledge-centric foundation for agentic reasoning.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">实验</span><span class="original-text">Experiments</span></h2>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span><span class="translated-text">设置</span><span class="original-text">Settings</span></h3>
+<section class="ltx_paragraph" id="S4.SS1.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">工作流程集合。</span><span class="original-text">Workflow Collection.</span></h4>
+<div class="ltx_para" id="S4.SS1.SSS0.Px1.p1">
+<p class="ltx_p" id="S4.SS1.SSS0.Px1.p1.1"><span class="translated-text">我们从互联网上收集了超过10000个工作流实例，涵盖了广泛的任务类型和节点结构。
+然而，原始数据噪声很大且冗余。
+为了构建高质量、多样化且语义一致的数据集，我们进行了大规模的结构重复数据删除和过滤。
+具体来说，我们首先通过比较节点级结构差异来识别潜在冗余的工作流程。
+当两个工作流之间不同节点的比例低于10%时，就认为它们在结构上相似。
+在这种情况下，我们采用 GPT-4o 来评估语义和程序等价性，仅保留具有更标准化和广泛使用的节点类型的版本。
+然后，我们通过统一输入条目来合并完全相同的工作流程，并删除太简单（少于六个节点）或过于复杂（超过九十个节点）的工作流程。
+任务描述进一步规范化和整合，以消除近乎重复的目标，同时保持结构和语义多样性。</span><span class="original-text">We collected over 10,000 workflow instances from the Internet, covering a wide range of task types and node structures.
+However, the raw data were highly noisy and redundant.
+To construct a high-quality, diverse, and semantically consistent dataset, we performed large-scale structural deduplication and filtering.
+Specifically, we first identified potentially redundant workflows by comparing node-level structural differences.
+When the ratio of differing nodes between two workflows was below 10%, they were considered structurally similar.
+In such cases, we employed GPT-4o to evaluate semantic and procedural equivalence, retaining only the version with more standardized and widely used node types.
+We then merged fully identical workflows by unifying their input entries and removed workflows that were either too simple (fewer than six nodes) or excessively complex (more than ninety nodes).
+Task descriptions were further normalized and consolidated to eliminate near-duplicate objectives while maintaining structural and semantic diversity.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.SSS0.Px1.p2">
+<p class="ltx_p" id="S4.SS1.SSS0.Px1.p2.1"><span class="translated-text">经过多阶段清理和过滤，我们获得了包含 912 个高质量工作流程的精选数据集，涵盖不同的任务分布和节点类型。
+其中，882个工作流用于训练，30个工作流及其相应的任务查询被保留用于测试。
+根据与训练数据的相似性，测试工作流程分为三类：</span><span class="original-text">After multi-stage cleaning and filtering, we obtained a curated dataset of 912 high-quality workflows spanning diverse task distributions and node types.
+Among them, 882 workflows were used for training, while 30 workflows and their corresponding task queries were reserved for testing.
+The test workflows were grouped into three categories based on their similarity to the training data:</span><span class="ltx_text ltx_font_italic" id="S4.SS1.SSS0.Px1.p2.1.1"><span class="translated-text">挑战1</span><span class="original-text">Challenge 1</span></span><span class="translated-text">（相似度高），</span><span class="original-text">(high similarity),</span><span class="ltx_text ltx_font_italic" id="S4.SS1.SSS0.Px1.p2.1.2"><span class="translated-text">挑战2</span><span class="original-text">Challenge 2</span></span><span class="translated-text">（中等相似度），以及</span><span class="original-text">(medium similarity), and</span><span class="ltx_text ltx_font_italic" id="S4.SS1.SSS0.Px1.p2.1.3"><span class="translated-text">真实案例</span><span class="original-text">Real-world Cases</span></span><span class="translated-text">（没有可比较的训练样本）。
+基于 GPT 的评估器从四个维度评估相似性：任务目标、技术方法、结构形式和应用上下文。</span><span class="original-text">(no comparable training samples).
+Similarity was assessed by a GPT-based evaluator across four dimensions: task objective, technical method, structural form, and application context.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS1.SSS0.Px1.p3">
+<p class="ltx_p" id="S4.SS1.SSS0.Px1.p3.1"><span class="translated-text">除了这种划分之外，我们还在两个外部基准上进一步评估我们的方法，以评估泛化能力。
+首先，我们在 FlowBench 数据集上进行评估</span><span class="original-text">In addition to this split, we further evaluate our method on two external benchmarks to assess generalization ability.
+First, we evaluate on the FlowBench dataset</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">huang2025comfygpt</span>]</cite><span class="translated-text">使用包含 30 个任务的测试集。
+其次，我们对 ComfyBench 的子集进行评估，该子集包含从 20 个样本中抽取的任务</span><span class="original-text">using a test set of 30 tasks.
+Second, we conduct evaluation on a subset of ComfyBench consisting of 20 tasks sampled from the</span><span class="ltx_text ltx_font_italic" id="S4.SS1.SSS0.Px1.p3.1.1"><span class="translated-text">创意</span><span class="original-text">Creative</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_italic" id="S4.SS1.SSS0.Px1.p3.1.2"><span class="translated-text">综合体</span><span class="original-text">Complex</span></span><span class="translated-text">类别。
+这些评估共同涵盖了域内和域外工作流生成场景。</span><span class="original-text">categories.
+Together, these evaluations cover both in-domain and out-of-domain workflow generation scenarios.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS1.SSS0.Px1.p4">
+<p class="ltx_p" id="S4.SS1.SSS0.Px1.p4.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.SSS0.Px1.p4.1.1"><span class="translated-text">比较方法。</span><span class="original-text">Compared Methods.</span></span><span class="translated-text">鉴于 ComfyBench</span><span class="original-text">Given that ComfyBench</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xue2025comfybench</span>]</cite><span class="translated-text">是目前可用于此任务的唯一开源基线，我们采用它进行比较并严格遵循其实验设置。具体来说，我们评估了 6 个具有代表性的工作流生成范例</span><span class="original-text">is the only open-source baseline currently available for this task, we adopt it for comparison and strictly follow its experimental settings. Specifically, we evaluate six representative workflow-generation paradigms established in</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xue2025comfybench</span>]</cite><span class="translated-text">：零射击、少射击、思想链 (CoT)、具有自洽性的 CoT (CoT-SC)、检索增强生成 (RAG) 和 ComfyAgent。这些方法对应于表中呈现的变体</span><span class="original-text">: Zero-Shot, Few-Shot, Chain-of-Thought (CoT), CoT with Self-Consistency (CoT-SC), Retrieval-Augmented Generation (RAG), and ComfyAgent. These methods correspond to the variants presented in Tables</span><a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ 4.3 Results ‣ 4 Experiments ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">1</span></a>, <a class="ltx_ref" href="#S4.T2" title="Table 2 ‣ 4.3 Results ‣ 4 Experiments ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">2</span></a>, <a class="ltx_ref" href="#S4.T3" title="Table 3 ‣ 4.3 Results ‣ 4 Experiments ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">, 和</span><span class="original-text">, and</span><a class="ltx_ref" href="#S4.T4" title="Table 4 ‣ 4.3 Results ‣ 4 Experiments ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">。
+为了保证公平性，所有方法都使用GPT-5作为底层LLM接口，与我们的refine代理的配置一致。
+有关这些基线方法的更多详细信息，请参阅补充材料。</span><span class="original-text">.
+To ensure fairness, all the methods use GPT-5 as the underlying LLM interface, consistent with the configuration of our refine agent.
+More details of these baseline methods can be found in the supplementary material.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS1.SSS0.Px1.p5">
+<p class="ltx_p" id="S4.SS1.SSS0.Px1.p5.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.SSS0.Px1.p5.1.1"><span class="translated-text">实施细节。</span><span class="original-text">Implementation detail.</span></span><span class="translated-text">我们使用 Qwen3-14B 模型作为 SFT 训练的骨干。该模型针对上述​​两项任务进行了训练。
+这两个阶段均在单个 NVIDIA H200 GPU 上使用 LoRA 技术进行了微调。
+在指令到策略阶段，我们将最大序列长度设置为2048个令牌，而在策略到伪代码阶段，将其扩展到4096个令牌。
+LoRA 配置使用等级 16 和缩放因子 (</span><span class="original-text">We used the Qwen3-14B model as the backbone for SFT training. The model was trained on the two tasks described above.
+Both stages were fine-tuned using the LoRA technique on a single NVIDIA H200 GPU.
+During the instruction-to-strategy stage, we set the maximum sequence length to 2048 tokens, while in the strategy-to-pseudocode stage, it was extended to 4096 tokens.
+The LoRA configuration used a rank of 16 and a scaling factor (</span><math alttext="\alpha" class="ltx_Math" display="inline" id="S4.SS1.SSS0.Px1.p5.1.m1" intent=":literal"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math><span class="translated-text">）共 32 个。
+对于用于代理构建的预训练大语言模型，我们采用 GPT-5（gpt-5-turbo，2025 版本）。</span><span class="original-text">) of 32.
+For the pre-trained large language model used for agent building, we adopt GPT-5 (gpt-5-turbo, 2025 release).</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_square" height="855" id="S4.F3.g1" src="https://arxiv.org/html/2607.15845v1/x3.png" width="772"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F3.2.1.1" style="font-size:90%;">Figure 3</span>: </span><span class="ltx_text" id="S4.F3.3.2" style="font-size:90%;">Comparison with baseline methods. Given a user instruction, our method accurately adheres to the task description.</span></figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span><span class="translated-text">评估指标</span><span class="original-text">Evaluation Metrics</span></h3>
+<div class="ltx_para" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.1"><span class="translated-text">我们全面评估两者生成的工作流程</span><span class="original-text">We comprehensively evaluate generated workflows from both</span><span class="ltx_text ltx_font_italic" id="S4.SS2.p1.1.1"><span class="translated-text">结构性的</span><span class="original-text">structural</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_italic" id="S4.SS2.p1.1.2"><span class="translated-text">语义</span><span class="original-text">semantic</span></span><span class="translated-text">使用四个互补指标的观点：
+有效节点多样性 (VND)、节点完整性 (NodeComp)、链路完整性 (LinkComp) 和任务一致性 (TaskCons)。</span><span class="original-text">perspectives using four complementary metrics:
+Valid Node Diversity (VND), Node Completeness (NodeComp), Link Completeness (LinkComp), and Task Consistency (TaskCons).</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS2.p2">
+<p class="ltx_p" id="S4.SS2.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.p2.1.1"><span class="translated-text">越南盾</span><span class="original-text">VND</span></span><span class="translated-text">量化生成的工作流程中存在的有效节点类型的多样性，反映模型生成各种且功能有效的模块组合的能力，而不是依赖于重复或琐碎的组件。</span><span class="original-text">quantifies the diversity of valid node types present in generated workflows, reflecting the model’s ability to produce varied and functionally valid module compositions rather than relying on repetitive or trivial components.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS2.p3">
+<p class="ltx_p" id="S4.SS2.p3.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.p3.1.1"><span class="translated-text">节点计算</span><span class="original-text">NodeComp</span></span><span class="translated-text">衡量正确实例化并参与至少一个连接的有效节点的比例。如果节点的类型已注册、非空且链接到其他节点，则该节点被视为有效。有效节点与总节点的比率表明工作流的语义和功能完整性。</span><span class="original-text">measures the proportion of valid nodes that are correctly instantiated and involved in at least one connection. A node is considered valid if its type is registered, non-empty, and linked to other nodes. The ratio of valid to total nodes indicates the semantic and functional completeness of the workflow.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS2.p4">
+<p class="ltx_p" id="S4.SS2.p4.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.p4.1.1"><span class="translated-text">链接组件</span><span class="original-text">LinkComp</span></span><span class="translated-text">评估节点连接的结构正确性。对于每个节点，验证输入输出一致性：所有声明的输入必须存在并正确引用有效输出，并且所有输出槽索引必须保持在界限内。通过这些检查的节点比例代表了工作流的拓扑健全性。</span><span class="original-text">evaluates the structural correctness of node connections. For each node, input–output consistency is verified: all declared inputs must exist and correctly reference valid outputs, and all output slot indices must remain within bounds. The proportion of nodes passing these checks represents the workflow’s topological soundness.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS2.p5">
+<p class="ltx_p" id="S4.SS2.p5.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.p5.1.1"><span class="translated-text">任务缺点</span><span class="original-text">TaskCons</span></span><span class="translated-text">评估生成的工作流程完成指令中描述的目标任务的情况。基于 GPT 的评估器对每个工作流程完成其任务的程度进行评分（例如，“高档”、“重新照明”、“姿势一致的动画”）。分数越高表明任务意图和工作流程的功能结构之间的一致性越好。</span><span class="original-text">assesses how well the generated workflow fulfills the target task described in the instruction. A GPT-based evaluator scores how well each workflow fulfills its task (e.g., “upscale”, “relighting”, “pose-consistent animation”). Higher scores indicate better alignment between the task intent and the workflow’s functional structure.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS2.p6">
+<p class="ltx_p" id="S4.SS2.p6.1"><span class="translated-text">此外，我们通过两个成果级别指标来评估可执行性和任务完成情况：</span><span class="original-text">In addition, we evaluate executability and task fulfillment through two outcome-level indicators:</span><span class="ltx_text ltx_font_bold" id="S4.SS2.p6.1.1"><span class="translated-text">通行证</span><span class="original-text">Pass</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_bold" id="S4.SS2.p6.1.2"><span class="translated-text">解决</span><span class="original-text">Resolve</span></span><span class="translated-text">。
+一个工作流程被计为</span><span class="original-text">.
+A workflow is counted as</span><span class="ltx_text ltx_font_italic" id="S4.SS2.p6.1.3"><span class="translated-text">通行证</span><span class="original-text">Pass</span></span><span class="translated-text">如果它在 ComfyUI 中成功执行且没有结构或运行时错误，并且如下</span><span class="original-text">if it executes successfully in ComfyUI without structural or runtime errors, and as</span><span class="ltx_text ltx_font_italic" id="S4.SS2.p6.1.4"><span class="translated-text">解决</span><span class="original-text">Resolve</span></span><span class="translated-text">如果它另外产生了满足预期任务目标的输出。这些指标共同评估工作流生成的语法有效性和功能有效性。为了确保评估的稳定和公正，我们不依赖法学硕士的评委。相反，所有工作流程均在 ComfyUI 中手动执行，并通过人工检查评估输出。</span><span class="original-text">if it additionally produces an output that fulfills the intended task goal. Together, these indicators assess both syntactic validity and the functional effectiveness of workflow generation. To ensure stable and unbiased evaluation, we do not rely on LLM-based judges. Instead, all workflows are executed manually in ComfyUI and the outputs are assessed through human inspection.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span><span class="translated-text">结果</span><span class="original-text">Results</span></h3>
+<div class="ltx_para" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.1"><span class="ltx_text ltx_font_bold" id="S4.SS3.p1.1.1"><span class="translated-text">定量评价。</span><span class="original-text">Quantitative evaluation.</span></span><span class="translated-text">我们使用四个互补指标来评估测试集上的工作流生成质量：VND、NodeComp、LinkComp 和 TaskCons。这些指标共同衡量工作流程的多样性、结构完整性和任务级正确性。如表所示</span><span class="original-text">We evaluate workflow-generation quality on our test set using four complementary metrics: VND, NodeComp, LinkComp, and TaskCons. Together, these metrics measure workflow diversity, structural completeness, and task-level correctness. As shown in Table</span><a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ 4.3 Results ‣ 4 Experiments ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">，我们的方法在所有指标上都实现了明显的改进。我们的 VND 分数达到 152，是最高基线分数 42 的 3.6 倍多，这表明我们的系统可以组成比基于模板的方法更丰富、更多样化的工作流程结构。</span><span class="original-text">, our method achieves clear improvements across all metrics. Our VND score reaches 152, more than 3.6 times the highest baseline score of 42, indicating that our system can compose substantially richer and more diverse workflow structures than template-based methods.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S4.T1.6.1.1" style="font-size:90%;">Table 1</span>: </span><span class="ltx_text" id="S4.T1.7.2" style="font-size:90%;">Comparison of workflow generation performance on the test set.
+VND: Valid Node Diversity.
+NodeComp: Node Completeness.
+LinkComp: Link Completeness.
+TaskCons: Task Consistency.</span></figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T1.4">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T1.4.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T1.4.4.5">Method</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T1.1.1.1">VND<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T1.1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T1.2.2.2">NodeComp (%)<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T1.2.2.2.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T1.3.3.3">LinkComp (%)<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T1.3.3.3.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T1.4.4.4">TaskCons (%)<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T1.4.4.4.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T1.4.5.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T1.4.5.1.1">GPT-5 + Zero-Shot</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t" id="S4.T1.4.5.1.2">0.0</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.4.5.1.3">0.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.4.5.1.4">0.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T1.4.5.1.5">0.0</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.6.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T1.4.6.2.1">GPT-5 + Few-Shot</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S4.T1.4.6.2.2">20</th>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.6.2.3">36.7</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.6.2.4">36.7</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.6.2.5">34.7</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.7.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T1.4.7.3.1">GPT-5 + CoT</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S4.T1.4.7.3.2">26</th>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.7.3.3">33.3</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.7.3.4">33.3</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.7.3.5">32.9</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.8.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T1.4.8.4.1">GPT-5 + CoT-SC</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S4.T1.4.8.4.2">21</th>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.8.4.3">36.7</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.8.4.4">36.7</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.8.4.5">34.8</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.9.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T1.4.9.5.1">GPT-5 + RAG</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S4.T1.4.9.5.2">42</th>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.9.5.3">56.7</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.9.5.4">56.7</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.9.5.5">53.6</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.10.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T1.4.10.6.1">GPT-5 + ComfyAgent</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S4.T1.4.10.6.2">40</th>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.10.6.3">56.7</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.10.6.4">56.7</td>
+<td class="ltx_td ltx_align_center" id="S4.T1.4.10.6.5">55.1</td>
+</tr>
+<tr class="ltx_tr" id="S4.T1.4.11.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t" id="S4.T1.4.11.7.1"><span class="ltx_text ltx_font_bold" id="S4.T1.4.11.7.1.1">Ours</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_bb ltx_border_t" id="S4.T1.4.11.7.2"><span class="ltx_text ltx_font_bold" id="S4.T1.4.11.7.2.1">152</span></th>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T1.4.11.7.3"><span class="ltx_text ltx_font_bold" id="S4.T1.4.11.7.3.1">96.3</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T1.4.11.7.4"><span class="ltx_text ltx_font_bold" id="S4.T1.4.11.7.4.1">98.3</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T1.4.11.7.5"><span class="ltx_text ltx_font_bold" id="S4.T1.4.11.7.5.1">86.9</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para" id="S4.SS3.p2">
+<p class="ltx_p" id="S4.SS3.p2.1"><span class="translated-text">我们的方法还比所有其他方法获得了明显更高的结构和语义准确性。其 NodeComp、LinkComp 和 TaskCons 分数始终远高于基于 GPT-5 的方法和 ComfyAgent，这表明生成的工作流格式良好且与预期任务逻辑保持一致。这些结果表明，基于模板或检索驱动的方法从根本上是有限的，而我们的模型可以大规模生成多样化、结构合理且任务忠实的工作流程。</span><span class="original-text">Our method also attains markedly higher structural and semantic accuracy than all the other methods. Its NodeComp, LinkComp, and TaskCons scores are consistently far above GPT-5-based methods and ComfyAgent, demonstrating that the generated workflows are both well-formed and aligned with the intended task logic. These results show that template-based or retrieval-driven methods are fundamentally limited, while our model can generate diverse, structurally sound, and task-faithful workflows at scale.</span></p>
+</div>
+<div class="ltx_para" id="S4.SS3.p3">
+<p class="ltx_p" id="S4.SS3.p3.1"><span class="translated-text">如表所示</span><span class="original-text">As reported in Table</span><a class="ltx_ref" href="#S4.T2" title="Table 2 ‣ 4.3 Results ‣ 4 Experiments ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">，我们在测试集上进一步评估 ComfyUI 内的工作流程可执行性。我们的方法在所有测试类别（挑战 1、挑战 2 和真实案例）中实现了最高的通过率和解决率。例如，平均通过率达到 86.9%，而 ComfyAgent 为 36.4%，Resolve 从 29.4% 提高到 61.1%。
+这些结果表明我们的工作流程不仅在理论上有效，而且在实践中可执行并且能够完成指定的任务指令。现实案例中的强劲性能进一步凸显了生成的管道的稳健性。</span><span class="original-text">, we further evaluate workflow executability within ComfyUI on our test set. Our approach achieves the highest pass and solve rates across all test categories—Challenge 1, Challenge 2, and Real-World Cases. For example, the average Pass rate reaches 86.9%, compared with 36.4% for ComfyAgent, and Resolve improves from 29.4% to 61.1%.
+These results indicate that our workflows are not only theoretically valid but also executable in practice and able to fulfill the specified task instruction. The strong performance on real-world cases further highlights the robustness of the generated pipelines.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T2">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S4.T2.4.1.1" style="font-size:90%;">Table 2</span>: </span><span class="ltx_text" id="S4.T2.5.2" style="font-size:90%;">Results grouped by test set categories.
+<em class="ltx_emph ltx_font_italic" id="S4.T2.5.2.1">Pass</em> indicates the generated workflow executes successfully without structural or runtime errors.
+<em class="ltx_emph ltx_font_italic" id="S4.T2.5.2.2">Resolve</em> indicates the workflow executes and fulfills the given instruction.</span></figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="S4.T2.6" style="width:345.0pt;height:65.5pt;vertical-align:-31.3pt;"><span class="ltx_transformed_inner" style="transform:translate(-117.2pt,22.3pt) scale(0.59541137660045,0.59541137660045) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S4.T2.6.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T2.6.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T2.6.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S4.T2.6.1.1.1.1.1">Method</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="2" id="S4.T2.6.1.1.1.2"><span class="ltx_text ltx_font_bold" id="S4.T2.6.1.1.1.2.1">Challenge 1</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="2" id="S4.T2.6.1.1.1.3"><span class="ltx_text ltx_font_bold" id="S4.T2.6.1.1.1.3.1">Challenge 2</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="2" id="S4.T2.6.1.1.1.4"><span class="ltx_text ltx_font_bold" id="S4.T2.6.1.1.1.4.1">Real-World Cases</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="2" id="S4.T2.6.1.1.1.5"><span class="ltx_text ltx_font_bold" id="S4.T2.6.1.1.1.5.1">Average</span></th>
+</tr>
+<tr class="ltx_tr" id="S4.T2.6.1.2.2">
+<th class="ltx_td ltx_th ltx_th_row" id="S4.T2.6.1.2.2.1"></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T2.6.1.2.2.2">Pass (%)</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T2.6.1.2.2.3">Resolve (%)</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T2.6.1.2.2.4">Pass (%)</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T2.6.1.2.2.5">Resolve (%)</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T2.6.1.2.2.6">Pass (%)</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T2.6.1.2.2.7">Resolve (%)</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T2.6.1.2.2.8">Pass (%)</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T2.6.1.2.2.9">Resolve (%)</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T2.6.1.3.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T2.6.1.3.1.1">GPT-5 + Zero-Shot</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.6.1.3.1.2">0.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.6.1.3.1.3">0.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.6.1.3.1.4">0.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.6.1.3.1.5">0.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.6.1.3.1.6">0.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.6.1.3.1.7">0.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.6.1.3.1.8">0.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T2.6.1.3.1.9">0.0</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.6.1.4.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T2.6.1.4.2.1">GPT-5 + Few-Shot</th>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.4.2.2">41.6</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.4.2.3">25.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.4.2.4">37.5</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.4.2.5">25.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.4.2.6">0.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.4.2.7">0.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.4.2.8">26.4</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.4.2.9">16.7</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.6.1.5.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T2.6.1.5.3.1">GPT-5 + CoT</th>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.5.3.2">33.3</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.5.3.3">25.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.5.3.4">25.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.5.3.5">12.5</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.5.3.6">10.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.5.3.7">10.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.5.3.8">22.8</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.5.3.9">15.8</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.6.1.6.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T2.6.1.6.4.1">GPT-5 + CoT-SC</th>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.6.4.2">25.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.6.4.3">25.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.6.4.4">37.5</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.6.4.5">12.5</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.6.4.6">10.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.6.4.7">0.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.6.4.8">24.2</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.6.4.9">12.5</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.6.1.7.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T2.6.1.7.5.1">GPT-5 + RAG</th>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.7.5.2">66.7</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.7.5.3">41.7</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.7.5.4">37.5</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.7.5.5">25.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.7.5.6">40.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.7.5.7">10.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.7.5.8">48.1</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.7.5.9">25.6</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.6.1.8.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T2.6.1.8.6.1">GPT-5 + ComfyAgent</th>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.8.6.2">41.7</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.8.6.3">33.3</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.8.6.4">37.5</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.8.6.5">25.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.8.6.6">30.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.8.6.7">30.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.8.6.8">36.4</td>
+<td class="ltx_td ltx_align_center" id="S4.T2.6.1.8.6.9">29.4</td>
+</tr>
+<tr class="ltx_tr" id="S4.T2.6.1.9.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t" id="S4.T2.6.1.9.7.1"><span class="ltx_text ltx_font_bold" id="S4.T2.6.1.9.7.1.1">Ours</span></th>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T2.6.1.9.7.2"><span class="ltx_text ltx_font_bold" id="S4.T2.6.1.9.7.2.1">83.3</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T2.6.1.9.7.3"><span class="ltx_text ltx_font_bold" id="S4.T2.6.1.9.7.3.1">58.3</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T2.6.1.9.7.4"><span class="ltx_text ltx_font_bold" id="S4.T2.6.1.9.7.4.1">87.5</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T2.6.1.9.7.5"><span class="ltx_text ltx_font_bold" id="S4.T2.6.1.9.7.5.1">75.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T2.6.1.9.7.6"><span class="ltx_text ltx_font_bold" id="S4.T2.6.1.9.7.6.1">90.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T2.6.1.9.7.7"><span class="ltx_text ltx_font_bold" id="S4.T2.6.1.9.7.7.1">50.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T2.6.1.9.7.8"><span class="ltx_text ltx_font_bold" id="S4.T2.6.1.9.7.8.1">86.9</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T2.6.1.9.7.9"><span class="ltx_text ltx_font_bold" id="S4.T2.6.1.9.7.9.1">61.1</span></td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+<div class="ltx_para" id="S4.SS3.p4">
+<p class="ltx_p" id="S4.SS3.p4.1"><span class="translated-text">我们在 ComfyBench 上评估工作流程生成质量</span><span class="original-text">We evaluate workflow-generation quality on ComfyBench</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xue2025comfybench</span>]</cite><span class="translated-text">，现实世界视觉创建工作流程的基准，可以评估模型泛化能力。
+评估是对从 20 个任务中随机抽取的一组保留的任务进行的。</span><span class="original-text">, a benchmark of real-world visual-creation workflows that enables assessing model generalization.
+The evaluation is conducted on a held-out set of 20 tasks randomly sampled from the</span><em class="ltx_emph ltx_font_italic" id="S4.SS3.p4.1.1"><span class="translated-text">创意</span><span class="original-text">Creative</span></em><span class="translated-text">和</span><span class="original-text">and</span><em class="ltx_emph ltx_font_italic" id="S4.SS3.p4.1.2"><span class="translated-text">综合体</span><span class="original-text">Complex</span></em><span class="translated-text">类别。
+如表所示</span><span class="original-text">categories.
+As shown in Table</span><a class="ltx_ref" href="#S4.T3" title="Table 3 ‣ 4.3 Results ‣ 4 Experiments ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">，我们的方法在结构和执行指标方面都远远优于所有其他方法。
+特别是，我们的模型获得了 138 分的 VND 分数，超过了</span><span class="original-text">, our method substantially outperforms all the other methods across both structural and execution metrics.
+In particular, our model achieves a VND score of 138, which is over</span><math alttext="3\times" class="ltx_math_unparsed" display="inline" id="S4.SS3.p4.1.m1" intent=":literal"><semantics><mrow><mn>3</mn><mo lspace="0.222em">×</mo></mrow><annotation encoding="application/x-tex">3\times</annotation></semantics></math><span class="translated-text">高于最强基线 (43-45)，表明工作流程组成显着丰富。
+结构正确性也显着提高，NodeComp 从 65.0% 增加到 79.8%，LinkComp 从 65.0% 增加到 82.7%，而 TaskCons 从 59.3% 增加到 85.0%。
+这些结构性收益转化为更强的执行可靠性，在整个基准测试中平均通过率达到 50.0%，解决率达到 25.0%。
+总的来说，这些结果表明，我们以知识为中心的框架生成的工作流程更加多样化、结构一致且可执行，展示了对现实世界工作流程生成任务的强大概括。</span><span class="original-text">higher than the strongest baseline (43–45), indicating significantly richer workflow compositions.
+Structural correctness also improves markedly, with NodeComp increasing from 65.0% to 79.8% and LinkComp from 65.0% to 82.7%, while TaskCons rises from 59.3% to 85.0%.
+These structural gains translate into stronger execution reliability, yielding 50.0% Pass and 25.0% Resolve on average across the benchmark.
+Overall, these results show that our knowledge-centric framework generates workflows that are substantially more diverse, structurally coherent, and executable, demonstrating strong generalization on real-world workflow generation tasks.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T3">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S4.T3.8.1.1" style="font-size:90%;">Table 3</span>: </span><span class="ltx_text" id="S4.T3.9.2" style="font-size:90%;">Overall workflow generation performance on ComfyBench.
+Workflow structure metrics include VND (Valid Node Diversity),
+NodeComp (Node Completeness), LinkComp (Link Completeness),
+and TaskCons (Task Consistency).
+Execution metrics report the average Pass and Resolve rates.</span></figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="S4.T3.6" style="width:345.0pt;height:71.2pt;vertical-align:-34.0pt;"><span class="ltx_transformed_inner" style="transform:translate(-92.9pt,19.2pt) scale(0.649869357401675,0.649869357401675) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S4.T3.6.6">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T3.6.6.7.1">
+<th class="ltx_td ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T3.6.6.7.1.1"></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_tt" colspan="4" id="S4.T3.6.6.7.1.2">Workflow Structure</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="2" id="S4.T3.6.6.7.1.3">Execution</th>
+</tr>
+<tr class="ltx_tr" id="S4.T3.6.6.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row" id="S4.T3.6.6.6.7">Method</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row" id="S4.T3.1.1.1.1">VND<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T3.1.1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S4.T3.2.2.2.2">NodeComp (%)<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T3.2.2.2.2.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S4.T3.3.3.3.3">LinkComp (%)<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T3.3.3.3.3.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r" id="S4.T3.4.4.4.4">TaskCons (%)<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T3.4.4.4.4.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S4.T3.5.5.5.5">Pass (%)<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T3.5.5.5.5.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S4.T3.6.6.6.6">Resolve (%)<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T3.6.6.6.6.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T3.6.6.8.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T3.6.6.8.1.1">GPT-5 + Zero-Shot</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t" id="S4.T3.6.6.8.1.2">0</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.6.6.8.1.3">0.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.6.6.8.1.4">0.0</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T3.6.6.8.1.5">0.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.6.6.8.1.6">0.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T3.6.6.8.1.7">0.0</td>
+</tr>
+<tr class="ltx_tr" id="S4.T3.6.6.9.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T3.6.6.9.2.1">GPT-5 + Few-Shot</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S4.T3.6.6.9.2.2">14</th>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.9.2.3">35.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.9.2.4">35.0</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T3.6.6.9.2.5">29.8</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.9.2.6">10.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.9.2.7">5.0</td>
+</tr>
+<tr class="ltx_tr" id="S4.T3.6.6.10.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T3.6.6.10.3.1">GPT-5 + CoT</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S4.T3.6.6.10.3.2">12</th>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.10.3.3">25.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.10.3.4">25.0</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T3.6.6.10.3.5">19.5</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.10.3.6">5.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.10.3.7">0.0</td>
+</tr>
+<tr class="ltx_tr" id="S4.T3.6.6.11.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T3.6.6.11.4.1">GPT-5 + CoT-SC</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S4.T3.6.6.11.4.2">18</th>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.11.4.3">20.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.11.4.4">20.0</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T3.6.6.11.4.5">17.1</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.11.4.6">0.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.11.4.7">0.0</td>
+</tr>
+<tr class="ltx_tr" id="S4.T3.6.6.12.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T3.6.6.12.5.1">GPT-5 + RAG</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S4.T3.6.6.12.5.2">45</th>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.12.5.3">60.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.12.5.4">60.0</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T3.6.6.12.5.5">57.7</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.12.5.6">40.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.12.5.7">25.0</td>
+</tr>
+<tr class="ltx_tr" id="S4.T3.6.6.13.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T3.6.6.13.6.1">GPT-5 + ComfyAgent</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S4.T3.6.6.13.6.2">43</th>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.13.6.3">65.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.13.6.4">65.0</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T3.6.6.13.6.5">59.3</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.13.6.6">35.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T3.6.6.13.6.7">20.0</td>
+</tr>
+<tr class="ltx_tr" id="S4.T3.6.6.14.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t" id="S4.T3.6.6.14.7.1">Ours</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_bb ltx_border_t" id="S4.T3.6.6.14.7.2"><span class="ltx_text ltx_font_bold" id="S4.T3.6.6.14.7.2.1">138</span></th>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T3.6.6.14.7.3"><span class="ltx_text ltx_font_bold" id="S4.T3.6.6.14.7.3.1">79.8</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T3.6.6.14.7.4"><span class="ltx_text ltx_font_bold" id="S4.T3.6.6.14.7.4.1">82.7</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_r ltx_border_t" id="S4.T3.6.6.14.7.5"><span class="ltx_text ltx_font_bold" id="S4.T3.6.6.14.7.5.1">85.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T3.6.6.14.7.6"><span class="ltx_text ltx_font_bold" id="S4.T3.6.6.14.7.6.1">50.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T3.6.6.14.7.7"><span class="ltx_text ltx_font_bold" id="S4.T3.6.6.14.7.7.1">25.0</span></td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+<div class="ltx_para" id="S4.SS3.p5">
+<p class="ltx_p" id="S4.SS3.p5.1"><span class="translated-text">我们在 FlowBench 上评估我们的方法</span><span class="original-text">We evaluate our method on the FlowBench</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">huang2025comfygpt</span>]</cite><span class="translated-text">使用包含 30 个任务的测试集，如表所示</span><span class="original-text">using a test set of 30 tasks, as summarized in Table</span><a class="ltx_ref" href="#S4.T4" title="Table 4 ‣ 4.3 Results ‣ 4 Experiments ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">。
+我们的方法在工作流程结构和执行指标方面始终优于所有其他方法。
+特别是，它的 VND 分数为 145，远高于最强基线 (41-42)，表明工作流程组成明显更丰富。
+结构正确性也显着提高，NodeComp 达到 94.4%，LinkComp 98.0%，而现有方法的正确性约为 53-73%，而 TaskCons 则提高到 93.4%。
+这些结构优势转化为更强的执行可靠性，实现了 66.7% 的通过率和 36.7% 的解决率，超过了所有基准方法。总的来说，结果表明我们的方法在 FlowBench 上实现了很强的泛化性</span><span class="original-text">.
+Our approach consistently outperforms all all the other methods across both workflow structure and execution metrics.
+In particular, it achieves a VND score of 145, substantially higher than the strongest baseline (41–42), indicating significantly richer workflow compositions.
+Structural correctness is also markedly improved, with NodeComp reaching 94.4% and LinkComp 98.0%, compared to around 53–73% for existing methods, while TaskCons improves to 93.4%.
+These structural advantages translate into stronger execution reliability, achieving 66.7% Pass and 36.7% Solve rates, exceeding all baseline approaches. Overall, the results demonstrate that our method achieves strong generalization on the FlowBench</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">huang2025comfygpt</span>]</cite><span class="translated-text">同时始终优于现有的所有其他方法。</span><span class="original-text">while consistently outperforming existing all the other methods.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T4">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S4.T4.8.1.1" style="font-size:90%;">Table 4</span>: </span><span class="ltx_text" id="S4.T4.9.2" style="font-size:90%;">Overall performance comparison on FlowBench<cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">huang2025comfygpt</span>]</cite>.
+Read as Tab.<a class="ltx_ref" href="#S4.T3" title="Table 3 ‣ 4.3 Results ‣ 4 Experiments ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">3</span></a>.</span></figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="S4.T4.6" style="width:345.0pt;height:72.7pt;vertical-align:-34.7pt;"><span class="ltx_transformed_inner" style="transform:translate(-87.8pt,18.5pt) scale(0.662593154963563,0.662593154963563) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S4.T4.6.6">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T4.6.6.7.1">
+<th class="ltx_td ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T4.6.6.7.1.1"></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_r ltx_border_tt" colspan="4" id="S4.T4.6.6.7.1.2">Workflow Structure</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="2" id="S4.T4.6.6.7.1.3">Execution</th>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.6.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row" id="S4.T4.6.6.6.7">Method</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row" id="S4.T4.1.1.1.1">VND<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T4.1.1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S4.T4.2.2.2.2">NodeComp (%)<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T4.2.2.2.2.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S4.T4.3.3.3.3">LinkComp (%)<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T4.3.3.3.3.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_r" id="S4.T4.4.4.4.4">TaskCons (%)<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T4.4.4.4.4.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S4.T4.5.5.5.5">Pass (%)<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T4.5.5.5.5.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column" id="S4.T4.6.6.6.6">Solve (%)<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T4.6.6.6.6.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T4.6.6.8.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T4.6.6.8.1.1">GPT-5 + Zero-Shot</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t" id="S4.T4.6.6.8.1.2">0</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.6.8.1.3">0.00</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.6.8.1.4">0.00</td>
+<td class="ltx_td ltx_align_center ltx_border_r ltx_border_t" id="S4.T4.6.6.8.1.5">0.00</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.6.8.1.6">0.0</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.6.6.8.1.7">0.0</td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.6.9.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T4.6.6.9.2.1">GPT-5 + Few-Shot</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S4.T4.6.6.9.2.2">27</th>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.9.2.3">46.67</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.9.2.4">46.67</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.6.6.9.2.5">45.50</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.9.2.6">26.7</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.9.2.7">16.7</td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.6.10.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T4.6.6.10.3.1">GPT-5 + CoT</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S4.T4.6.6.10.3.2">24</th>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.10.3.3">43.33</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.10.3.4">43.33</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.6.6.10.3.5">42.10</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.10.3.6">23.3</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.10.3.7">16.7</td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.6.11.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T4.6.6.11.4.1">GPT-5 + CoT-SC</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S4.T4.6.6.11.4.2">26</th>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.11.4.3">40.00</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.11.4.4">40.00</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.6.6.11.4.5">38.20</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.11.4.6">20.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.11.4.7">13.3</td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.6.12.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T4.6.6.12.5.1">GPT-5 + RAG</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S4.T4.6.6.12.5.2">42</th>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.12.5.3">73.33</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.12.5.4">73.33</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.6.6.12.5.5">67.43</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.12.5.6">46.7</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.12.5.7">26.7</td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.6.13.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T4.6.6.13.6.1">GPT-5 + ComfyAgent</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S4.T4.6.6.13.6.2">41</th>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.13.6.3">53.33</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.13.6.4">53.33</td>
+<td class="ltx_td ltx_align_center ltx_border_r" id="S4.T4.6.6.13.6.5">50.80</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.13.6.6">40.0</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.6.6.13.6.7">26.7</td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.6.6.14.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb ltx_border_t" id="S4.T4.6.6.14.7.1">Ours</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_bb ltx_border_t" id="S4.T4.6.6.14.7.2"><span class="ltx_text ltx_font_bold" id="S4.T4.6.6.14.7.2.1">145</span></th>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T4.6.6.14.7.3"><span class="ltx_text ltx_font_bold" id="S4.T4.6.6.14.7.3.1">94.4</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T4.6.6.14.7.4"><span class="ltx_text ltx_font_bold" id="S4.T4.6.6.14.7.4.1">98.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_r ltx_border_t" id="S4.T4.6.6.14.7.5"><span class="ltx_text ltx_font_bold" id="S4.T4.6.6.14.7.5.1">93.4</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T4.6.6.14.7.6"><span class="ltx_text ltx_font_bold" id="S4.T4.6.6.14.7.6.1">66.7</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb ltx_border_t" id="S4.T4.6.6.14.7.7"><span class="ltx_text ltx_font_bold" id="S4.T4.6.6.14.7.7.1">36.7</span></td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+<div class="ltx_para ltx_noindent" id="S4.SS3.p6">
+<p class="ltx_p" id="S4.SS3.p6.1"><span class="ltx_text ltx_font_bold" id="S4.SS3.p6.1.1"><span class="translated-text">法学硕士法官偏见分析。</span><span class="original-text">LLM Judge Bias Analysis.</span></span><span class="translated-text">为了检查任务一致性评估的稳健性，我们在同一组生成的工作流程上比较了两位 LLM 法官 GPT-5 和 Gemini-2.5。
+如表所示</span><span class="original-text">To examine the robustness of task consistency evaluation, we compare two LLM judges, GPT-5 and Gemini-2.5, on the same set of generated workflows.
+As shown in Table</span><a class="ltx_ref" href="#S4.T5" title="Table 5 ‣ 4.3 Results ‣ 4 Experiments ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">，两位评估者在激励策略中产生高度一致的绩效趋势。
+我们的方法在 GPT-5 (86.9%) 和 Gemini-2.5 (85.6%) 下都实现了最高的任务一致性，而竞争方法的相对排名基本保持不变。
+这种一致性表明评估结果对法学硕士法官的选择不敏感，并且不太可能受到模型特定偏差的主导。
+此外，基于执行的指标（例如通过和解决）提供了任务正确性的独立信号，进一步支持评估的可靠性。</span><span class="original-text">, both evaluators produce highly consistent performance trends across prompting strategies.
+Our method achieves the highest task consistency under both GPT-5 (86.9%) and Gemini-2.5 (85.6%), while the relative ranking of competing approaches remains largely unchanged.
+This consistency suggests that the evaluation results are not sensitive to the choice of LLM judge and are unlikely to be dominated by model-specific bias.
+In addition, execution-based metrics such as Pass and Solve provide an independent signal of task correctness, further supporting the reliability of the evaluation.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T5">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S4.T5.2.1.1" style="font-size:90%;">Table 5</span>: </span><span class="ltx_text" id="S4.T5.3.2" style="font-size:90%;">Task consistency (%) evaluated by two LLM judges (GPT-5 and Gemini-2.5) across different methods. Higher is better.</span></figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T5.4">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T5.4.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T5.4.1.1.1" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.1.1.1.1" style="font-size:90%;">Model</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T5.4.1.1.2" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.1.1.2.1" style="font-size:90%;">Zero-Shot</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T5.4.1.1.3" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.1.1.3.1" style="font-size:90%;">Few-Shot</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T5.4.1.1.4" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.1.1.4.1" style="font-size:90%;">CoT</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T5.4.1.1.5" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.1.1.5.1" style="font-size:90%;">CoT-SC</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T5.4.1.1.6" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.1.1.6.1" style="font-size:90%;">RAG</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T5.4.1.1.7" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.1.1.7.1" style="font-size:90%;">ComfyAgent</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T5.4.1.1.8" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.1.1.8.1" style="font-size:90%;">Ours</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T5.4.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T5.4.2.1.1" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.2.1.1.1" style="font-size:90%;">Gemini-2.5</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t" id="S4.T5.4.2.1.2" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.2.1.2.1" style="font-size:90%;">0</span></th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.4.2.1.3" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.2.1.3.1" style="font-size:90%;">34.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.4.2.1.4" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.2.1.4.1" style="font-size:90%;">30.8</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.4.2.1.5" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.2.1.5.1" style="font-size:90%;">34.2</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.4.2.1.6" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.2.1.6.1" style="font-size:90%;">52.0</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.4.2.1.7" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.2.1.7.1" style="font-size:90%;">40.8</span></td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.4.2.1.8" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.4.2.1.8.1" style="font-size:90%;">85.6</span></td>
+</tr>
+<tr class="ltx_tr" id="S4.T5.4.3.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S4.T5.4.3.2.1" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.3.2.1.1" style="font-size:90%;">GPT-5</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_bb" id="S4.T5.4.3.2.2" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.3.2.2.1" style="font-size:90%;">0</span></th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T5.4.3.2.3" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.3.2.3.1" style="font-size:90%;">34.7</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T5.4.3.2.4" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.3.2.4.1" style="font-size:90%;">32.9</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T5.4.3.2.5" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.3.2.5.1" style="font-size:90%;">34.8</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T5.4.3.2.6" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.3.2.6.1" style="font-size:90%;">53.6</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T5.4.3.2.7" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text" id="S4.T5.4.3.2.7.1" style="font-size:90%;">55.1</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T5.4.3.2.8" style="padding-left:4.0pt;padding-right:4.0pt;"><span class="ltx_text ltx_font_bold" id="S4.T5.4.3.2.8.1" style="font-size:90%;">86.9</span></td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para ltx_noindent" id="S4.SS3.p7">
+<p class="ltx_p" id="S4.SS3.p7.1"><span class="ltx_text ltx_font_bold" id="S4.SS3.p7.1.1"><span class="translated-text">分层工作流建模的效果。</span><span class="original-text">Effect of Hierarchical Workflow Modeling.</span></span><span class="translated-text">为了提供强大的基于训练的基线，我们端到端训练 Qwen3-32B，以将用户指令直接映射到伪代码工作流程 (Q2P)。如表所示</span><span class="original-text">To provide a strong training-based baseline, we train Qwen3-32B end-to-end to directly map user instructions to pseudocode workflows (Q2P). As shown in Table</span><a class="ltx_ref" href="#S4.T6" title="Table 6 ‣ 4.3 Results ‣ 4 Experiments ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">，我们使用 Qwen3-14B 的方法在工作流结构和执行指标上始终优于 Qwen3-32B Q2P 基线，尽管使用了较小的骨干模型。特别是，我们的方法将 VND 从 148 提高到 152，NodeComp 从 92.3% 提高到 96.3%，LinkComp 从 95.8% 提高到 98.3%，这表明工作流生成更加完整且结构一致。在执行可靠性方面，优势变得更加明显：通过率从 56.7% 增加到 86.9%，解决率从 33.3% 增加到 61.1%，这表明我们的方法产生的工作流程更具可执行性和任务一致性。这些结果凸显了所提出的分层设计与直接端到端训练相比的优势。我们的框架不是学习从指令到工作流的单一映射，而是将工作流分解为多级监督信号，包括高层设计策略、中间推理轨迹和结构骨架拓扑。
+这种结构化监督使模型能够明确地捕获工作流设计原则，并以更系统的方式组成模块，从而获得更好的结构保真度和更高的执行成功率。</span><span class="original-text">, our method with Qwen3-14B consistently outperforms the Qwen3-32B Q2P baseline across both workflow structure and execution metrics, despite using a smaller backbone model. In particular, our approach improves VND from 148 to 152, NodeComp from 92.3% to 96.3%, and LinkComp from 95.8% to 98.3%, indicating more complete and structurally coherent workflow generation. The advantage becomes even more pronounced in execution reliability: Pass increases from 56.7% to 86.9% and Solve from 33.3% to 61.1%, demonstrating that our method produces workflows that are substantially more executable and task-consistent. These results highlight the benefit of the proposed hierarchical design compared with direct end-to-end training. Instead of learning a single mapping from instructions to workflows, our framework decomposes workflows into multi-level supervision signals, including high-level design strategies, intermediate reasoning traces, and structural skeleton topologies.
+This structured supervision enables the model to capture workflow design principles explicitly and to compose modules in a more systematic manner, leading to better structural fidelity and higher execution success rates.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T6">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table"><span class="ltx_text" id="S4.T6.7.1.1" style="font-size:90%;">Table 6</span>: </span><span class="ltx_text" id="S4.T6.8.2" style="font-size:90%;">Comparison with Qwen3-32B Q2P on workflow generation.
+Read as Tab. <a class="ltx_ref" href="#S4.T3" title="Table 3 ‣ 4.3 Results ‣ 4 Experiments ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">3</span></a></span></figcaption>
+<div class="ltx_inline-block ltx_align_center ltx_transformed_outer" id="S4.T6.5" style="width:325.2pt;height:38.9pt;vertical-align:-17.5pt;"><span class="ltx_transformed_inner" style="transform:translate(-44.6pt,5.3pt) scale(0.784647015992621,0.784647015992621) ;">
+<table class="ltx_tabular ltx_guessed_headers ltx_align_middle" id="S4.T6.5.5">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T6.5.5.6.1">
+<th class="ltx_td ltx_th ltx_th_row ltx_border_tt" id="S4.T6.5.5.6.1.1"></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_tt" colspan="3" id="S4.T6.5.5.6.1.2">Workflow Structure</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" colspan="2" id="S4.T6.5.5.6.1.3">Execution</th>
+</tr>
+<tr class="ltx_tr" id="S4.T6.5.5.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row" id="S4.T6.5.5.5.6">Method</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_t" id="S4.T6.1.1.1.1">VND<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T6.1.1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T6.2.2.2.2">NodeComp (%)<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T6.2.2.2.2.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T6.3.3.3.3">LinkComp (%)<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T6.3.3.3.3.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T6.4.4.4.4">Pass (%)<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T6.4.4.4.4.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_t" id="S4.T6.5.5.5.5">Solve (%)<math alttext="\uparrow" class="ltx_Math" display="inline" id="S4.T6.5.5.5.5.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T6.5.5.7.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T6.5.5.7.1.1">Qwen3-32B Q2P</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t" id="S4.T6.5.5.7.1.2">148</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T6.5.5.7.1.3">92.3</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T6.5.5.7.1.4">95.8</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T6.5.5.7.1.5">56.7</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T6.5.5.7.1.6">33.3</td>
+</tr>
+<tr class="ltx_tr" id="S4.T6.5.5.8.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S4.T6.5.5.8.2.1">Ours</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_bb" id="S4.T6.5.5.8.2.2"><span class="ltx_text ltx_font_bold" id="S4.T6.5.5.8.2.2.1">152</span></th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T6.5.5.8.2.3"><span class="ltx_text ltx_font_bold" id="S4.T6.5.5.8.2.3.1">96.3</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T6.5.5.8.2.4"><span class="ltx_text ltx_font_bold" id="S4.T6.5.5.8.2.4.1">98.3</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T6.5.5.8.2.5"><span class="ltx_text ltx_font_bold" id="S4.T6.5.5.8.2.5.1">86.9</span></td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T6.5.5.8.2.6"><span class="ltx_text ltx_font_bold" id="S4.T6.5.5.8.2.6.1">61.1</span></td>
+</tr>
+</tbody>
+</table>
+</span></div>
+</figure>
+<div class="ltx_para ltx_noindent" id="S4.SS3.p8">
+<p class="ltx_p" id="S4.SS3.p8.1"><span class="ltx_text ltx_font_bold" id="S4.SS3.p8.1.1"><span class="translated-text">定性评价。</span><span class="original-text">Qualitative evaluation.</span></span><span class="translated-text">如图所示。</span><span class="original-text">As shown in Fig.</span><a class="ltx_ref" href="#S4.F3" title="Figure 3 ‣ Workflow Collection. ‣ 4.1 Settings ‣ 4 Experiments ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">，我们的方法准确地解释简洁的任务指令，并在不同的任务中组装合适的节点组合，包括文本到图像的生成、覆盖、面部恢复和风格转换。定性结果表明，我们的代理生成了更完整、结构更好的工作流程，比 ComfyAgent 和其他方法产生更高质量的视觉输出。</span><span class="original-text">, our method accurately interprets concise task instructions and assembles suitable node compositions across diverse tasks, including text-to-image generation, outpainting, face restoration, and style transfer. The qualitative results show that our agent generates more complete and better-structured workflows, producing higher-quality visual outputs than ComfyAgent and the other methods.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS3.p9">
+<p class="ltx_p" id="S4.SS3.p9.1"><span class="ltx_text ltx_font_bold" id="S4.SS3.p9.1.1"><span class="translated-text">限制和讨论。</span><span class="original-text">Limitations and Discussion.</span></span><span class="translated-text">当任务需要相对稀有的节点类型时，我们观察到一个限制。在这种情况下，模型倾向于用更常见的节点来替代它们，这可能会破坏功能依赖性并增加生成的工作流中的结构错误。我们将这种行为主要归因于训练数据中稀有节点的覆盖范围有限；扩大培训工作流程的多样性和规模可能有助于缓解这个问题。此外，结合强化式优化（例如 GRPO）可以进一步提高鲁棒性。</span><span class="original-text">We observe a limitation when tasks require relatively rare node types. In such cases, the model tends to substitute them with more common nodes, which may break functional dependencies and increase structural errors in the generated workflow. We attribute this behavior mainly to limited coverage of rare nodes in the training data; expanding the diversity and scale of training workflows could help mitigate this issue. In addition, incorporating reinforcement-style optimization (e.g., GRPO) may further improve robustness.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h2>
+<div class="ltx_para" id="S5.p1">
+<p class="ltx_p" id="S5.p1.1"><span class="translated-text">在这项工作中，我们提出了一个以知识为中心的框架，用于在 ComfyUI 等视觉创建系统中生成工作流。与之前基于 LLM 的方法将工作流合成视为直接文本到 JSON 的预测问题不同，我们的方法显式地对专家知识的结构、层次结构和动态进行建模。通过知识反演，该模型从大量真实工作流集合中学习多级表示，包括伪代码、结构骨架和设计策略。然后，知识注入引导模型通过监督推理将任务映射到策略，并将策略映射到可执行结构。在推理过程中，可逆推理和自我完善能够生成连贯、可执行的工作流程。大量的实验表明，我们的方法比现有方法产生更多样化的节点、更一致的组合以及显着更高的执行成功率。总体而言，这项工作为视觉创作系统中知识驱动的代理工作流程生成建立了新的方向。</span><span class="original-text">In this work, we present a knowledge-centric framework for workflow generation in visual creation systems such as ComfyUI. Unlike prior LLM-based approaches that treat workflow synthesis as a direct text-to-JSON prediction problem, our method explicitly models the structure, hierarchy, and dynamics of expert knowledge.Through knowledge inversion, the model learns multilevel representations, including pseudo-codes, structural skeletons, and design strategies, from large collections of real workflows. Knowledge injection then guides the model to map tasks to strategies and strategies to executable structures via supervised reasoning. During inference, reversible reasoning and self-refinement enable the generation of coherent, executable workflows. Extensive experiments show that our approach produces more diverse nodes, more consistent compositions, and significantly higher execution success rates than existing methods. Overall, this work establishes a new direction for knowledge-driven, agentic workflow generation in visual creation systems.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="Sx1">
+<h2 class="ltx_title ltx_title_section"><span class="translated-text">确认</span><span class="original-text">Acknowledge</span></h2>
+<div class="ltx_para" id="Sx1.p1">
+<p class="ltx_p" id="Sx1.p1.1"><span class="translated-text">这项研究由保加利亚教育和科学部部分资助，作为保加利亚国家研究基础设施路线图的一部分，对 INSAIT 提供支持。该项目也得到了 Adob​​e Research 的部分支持。</span><span class="original-text">This research was partially funded by the Ministry of Education and Science of Bulgaria, through support for INSAIT as part of the Bulgarian National Roadmap for Research Infrastructure. This project is also partially supported by Adobe Research.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+</ul>
+</section>
+<div class="ltx_pagination ltx_role_newpage"></div>
+<div class="ltx_para" id="p1">
+<p class="ltx_p ltx_align_center" id="p1.1"><span class="ltx_text ltx_font_bold" id="p1.1.1" style="font-size:173%;"><span class="translated-text">ComfyUI 中用于生成工作流的以知识为中心的代理</span><span class="original-text">Knowledge-Centric Agents for Workflow Generation in ComfyUI</span><br class="ltx_break"/></span>
+<span class="ltx_text ltx_font_italic" id="p1.1.2" style="font-size:144%;"><span class="translated-text">补充材料</span><span class="original-text">Supplementary Materials</span></span></p>
+</div>
+<div class="ltx_para" id="p2">
+<p class="ltx_p" id="p2.1"><span class="translated-text">本补充材料的组织如下。
+首先，§</span><span class="original-text">This supplementary material is organized as follows.
+First, §</span><a class="ltx_ref" href="#Pt0.A1" title="Appendix 0.A Workflow Structure Analysis ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">0.A</span></a><span class="translated-text">通过代表性案例研究提出定性工作流程结构比较。
+第二，§</span><span class="original-text">presents qualitative workflow structure comparisons through representative case studies.
+Second, §</span><a class="ltx_ref" href="#Pt0.A2" title="Appendix 0.B Comparison Methods ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">0.B</span></a><span class="translated-text">总结了我们实验中使用的比较方法，包括零样本提示、少样本提示、基于推理的策略和检索增强方法。
+最后，§</span><span class="original-text">summarizes the comparison methods used in our experiments, including zero-shot prompting, few-shot prompting, reasoning-based strategies, and retrieval-augmented methods.
+Finally, §</span><a class="ltx_ref" href="#Pt0.A3" title="Appendix 0.C Dataset Analysis ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">0.C</span></a><span class="translated-text">提供对训练和测试数据集中的任务分配和工作流程组成的详细分析。</span><span class="original-text">provides a detailed analysis of task distributions and workflow compositions in the training and test datasets.</span></p>
+</div>
+<section class="ltx_appendix" id="Pt0.A1">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录0.A</span><span class="original-text">Appendix 0.A</span></span><span class="translated-text">工作流程结构分析</span><span class="original-text">Workflow Structure Analysis</span></h2>
+<div class="ltx_para" id="Pt0.A1.p1">
+<p class="ltx_p" id="Pt0.A1.p1.1"><span class="translated-text">如图所示</span><span class="original-text">As illustrated in Fig.</span><a class="ltx_ref" href="#Pt0.A1.F4" title="Figure 4 ‣ Appendix 0.A Workflow Structure Analysis ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">, 对于</span><span class="original-text">, for</span><span class="ltx_text ltx_font_bold" id="Pt0.A1.p1.1.1"><span class="translated-text">案例1</span><span class="original-text">Case 1</span></span><span class="translated-text">，我们的方法生成的工作流程采用了使用的设计</span><span class="original-text">, the workflow generated by our method adopts a design that uses</span><em class="ltx_emph ltx_font_italic" id="Pt0.A1.p1.1.2"><span class="translated-text">两个</span><span class="original-text">two</span></em> <span class="ltx_text ltx_font_typewriter" id="Pt0.A1.p1.1.3"><span class="translated-text">控制网络应用</span><span class="original-text">ControlNetApply</span></span><span class="translated-text">模块一起</span><span class="original-text">modules together with a</span><span class="ltx_text ltx_font_typewriter" id="Pt0.A1.p1.1.4"><span class="translated-text">通量指导</span><span class="original-text">FluxGuidance</span></span><span class="translated-text">模块，而 ComfyAgent 的工作流程基于单个</span><span class="original-text">module, while ComfyAgent’s workflow is based on a single</span><span class="ltx_text ltx_font_typewriter" id="Pt0.A1.p1.1.5"><span class="translated-text">ControlNet应用高级</span><span class="original-text">ControlNetApplyAdvanced</span></span><span class="translated-text">。
+这种设计具有多种优势：采用两个 ControlNet 模块，使工作流程能够同时保持结构保真度并保持更平滑的风格轮廓——使用单个 ControlNet 很难平衡这两个目标，因为它只提供一个强度参数。
+此外，</span><span class="original-text">.
+This design offers several advantages: employing two ControlNet modules allows the workflow to simultaneously preserve structural fidelity and maintain smoother stylistic contours—two objectives that are difficult to balance using a single ControlNet, since it only provides one strength parameter.
+In addition, the</span><span class="ltx_text ltx_font_typewriter" id="Pt0.A1.p1.1.6"><span class="translated-text">通量指导</span><span class="original-text">FluxGuidance</span></span><span class="translated-text">组件进一步增强了文本对齐并导致更一致的风格控制。对于</span><span class="original-text">component further enhances textual alignment and leads to more consistent stylistic control. For</span><span class="ltx_text ltx_font_bold" id="Pt0.A1.p1.1.7"><span class="translated-text">案例2</span><span class="original-text">Case 2</span></span><span class="translated-text">，我们的方法产生的工作流程包含</span><span class="original-text">, the workflow produced by our method incorporates</span><span class="ltx_text ltx_font_typewriter" id="Pt0.A1.p1.1.8"><span class="translated-text">设置潜在噪声掩模</span><span class="original-text">SetLatentNoiseMask</span></span><span class="translated-text">，它将噪声分配给外部绘画区域的潜在表示。这使得模型能够在扩展区域中自由生成新内容，同时保持原始区域完整。</span><span class="original-text">, which assigns noise to the latent representation of the out painting region. This enables the model to freely generate new content in the extended areas while keeping the original regions intact.</span></p>
+</div>
+<div class="ltx_para" id="Pt0.A1.p2">
+<p class="ltx_p" id="Pt0.A1.p2.1"><span class="translated-text">综上所述，这两个案例表明，在相同的任务指令下，ComfyAgent 通常会退回到预设的简化模板，而该模板通常会偏离实际任务要求。相比之下，我们的方法生成的工作流程显示出更大的多样性和更强的特定于任务的推理。这源于从大规模数据中学习丰富的工作流程设计知识，使模型能够理解有效的功能组合（例如何时使用配对的 Co​​ntrolNet 模块）并做出更智能的设计决策。</span><span class="original-text">Taken together, these two cases reveal that, under the same task instruction, ComfyAgent typically falls back to a preset, simplified template that often deviates from real task requirements. In contrast, workflows generated by our method show greater diversity and stronger task-specific reasoning. This stems from learning rich workflow-design knowledge from large-scale data, enabling the model to understand effective functional compositions—such as when to use paired ControlNet modules—and make more intelligent design decisions.</span></p>
+</div>
+<figure class="ltx_figure" id="Pt0.A1.F4"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_portrait" height="1142" id="Pt0.A1.F4.g1" src="https://arxiv.org/html/2607.15845v1/x4.png" width="664"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="Pt0.A1.F4.2.1.1" style="font-size:90%;">Figure 4</span>: </span><span class="ltx_text" id="Pt0.A1.F4.3.2" style="font-size:90%;">Comparison of generated workflow structures.</span></figcaption>
+</figure>
+</section>
+<section class="ltx_appendix" id="Pt0.A2">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录0.B</span><span class="original-text">Appendix 0.B</span></span><span class="translated-text">比较方法</span><span class="original-text">Comparison Methods</span></h2>
+<div class="ltx_para" id="Pt0.A2.p1">
+<p class="ltx_p" id="Pt0.A2.p1.1"><span class="translated-text">我们采用了中提出的工作流生成范例</span><span class="original-text">We adopt the workflow-generation paradigms proposed in</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xue2025comfybench</span>]</cite><span class="translated-text">及其变体作为比较方法，与主论文中使用的设置一致。
+为了保证公平性，所有方法都使用GPT-5作为底层LLM接口，与我们的refine代理配置一致。
+正在关注</span><span class="original-text">and their variants as comparison methods, consistent with the settings used in the main paper.
+To ensure fairness, all methods use GPT-5 as the underlying LLM interface, consistent with our refine agent configuration.
+Following</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">xue2025comfybench</span>]</cite><span class="translated-text">，我们评估以下代表性范式：</span><span class="original-text">, we evaluate the following representative paradigms:</span></p>
+</div>
+<div class="ltx_para" id="Pt0.A2.p2">
+<ul class="ltx_itemize" id="Pt0.A2.I1">
+<li class="ltx_item" id="Pt0.A2.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="Pt0.A2.I1.i1.p1">
+<p class="ltx_p" id="Pt0.A2.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="Pt0.A2.I1.i1.p1.1.1"><span class="translated-text">零射击：</span><span class="original-text">Zero-shot:</span></span><span class="translated-text">直接提示法学硕士仅根据任务指令生成工作流程。</span><span class="original-text">Directly prompts the LLM to generate a workflow from the task instruction alone.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="Pt0.A2.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="Pt0.A2.I1.i2.p1">
+<p class="ltx_p" id="Pt0.A2.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="Pt0.A2.I1.i2.p1.1.1"><span class="translated-text">少拍：</span><span class="original-text">Few-shot:</span></span><span class="translated-text">通过提供多个上下文示例来扩展零样本设置，使模型能够更好地理解预期格式并提高生成精度</span><span class="original-text">Extends the zero-shot setting by providing several in-context exemplars, allowing the model to better understand expected formats and improve generation accuracy</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">brown2020language</span>]</cite>.</p>
+</div>
+</li>
+<li class="ltx_item" id="Pt0.A2.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="Pt0.A2.I1.i3.p1">
+<p class="ltx_p" id="Pt0.A2.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="Pt0.A2.I1.i3.p1.1.1"><span class="translated-text">思想链（CoT）：</span><span class="original-text">Chain-of-Thought (CoT):</span></span><span class="translated-text">鼓励模型在生成最终工作流程之前执行中间推理，从而产生更加结构化和可解释的输出</span><span class="original-text">Encourages the model to perform intermediate reasoning before producing the final workflow, leading to more structured and interpretable outputs</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">wei2022chain</span>]</cite>.</p>
+</div>
+</li>
+<li class="ltx_item" id="Pt0.A2.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="Pt0.A2.I1.i4.p1">
+<p class="ltx_p" id="Pt0.A2.I1.i4.p1.1"><span class="ltx_text ltx_font_bold" id="Pt0.A2.I1.i4.p1.1.1"><span class="translated-text">具有自我一致性的 CoT (CoT-SC)：</span><span class="original-text">CoT with Self-Consistency (CoT-SC):</span></span><span class="translated-text">通过对多个推理路径进行采样并选择最自洽的输出作为最终预测来增强 CoT</span><span class="original-text">Enhances CoT by sampling multiple reasoning paths and selecting the most self-consistent output as the final prediction</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">wang2022self</span>]</cite>.</p>
+</div>
+</li>
+<li class="ltx_item" id="Pt0.A2.I1.i5" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="Pt0.A2.I1.i5.p1">
+<p class="ltx_p" id="Pt0.A2.I1.i5.p1.1"><span class="ltx_text ltx_font_bold" id="Pt0.A2.I1.i5.p1.1.1"><span class="translated-text">检索增强生成 (RAG)：</span><span class="original-text">Retrieval-Augmented Generation (RAG):</span></span><span class="translated-text">从外部工作流程语料库中检索最相关的范例，并根据这些范例调整法学硕士，以使其生成基于先验知识</span><span class="original-text">Retrieves the most relevant exemplars from an external workflow corpus and conditions the LLM on these examples to ground its generation in prior knowledge</span><cite class="ltx_cite ltx_citemacro_cite">[<span class="ltx_ref ltx_missing_citation ltx_ref_self">lewis2020retrieval</span>]</cite>.</p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section class="ltx_appendix" id="Pt0.A3">
+<h2 class="ltx_title ltx_title_appendix">
+<span class="ltx_tag ltx_tag_appendix"><span class="translated-text">附录0.C</span><span class="original-text">Appendix 0.C</span></span><span class="translated-text">数据集分析</span><span class="original-text">Dataset Analysis</span></h2>
+<div class="ltx_para" id="Pt0.A3.p1">
+<p class="ltx_p" id="Pt0.A3.p1.1"><span class="translated-text">为了全面表征数据集中的任务分布和工作流程复杂性，我们对训练和测试数据集的任务类型进行了系统分析。我们的分析采用 GPT-5 进行多标签分类，认识到单个工作流程可能包含多种任务类型（例如，生成图像然后放大图像的工作流程将被分类为</span><span class="original-text">To comprehensively characterize the task distribution and workflow complexity in our dataset, we conducted a systematic analysis of task types across both the training and test datasets. Our analysis employed GPT-5 for multi-label classification, recognizing that a single workflow may encompass multiple task types (e.g., a workflow that generates an image and then upscales it would be classified as both</span><span class="ltx_text ltx_font_typewriter" id="Pt0.A3.p1.1.1"><span class="translated-text">文本到图像</span><span class="original-text">text_to_image</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_typewriter" id="Pt0.A3.p1.1.2"><span class="translated-text">升级</span><span class="original-text">upscaling</span></span>).</p>
+</div>
+<section class="ltx_subsection" id="Pt0.A3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">0.C.1 </span><span class="translated-text">训练数据集分析</span><span class="original-text">Training Dataset Analysis</span></h3>
+<div class="ltx_para" id="Pt0.A3.SS1.p1">
+<p class="ltx_p" id="Pt0.A3.SS1.p1.1"><span class="translated-text">训练数据集包含 879 个工作流项目和 635 个独特的节点类型，展示了图像生成管道中使用的丰富组件。任务类型分类显示，大多数工作流涉及多种任务类型组合的复合操作，每个工作流项平均有 2.93 个任务类型。图</span><span class="original-text">The training dataset comprises 879 workflow items with 635 unique node types, demonstrating the rich variety of components utilized in image generation pipelines. Task type classification reveals that the majority of workflows involve composite operations combining multiple task types, with an average of 2.93 task types per workflow item. Figure</span><a class="ltx_ref" href="#Pt0.A3.F5" title="Figure 5 ‣ 0.C.1 Training Dataset Analysis ‣ Appendix 0.C Dataset Analysis ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">通过两个互补的视角呈现任务类型分布的全面可视化。左侧面板（条形图）按计数显示工作流级别分布，表明文本到图像生成出现在 481 个工作流中（占所有工作流的 54.7%），使其成为最普遍的任务类型。其次是升级（348 个工作流程，39.6%）、风格转换（312 个工作流程，35.5%）、绘画操作（228 个工作流程，26.0%）、LoRA 应用（225 个工作流程，25.6%）和边缘控制（187 个工作流程，21.3%）。右侧面板（饼图）显示发生级别分布，这说明了多标签性质，其中每个工作流可能包含多个任务类型。此视角揭示了每种任务类型在所有任务类型发生中的相对比例，从而深入了解不同任务类型在工作流中组合的频率。</span><span class="original-text">presents a comprehensive visualization of the task type distribution through two complementary perspectives. The left panel (bar chart) shows the workflow-level distribution by count, indicating that text-to-image generation appears in 481 workflows (54.7% of all workflows), making it the most prevalent task type. This is followed by upscaling (348 workflows, 39.6%), style transfer (312 workflows, 35.5%), painting operations (228 workflows, 26.0%), LoRA application (225 workflows, 25.6%), and edge control (187 workflows, 21.3%). The right panel (pie chart) displays the occurrence-level distribution, which accounts for the multi-label nature where each workflow may contain multiple task types. This perspective reveals the relative proportion of each task type among all task type occurrences, providing insight into how frequently different task types are combined within workflows.</span></p>
+</div>
+<figure class="ltx_figure" id="Pt0.A3.F5"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="283" id="Pt0.A3.F5.g1" src="https://arxiv.org/html/2607.15845v1/x5.png" width="660"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="Pt0.A3.F5.2.1.1" style="font-size:90%;">Figure 5</span>: </span><span class="ltx_text" id="Pt0.A3.F5.3.2" style="font-size:90%;">Task type distribution in the training dataset. Left: count of workflows containing each task type (workflow-level distribution, showing the number of workflows with each task type). Right: proportion of each task type among all task type occurrences (occurrence-level distribution, accounting for multi-label classification where each workflow may contain multiple task types).</span></figcaption>
+</figure>
+<figure class="ltx_figure" id="Pt0.A3.F6"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="284" id="Pt0.A3.F6.g1" src="https://arxiv.org/html/2607.15845v1/x6.png" width="660"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="Pt0.A3.F6.2.1.1" style="font-size:90%;">Figure 6</span>: </span><span class="ltx_text" id="Pt0.A3.F6.3.2" style="font-size:90%;">Task type distribution in the test dataset. Left: count of workflows containing each task type (workflow-level distribution, 30 workflows total). Right: proportion of each task type among all task type occurrences (occurrence-level distribution, accounting for multi-label classification where each workflow may contain multiple task types).</span></figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="Pt0.A3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">0.C.2 </span><span class="translated-text">测试数据集分析</span><span class="original-text">Test Dataset Analysis</span></h3>
+<div class="ltx_para" id="Pt0.A3.SS2.p1">
+<p class="ltx_p" id="Pt0.A3.SS2.p1.1"><span class="translated-text">测试数据集包含 30 个工作流项目，表现出类似的模式，每个项目平均有 2.7 个任务类型。图</span><span class="original-text">The test dataset, comprising 30 workflow items, exhibits a similar pattern with an average of 2.7 task types per item. Figure</span><a class="ltx_ref" href="#Pt0.A3.F6" title="Figure 6 ‣ 0.C.1 Training Dataset Analysis ‣ Appendix 0.C Dataset Analysis ‣ Knowledge-Centric Agents for Workflow Generation in ComfyUI"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">使用与训练数据集相同的双视角方法来说明任务类型分布。左侧面板（条形图）显示，文本到图像生成仍然是最普遍的任务类型，出现在 17 个工作流程中（占所有工作流程的 56.7%），与训练数据集一致。值得注意的是，与训练数据集（187 个工作流程，21.3%）相比，测试数据集显示了更高的边缘控制相对比例（8 个工作流程，26.7%），这表明重点关注更受控制的生成场景。测试数据集中的其他重要任务类型包括风格转换（10 个工作流程，33.3%）、升级（10 个工作流程，33.3%）和 LoRA 应用程序（7 个工作流程，23.3%）。右侧面板（饼图）显示了发生级别分布，显示了在考虑多标签分类时任务类型如何在所有事件中分布。这种可视化有助于与训练数据集进行直接比较，揭示两个数据集之间任务类型组成的相似性和细微差异。</span><span class="original-text">illustrates the task type distribution using the same dual-perspective approach as the training dataset. The left panel (bar chart) reveals that text-to-image generation remains the most prevalent task type, appearing in 17 workflows (56.7% of all workflows), consistent with the training dataset. Notably, the test dataset shows a higher relative proportion of edge control (8 workflows, 26.7%) compared to the training dataset (187 workflows, 21.3%), suggesting a focus on more controlled generation scenarios. Other significant task types in the test dataset include style transfer (10 workflows, 33.3%), upscaling (10 workflows, 33.3%), and LoRA application (7 workflows, 23.3%). The right panel (pie chart) presents the occurrence-level distribution, showing how task types are distributed among all occurrences when accounting for the multi-label classification. This visualization facilitates direct comparison with the training dataset, revealing both similarities and subtle differences in task type composition between the two datasets.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="Pt0.A3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">0.C.3 </span><span class="translated-text">对比分析</span><span class="original-text">Comparative Analysis</span></h3>
+<div class="ltx_para" id="Pt0.A3.SS3.p1">
+<p class="ltx_p" id="Pt0.A3.SS3.p1.1"><span class="translated-text">比较可视化表明，虽然两个数据集具有相似的任务类型分布，但测试数据集在某些任务类型的相对比例上表现出细微的变化。值得注意的是，与训练数据集（187 个工作流程，21.3%）相比，测试数据集显示出对边缘控制（8 个工作流程，26.7%）的更高重视，并且风格转移操作的比例相似（10 个工作流程，测试中的 33.3% vs. 312 个工作流程，训练中的 35.5%），这表明对更受控制和风格化的生成场景的关注。两个数据集中一致存在的多任务工作流程（平均每个项目有 2.7-2.9 种任务类型）强调了现实世界图像生成管道的复杂性，用户通常需要顺序或并行应用多种技术才能获得所需的结果。</span><span class="original-text">The comparative visualization reveals that while both datasets share similar task type distributions, the test dataset exhibits slight variations in the relative proportions of certain task types. Notably, the test dataset shows a higher emphasis on edge control (8 workflows, 26.7%) compared to the training dataset (187 workflows, 21.3%), and similar proportions of style transfer operations (10 workflows, 33.3% in test vs. 312 workflows, 35.5% in training), indicating a focus on more controlled and stylized generation scenarios. The consistent presence of multi-task workflows (averaging 2.7–2.9 task types per item) across both datasets underscores the complexity of real-world image generation pipelines, where users typically require sequential or parallel application of multiple techniques to achieve their desired results.</span></p>
+</div>
+<section class="ltx_paragraph" id="Pt0.A3.SS3.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">主要发现：</span><span class="original-text">Key Findings:</span></h4>
+<div class="ltx_para" id="Pt0.A3.SS3.SSS0.Px1.p1">
+<ul class="ltx_itemize" id="Pt0.A3.I1">
+<li class="ltx_item" id="Pt0.A3.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="Pt0.A3.I1.i1.p1">
+<p class="ltx_p" id="Pt0.A3.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="Pt0.A3.I1.i1.p1.1.1"><span class="translated-text">多任务性质：</span><span class="original-text">Multi-task Nature:</span></span><span class="translated-text">每个工作流程的任务类型平均数量较高 (2.7–2.9)，这证实了现实世界的图像生成工作流程通常集成了多种操作，例如生成、编辑和增强。</span><span class="original-text">The high average number of task types per workflow (2.7–2.9) confirms that real-world image generation workflows typically integrate multiple operations, such as generation, editing, and enhancement.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="Pt0.A3.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="Pt0.A3.I1.i2.p1">
+<p class="ltx_p" id="Pt0.A3.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="Pt0.A3.I1.i2.p1.1.1"><span class="translated-text">任务类型优势：</span><span class="original-text">Task Type Dominance:</span></span><span class="translated-text">文本到图像生成在两个数据集中都占主导地位，出现在训练集中的 481 个工作流程（54.7%）和测试集中的 17 个工作流程（56.7%）中，反映了其作为大多数图像生成管道中的基本操作的基本作用。</span><span class="original-text">Text-to-image generation dominates both datasets, appearing in 481 workflows (54.7%) in the training set and 17 workflows (56.7%) in the test set, reflecting its fundamental role as the base operation in most image generation pipelines.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="Pt0.A3.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="Pt0.A3.I1.i3.p1">
+<p class="ltx_p" id="Pt0.A3.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="Pt0.A3.I1.i3.p1.1.1"><span class="translated-text">后处理普遍程度：</span><span class="original-text">Post-processing Prevalence:</span></span><span class="translated-text">升级（348 个工作流程，39.6% 训练；10 个工作流程，33.3% 测试）和风格转换（312 个工作流程，35.5% 训练；10 个工作流程，33.3% 测试）操作的高频率表明用户在初始生成后频繁应用增强和风格化步骤。</span><span class="original-text">The high frequency of upscaling (348 workflows, 39.6% in training; 10 workflows, 33.3% in test) and style transfer (312 workflows, 35.5% in training; 10 workflows, 33.3% in test) operations indicates that users frequently apply enhancement and stylization steps after initial generation.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="Pt0.A3.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="Pt0.A3.I1.i4.p1">
+<p class="ltx_p" id="Pt0.A3.I1.i4.p1.1"><span class="ltx_text ltx_font_bold" id="Pt0.A3.I1.i4.p1.1.1"><span class="translated-text">控制机制：</span><span class="original-text">Control Mechanisms:</span></span><span class="translated-text">边缘控制（187 个工作流程，21.3% 在训练中；8 个工作流程，26.7% 在测试中）和姿势控制操作（143 个工作流程，16.3% 在训练中；5 个工作流程，16.7% 在测试中）的大量存在证明了结构指导在受控图像生成场景中的重要性。</span><span class="original-text">The significant presence of edge control (187 workflows, 21.3% in training; 8 workflows, 26.7% in test) and pose control operations (143 workflows, 16.3% in training; 5 workflows, 16.7% in test) demonstrates the importance of structural guidance in controlled image generation scenarios.</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para" id="Pt0.A3.SS3.SSS0.Px1.p2">
+<p class="ltx_p" id="Pt0.A3.SS3.SSS0.Px1.p2.1"><span class="translated-text">这些可视化提供了对任务分配模式的全面洞察，支持我们对现代图像生成工作流程固有的多样化需求和复杂性的理解。</span><span class="original-text">These visualizations provide comprehensive insights into the task distribution patterns, supporting our understanding of the diverse requirements and complexity inherent in modern image generation workflows.</span></p>
+</div>
+</section>
+</section>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2607.15845v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer><footer class="ds-site-footer">
+<div class="ds-site-footer-grid">
+<div class="ds-site-footer-main">
+<div class="ds-site-footer-ack"><span class="translated-text">我们衷心感谢来自
+        我们的</span><span class="original-text">We gratefully acknowledge support from
+        our</span><strong><span class="translated-text">主要资助者</span><span class="original-text">major funders</span></strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong><span class="translated-text">成员机构</span><span class="original-text">member institutions</span></strong></a><span class="ack-member-inline" hidden="">, <strong></strong></span><span class="translated-text">,
+        以及所有贡献者。</span><span class="original-text">,
+        and all contributors.</span></div>
+<nav aria-label="Site navigation" class="ds-site-footer-links">
+<a href="https://info.arxiv.org/about"><span class="translated-text">关于</span><span class="original-text">About</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help"><span class="translated-text">帮助</span><span class="original-text">Help</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/contact.html"><span class="translated-text">联系方式</span><span class="original-text">Contact</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/subscribe"><span class="translated-text">订阅</span><span class="original-text">Subscribe</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/license/index.html"><span class="translated-text">版权</span><span class="original-text">Copyright</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/policies/privacy_policy.html"><span class="translated-text">隐私</span><span class="original-text">Privacy</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/web_accessibility.html"><span class="translated-text">无障碍</span><span class="original-text">Accessibility</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://status.arxiv.org" rel="noopener noreferrer" target="_blank"><span class="translated-text">运营状况</span><span class="original-text">Operational Status</span><span class="is-sr-only"><span class="translated-text">（在新选项卡中打开）</span><span class="original-text">(opens in new tab)</span></span></a>
+</nav>
+</div>
+<div aria-label="Major funders" class="ds-site-footer-funders">
+<div class="ds-site-footer-funders-label"><span class="translated-text">主要资金支持来自</span><span class="original-text">Major funding support from</span></div>
+<div class="ds-site-footer-funders-logos">
+<a class="ds-funder-link" href="https://www.simonsfoundation.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.sfi.org.bm/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation International" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation-international.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.schmidtsciences.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Schmidt Sciences" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/schmidt-sciences.png"/>
+</a>
+</div>
+</div>
+</div>
+</footer><div id="fixed-buttons-container">
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
