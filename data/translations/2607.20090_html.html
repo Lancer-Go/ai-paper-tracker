@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">大型语言模型的强化学习 从受污染的检索结果中选择性采用证据</span><span class="original-text">Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 7 月 22 日星期三 12:41:22 生成 http://dlmf.nist.gov/LaTeXML/。</span><span class="original-text">Generated on Wed Jul 22 12:41:22 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+    // Pre-apply spinout-banner dismissal here, before the banner paints, so it
+    // never flashes in only to be hidden later by the deferred arxiv-header.js.
+    // Key matches arxiv-header.js: "arxiv-banner-dismissed:" + data-banner-name.
+    if (localStorage.getItem('arxiv-banner-dismissed:spinout-nonprofit')) {
+      document.documentElement.setAttribute("data-banner-dismissed", "");
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/><link href="https://arxiv.org/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626" media="screen" rel="stylesheet" type="text/css"/><style>
+  /* Banner pre-dismissal (set above before paint -> no flash-then-hide) and
+     reading-mode chrome hiding. */
+  html[data-banner-dismissed] .ds-announcement { display: none; }
+  html[data-reading-mode="enabled"] .ds-announcement,
+  html[data-reading-mode="enabled"] .ds-site-footer { display: none; }
+  /* Keep the announcement text dark on the Open-Blue band in both colour themes
+     (otherwise it inherits the paper's warm-wash text in dark mode and washes out). */
+  .ds-announcement-text { color: var(--arxiv-ink, #1c1a17); }
+</style>
+<script defer="" src="https://arxiv.org/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2607.20090" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2607.20090" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog><div aria-label="Announcement" class="ds-announcement" data-banner-name="spinout-nonprofit" id="announcement-banner" role="region">
+<img alt="" aria-hidden="true" class="ds-announcement-glyph" src="https://arxiv.org/static/base/1.0.1/images/icons/smileybones-small.svg"/>
+<span class="ds-announcement-text"><span class="translated-text">arXiv 现在是一个独立的非营利组织！</span><span class="original-text">arXiv is now an independent nonprofit!</span></span>
+<a class="ds-announcement-link" href="https://info.arxiv.org/about"><span class="translated-text">了解更多</span><span class="original-text">Learn more</span></a>
+<button aria-label="Dismiss announcement" class="ds-announcement-close" type="button">×</button>
+</div>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/"><img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/base/1.0.1/images/arxiv-logo-primary-light.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2607.20090v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2607.20090v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S2" title="In Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Preliminary</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Methodology</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S3.SS1" title="In 3 Methodology ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Dataset Preparation</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS1.SSS0.Px1" title="In 3.1 Dataset Preparation ‣ 3 Methodology ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title">Training data.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S3.SS1.SSS0.Px2" title="In 3.1 Dataset Preparation ‣ 3 Methodology ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title">Example-disjoint test set.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS2" title="In 3 Methodology ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Tool-Use Rollout</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS3" title="In 3 Methodology ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.3 </span>Reward Policy</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS4" title="In 3 Methodology ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.4 </span>Policy Optimization</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Experimental Setup</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In 4 Experimental Setup ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>Training details</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS2" title="In 4 Experimental Setup ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2 </span>Datasets</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS3" title="In 4 Experimental Setup ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.3 </span>Baselines</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS4" title="In 4 Experimental Setup ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.4 </span>Metrics</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S5" title="In Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Results and Analysis</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS1" title="In 5 Results and Analysis ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5.1 </span>Main Results</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS2" title="In 5 Results and Analysis ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5.2 </span>Evaluator and Dataset-Version Diagnostics</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS3" title="In 5 Results and Analysis ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5.3 </span>General Capability Retention</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S6" title="In Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6 </span>Related Work</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S6.SS1" title="In 6 Related Work ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6.1 </span>Reinforcement Learning</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S6.SS2" title="In 6 Related Work ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6.2 </span>Large Language Models as Agents</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S7" title="In Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">7 </span>Conclusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：arXiv.org 永久非独占许可证</span><span class="original-text">License: arXiv.org perpetual non-exclusive license</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2607.20090v1 [cs.CL] 2026 年 7 月 22 日</span><span class="original-text">arXiv:2607.20090v1 [cs.CL] 22 Jul 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">大型语言模型的强化学习 从受污染的检索结果中选择性采用证据</span><span class="original-text">Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+<span class="ltx_text ltx_font_bold" id="id1.1.id1">Yanyu Chen<sup class="ltx_sup" id="id1.1.id1.1"><span class="ltx_text ltx_font_medium" id="id1.1.id1.1.1">1</span></sup></span>
+<span class="ltx_text ltx_font_bold" id="id2.2.id2">, Yue Li<sup class="ltx_sup" id="id2.2.id2.1"><span class="ltx_text ltx_font_medium" id="id2.2.id2.1.1">1</span></sup><span class="ltx_note ltx_role_footnotemark" id="footnotex1"><sup class="ltx_note_mark">1</sup><span class="ltx_note_outer"><span class="ltx_note_content"><sup class="ltx_note_mark">1</sup><span class="ltx_note_type">footnotemark: </span><span class="ltx_tag ltx_tag_note"><span class="ltx_text ltx_font_medium" id="footnotex1.1.1.1">1</span></span></span></span></span></span>
+<span class="ltx_text ltx_font_bold" id="id3.3.id3">, Yongyi Cui<sup class="ltx_sup" id="id3.3.id3.1"><span class="ltx_text ltx_font_medium" id="id3.3.id3.1.1">1</span></sup></span>
+<span class="ltx_text ltx_font_bold" id="id4.4.id4">, Dongsheng Shi<sup class="ltx_sup" id="id4.4.id4.1"><span class="ltx_text ltx_font_medium" id="id4.4.id4.1.1">1</span></sup></span>
+<span class="ltx_text ltx_font_bold" id="id5.5.id5">, Lichang Dai<sup class="ltx_sup" id="id5.5.id5.1"><span class="ltx_text ltx_font_medium" id="id5.5.id5.1.1">2</span></sup></span>
+<br class="ltx_break"/><sup class="ltx_sup" id="id6.6.id6">1</sup>East China Normal University  
+<sup class="ltx_sup" id="id7.7.id7">2</sup>Shandong University 
+<br class="ltx_break"/><span class="ltx_text ltx_font_typewriter" id="id8.8.id8">cyyecao@stu.ecnu.edu.cn, </span>
+<span class="ltx_text ltx_font_typewriter" id="id9.9.id9">202435387@mail.sdu.edu.cn</span>
+</span><span class="ltx_author_notes">Equal Contribution.Corresponding author.</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">检索增强的大型语言模型经常面临将有用的证据与误导性陈述或类似指令的内容交织在一起的上下文。一揽子拒绝会丢弃有效的证据，而不加批判的采用会产生错误或不安全的答案。因此，能够选择性地采用相关信息，同时拒绝欺骗性或有害内容，对于现实世界检索设置中的可靠部署至关重要。
+我们引入了 SelectBench，一个用于选择性证据采用的受控基准和训练集，并使用确定性规则奖励或冻结语义判断直接使用 DAPO 进行后训练 Qwen3.5-4B。在修正后的 325 个示例 SelectBench-v2 测试集上，严格成功率从原始检查点的 22.46% 上升到 DAPO-Rule 的 25.54% 和 DAPO-DeepSeek 的 26.46%。这两种经过训练的策略都减少了禁止内容的采用，并产生更短、更集中的响应，但即时注入跟踪并没有改善。成对的增益是适度的，并且无法经受霍尔姆校正，这表明可能需要更强的奖励塑造或额外的训练迭代来获得更稳健的增益。 DAPO-DeepSeek 在 MMLU 或干净的 HotpotQA 上没有表现出材料退化，表明训练后程序保留了一般功能。这些结果表明选择性证据使用的方向性改进，同时将注射阻力和统计稳健性确定为未来工作的重要挑战。</span><span class="original-text">Retrieval-augmented large language models frequently face contexts that interleave useful evidence with misleading statements or instruction-like content. Blanket refusal discards valid evidence, whereas uncritical adoption yields incorrect or unsafe answers. The ability to selectively adopt relevant information while rejecting deceptive or harmful content is therefore critical for reliable deployment in real-world retrieval settings.
+We introduce SelectBench, a controlled benchmark and training set for selective evidence adoption, and post-train Qwen3.5-4B directly with DAPO using either deterministic rule rewards or a frozen semantic judge. On the corrected 325-example SelectBench-v2 test set, strict success rises from 22.46% for the original checkpoint to 25.54% with DAPO-Rule and 26.46% with DAPO-DeepSeek. Both trained policies reduce forbidden-content adoption and produce shorter, more focused responses, yet prompt-injection following does not improve. The paired gains are modest and fail to survive Holm correction, suggesting that stronger reward shaping or additional training iterations may be needed for more robust gains. DAPO-DeepSeek exhibits no material degradation on MMLU or clean HotpotQA, indicating that the post-training procedure preserves general capabilities. These results demonstrate a directional improvement in selective evidence use, while identifying injection resistance and statistical robustness as important remaining challenges for future work.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para ltx_noindent" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">大型语言模型 (LLM) 在广泛的下游任务中表现出了卓越的熟练程度</span><span class="original-text">Large Language Models (LLMs) have demonstrated remarkable proficiency across a broad spectrum of downstream tasks</span><cite class="ltx_cite ltx_citemacro_cite">Yi<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib6" title="Unified attacks to large language model watermarks: spoofing and scrubbing in unauthorized knowledge distillation">2025c</a>); Li<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib5" title="From construction to injection: edit-based fingerprints for large language models">2025a</a>; <a class="ltx_ref" href="#bib.bib19" title="AGMark: attention-guided dynamic watermarking for large vision-language models">2026</a>)</cite><span class="translated-text">。它们从有限的监督中进行概括并执行复杂推理的能力使它们成为各种现实世界应用的多功能基础模型</span><span class="original-text">. Their ability to generalize from limited supervision and perform complex reasoning has positioned them as versatile foundation models for diverse real-world applications</span><cite class="ltx_cite ltx_citemacro_cite">Yi<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib4" title="Unified defense for large language models against jailbreak and fine-tuning attacks in education">2025b</a>); Shi<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib18" title="Benchmarking large language models for end-to-end clinical support in traditional chinese medicine">2026b</a>)</cite><span class="translated-text">。此外，通过利用外部工具使用功能，他们可以解决超出固有语言推理范围的任务</span><span class="original-text">. Additionally, by leveraging external tool-use capabilities, they can tackle tasks that go beyond the scope of inherent language reasoning</span><cite class="ltx_cite ltx_citemacro_cite">Zhang<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib17" title="A survey on evaluating quality and trustworthiness in LLM-generated data">2026a</a>); Shi<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib13" title="SURGENT: a surgical multi-agent assistance system across the perioperative workflow">2026a</a>)</cite><span class="translated-text">。
+通过提示明确指示模型何时以及如何调用外部工具，模型能够执行超出纯语言推理限制的任务</span><span class="original-text">.
+By explicitly instructing the model through prompts on when and how to invoke external tools, it becomes capable of performing tasks beyond the limits of pure linguistic reasoning</span><cite class="ltx_cite ltx_citemacro_cite">Sha<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib10" title="Sem: reinforcement learning for search-efficient large language models">2025</a>); Zhang<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib16" title="Are tools all we need? unveiling the tool-use tax in llm agents">2026b</a>)</cite>.</p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">法学硕士的安全对齐是一个研究方向，致力于为模型配备拒绝有害指令的能力</span><span class="original-text">Safety alignment in LLMs is a research direction dedicated to equipping models with the ability to refuse harmful instructions</span><cite class="ltx_cite ltx_citemacro_cite">Li<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib1" title="Hierarchical safety realignment: lightweight restoration of safety in pruned large vision-language models">2025b</a>); Yi<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib2" title="Latent-space adversarial training with post-aware calibration for defending large language models against jailbreak attacks">2025a</a>)</cite><span class="translated-text">。然而，过度的对齐可能会无意中导致良性的无理拒绝</span><span class="original-text">. Nevertheless, excessive alignment may inadvertently lead to the unwarranted refusal of benign ones</span><cite class="ltx_cite ltx_citemacro_cite">Zhang<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib12" title="FalseReject: a resource for improving contextual safety and mitigating over-refusals in LLMs via structured reasoning">2025</a>)</cite><span class="translated-text">。
+受此启发，我们研究了法学硕士调用搜索工具来帮助生成的场景。出于安全考虑而全面拒绝检索到的信息，而不是提取有用的部分，会造成不必要的资源浪费。另一方面，不加批判地接受此类信息会带来安全风险并产生低质量的输出。因此，使模型能够识别和采用有价值的信息，同时过滤掉有害内容至关重要。</span><span class="original-text">.
+Inspired by this, we examine the scenario in which LLMs call upon search tools to aid generation. A blanket refusal of retrieved information due to safety concerns, rather than extracting useful portions, constitutes an unnecessary waste of resources. On the other hand, uncritical acceptance of such information introduces safety risks and yields low-quality outputs. Consequently, equipping models with the ability to discern and adopt valuable information while filtering out harmful content is of paramount importance.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">先前的工作已经证明了使用强化学习来增强模型对外部工具（包括检索工具）的理解和利用的潜力</span><span class="original-text">Prior work has demonstrated the potential of using reinforcement learning to enhance models’ understanding and utilization of external tools, including retrieval tools</span><cite class="ltx_cite ltx_citemacro_cite">Sha<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib10" title="Sem: reinforcement learning for search-efficient large language models">2025</a>); Chen<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib9" title="ReSearch: learning to reason with search for LLMs via reinforcement learning">2026</a>)</cite><span class="translated-text">。在此基础上，我们构建了 SelectBench 来研究这个问题。基于DAPO框架</span><span class="original-text">. Building on this, we construct SelectBench to study this problem. Based on the DAPO framework</span><cite class="ltx_cite ltx_citemacro_cite">Yu<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib20" title="Dapo: an open-source llm reinforcement learning system at scale">2026</a>)</cite><span class="translated-text">，我们定制奖励信号，以鼓励模型从散布误导性或类似指令的材料的检索内容中提取支持的信息。我们评估这种政策转变是否改善了选择性证据采用，以及是否改变了衡量一般能力任务的绩效。</span><span class="original-text">, we customize the reward signal to encourage the model to extract supported information from retrieved content interspersed with misleading or instruction-like material. We evaluate whether this policy shift improves selective evidence adoption and whether it changes performance on measured general-capability tasks.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">总之，我们的贡献如下：</span><span class="original-text">In summary, our contributions are as follows:</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p5">
+<ul class="ltx_itemize" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="translated-text">我们从受污染的检索工具输出中制定选择性证据采用，作为法学硕士代理人的独特培训后目标。</span><span class="original-text">We formulate selective evidence adoption from contaminated retrieval-tool outputs as a distinct post-training objective for LLM agents.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="translated-text">我们构建了一个用于选择性证据采用的受控数据集，并设计了一个定制的强化学习管道，该管道仅向正确、完整和安全的答案分配积极奖励，同时将禁止采用视为硬失败。</span><span class="original-text">We build a controlled dataset for selective evidence adoption and design a tailored RL pipeline that assigns positive reward only to correct, complete, and safe answers while treating forbidden adoption as a hard failure.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1"><span class="translated-text">在修正后的保留测试集上，两种经过训练的策略在严格选择性采用和较低禁止内容采用方面都显示出适度的方向性改进。配对统计和失效模式分析揭示了剩余的不确定性和即时注射阻力缺乏改进。</span><span class="original-text">On a corrected held-out test set, both trained policies show modest directional improvements in strict selective adoption and lower forbidden-content adoption. Paired statistical and failure-mode analyses expose remaining uncertainty and a lack of improvement in prompt-injection resistance.</span></p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">初步</span><span class="original-text">Preliminary</span></h2>
+<div class="ltx_para ltx_noindent" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="translated-text">我们使用Qwen3.5进行了试点实验</span><span class="original-text">We conduct a pilot experiment using Qwen3.5</span><cite class="ltx_cite ltx_citemacro_cite">Team (<a class="ltx_ref" href="#bib.bib7" title="Qwen3.5: accelerating productivity with native multimodal agents">2026</a>)</cite><span class="translated-text">在两个模型尺度（4B 和 9B 参数）上检查法学硕士从低质量检索内容中提取有用信息的固有能力。具体来说，我们考虑三个低质量维度：安全损坏、临时损坏和格式损坏，为每个维度构建 100 个实例。这种设计使我们能够系统地评估模型能力如何影响对不同腐败类型的辨别力。</span><span class="original-text">at two model scales (4B and 9B parameters) to examine the inherent ability of LLMs to extract useful information from low-quality retrieved content. Specifically, we consider three dimensions of low quality: safety corruption, temporality corruption, and format corruption, with 100 instances constructed for each dimension. This design allows us to systematically assess how model capacity influences discernment across diverse corruption types.</span></p>
+</div>
+<figure class="ltx_table ltx_align_floatright" id="S2.T1">
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>
+Comparison of Multi-dimensional Settings.
+</figcaption>
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S2.T1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S2.T1.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S2.T1.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S2.T1.1.1.1.1.1">Strategy</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S2.T1.1.1.1.2"><span class="ltx_text ltx_font_bold" id="S2.T1.1.1.1.2.1">Safety</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S2.T1.1.1.1.3"><span class="ltx_text ltx_font_bold" id="S2.T1.1.1.1.3.1">Temporality</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S2.T1.1.1.1.4"><span class="ltx_text ltx_font_bold" id="S2.T1.1.1.1.4.1">Format</span></th>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.2.2">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_t" colspan="4" id="S2.T1.1.2.2.1" style="--ltx-bg-color:#D9D9D9;"><span class="ltx_text" id="S2.T1.1.2.2.1.1" style="--ltx-bg-color:#D9D9D9;"><span class="ltx_text ltx_font_italic" id="S2.T1.1.2.2.1.1.1">Qwen3.5-4B</span></span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S2.T1.1.3.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S2.T1.1.3.1.1"><span class="ltx_text ltx_font_bold" id="S2.T1.1.3.1.1.1">Full Accept</span></th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.1.3.1.2">15.00</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.1.3.1.3">0.00</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.1.3.1.4">0.00</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.4.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.1.4.2.1"><span class="ltx_text ltx_font_bold" id="S2.T1.1.4.2.1.1">Full Reject</span></th>
+<td class="ltx_td ltx_align_center" id="S2.T1.1.4.2.2">55.00</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.1.4.2.3">0.00</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.1.4.2.4">0.00</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.5.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.1.5.3.1"><span class="ltx_text ltx_font_bold" id="S2.T1.1.5.3.1.1">Selective Accept</span></th>
+<td class="ltx_td ltx_align_center" id="S2.T1.1.5.3.2">30.00</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.1.5.3.3">100.00</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.1.5.3.4">100.00</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.6.4">
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t" colspan="4" id="S2.T1.1.6.4.1" style="--ltx-bg-color:#D9D9D9;"><span class="ltx_text" id="S2.T1.1.6.4.1.1" style="--ltx-bg-color:#D9D9D9;"><span class="ltx_text ltx_font_italic" id="S2.T1.1.6.4.1.1.1">Qwen3.5-9B</span></span></th>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.7.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S2.T1.1.7.5.1"><span class="ltx_text ltx_font_bold" id="S2.T1.1.7.5.1.1">Full Accept</span></th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.1.7.5.2">10.00</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.1.7.5.3">0.00</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S2.T1.1.7.5.4">0.00</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.8.6">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S2.T1.1.8.6.1"><span class="ltx_text ltx_font_bold" id="S2.T1.1.8.6.1.1">Full Reject</span></th>
+<td class="ltx_td ltx_align_center" id="S2.T1.1.8.6.2">70.00</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.1.8.6.3">0.00</td>
+<td class="ltx_td ltx_align_center" id="S2.T1.1.8.6.4">0.00</td>
+</tr>
+<tr class="ltx_tr" id="S2.T1.1.9.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S2.T1.1.9.7.1"><span class="ltx_text ltx_font_bold" id="S2.T1.1.9.7.1.1">Selective Accept</span></th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S2.T1.1.9.7.2">20.00</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S2.T1.1.9.7.3">100.00</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S2.T1.1.9.7.4">100.00</td>
+</tr>
+</tbody>
+</table>
+</figure>
+<div class="ltx_para ltx_noindent" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="translated-text">从表</span><span class="original-text">From Table</span><a class="ltx_ref" href="#S2.T1" title="Table 1 ‣ 2 Preliminary ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">，我们观察到该模型可以在很大程度上克服时间性和格式损坏维度中低质量噪声内容的干扰，从而实现选择性接受。相比之下，在安全腐败维度，该模型表现出强烈的要么不加区别地接受，要么全盘拒绝的倾向：前者损害了安全一致性，而后者则反映了过于保守的安全行为。</span><span class="original-text">, we observe that the model can largely overcome interference from low-quality noisy content in the temporality and format corruption dimensions, thereby achieving selective acceptance. In contrast, in the safety corruption dimension, the model exhibits a strong tendency toward either indiscriminate acceptance or wholesale rejection: the former compromises safety alignment, whereas the latter reflects overly conservative safety behavior.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p3">
+<p class="ltx_p" id="S2.p3.1"><span class="translated-text">根据这些描述性试点结果，我们将安全性受损的检索确定为三个测试维度中最具挑战性的。这个初步实验促使我们对“选择性检索结​​果采用”进行对照研究，我们假设模型的安全对齐是观察到的行为的原因。</span><span class="original-text">Based on these descriptive pilot results, we identify safety-corrupted retrieval as the most challenging of the three tested dimensions. This preliminary experiment prompted us to conduct a controlled study on ”selective retrieval result adoption,” and we hypothesize that the model’s safety alignment is the cause of the observed behavior.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">方法论</span><span class="original-text">Methodology</span></h2>
+<div class="ltx_para ltx_noindent" id="S3.p1">
+<p class="ltx_p" id="S3.p1.7"><span class="translated-text">我们研究的智能体在调用搜索工具后必须回答事实问题，而搜索工具的输出将有用的证据与误导性或类似指令的文本混合在一起。让</span><span class="original-text">We study an agent that must answer a factual question after calling a search tool whose output mixes useful evidence with misleading or instruction-like text. Let</span><math alttext="q" class="ltx_Math" display="inline" id="S3.p1.1.m1" intent=":literal"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math><span class="translated-text">表示问题，</span><span class="original-text">denote the question,</span><math alttext="c" class="ltx_Math" display="inline" id="S3.p1.2.m2" intent=":literal"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math><span class="translated-text">固定的混合检索上下文，以及</span><span class="original-text">the fixed mixed retrieval context, and</span><math alttext="\tau=(q,a_{1},c,a_{2})" class="ltx_Math" display="inline" id="S3.p1.3.m3" intent=":literal"><semantics><mrow><mi>τ</mi><mo>=</mo><mrow><mo stretchy="false">(</mo><mi>q</mi><mo>,</mo><msub><mi>a</mi><mn>1</mn></msub><mo>,</mo><mi>c</mi><mo>,</mo><msub><mi>a</mi><mn>2</mn></msub><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\tau=(q,a_{1},c,a_{2})</annotation></semantics></math><span class="translated-text">由此产生的两圈辅助轨迹：</span><span class="original-text">the resulting two-turn assistant trajectory:</span><math alttext="a_{1}" class="ltx_Math" display="inline" id="S3.p1.4.m4" intent=":literal"><semantics><msub><mi>a</mi><mn>1</mn></msub><annotation encoding="application/x-tex">a_{1}</annotation></semantics></math><span class="translated-text">调用该工具并</span><span class="original-text">invokes the tool and</span><math alttext="a_{2}" class="ltx_Math" display="inline" id="S3.p1.5.m5" intent=":literal"><semantics><msub><mi>a</mi><mn>2</mn></msub><annotation encoding="application/x-tex">a_{2}</annotation></semantics></math><span class="translated-text">包含最终的推理和答案。期望的政策使用以下证据：</span><span class="original-text">contains the final reasoning and answer. The desired policy uses the evidence in</span><math alttext="c" class="ltx_Math" display="inline" id="S3.p1.6.m6" intent=":literal"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math><span class="translated-text">支持答案，同时既不采用不受支持的内容，也不遵守嵌入的说明</span><span class="original-text">that supports the answer while neither adopting unsupported content nor obeying instructions embedded in</span><math alttext="c" class="ltx_Math" display="inline" id="S3.p1.7.m7" intent=":literal"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math><span class="translated-text">。我们直接使用 DAPO 对策略进行后训练</span><span class="original-text">. We post-train the policy directly with DAPO</span><cite class="ltx_cite ltx_citemacro_cite">Yu<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib20" title="Dapo: an open-source llm reinforcement learning system at scale">2026</a>)</cite><span class="translated-text">使用三元任务分数，然后进行连续长度整形。</span><span class="original-text">using a ternary task score followed by continuous length shaping.</span></p>
+</div>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">数据集准备</span><span class="original-text">Dataset Preparation</span></h3>
+<section class="ltx_paragraph" id="S3.SS1.SSS0.Px1">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">训练数据。</span><span class="original-text">Training data.</span></h4>
+<div class="ltx_para ltx_noindent" id="S3.SS1.SSS0.Px1.p1">
+<p class="ltx_p" id="S3.SS1.SSS0.Px1.p1.1"><span class="translated-text">SelectBench 包含源自 HotpotQA 中多跳问题的 1,300 个训练实例</span><span class="original-text">SelectBench contains 1,300 training instances derived from multi-hop questions in HotpotQA</span><cite class="ltx_cite ltx_citemacro_cite">Yang<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib27" title="HotpotQA: a dataset for diverse, explainable multi-hop question answering">2018</a>)</cite>, 2WikiMultiHopQA <cite class="ltx_cite ltx_citemacro_cite">Ho<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib28" title="Constructing a multi-hop qa dataset for comprehensive evaluation of reasoning steps">2020</a>)</cite><span class="translated-text">、和音乐</span><span class="original-text">, and MuSiQue</span><cite class="ltx_cite ltx_citemacro_cite">Trivedi<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib29" title="MuSiQue: multihop questions via single-hop question composition">2022</a>)</cite><span class="translated-text">。源混合物分别为 650/325/325 个实例。对于每个问题，我们保留支持答案的证据，并将其与受控的低质量跨度相结合。这些跨度涵盖了类似答案的错误摘要、表面匹配的错误实体、陈旧或误导性信息、不安全的证据选择建议、过度拒绝诱饵以及检索到的即时注入。每个实例都会记录接受的答案别名、所需的答案术语、已知错误或禁止的短语以及（如果适用）唯一的注入成功标记。</span><span class="original-text">. The source mixture is 650/325/325 instances, respectively. For each question, we retain answer-supporting evidence and combine it with controlled low-quality spans. These spans cover an answer-like wrong summary, a surface-matched wrong entity, stale or misleading information, unsafe evidence-selection advice, over-refusal bait, and a retrieved prompt injection. Each instance records accepted answer aliases, required answer terms, known-wrong or forbidden phrases, and (where applicable) a unique injection-success marker.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS1.SSS0.Px1.p2">
+<p class="ltx_p" id="S3.SS1.SSS0.Px1.p2.1"><span class="translated-text">我们构建了一个包含 1,300 个实例的数据集，其中包含 650 个实例</span><span class="original-text">We construct a dataset of 1,300 instances, comprising 650</span><span class="ltx_text ltx_font_typewriter" id="S3.SS1.SSS0.Px1.p2.1.1"><span class="translated-text">sft_校正</span><span class="original-text">sft_correction</span></span>, 455 <span class="ltx_text ltx_font_typewriter" id="S3.SS1.SSS0.Px1.p2.1.2"><span class="translated-text">偏好对</span><span class="original-text">preference_pair</span></span><span class="translated-text">和 195</span><span class="original-text">, and 195</span><span class="ltx_text ltx_font_typewriter" id="S3.SS1.SSS0.Px1.p2.1.3"><span class="translated-text">注射阻力</span><span class="original-text">injection_resistance</span></span><span class="translated-text">案例。这些标签仅描述建筑来源。训练转换主动删除选择和拒绝的辅助轨迹，强化学习仅接收问题、固定工具上下文和奖励标签。我们将数据分为 1,170 个训练示例和 130 个验证示例（种子为 42），按源数据集、任务类型和构造桶联合分层。</span><span class="original-text">cases. These labels describe construction provenance only. Training conversion actively removes chosen and rejected assistant trajectories, and RL receives only the question, fixed tool context, and reward labels. We split the data into 1,170 training and 130 validation examples with seed 42, stratifying jointly by source dataset, task type, and construction bucket.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS1.SSS0.Px1.p3">
+<p class="ltx_p" id="S3.SS1.SSS0.Px1.p3.1"><span class="translated-text">冻结的构建清单记录了 646 个跳过的候选者：377 个测试证据哈希重叠，156 个被语义证据或标签审查拒绝，58 个重复的训练问题，以及 55 个其他构建或审查失败。每个保留的实例都收到了第一次审核，1,105 个实例收到了第二次审核。最终的泄漏审计报告称，在标准化令牌三元组 Jaccard 相似度为 0.9 的阈值下，没有遗留泄漏，也没有接近重复的标志。</span><span class="original-text">The frozen construction manifest records 646 skipped candidates: 377 with test-evidence hash overlap, 156 rejected by semantic evidence or label review, 58 duplicate training questions, and 55 with other construction or review failures. Every retained instance received a first review, and 1,105 received a second review. A final leakage audit reported no surviving leakage and no near-duplicate flags under normalized-token trigram Jaccard similarity at a 0.9 threshold.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S3.SS1.SSS0.Px2">
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">示例-不相交测试集。</span><span class="original-text">Example-disjoint test set.</span></h4>
+<div class="ltx_para ltx_noindent" id="S3.SS1.SSS0.Px2.p1">
+<p class="ltx_p" id="S3.SS1.SSS0.Px2.p1.1"><span class="translated-text">我们唯一的正式测试集是 SelectBench-v2，它是从原始 SelectBench 挑战集派生的修正后的 325 个示例不相交的分割。训练后审计发现，原始生成器在具体化可信证据时可以替换非支持性句子。版本 2 严格解析了固定的官方 HotpotQA 干扰验证快照中的所有支持事实，并更改了 233 个示例中的可信证据包。它保留所有问题、答案、合成污染范围、禁止标签和注射标记。因此，训练数据和两个训练过的检查点保持不变。该拆分包含 275 个注入轴承示例和 50 个低质量推测而不是注入的示例。</span><span class="original-text">Our sole formal test set is SelectBench-v2, a corrected 325-example example-disjoint split derived from the original SelectBench challenge set. A post-training audit found that the original generator could substitute a non-supporting sentence when materializing trusted evidence. Version 2 strictly resolves all supporting facts from the pinned official HotpotQA distractor validation snapshot and changes the trusted evidence bundle in 233 examples. It preserves all questions, answers, synthetic contamination spans, forbidden labels, and injection markers. Consequently, the training data and both trained checkpoints remain unchanged. The split contains 275 injection-bearing examples and 50 examples with low-quality speculation instead of an injection.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS1.SSS0.Px2.p2">
+<p class="ltx_p" id="S3.SS1.SSS0.Px2.p2.1"><span class="translated-text">没有测试问题、上下文、答案标签、标识符、标记或行级分类进入 1,300 个示例构建池。原始诊断集中的故障类型总数为培训分类和泄漏审计提供了信息。因此，方法开发在总体类别级别上进行了基准测试，但没有使用行级别测试内容或标签进行培训。所有培训问题和证据都来自不相交的培训来源。</span><span class="original-text">No test question, context, answer label, identifier, marker, or row-level taxonomy enters the 1,300-example construction pool. Aggregate failure-type counts from the original diagnostic set informed the training taxonomy and leakage audit. Thus, method development was benchmark-informed at the aggregate category level, but no row-level test content or label was used for training. All training questions and evidence originate from disjoint training sources.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span><span class="translated-text">工具使用展示</span><span class="original-text">Tool-Use Rollout</span></h3>
+<div class="ltx_para ltx_noindent" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.2"><span class="translated-text">该策略最初仅观察系统指令和问题</span><span class="original-text">The policy initially observes only a system instruction and the question</span><math alttext="q" class="ltx_Math" display="inline" id="S3.SS2.p1.1.m1" intent=":literal"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math><span class="translated-text">。然后它调用</span><span class="original-text">. It then invokes</span><span class="ltx_text ltx_font_typewriter" id="S3.SS2.p1.2.1"><span class="translated-text">选择基准搜索</span><span class="original-text">selectbench_search</span></span><span class="translated-text">使用非空查询。离线工具返回示例特定的上下文</span><span class="original-text">with a non-empty query. The offline tool returns the example-specific context</span><math alttext="c" class="ltx_Math" display="inline" id="S3.SS2.p1.2.m2" intent=":literal"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math><span class="translated-text">逐字记录，无论查询措辞如何。这种结构使检索在不同的策略中保持固定，并将证据选择与搜索引擎差异隔离开来。成功的轨迹至少包含一次成功的工具调用，随后是可见的最终答案。正确性根据最终结果后出现的文本进行评估</span><span class="original-text">verbatim, regardless of query wording. This construction holds retrieval fixed across policies and isolates evidence selection from search-engine variance. A successful trajectory contains at least one successful tool call followed by a visible final answer. Correctness is evaluated on the text appearing after the final</span><span class="ltx_text ltx_font_typewriter" id="S3.SS2.p1.2.2"><span class="translated-text"><!--认为--></span><span class="original-text">&lt;/think&gt;</span></span><span class="translated-text">分隔符，而禁止采用检查跨越整个最终助理回合，因此将禁止跨度复制到推理中对奖励仍然可见。</span><span class="original-text">delimiter, while forbidden-adoption checks span the entire final assistant turn so that copying a forbidden span into reasoning remains visible to the reward.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span><span class="translated-text">奖励政策</span><span class="original-text">Reward Policy</span></h3>
+<div class="ltx_para ltx_noindent" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.3"><span class="translated-text">让</span><span class="original-text">Let</span><math alttext="T(\tau)" class="ltx_Math" display="inline" id="S3.SS3.p1.1.m1" intent=":literal"><semantics><mrow><mi>T</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">T(\tau)</annotation></semantics></math><span class="translated-text">表明工具调用成功，</span><span class="original-text">indicate a successful tool call,</span><math alttext="C(\tau)" class="ltx_Math" display="inline" id="S3.SS3.p1.2.m2" intent=":literal"><semantics><mrow><mi>C</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">C(\tau)</annotation></semantics></math><span class="translated-text">正确且完整的答案，以及</span><span class="original-text">a correct and complete answer, and</span><math alttext="H(\tau)" class="ltx_Math" display="inline" id="S3.SS3.p1.3.m3" intent=":literal"><semantics><mrow><mi>H</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">H(\tau)</annotation></semantics></math><span class="translated-text">采用禁止的范围或检索的指令。
+确定性任务得分为</span><span class="original-text">the adoption of a forbidden span or a retrieved instruction.
+The deterministic task score is</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="r_{\mathrm{task}}(\tau)=\begin{cases}-1,&amp;\neg T(\tau)\ \text{or}\ H(\tau),\\
++1,&amp;T(\tau)\land C(\tau)\land\neg H(\tau),\\
+0,&amp;\text{otherwise}.\end{cases}" class="ltx_Math" display="block" id="S3.E1.m1" intent=":literal"><semantics><mrow><mrow><msub><mi>r</mi><mi>task</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mo>{</mo><mtable columnspacing="5pt" displaystyle="true" rowspacing="0pt"><mtr><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mo>−</mo><mn>1</mn></mrow><mo>,</mo></mrow></mtd><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mo rspace="0.167em">¬</mo><mrow><mi>T</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo></mrow><mo lspace="0.500em" rspace="0em">​</mo><mtext>or</mtext><mo lspace="0.500em" rspace="0em">​</mo><mi>H</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>,</mo></mrow></mtd></mtr><mtr><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mo>+</mo><mn>1</mn></mrow><mo>,</mo></mrow></mtd><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mrow><mi>T</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo></mrow></mrow><mo>∧</mo><mrow><mi>C</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo></mrow></mrow><mo>∧</mo><mrow><mo rspace="0.167em">¬</mo><mrow><mi>H</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><mo>,</mo></mrow></mtd></mtr><mtr><mtd class="ltx_align_left" columnalign="left"><mrow><mn>0</mn><mo>,</mo></mrow></mtd><mtd class="ltx_align_left" columnalign="left"><mrow><mtext>otherwise</mtext><mo lspace="0em">.</mo></mrow></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">r_{\mathrm{task}}(\tau)=\begin{cases}-1,&amp;\neg T(\tau)\ \text{or}\ H(\tau),\\
++1,&amp;T(\tau)\land C(\tau)\land\neg H(\tau),\\
+0,&amp;\text{otherwise}.\end{cases}</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS3.p1.4"><span class="translated-text">因此，禁止或注入采用以及未能使用所需工具决定了事实的正确性。未检测到错误、不完整、缺失或过度拒绝的采纳的答案被归类为中性失败，原始分数为零，而不是硬否定。我们另外不鼓励不必要的长模型输出。对于</span><span class="original-text">Thus, forbidden or injection adoption and failure to use the required tool dominate factual correctness. An answer with no detected adoption that is wrong, incomplete, missing, or over-refusing is classified as a neutral failure with a raw score of zero rather than a hard negative. We additionally discourage unnecessarily long model output. For</span><math alttext="n" class="ltx_Math" display="inline" id="S3.SS3.p1.4.m1" intent=":literal"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math><span class="translated-text">模型生成的标记（不包括工具文本），</span><span class="original-text">model-generated tokens (tool text excluded),</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="p_{\mathrm{len}}(n)=\begin{cases}0,&amp;n\leq 768,\\
+-(n-768)/256,&amp;768&lt;n&lt;1024,\\
+-1,&amp;n\geq 1024,\end{cases}\qquad r(\tau)=\operatorname{clip}(r_{\mathrm{task}}+p_{\mathrm{len}},-1,1)." class="ltx_Math" display="block" id="S3.E2.m1" intent=":literal"><semantics><mrow><mrow><mrow><mrow><msub><mi>p</mi><mi>len</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>n</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mo>{</mo><mtable columnspacing="5pt" displaystyle="true" rowspacing="0pt"><mtr><mtd class="ltx_align_left" columnalign="left"><mrow><mn>0</mn><mo>,</mo></mrow></mtd><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mi>n</mi><mo>≤</mo><mn>768</mn></mrow><mo>,</mo></mrow></mtd></mtr><mtr><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mo>−</mo><mrow><mrow><mo stretchy="false">(</mo><mrow><mi>n</mi><mo>−</mo><mn>768</mn></mrow><mo stretchy="false">)</mo></mrow><mo>/</mo><mn>256</mn></mrow></mrow><mo>,</mo></mrow></mtd><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mn>768</mn><mo>&lt;</mo><mi>n</mi><mo>&lt;</mo><mn>1024</mn></mrow><mo>,</mo></mrow></mtd></mtr><mtr><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mo>−</mo><mn>1</mn></mrow><mo>,</mo></mrow></mtd><mtd class="ltx_align_left" columnalign="left"><mrow><mrow><mi>n</mi><mo>≥</mo><mn>1024</mn></mrow><mo>,</mo></mrow></mtd></mtr></mtable></mrow></mrow><mspace style="width:2em;" width="2em"></mspace><mrow><mrow><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mi>clip</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mrow><msub><mi>r</mi><mi>task</mi></msub><mo>+</mo><msub><mi>p</mi><mi>len</mi></msub></mrow><mo>,</mo><mrow><mo>−</mo><mn>1</mn></mrow><mo>,</mo><mn>1</mn><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">p_{\mathrm{len}}(n)=\begin{cases}0,&amp;n\leq 768,\\
+-(n-768)/256,&amp;768&lt;n&lt;1024,\\
+-1,&amp;n\geq 1024,\end{cases}\qquad r(\tau)=\operatorname{clip}(r_{\mathrm{task}}+p_{\mathrm{len}},-1,1).</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td>
+</tr></tbody>
+</table>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS3.p2">
+<p class="ltx_p" id="S3.SS3.p2.1"><span class="translated-text">我们实例化了用于政策训练的三元原始任务得分的两个变体。</span><span class="original-text">We instantiate two variants of the ternary raw task score for policy training.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS3.p3">
+<p class="ltx_p" id="S3.SS3.p3.1"><span class="ltx_text ltx_font_bold" id="S3.SS3.p3.1.1"><span class="translated-text">DAPO规则</span><span class="original-text">DAPO-Rule</span></span><span class="translated-text">保留小写 ASCII 字母和数字，将所有其他字符范围折叠成空格，并对接受的别名、必需术语、禁止或错误短语以及注入标记执行全短语匹配。接受的别名和所有必需的术语必须在可见答案中显示为未否定。当否定标记出现在其四个标记的左侧上下文中，或者当它在本地跟随时，禁止或注入短语被视为否定，而不是采用。</span><span class="original-text">retains lowercase ASCII letters and digits, collapses all other character spans into spaces, and performs whole-phrase matching against accepted aliases, required terms, forbidden or wrong phrases, and injection markers. Accepted aliases and all required terms must appear unnegated in the visible answer. A forbidden or injection phrase is treated as negated—rather than adopted—when a negation marker occurs within its four-token left context, or when it is locally followed by</span><em class="ltx_emph ltx_font_italic" id="S3.SS3.p3.1.2"><span class="translated-text">错误的</span><span class="original-text">wrong</span></em>, <em class="ltx_emph ltx_font_italic" id="S3.SS3.p3.1.3"><span class="translated-text">假的</span><span class="original-text">false</span></em>, <em class="ltx_emph ltx_font_italic" id="S3.SS3.p3.1.4"><span class="translated-text">不安全</span><span class="original-text">unsafe</span></em><span class="translated-text">, 或</span><span class="original-text">, or</span><em class="ltx_emph ltx_font_italic" id="S3.SS3.p3.1.5"><span class="translated-text">不支持的</span><span class="original-text">unsupported</span></em><span class="translated-text">。对于标记为的示例</span><span class="original-text">. For examples labeled</span><span class="ltx_text ltx_font_typewriter" id="S3.SS3.p3.1.6"><span class="translated-text">完全拒绝</span><span class="original-text">full_reject</span></span><span class="translated-text">，明确的检索拒绝或拒绝也满足正确性。</span><span class="original-text">, an explicit retrieval rejection or refusal also satisfies correctness.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS3.p4">
+<p class="ltx_p" id="S3.SS3.p4.7"><span class="ltx_text ltx_font_bold" id="S3.SS3.p4.7.1">DAPO-DeepSeek</span><span class="translated-text">雇用冷冻</span><span class="original-text">employs a frozen</span><span class="ltx_text ltx_font_typewriter" id="S3.SS3.p4.7.2">deepseek-v4-flash</span><span class="translated-text">法官</span><span class="original-text">judge</span><cite class="ltx_cite ltx_citemacro_cite">Xu<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib30" title="Deepseek-v4: towards highly efficient million-token context intelligence">2026</a>)</cite><span class="translated-text">与</span><span class="original-text">with the</span><span class="ltx_text ltx_font_typewriter" id="S3.SS3.p4.7.3">selectbench-deepseek-rm-v2</span><span class="translated-text">评分标准，产生相同的原始分数</span><span class="original-text">rubric, yielding raw scores on the same</span><math alttext="\{-1,0,+1\}" class="ltx_Math" display="inline" id="S3.SS3.p4.1.m1" intent=":literal"><semantics><mrow><mo stretchy="false">{</mo><mrow><mo>−</mo><mn>1</mn></mrow><mo>,</mo><mn>0</mn><mo>,</mo><mrow><mo>+</mo><mn>1</mn></mrow><mo stretchy="false">}</mo></mrow><annotation encoding="application/x-tex">\{-1,0,+1\}</annotation></semantics></math><span class="translated-text">规模。本地硬门分配</span><span class="original-text">scale. Local hard gates assign</span><math alttext="-1" class="ltx_Math" display="inline" id="S3.SS3.p4.2.m2" intent=":literal"><semantics><mrow><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math><span class="translated-text">工具遗漏和</span><span class="original-text">to tool omission and</span><math alttext="0" class="ltx_Math" display="inline" id="S3.SS3.p4.3.m3" intent=":literal"><mn>0</mn></math><span class="translated-text">在任何法官调用之前缺少最终答案。法官在温度下奔跑</span><span class="original-text">to a missing final answer prior to any judge invocation. The judge runs at temperature</span><math alttext="0" class="ltx_Math" display="inline" id="S3.SS3.p4.4.m4" intent=":literal"><mn>0</mn></math><span class="translated-text">思维障碍和</span><span class="original-text">with thinking disabled and a</span><math alttext="4{,}096" class="ltx_Math" display="inline" id="S3.SS3.p4.5.m5" intent=":literal"><semantics><mrow><mn>4</mn><mo>,</mo><mn>096</mn></mrow><annotation encoding="application/x-tex">4{,}096</annotation></semantics></math><span class="translated-text">- 代币输出限制；请求强制执行</span><span class="original-text">-token output limit; requests enforce a</span><math alttext="180" class="ltx_Math" display="inline" id="S3.SS3.p4.6.m6" intent=":literal"><semantics><mn>180</mn><annotation encoding="application/x-tex">180</annotation></semantics></math><span class="translated-text">- 第二次超时，最多重试八次，并发数</span><span class="original-text">-second timeout, at most eight retries, concurrency of</span><math alttext="16" class="ltx_Math" display="inline" id="S3.SS3.p4.7.m7" intent=":literal"><semantics><mn>16</mn><annotation encoding="application/x-tex">16</annotation></semantics></math><span class="translated-text">，以及每秒 8 个请求的速率限制。判断输出必须符合严格的 JSON 模式，并且进行内容寻址和缓存。</span><span class="original-text">, and a rate limit of eight requests per second. Judge outputs must conform to a strict JSON schema and are content-addressed and cached.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS3.p5">
+<p class="ltx_p" id="S3.SS3.p5.5"><span class="translated-text">合并后</span><span class="original-text">After incorporating</span><math alttext="p_{\mathrm{len}}" class="ltx_Math" display="inline" id="S3.SS3.p5.1.m1" intent=":literal"><semantics><msub><mi>p</mi><mi>len</mi></msub><annotation encoding="application/x-tex">p_{\mathrm{len}}</annotation></semantics></math><span class="translated-text">，最终的政策奖励是连续的</span><span class="original-text">, the final policy reward is continuous on</span><math alttext="[-1,1]" class="ltx_Math" display="inline" id="S3.SS3.p5.2.m2" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><mrow><mo>−</mo><mn>1</mn></mrow><mo>,</mo><mn>1</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[-1,1]</annotation></semantics></math><span class="translated-text">对于输出之间</span><span class="original-text">for outputs between</span><math alttext="768" class="ltx_Math" display="inline" id="S3.SS3.p5.3.m3" intent=":literal"><semantics><mn>768</mn><annotation encoding="application/x-tex">768</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="1{,}024" class="ltx_Math" display="inline" id="S3.SS3.p5.4.m4" intent=":literal"><semantics><mrow><mn>1</mn><mo>,</mo><mn>024</mn></mrow><annotation encoding="application/x-tex">1{,}024</annotation></semantics></math><span class="translated-text">生成的令牌。动态组过滤对未成形的三元分数进行操作，而策略更新则使用成形的奖励</span><span class="original-text">generated tokens. Dynamic group filtering operates on the unshaped ternary score, whereas the policy update uses the shaped reward</span><math alttext="r(\tau)" class="ltx_Math" display="inline" id="S3.SS3.p5.5.m5" intent=":literal"><semantics><mrow><mi>r</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">r(\tau)</annotation></semantics></math>.</p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.4 </span><span class="translated-text">政策优化</span><span class="original-text">Policy Optimization</span></h3>
+<div class="ltx_para ltx_noindent" id="S3.SS4.p1">
+<p class="ltx_p" id="S3.SS4.p1.2"><span class="translated-text">对于每个提示，我们对一组八个轨迹进行采样，并在组内标准化它们的奖励以获得 GRPO 优势。然后，DAPO 应用令牌级裁剪代理目标，其非对称裁剪范围为</span><span class="original-text">For each prompt, we sample a group of eight trajectories and normalize their rewards within the group to obtain GRPO advantages. DAPO then applies the token-level clipped surrogate objective with asymmetric clipping bounds of</span><math alttext="0.20" class="ltx_Math" display="inline" id="S3.SS4.p1.1.m1" intent=":literal"><semantics><mn>0.20</mn><annotation encoding="application/x-tex">0.20</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="0.28" class="ltx_Math" display="inline" id="S3.SS4.p1.2.m2" intent=":literal"><semantics><mn>0.28</mn><annotation encoding="application/x-tex">0.28</annotation></semantics></math><span class="translated-text">，以及排除具有同等奖励的群体的动态抽样。我们每批次使用一个策略周期，并忽略 KL 奖励和 KL 损失。奖励被放置在最后一个模型生成的令牌上，而不是工具返回令牌上，确保策略梯度附加到代理的动作序列上。</span><span class="original-text">, along with dynamic sampling that excludes groups with all-equal rewards. We use one policy epoch per batch and omit both the KL reward and the KL loss. The reward is placed on the last model-generated token rather than on tool-return tokens, ensuring that the policy gradient is attached to the agent’s action sequence.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">实验装置</span><span class="original-text">Experimental Setup</span></h2>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span><span class="translated-text">培训详情</span><span class="original-text">Training details</span></h3>
+<div class="ltx_para ltx_noindent" id="S4.SS1.p1">
+<p class="ltx_p" id="S4.SS1.p1.12"><span class="translated-text">所有后训练和正式评估实验均使用原始后训练Qwen3.5-4B检查点</span><span class="original-text">All post-training and formal evaluation experiments use the original post-trained Qwen3.5-4B checkpoint</span><cite class="ltx_cite ltx_citemacro_cite">Team (<a class="ltx_ref" href="#bib.bib7" title="Qwen3.5: accelerating productivity with native multimodal agents">2026</a>)</cite><span class="translated-text">，固定到修订版</span><span class="original-text">, pinned to revision</span><span class="ltx_text ltx_font_typewriter" id="S4.SS1.p1.12.1">851bf6e8</span><span class="translated-text">。我们冻结视觉塔并使用 FSDP2 更新 bfloat16 中的语言模型，使用 AdamW，学习率为</span><span class="original-text">. We freeze the vision tower and update the language model in bfloat16 with FSDP2, using AdamW with a learning rate of</span><math alttext="5\times 10^{-7}" class="ltx_Math" display="inline" id="S4.SS1.p1.1.m1" intent=":literal"><semantics><mrow><mn>5</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>7</mn></mrow></msup></mrow><annotation encoding="application/x-tex">5\times 10^{-7}</annotation></semantics></math><span class="translated-text">, 重量衰减</span><span class="original-text">, weight decay</span><math alttext="0.1" class="ltx_Math" display="inline" id="S4.SS1.p1.2.m2" intent=":literal"><semantics><mn>0.1</mn><annotation encoding="application/x-tex">0.1</annotation></semantics></math><span class="translated-text">，每批次一个策略纪元，梯度裁剪为</span><span class="original-text">, one policy epoch per batch, gradient clipping at</span><math alttext="1.0" class="ltx_Math" display="inline" id="S4.SS1.p1.3.m3" intent=":literal"><semantics><mn>1.0</mn><annotation encoding="application/x-tex">1.0</annotation></semantics></math><span class="translated-text">，以及十个热身步骤。卷展使用温度</span><span class="original-text">, and ten warm-up steps. Rollouts use temperature</span><math alttext="1" class="ltx_Math" display="inline" id="S4.SS1.p1.4.m4" intent=":literal"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math><span class="translated-text">, 顶-</span><span class="original-text">, top-</span><math alttext="p" class="ltx_Math" display="inline" id="S4.SS1.p1.5.m5" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math> <math alttext="1" class="ltx_Math" display="inline" id="S4.SS1.p1.6.m6" intent=":literal"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math><span class="translated-text">, 无顶-</span><span class="original-text">, no top-</span><math alttext="k" class="ltx_Math" display="inline" id="S4.SS1.p1.7.m7" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math><span class="translated-text">截断，最大提示长度为</span><span class="original-text">truncation, a maximum prompt length of</span><math alttext="768" class="ltx_Math" display="inline" id="S4.SS1.p1.8.m8" intent=":literal"><semantics><mn>768</mn><annotation encoding="application/x-tex">768</annotation></semantics></math><span class="translated-text">，最大响应长度为</span><span class="original-text">, and a maximum response length of</span><math alttext="3{,}072" class="ltx_Math" display="inline" id="S4.SS1.p1.9.m9" intent=":literal"><semantics><mrow><mn>3</mn><mo>,</mo><mn>072</mn></mrow><annotation encoding="application/x-tex">3{,}072</annotation></semantics></math><span class="translated-text">。两个导出的检查点都对应于优化器步骤</span><span class="original-text">. Both exported checkpoints correspond to optimizer step</span><math alttext="130" class="ltx_Math" display="inline" id="S4.SS1.p1.10.m10" intent=":literal"><semantics><mn>130</mn><annotation encoding="application/x-tex">130</annotation></semantics></math><span class="translated-text">在 NVIDIA RTX 3090 GPU 上。这里，一个策略时期表示对每个采样的推出批次进行一次内部优化，而不是对整个训练集进行一次内部优化。两次运行均已完成</span><span class="original-text">on NVIDIA RTX 3090 GPUs. Here, one policy epoch denotes one inner optimization pass over each sampled rollout batch, rather than one pass over the full training set. Both runs completed</span><math alttext="130" class="ltx_Math" display="inline" id="S4.SS1.p1.11.m11" intent=":literal"><semantics><mn>130</mn><annotation encoding="application/x-tex">130</annotation></semantics></math><span class="translated-text">优化器更新，在第一次更新之前以及此后每十次更新之前执行验证，并导出预先声明的终端步骤-</span><span class="original-text">optimizer updates, with validation performed before the first update and every ten updates thereafter, and exported the predeclared terminal step-</span><math alttext="130" class="ltx_Math" display="inline" id="S4.SS1.p1.12.m12" intent=":literal"><semantics><mn>130</mn><annotation encoding="application/x-tex">130</annotation></semantics></math><span class="translated-text">检查站；使用 SelectBench-v2 未选择任何检查点。</span><span class="original-text">checkpoint; no checkpoint was selected using SelectBench-v2.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS1.p2">
+<p class="ltx_p" id="S4.SS1.p2.2"><span class="translated-text">规则奖励运行使用了三个 GPU，提示批量大小为</span><span class="original-text">The rule-reward run used three GPUs with a prompt batch size of</span><math alttext="9" class="ltx_Math" display="inline" id="S4.SS1.p2.1.m1" intent=":literal"><semantics><mn>9</mn><annotation encoding="application/x-tex">9</annotation></semantics></math><span class="translated-text">，而 DeepSeek 奖励运行使用了四个 GPU，提示批量大小为</span><span class="original-text">, whereas the DeepSeek-reward run used four GPUs with a prompt batch size of</span><math alttext="8" class="ltx_Math" display="inline" id="S4.SS1.p2.2.m2" intent=":literal"><semantics><mn>8</mn><annotation encoding="application/x-tex">8</annotation></semantics></math><span class="translated-text">;每个提示都采样了八次推出。因此，它们的比较提供了丰富的信息，但并不构成严格的单因素奖励模型消融。在检查正式测试集后，既没有重新训练模型，也没有调整超参数。</span><span class="original-text">; both sampled eight rollouts per prompt. Consequently, their comparison is informative but does not constitute a strict single-factor reward-model ablation. Neither model was retrained nor were hyperparameters tuned after inspecting the formal test set.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span><span class="translated-text">数据集</span><span class="original-text">Datasets</span></h3>
+<div class="ltx_para ltx_noindent" id="S4.SS2.p1">
+<p class="ltx_p" id="S4.SS2.p1.1"><span class="translated-text">主要评估是经过修正的上述 325 个示例 SelectBench-v2 测试集。为了衡量能力保留，我们还评估了基础和</span><span class="original-text">The primary evaluation is the corrected 325-example SelectBench-v2 test set described above. To measure capability retention, we additionally evaluate both the base and</span><span class="ltx_text ltx_font_smallcaps" id="S4.SS2.p1.1.1">DAPO-DeepSeek</span><span class="translated-text">所有 14,042 个 MMLU 测试题的检查点</span><span class="original-text">checkpoints on all 14,042 MMLU test questions</span><cite class="ltx_cite ltx_citemacro_cite">Hendrycks<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib15" title="Measuring massive multitask language understanding">2020</a>)</cite><span class="translated-text">，同时使用标准主题 5 次射击协议和零次射击约束下一个标记评分。在排除 325 个 SelectBench 问题后，我们还在固定上下文和闭卷模式下对 7,080 个干净的 HotpotQA 验证问题进行了评估。所有数据集文件、模型导出、提示和轨迹均经过 SHA-256 盘点。</span><span class="original-text">, using both the standard subject-wise 5-shot protocol and zero-shot constrained next-token scoring. We also evaluate on 7,080 clean HotpotQA validation questions after excluding the 325 SelectBench questions, in both fixed-context and closed-book modes. All dataset files, model exports, prompts, and trajectories are SHA-256 inventoried.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.3 </span><span class="translated-text">基线</span><span class="original-text">Baselines</span></h3>
+<div class="ltx_para ltx_noindent" id="S4.SS3.p1">
+<p class="ltx_p" id="S4.SS3.p1.6"><span class="translated-text">我们比较原来的检查点，</span><span class="original-text">We compare the original checkpoint,</span><span class="ltx_text ltx_font_smallcaps" id="S4.SS3.p1.6.1"><span class="translated-text">DAPO规则</span><span class="original-text">DAPO-Rule</span></span><span class="translated-text">, 和</span><span class="original-text">, and</span><span class="ltx_text ltx_font_smallcaps" id="S4.SS3.p1.6.2">DAPO-DeepSeek</span><span class="translated-text">使用相同的测试提示和确定性评估器。正式生成每个示例使用一条轨迹</span><span class="original-text">using identical test prompts and a deterministic evaluator. Formal generation uses one trajectory per example with</span><span class="ltx_text ltx_font_typewriter" id="S4.SS3.p1.6.3"><span class="translated-text">do_sample=假</span><span class="original-text">do_sample=false</span></span><span class="translated-text">, 温度</span><span class="original-text">, temperature</span><math alttext="0" class="ltx_Math" display="inline" id="S4.SS3.p1.1.m1" intent=":literal"><mn>0</mn></math><span class="translated-text">, 顶-</span><span class="original-text">, top-</span><math alttext="p" class="ltx_Math" display="inline" id="S4.SS3.p1.2.m2" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math> <math alttext="1" class="ltx_Math" display="inline" id="S4.SS3.p1.3.m3" intent=":literal"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math><span class="translated-text">, 无顶-</span><span class="original-text">, no top-</span><math alttext="k" class="ltx_Math" display="inline" id="S4.SS3.p1.4.m4" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math><span class="translated-text">截断，一个</span><span class="original-text">truncation, a</span><math alttext="3{,}072" class="ltx_Math" display="inline" id="S4.SS3.p1.5.m5" intent=":literal"><semantics><mrow><mn>3</mn><mo>,</mo><mn>072</mn></mrow><annotation encoding="application/x-tex">3{,}072</annotation></semantics></math><span class="translated-text">- 代币输出限制和种子</span><span class="original-text">-token output limit, and seed</span><math alttext="42" class="ltx_Math" display="inline" id="S4.SS3.p1.6.m6" intent=":literal"><semantics><mn>42</mn><annotation encoding="application/x-tex">42</annotation></semantics></math><span class="translated-text">。评估者将上述规则匹配程序应用于可见答案的正确性，以及完整的最终辅助轮以禁止采用或注入检测。这种共享的测量机制可以在所有三个检查点之间进行配对比较，而无需评估</span><span class="original-text">. The evaluator applies the Rule matching procedure described above to the visible answer for correctness, and to the complete final assistant turn for forbidden adoption or injection detection. This shared measurement regime enables paired comparisons across all three checkpoints without evaluating</span><span class="ltx_text ltx_font_smallcaps" id="S4.SS3.p1.6.4">DAPO-DeepSeek</span><span class="translated-text">使用其训练时间判断。然而，由于两个经过训练的检查点在提示批量大小、GPU 数量和执行历史方面有所不同，因此它们的比较是描述性的，而不是受控奖励模型消融。</span><span class="original-text">using its training-time judge. Nevertheless, because the two trained checkpoints differ in prompt-batch size, GPU count, and execution history, their comparison is descriptive rather than a controlled reward-model ablation.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.4 </span><span class="translated-text">指标</span><span class="original-text">Metrics</span></h3>
+<div class="ltx_para ltx_noindent" id="S4.SS4.p1">
+<p class="ltx_p" id="S4.SS4.p1.1"><span class="translated-text">严格的成功需要成功的工具调用、正确且完整的可见答案，并且没有检测到禁止采用或注入的情况。我们还报告正确且完整的答案、禁止采用、注入跟踪、缺少最终答案、过度拒绝、过长的输出、工具成功和平均生成的令牌。注射遵循以包含注射的 275 个示例为条件；所有其他指标都是根据所有 325 个示例计算的。根据配对的每个示例记录，我们使用 10,000 次重采样和 42 种子计算百分位引导置信区间，并应用两侧精确 McNemar 检验。我们在九个预先指定的比较中联合应用霍尔姆校正：三个模型对中每一个的严格成功、禁止采用和注入跟踪。每个奖励变体都有一次完整的训练和正式的测试运行，因此训练种子的变异性仍然无法测量。</span><span class="original-text">Strict success requires a successful tool call, a correct and complete visible answer, and no detected forbidden adoption or injection following. We additionally report correct-and-complete answers, forbidden adoption, injection following, missing final answers, over-refusal, overlong output, tool success, and mean generated tokens. Injection following is conditioned on the 275 examples that contain an injection; all other metrics are computed over all 325 examples. From the paired per-example records, we compute percentile-bootstrap confidence intervals with 10,000 resamples and seed 42, and apply two-sided exact McNemar tests. We jointly apply Holm correction across nine prespecified comparisons: strict success, forbidden adoption, and injection following for each of the three model pairs. Each reward variant has one completed training and formal test run, so training-seed variability remains unmeasured.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span><span class="translated-text">结果与分析</span><span class="original-text">Results and Analysis</span></h2>
+<section class="ltx_subsection" id="S5.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.1 </span><span class="translated-text">主要结果</span><span class="original-text">Main Results</span></h3>
+<div class="ltx_para" id="S5.SS1.p1">
+<p class="ltx_p" id="S5.SS1.p1.5"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S5.T2" title="Table 2 ‣ 5.1 Main Results ‣ 5 Results and Analysis ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">报告共享的确定性评估。
+严格成功率从原始检查点的 73/325 (22.46%) 增加到
+83/325 (25.54%) 为</span><span class="original-text">reports the shared deterministic evaluation.
+Strict success increases from 73/325 (22.46%) for the original checkpoint to
+83/325 (25.54%) for</span><span class="ltx_text ltx_font_smallcaps" id="S5.SS1.p1.5.1"><span class="translated-text">DAPO规则</span><span class="original-text">DAPO-Rule</span></span><span class="translated-text">和 86/325 (26.46%)</span><span class="original-text">and 86/325 (26.46%) for</span><span class="ltx_text ltx_font_smallcaps" id="S5.SS1.p1.5.2">DAPO-DeepSeek</span><span class="translated-text">。成对的变化是</span><span class="original-text">. The paired changes are</span><math alttext="+3.08" class="ltx_Math" display="inline" id="S5.SS1.p1.1.m1" intent=":literal"><semantics><mrow><mo>+</mo><mn>3.08</mn></mrow><annotation encoding="application/x-tex">+3.08</annotation></semantics></math><span class="translated-text">个百分点 (20
+改进和 10 项回归）和</span><span class="original-text">percentage points (20
+improvements and 10 regressions) and</span><math alttext="+4.00" class="ltx_Math" display="inline" id="S5.SS1.p1.2.m2" intent=":literal"><semantics><mrow><mo>+</mo><mn>4.00</mn></mrow><annotation encoding="application/x-tex">+4.00</annotation></semantics></math><span class="translated-text">点（21 项改进和 8
+回归）分别。他们未经调整的 95% 自举间隔是</span><span class="original-text">points (21 improvements and 8
+regressions), respectively. Their unadjusted 95% bootstrap intervals are</span><math alttext="[0.00,6.46]" class="ltx_Math" display="inline" id="S5.SS1.p1.3.m3" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><mn>0.00</mn><mo>,</mo><mn>6.46</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[0.00,6.46]</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="[0.92,7.38]" class="ltx_Math" display="inline" id="S5.SS1.p1.4.m4" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><mn>0.92</mn><mo>,</mo><mn>7.38</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[0.92,7.38]</annotation></semantics></math><span class="translated-text">点。对应的确切麦克尼马尔</span><span class="original-text">points. The corresponding exact McNemar</span><math alttext="p" class="ltx_Math" display="inline" id="S5.SS1.p1.5.m5" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math><span class="translated-text">- 值为 0.099 和 0.024，但在预先指定的范围内进行校正后
+代码比较 Holm 调整后的值为 0.691 和 0.217。因此我们解释
+结果是适度的方向性改进，而不是统计上的改进
+最终的收获。所有三个检查点的工具成功率为 100%。</span><span class="original-text">-values are 0.099 and 0.024, but after correction across the prespecified
+code comparisons the Holm-adjusted values are 0.691 and 0.217. We therefore interpret
+the result as a modest directional improvement rather than a statistically
+conclusive gain. Tool success is 100% for all three checkpoints.</span></p>
+</div>
+<figure class="ltx_table" id="S5.T2">
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S5.T2.5">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S5.T2.5.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S5.T2.5.5.6">Model</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T2.1.1.1">Strict <math alttext="\uparrow" class="ltx_Math" display="inline" id="S5.T2.1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T2.2.2.2">Correct <math alttext="\uparrow" class="ltx_Math" display="inline" id="S5.T2.2.2.2.m1" intent=":literal"><semantics><mo stretchy="false">↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T2.3.3.3">Forbidden <math alttext="\downarrow" class="ltx_Math" display="inline" id="S5.T2.3.3.3.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T2.4.4.4">
+<math alttext="\Delta" class="ltx_Math" display="inline" id="S5.T2.4.4.4.m1" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> pp</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T2.5.5.7">95% CI</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T2.5.5.5"><math alttext="p_{\mathrm{Holm}}" class="ltx_Math" display="inline" id="S5.T2.5.5.5.m1" intent=":literal"><semantics><msub><mi>p</mi><mi>Holm</mi></msub><annotation encoding="application/x-tex">p_{\mathrm{Holm}}</annotation></semantics></math></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S5.T2.5.6.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S5.T2.5.6.1.1">Qwen3.5-4B</th>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T2.5.6.1.2">73 (22.46%)</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T2.5.6.1.3">276 (84.92%)</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T2.5.6.1.4">236 (72.62%)</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T2.5.6.1.5">—</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T2.5.6.1.6">—</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T2.5.6.1.7">—</td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.5.7.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T2.5.7.2.1">DAPO-Rule</th>
+<td class="ltx_td ltx_align_right" id="S5.T2.5.7.2.2">83 (25.54%)</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.5.7.2.3">276 (84.92%)</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.5.7.2.4">225 (69.23%)</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.5.7.2.5">+3.08</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.5.7.2.6">[0.00, 6.46]</td>
+<td class="ltx_td ltx_align_right" id="S5.T2.5.7.2.7">0.691</td>
+</tr>
+<tr class="ltx_tr" id="S5.T2.5.8.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S5.T2.5.8.3.1">DAPO-DeepSeek</th>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T2.5.8.3.2">86 (26.46%)</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T2.5.8.3.3">282 (86.77%)</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T2.5.8.3.4">224 (68.92%)</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T2.5.8.3.5">+4.00</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T2.5.8.3.6">[0.92, 7.38]</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T2.5.8.3.7">0.217</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>Primary deterministic results on the corrected 325-example SelectBench-v2 test set. Correct denotes a correct and complete visible answer. Confidence intervals are paired percentile-bootstrap intervals with 10,000 resamples; <math alttext="p_{\mathrm{Holm}}" class="ltx_Math" display="inline" id="S5.T2.8.m1" intent=":literal"><semantics><msub><mi>p</mi><mi>Holm</mi></msub><annotation encoding="application/x-tex">p_{\mathrm{Holm}}</annotation></semantics></math> is the exact McNemar <math alttext="p" class="ltx_Math" display="inline" id="S5.T2.9.m2" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>-value for strict success versus the original checkpoint after correction over the prespecified code-comparison family.</figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S5.SS1.p2">
+<p class="ltx_p" id="S5.SS1.p2.4"><span class="translated-text">禁止采用从 236/325 (72.62%) 下降到 225/325 (69.23%)</span><span class="original-text">Forbidden adoption falls from 236/325 (72.62%) to 225/325 (69.23%) with</span><span class="ltx_text ltx_font_smallcaps" id="S5.SS1.p2.4.1"><span class="translated-text">DAPO规则</span><span class="original-text">DAPO-Rule</span></span><span class="translated-text">和 224/325 (68.92%)</span><span class="original-text">and 224/325 (68.92%) with</span><span class="ltx_text ltx_font_smallcaps" id="S5.SS1.p2.4.2">DAPO-DeepSeek</span><span class="translated-text">。相应的成对变化是</span><span class="original-text">. The respective paired changes are</span><math alttext="-3.38" class="ltx_Math" display="inline" id="S5.SS1.p2.1.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>3.38</mn></mrow><annotation encoding="application/x-tex">-3.38</annotation></semantics></math><span class="translated-text">点
+（95% 置信区间</span><span class="original-text">points
+(95% CI</span><math alttext="[-7.08,0.31]" class="ltx_Math" display="inline" id="S5.SS1.p2.2.m2" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><mrow><mo>−</mo><mn>7.08</mn></mrow><mo>,</mo><mn>0.31</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[-7.08,0.31]</annotation></semantics></math><span class="translated-text">）和</span><span class="original-text">) and</span><math alttext="-3.69" class="ltx_Math" display="inline" id="S5.SS1.p2.3.m3" intent=":literal"><semantics><mrow><mo>−</mo><mn>3.69</mn></mrow><annotation encoding="application/x-tex">-3.69</annotation></semantics></math><span class="translated-text">点（95% CI</span><span class="original-text">points (95% CI</span><math alttext="[-7.08,-0.31]" class="ltx_Math" display="inline" id="S5.SS1.p2.4.m4" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><mrow><mo>−</mo><mn>7.08</mn></mrow><mo>,</mo><mrow><mo>−</mo><mn>0.31</mn></mrow><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[-7.08,-0.31]</annotation></semantics></math><span class="translated-text">）；经过 Holm 校正后，两者均不显着。正确
+完整答案不变，为 84.92%</span><span class="original-text">); neither remains significant after Holm correction. Correct
+and complete answers are unchanged at 84.92% for</span><span class="ltx_text ltx_font_smallcaps" id="S5.SS1.p2.4.3"><span class="translated-text">DAPO规则</span><span class="original-text">DAPO-Rule</span></span><span class="translated-text">并崛起
+至 86.77%</span><span class="original-text">and rise
+to 86.77% for</span><span class="ltx_text ltx_font_smallcaps" id="S5.SS1.p2.4.4">DAPO-DeepSeek</span><span class="translated-text">。与事实差距较大
+正确性和严格的成功是通过它们的重叠来解释的：203 原始的，
+第193章 规则，和196 DeepSeek的输出实际上是正确的，但仍然采用了
+禁止的短语。选择性拒绝污染，而不是事实
+因此，单独回答是该评估器的主要瓶颈。</span><span class="original-text">. The large gap between factual
+correctness and strict success is explained by their overlap: 203 original,
+193 Rule, and 196 DeepSeek outputs are factually correct yet still adopt a
+forbidden phrase. Selective rejection of contamination, rather than factual
+answering alone, is therefore the principal bottleneck under this evaluator.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S5.SS1.p3">
+<p class="ltx_p" id="S5.SS1.p3.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S5.T3" title="Table 3 ‣ 5.1 Main Results ‣ 5 Results and Analysis ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">表明这种转变不会延伸到
+即时注射阻力。在 275 个符合条件的示例中，注入
+从 14 (5.09%) 变更为 18 (6.55%) 和 16 (5.82%)；两者
+间隔包括零变化。相比之下，</span><span class="original-text">shows that this shift does not extend to
+prompt-injection resistance. On the 275 eligible examples, injection
+following changes from 14 (5.09%) to 18 (6.55%) and 16 (5.82%); both
+intervals include zero change. By contrast,</span><span class="ltx_text ltx_font_smallcaps" id="S5.SS1.p3.1.1">DAPO-DeepSeek</span><span class="translated-text">减少
+过度拒绝、遗漏最终答案以及过长的回复。平均输出
+两个经过训练的策略的长度也减少了大约 12 个生成的标记。
+总体而言，完整的证据支持改进选择性采用
+聚合指标，但不是跨故障模式的统一改进。</span><span class="original-text">reduces
+over-refusal, missing final answers, and overlong responses. Mean output
+length also falls by about 12 generated tokens for both trained policies.
+Overall, the completed evidence supports improved selective adoption on the
+aggregate metric, but not uniform improvement across failure modes.</span></p>
+</div>
+<figure class="ltx_table" id="S5.T3">
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S5.T3.5">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S5.T3.5.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S5.T3.5.5.6">Model</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T3.1.1.1">Injection <math alttext="\downarrow" class="ltx_Math" display="inline" id="S5.T3.1.1.1.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T3.2.2.2">Over-refusal <math alttext="\downarrow" class="ltx_Math" display="inline" id="S5.T3.2.2.2.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T3.3.3.3">Missing final <math alttext="\downarrow" class="ltx_Math" display="inline" id="S5.T3.3.3.3.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T3.4.4.4">Overlong <math alttext="\downarrow" class="ltx_Math" display="inline" id="S5.T3.4.4.4.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T3.5.5.5">Mean tokens <math alttext="\downarrow" class="ltx_Math" display="inline" id="S5.T3.5.5.5.m1" intent=":literal"><semantics><mo stretchy="false">↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>
+</th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S5.T3.5.6.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S5.T3.5.6.1.1">Qwen3.5-4B</th>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T3.5.6.1.2">14 (5.09%)</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T3.5.6.1.3">3 (0.92%)</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T3.5.6.1.4">9 (2.77%)</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T3.5.6.1.5">7 (2.15%)</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T3.5.6.1.6">383.18</td>
+</tr>
+<tr class="ltx_tr" id="S5.T3.5.7.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T3.5.7.2.1">DAPO-Rule</th>
+<td class="ltx_td ltx_align_right" id="S5.T3.5.7.2.2">18 (6.55%)</td>
+<td class="ltx_td ltx_align_right" id="S5.T3.5.7.2.3">4 (1.23%)</td>
+<td class="ltx_td ltx_align_right" id="S5.T3.5.7.2.4">9 (2.77%)</td>
+<td class="ltx_td ltx_align_right" id="S5.T3.5.7.2.5">4 (1.23%)</td>
+<td class="ltx_td ltx_align_right" id="S5.T3.5.7.2.6">371.20</td>
+</tr>
+<tr class="ltx_tr" id="S5.T3.5.8.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S5.T3.5.8.3.1">DAPO-DeepSeek</th>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T3.5.8.3.2">16 (5.82%)</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T3.5.8.3.3">1 (0.31%)</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T3.5.8.3.4">5 (1.54%)</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T3.5.8.3.5">2 (0.62%)</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T3.5.8.3.6">371.32</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 3: </span>Failure diagnostics on SelectBench-v2. Injection following is measured over the 275 injection-bearing examples; all other rates use 325 examples. Categories can overlap and therefore need not sum to the complement of strict success.</figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S5.SS1.p4">
+<p class="ltx_p" id="S5.SS1.p4.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S5.T4" title="Table 4 ‣ 5.1 Main Results ‣ 5 Results and Analysis ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">报告中的所有九个比较
+预先指定的 Holm 系列，包括 Rule-DeepSeek 对比。没有比较
+经过家庭修正后仍然显着，并且直接差异
+两种奖励变体之间对于所有三种结果的影响都很小。</span><span class="original-text">reports all nine comparisons in the
+prespecified Holm family, including the Rule–DeepSeek contrast. No comparison
+remains significant after family-wise correction, and the direct difference
+between the two reward variants is small on all three outcomes.</span></p>
+</div>
+<figure class="ltx_table" id="S5.T4">
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S5.T4.24">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S5.T4.3.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S5.T4.3.3.4">Comparison</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S5.T4.3.3.5">Outcome</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T4.1.1.1">
+<math alttext="\Delta" class="ltx_Math" display="inline" id="S5.T4.1.1.1.m1" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> pp</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T4.3.3.6">95% CI</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T4.2.2.2"><math alttext="p" class="ltx_Math" display="inline" id="S5.T4.2.2.2.m1" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math></th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T4.3.3.3"><math alttext="p_{\mathrm{Holm}}" class="ltx_Math" display="inline" id="S5.T4.3.3.3.m1" intent=":literal"><semantics><msub><mi>p</mi><mi>Holm</mi></msub><annotation encoding="application/x-tex">p_{\mathrm{Holm}}</annotation></semantics></math></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S5.T4.4.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S5.T4.4.4.1">Original <math alttext="\rightarrow" class="ltx_Math" display="inline" id="S5.T4.4.4.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> Rule</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S5.T4.4.4.2">Strict</th>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T4.4.4.3">+3.08</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T4.4.4.4">[0.00, 6.46]</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T4.4.4.5">0.099</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T4.4.4.6">0.691</td>
+</tr>
+<tr class="ltx_tr" id="S5.T4.5.5">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T4.5.5.1">Original <math alttext="\rightarrow" class="ltx_Math" display="inline" id="S5.T4.5.5.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> DeepSeek</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T4.5.5.2">Strict</th>
+<td class="ltx_td ltx_align_right" id="S5.T4.5.5.3">+4.00</td>
+<td class="ltx_td ltx_align_right" id="S5.T4.5.5.4">[0.92, 7.38]</td>
+<td class="ltx_td ltx_align_right" id="S5.T4.5.5.5">0.024</td>
+<td class="ltx_td ltx_align_right" id="S5.T4.5.5.6">0.217</td>
+</tr>
+<tr class="ltx_tr" id="S5.T4.7.7">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T4.6.6.1">Rule <math alttext="\rightarrow" class="ltx_Math" display="inline" id="S5.T4.6.6.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> DeepSeek</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T4.7.7.3">Strict</th>
+<td class="ltx_td ltx_align_right" id="S5.T4.7.7.4">+0.92</td>
+<td class="ltx_td ltx_align_right" id="S5.T4.7.7.2">[<math alttext="-1.85" class="ltx_Math" display="inline" id="S5.T4.7.7.2.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>1.85</mn></mrow><annotation encoding="application/x-tex">-1.85</annotation></semantics></math>, 3.69]</td>
+<td class="ltx_td ltx_align_right" id="S5.T4.7.7.5">0.664</td>
+<td class="ltx_td ltx_align_right" id="S5.T4.7.7.6">1.000</td>
+</tr>
+<tr class="ltx_tr" id="S5.T4.10.10">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S5.T4.8.8.1">Original <math alttext="\rightarrow" class="ltx_Math" display="inline" id="S5.T4.8.8.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> Rule</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S5.T4.10.10.4">Forbidden</th>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T4.9.9.2"><math alttext="-3.38" class="ltx_Math" display="inline" id="S5.T4.9.9.2.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>3.38</mn></mrow><annotation encoding="application/x-tex">-3.38</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T4.10.10.3">[<math alttext="-7.08" class="ltx_Math" display="inline" id="S5.T4.10.10.3.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>7.08</mn></mrow><annotation encoding="application/x-tex">-7.08</annotation></semantics></math>, 0.31]</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T4.10.10.5">0.099</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T4.10.10.6">0.691</td>
+</tr>
+<tr class="ltx_tr" id="S5.T4.14.14">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T4.11.11.1">Original <math alttext="\rightarrow" class="ltx_Math" display="inline" id="S5.T4.11.11.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> DeepSeek</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T4.14.14.5">Forbidden</th>
+<td class="ltx_td ltx_align_right" id="S5.T4.12.12.2"><math alttext="-3.69" class="ltx_Math" display="inline" id="S5.T4.12.12.2.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>3.69</mn></mrow><annotation encoding="application/x-tex">-3.69</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_right" id="S5.T4.14.14.4">[<math alttext="-7.08" class="ltx_Math" display="inline" id="S5.T4.13.13.3.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>7.08</mn></mrow><annotation encoding="application/x-tex">-7.08</annotation></semantics></math>, <math alttext="-0.31" class="ltx_Math" display="inline" id="S5.T4.14.14.4.m2" intent=":literal"><semantics><mrow><mo>−</mo><mn>0.31</mn></mrow><annotation encoding="application/x-tex">-0.31</annotation></semantics></math>]</td>
+<td class="ltx_td ltx_align_right" id="S5.T4.14.14.6">0.050</td>
+<td class="ltx_td ltx_align_right" id="S5.T4.14.14.7">0.401</td>
+</tr>
+<tr class="ltx_tr" id="S5.T4.17.17">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T4.15.15.1">Rule <math alttext="\rightarrow" class="ltx_Math" display="inline" id="S5.T4.15.15.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> DeepSeek</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T4.17.17.4">Forbidden</th>
+<td class="ltx_td ltx_align_right" id="S5.T4.16.16.2"><math alttext="-0.31" class="ltx_Math" display="inline" id="S5.T4.16.16.2.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>0.31</mn></mrow><annotation encoding="application/x-tex">-0.31</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_right" id="S5.T4.17.17.3">[<math alttext="-3.38" class="ltx_Math" display="inline" id="S5.T4.17.17.3.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>3.38</mn></mrow><annotation encoding="application/x-tex">-3.38</annotation></semantics></math>, 2.46]</td>
+<td class="ltx_td ltx_align_right" id="S5.T4.17.17.5">1.000</td>
+<td class="ltx_td ltx_align_right" id="S5.T4.17.17.6">1.000</td>
+</tr>
+<tr class="ltx_tr" id="S5.T4.19.19">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S5.T4.18.18.1">Original <math alttext="\rightarrow" class="ltx_Math" display="inline" id="S5.T4.18.18.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> Rule</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S5.T4.19.19.3">Injection</th>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T4.19.19.4">+1.45</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T4.19.19.2">[<math alttext="-1.82" class="ltx_Math" display="inline" id="S5.T4.19.19.2.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>1.82</mn></mrow><annotation encoding="application/x-tex">-1.82</annotation></semantics></math>, 4.73]</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T4.19.19.5">0.523</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T4.19.19.6">1.000</td>
+</tr>
+<tr class="ltx_tr" id="S5.T4.21.21">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T4.20.20.1">Original <math alttext="\rightarrow" class="ltx_Math" display="inline" id="S5.T4.20.20.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> DeepSeek</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S5.T4.21.21.3">Injection</th>
+<td class="ltx_td ltx_align_right" id="S5.T4.21.21.4">+0.73</td>
+<td class="ltx_td ltx_align_right" id="S5.T4.21.21.2">[<math alttext="-2.55" class="ltx_Math" display="inline" id="S5.T4.21.21.2.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>2.55</mn></mrow><annotation encoding="application/x-tex">-2.55</annotation></semantics></math>, 4.36]</td>
+<td class="ltx_td ltx_align_right" id="S5.T4.21.21.5">0.839</td>
+<td class="ltx_td ltx_align_right" id="S5.T4.21.21.6">1.000</td>
+</tr>
+<tr class="ltx_tr" id="S5.T4.24.24">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S5.T4.22.22.1">Rule <math alttext="\rightarrow" class="ltx_Math" display="inline" id="S5.T4.22.22.1.m1" intent=":literal"><semantics><mo stretchy="false">→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> DeepSeek</th>
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S5.T4.24.24.4">Injection</th>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T4.23.23.2"><math alttext="-0.73" class="ltx_Math" display="inline" id="S5.T4.23.23.2.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>0.73</mn></mrow><annotation encoding="application/x-tex">-0.73</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T4.24.24.3">[<math alttext="-3.64" class="ltx_Math" display="inline" id="S5.T4.24.24.3.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>3.64</mn></mrow><annotation encoding="application/x-tex">-3.64</annotation></semantics></math>, 2.18]</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T4.24.24.5">0.804</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T4.24.24.6">1.000</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 4: </span>All nine prespecified paired code comparisons on SelectBench-v2. The
+delta is the right model minus the left model in percentage points. Intervals
+are paired percentile-bootstrap 95% CIs; <math alttext="p" class="ltx_Math" display="inline" id="S5.T4.27.m1" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math> is the two-sided exact McNemar
+value and <math alttext="p_{\mathrm{Holm}}" class="ltx_Math" display="inline" id="S5.T4.28.m2" intent=":literal"><semantics><msub><mi>p</mi><mi>Holm</mi></msub><annotation encoding="application/x-tex">p_{\mathrm{Holm}}</annotation></semantics></math> corrects jointly over all nine rows.</figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S5.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.2 </span><span class="translated-text">评估器和数据集版本诊断</span><span class="original-text">Evaluator and Dataset-Version Diagnostics</span></h3>
+<div class="ltx_para ltx_noindent" id="S5.SS2.p1">
+<p class="ltx_p" id="S5.SS2.p1.1"><span class="translated-text">主要评估员仅在可见答案中检查事实正确性，
+但扫描完整的最后助理回合，包括</span><span class="original-text">The primary evaluator checks factual correctness only in the visible answer,
+but scans the complete final assistant turn, including</span><span class="ltx_text ltx_font_typewriter" id="S5.SS2.p1.1.1"><span class="translated-text">&lt;思考&gt;</span><span class="original-text">&lt;think&gt;</span></span><span class="translated-text">, 对于
+禁止收养。因此，当禁止短语时，它是保守的
+在推理中提到，并且它与训练信号对齐</span><span class="original-text">, for
+forbidden adoption. It is consequently conservative when a forbidden phrase
+is mentioned in reasoning, and it is aligned with the training signal for</span><span class="ltx_text ltx_font_smallcaps" id="S5.SS2.p1.1.2"><span class="translated-text">DAPO规则</span><span class="original-text">DAPO-Rule</span></span><span class="translated-text">。其优点是相同的冻结决策规则和
+相同的 325 提示适用于所有三个检查点。语义判断者
+用于训练</span><span class="original-text">. Its advantage is that the same frozen decision rule and
+the same 325 prompts are applied to all three checkpoints. The semantic judge
+used to train</span><span class="ltx_text ltx_font_smallcaps" id="S5.SS2.p1.1.3">DAPO-DeepSeek</span><span class="translated-text">不用于正式结果。</span><span class="original-text">is not used for the formal results.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S5.SS2.p2">
+<p class="ltx_p" id="S5.SS2.p2.1"><span class="translated-text">数据集版本控制也会对测量产生重大影响。原来的测试
+生成器使用了允许的支持事实后备； v2 审核取代
+仅可信证据并更改 233/325 个示例中的检索上下文，
+同时保留问题、答案和污染。所有结果都在这
+部分是从 v2 重新生成的。旧版 v1 分数被排除而不是
+与校正的测量方案混合。</span><span class="original-text">Dataset versioning also materially affects measurement. The original test
+generator used a permissive supporting-fact fallback; the v2 audit replaces
+only trusted evidence and changes the retrieval context in 233/325 examples,
+while preserving questions, answers, and contamination. All results in this
+section are regenerated from v2. Legacy v1 scores are excluded rather than
+mixed with the corrected measurement regime.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S5.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.3 </span><span class="translated-text">一般能力保留</span><span class="original-text">General Capability Retention</span></h3>
+<div class="ltx_para ltx_noindent" id="S5.SS3.p1">
+<p class="ltx_p" id="S5.SS3.p1.5"><span class="translated-text">在 14,042 个 MMLU 问题上，原始问题和</span><span class="original-text">On 14,042 MMLU questions, the original and</span><span class="ltx_text ltx_font_smallcaps" id="S5.SS3.p1.5.1">DAPO-DeepSeek</span><span class="translated-text">检查站
+在 5 次评估下获得 67.70 和 67.70 的准确度（a</span><span class="original-text">checkpoints
+obtain 67.70 and 67.70 accuracy under 5-shot evaluation (a</span><math alttext="+0.01" class="ltx_Math" display="inline" id="S5.SS3.p1.1.m1" intent=":literal"><semantics><mrow><mo>+</mo><mn>0.01</mn></mrow><annotation encoding="application/x-tex">+0.01</annotation></semantics></math><span class="translated-text">四舍五入后的百分点差异），具有配对区间跨越
+零和精确麦克尼马尔</span><span class="original-text">percentage-point difference after rounding), with a paired interval spanning
+zero and exact McNemar</span><math alttext="p=1.000" class="ltx_Math" display="inline" id="S5.SS3.p1.2.m2" intent=":literal"><semantics><mrow><mi>p</mi><mo>=</mo><mn>1.000</mn></mrow><annotation encoding="application/x-tex">p=1.000</annotation></semantics></math><span class="translated-text">。零射击精度从 58.65 更改为
+58.85（</span><span class="original-text">. Zero-shot accuracy changes from 58.65 to
+58.85 (</span><math alttext="+0.21" class="ltx_Math" display="inline" id="S5.SS3.p1.3.m3" intent=":literal"><semantics><mrow><mo>+</mo><mn>0.21</mn></mrow><annotation encoding="application/x-tex">+0.21</annotation></semantics></math><span class="translated-text">点，95% CI</span><span class="original-text">points, 95% CI</span><math alttext="[0.06,0.36]" class="ltx_Math" display="inline" id="S5.SS3.p1.4.m4" intent=":literal"><semantics><mrow><mo stretchy="false">[</mo><mn>0.06</mn><mo>,</mo><mn>0.36</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">[0.06,0.36]</annotation></semantics></math>, <math alttext="p=0.010" class="ltx_Math" display="inline" id="S5.SS3.p1.5.m5" intent=":literal"><semantics><mrow><mi>p</mi><mo>=</mo><mn>0.010</mn></mrow><annotation encoding="application/x-tex">p=0.010</annotation></semantics></math><span class="translated-text">）。上
+7,080 个问题干净的 HotpotQA 子集，固定上下文 EM 相同为 60.03，
+而F1则从74.39变为74.41。闭盘交易日从 18.01 更改为
+17.98 和 F1 从 24.80 到 24.78。两者的配对 95% 自举间隔
+HotpotQA 模式包括零；表</span><span class="original-text">). On the
+7,080-question clean HotpotQA subset, fixed-context EM is identical at 60.03,
+while F1 changes from 74.39 to 74.41. Closed-book EM changes from 18.01 to
+17.98 and F1 from 24.80 to 24.78. The paired 95% bootstrap intervals for both
+HotpotQA modes include zero; Table</span><a class="ltx_ref" href="#S5.T5" title="Table 5 ‣ 5.3 General Capability Retention ‣ 5 Results and Analysis ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">报告完整的
+配对间隔以及可用于准确性和 EM 的精确测试。这些结果表明没有材料降解
+两项测量的一般能力评估</span><span class="original-text">reports the complete
+paired intervals and the exact tests available for accuracy and EM. These results show no material degradation on
+the two measured general-capability evaluations for</span><span class="ltx_text ltx_font_smallcaps" id="S5.SS3.p1.5.2">DAPO-DeepSeek</span><span class="translated-text">,
+但不要建立能力保留或更广泛的稳健性。</span><span class="original-text">,
+but do not establish capability preservation or broader robustness beyond them.</span></p>
+</div>
+<figure class="ltx_table" id="S5.T5">
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S5.T5.9">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S5.T5.2.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_border_tt" id="S5.T5.2.2.3">Evaluation</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T5.2.2.4">Original</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T5.2.2.5">DeepSeek</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T5.1.1.1">
+<math alttext="\Delta" class="ltx_Math" display="inline" id="S5.T5.1.1.1.m1" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math> pp</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T5.2.2.6">95% CI</th>
+<th class="ltx_td ltx_align_right ltx_th ltx_th_column ltx_border_tt" id="S5.T5.2.2.2"><math alttext="p" class="ltx_Math" display="inline" id="S5.T5.2.2.2.m1" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S5.T5.3.3">
+<td class="ltx_td ltx_align_left ltx_border_t" id="S5.T5.3.3.2">MMLU 5-shot accuracy</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T5.3.3.3">67.697</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T5.3.3.4">67.704</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T5.3.3.5">+0.007</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T5.3.3.1">[<math alttext="-0.135" class="ltx_Math" display="inline" id="S5.T5.3.3.1.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>0.135</mn></mrow><annotation encoding="application/x-tex">-0.135</annotation></semantics></math>, 0.150]</td>
+<td class="ltx_td ltx_align_right ltx_border_t" id="S5.T5.3.3.6">1.000</td>
+</tr>
+<tr class="ltx_tr" id="S5.T5.9.10.1">
+<td class="ltx_td ltx_align_left" id="S5.T5.9.10.1.1">MMLU zero-shot accuracy</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.9.10.1.2">58.645</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.9.10.1.3">58.852</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.9.10.1.4">+0.207</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.9.10.1.5">[0.057, 0.356]</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.9.10.1.6">0.010</td>
+</tr>
+<tr class="ltx_tr" id="S5.T5.4.4">
+<td class="ltx_td ltx_align_left" id="S5.T5.4.4.2">HotpotQA fixed-context EM</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.4.4.3">60.028</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.4.4.4">60.028</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.4.4.5">0.000</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.4.4.1">[<math alttext="-0.184" class="ltx_Math" display="inline" id="S5.T5.4.4.1.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>0.184</mn></mrow><annotation encoding="application/x-tex">-0.184</annotation></semantics></math>, 0.184]</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.4.4.6">1.000</td>
+</tr>
+<tr class="ltx_tr" id="S5.T5.5.5">
+<td class="ltx_td ltx_align_left" id="S5.T5.5.5.2">HotpotQA fixed-context F1</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.5.5.3">74.395</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.5.5.4">74.415</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.5.5.5">+0.020</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.5.5.1">[<math alttext="-0.143" class="ltx_Math" display="inline" id="S5.T5.5.5.1.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>0.143</mn></mrow><annotation encoding="application/x-tex">-0.143</annotation></semantics></math>, 0.185]</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.5.5.6">—</td>
+</tr>
+<tr class="ltx_tr" id="S5.T5.7.7">
+<td class="ltx_td ltx_align_left" id="S5.T5.7.7.3">HotpotQA closed-book EM</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.7.7.4">18.008</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.7.7.5">17.980</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.6.6.1"><math alttext="-0.028" class="ltx_Math" display="inline" id="S5.T5.6.6.1.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>0.028</mn></mrow><annotation encoding="application/x-tex">-0.028</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_right" id="S5.T5.7.7.2">[<math alttext="-0.198" class="ltx_Math" display="inline" id="S5.T5.7.7.2.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>0.198</mn></mrow><annotation encoding="application/x-tex">-0.198</annotation></semantics></math>, 0.141]</td>
+<td class="ltx_td ltx_align_right" id="S5.T5.7.7.6">0.871</td>
+</tr>
+<tr class="ltx_tr" id="S5.T5.9.9">
+<td class="ltx_td ltx_align_left ltx_border_bb" id="S5.T5.9.9.3">HotpotQA closed-book F1</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T5.9.9.4">24.802</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T5.9.9.5">24.777</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T5.8.8.1"><math alttext="-0.024" class="ltx_Math" display="inline" id="S5.T5.8.8.1.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>0.024</mn></mrow><annotation encoding="application/x-tex">-0.024</annotation></semantics></math></td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T5.9.9.2">[<math alttext="-0.216" class="ltx_Math" display="inline" id="S5.T5.9.9.2.m1" intent=":literal"><semantics><mrow><mo>−</mo><mn>0.216</mn></mrow><annotation encoding="application/x-tex">-0.216</annotation></semantics></math>, 0.162]</td>
+<td class="ltx_td ltx_align_right ltx_border_bb" id="S5.T5.9.9.6">—</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 5: </span>General-capability retention for the original and DAPO-DeepSeek
+checkpoints. Values and differences are percentage points. Confidence
+intervals use 10,000 paired bootstrap resamples. Reported <math alttext="p" class="ltx_Math" display="inline" id="S5.T5.11.m1" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>-values are
+two-sided exact McNemar tests; they are not defined for token-overlap F1.
+HotpotQA excludes all 325 SelectBench test questions.</figcaption>
+</figure>
+</section>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></h2>
+<section class="ltx_subsection" id="S6.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">6.1 </span><span class="translated-text">强化学习</span><span class="original-text">Reinforcement Learning</span></h3>
+<div class="ltx_para ltx_noindent" id="S6.SS1.p1">
+<p class="ltx_p" id="S6.SS1.p1.1"><span class="translated-text">强化学习（RL）已成为法学硕士与人类偏好保持一致并增强其推理能力的基石。
+近端策略优化 (PPO)</span><span class="original-text">Reinforcement learning (RL) has become a cornerstone in aligning LLMs with human preferences and enhancing their reasoning capabilities.
+Proximal Policy Optimization (PPO)</span><cite class="ltx_cite ltx_citemacro_cite">Schulman<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib21" title="Proximal policy optimization algorithms">2017</a>)</cite><span class="translated-text">是一种广泛使用的策略梯度算法，它通过修剪策略更新来稳定训练，但维护四个模型会带来沉重的计算成本。直接偏好优化 (DPO)</span><span class="original-text">is a widely used policy gradient algorithm that stabilizes training through clipped policy updates, but maintaining four models imposes heavy computational costs. Direct preference optimization (DPO)</span><cite class="ltx_cite ltx_citemacro_cite">Rafailov<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib22" title="Direct preference optimization: your language model is secretly a reward model">2023</a>)</cite><span class="translated-text">通过直接优化所选响应和拒绝响应之间的偏好差距来简化这一过程，而组相对策略优化 (GRPO)</span><span class="original-text">simplifies this by directly optimizing the preference gap between chosen and rejected responses, while Group Relative Policy Optimization (GRPO)</span><cite class="ltx_cite ltx_citemacro_cite">Shao<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib23" title="Deepseekmath: pushing the limits of mathematical reasoning in open language models">2024</a>)</cite><span class="translated-text">引入基于组的比较来计算多个输出的相对优势，从而在解决数学问题等 LLM 推理任务中实现更精细的学习和更好的结果。
+包括 DAPO 在内的变体</span><span class="original-text">introduces group-based comparison to compute relative advantages across multiple outputs, enabling finer learning and strong results in LLM reasoning tasks such as mathematical problem solving.
+With variants including DAPO</span><cite class="ltx_cite ltx_citemacro_cite">Yu<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib20" title="Dapo: an open-source llm reinforcement learning system at scale">2026</a>)</cite><span class="translated-text">和全球粮食计划署</span><span class="original-text">and GSPO</span><cite class="ltx_cite ltx_citemacro_cite">Zheng<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib24" title="Group sequence policy optimization">2025</a>)</cite><span class="translated-text">，GRPO已经成为新的主流范式。</span><span class="original-text">, GRPO has become a new mainstream paradigm.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S6.SS1.p2">
+<p class="ltx_p" id="S6.SS1.p2.1"><span class="translated-text">强化学习超越了标准的法学硕士后期培训，以增强代理的能力</span><span class="original-text">Reinforcement learning extends beyond standard LLM post-training to enhance agent capabilities</span><cite class="ltx_cite ltx_citemacro_cite">Sha<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib10" title="Sem: reinforcement learning for search-efficient large language models">2025</a>); Chen<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib9" title="ReSearch: learning to reason with search for LLMs via reinforcement learning">2026</a>)</cite><span class="translated-text">。通过设计适当的奖励函数并使优化目标适应实际任务，法学硕士可以学习调用外部工具进行搜索、文件操作，甚至复杂的 GUI 交互</span><span class="original-text">. By designing appropriate reward functions and adapting optimization objectives to practical tasks, LLMs can learn to invoke external tools for search, file manipulation, and even complex GUI interactions</span><cite class="ltx_cite ltx_citemacro_cite">Zhang<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib16" title="Are tools all we need? unveiling the tool-use tax in llm agents">2026b</a>)</cite><span class="translated-text">。
+然而，代理的强化学习面临着独特的挑战，包括由于扩展工具使用轨迹而产生的稀疏奖励以及对稳定模拟环境的严重依赖。尽管如此，这些强化学习方法对于训练后优化仍然至关重要，确保模型不仅产生连贯的文本，而且符合人类价值观并表现出更强的复杂问题解决能力。</span><span class="original-text">.
+However, reinforcement learning for agents faces distinct challenges, including sparse rewards arising from extended tool-use trajectories and heavy dependence on stable simulation environments. Nevertheless, these reinforcement learning methods remain essential for post-training optimization, ensuring models not only produce coherent text but also align with human values and exhibit stronger complex problem-solving abilities.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S6.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">6.2 </span><span class="translated-text">作为代理的大型语言模型</span><span class="original-text">Large Language Models as Agents</span></h3>
+<div class="ltx_para ltx_noindent" id="S6.SS2.p1">
+<p class="ltx_p" id="S6.SS2.p1.1"><span class="translated-text">将大型语言模型视为能够规划和执行多步推理的自主代理已成为一种新范式</span><span class="original-text">Viewing large language models as autonomous agents capable of planning and executing multi-step reasoning has emerged as a new paradigm</span><cite class="ltx_cite ltx_citemacro_cite">Shi<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib13" title="SURGENT: a surgical multi-agent assistance system across the perioperative workflow">2026a</a>)</cite><span class="translated-text">。代理可以分解为 LLM 和由内存、规划、工具和其他组件组成的工具</span><span class="original-text">. An agent can be decomposed into an LLM and a harness that comprises memory, planning, tools, and other components</span><cite class="ltx_cite ltx_citemacro_cite">Meng<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib26" title="Agent harness for large language model agents: a survey">2026</a>)</cite><span class="translated-text">。 LLM作为Agent的大脑和核心，在harness的编排下迭代地细化任务、检索信息并生成解决方案</span><span class="original-text">. The LLM serves as the brain and core of the agent, iteratively refining tasks, retrieving information, and generating solutions under the orchestration of the harness</span><cite class="ltx_cite ltx_citemacro_cite">Yao<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib25" title="Harness-bench: measuring harness effects across models in realistic agent workflows">2026</a>)</cite><span class="translated-text">。然而，当代理人调用检索工具时，法学硕士固有的过度拒绝问题仍然存在。我们的方法通过强化学习明确地训练模型，从包含有害内容的检索结果中提取有用信息，从而减轻资源利用不足的情况。</span><span class="original-text">. However, the over-refusal problem inherent in LLMs persists when agents invoke retrieval tools. Our method explicitly trains the model through reinforcement learning to extract useful information from retrieved results that contain harmful content, thereby mitigating the underutilization of resources.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S7">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">7 </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h2>
+<div class="ltx_para ltx_noindent" id="S7.p1">
+<p class="ltx_p" id="S7.p1.1"><span class="translated-text">我们引入了 SelectBench 和 DAPO 后训练框架，用于选择性
+从包含支持事实的检索上下文中采用证据
+误导性或类似说明的文本。在修正后的 SelectBench-v2 测试集上，
+两种奖励变体都可以提高严格成功率并减少禁止采用，
+经过 DeepSeek 训练的检查点还提高了答案的完整性
+保留 MMLU 和干净的 HotpotQA 上的性能。收益不大，不
+多次比较校正后仍显着，且没有改善
+提示注射如下。这些结果定位了选择性证据
+采用作为一个独特且可衡量的培训后目标，同时展示
+更强的注射阻力、重复的训练以及更广泛的
+检索设置仍然是必要的。</span><span class="original-text">We introduced SelectBench and a DAPO post-training framework for selective
+evidence adoption from retrieval contexts containing supported facts alongside
+misleading or instruction-like text. On the corrected SelectBench-v2 test set,
+both reward variants improve strict success and reduce forbidden adoption, with
+the DeepSeek-trained checkpoint also improving answer completeness and
+retaining performance on MMLU and clean HotpotQA. The gains are modest, do not
+remain significant after multiple-comparison correction, and do not improve
+prompt-injection following. These results position selective evidence
+adoption as a distinct and measurable post-training objective while showing
+that stronger injection resistance, replicated training runs, and broader
+retrieval settings remain necessary.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib9">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">M. Chen, L. Sun, T. Li, sunhaoze, ZhouYijie, C. Zhu, H. Wang, J. Z. Pan, W. Zhang, H. Chen, F. Yang, Z. Zhou, and W. Chen (2026)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">ReSearch: learning to reason with search for LLMs via reinforcement learning</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">The Thirty-ninth Annual Conference on Neural Information Processing Systems</span>,
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://openreview.net/forum?id=OuGAwwAT8G" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S6.SS1.p2.1" title="6.1 Reinforcement Learning ‣ 6 Related Work ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§6.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib15">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">D. Hendrycks, C. Burns, S. Basart, A. Zou, M. Mazeika, D. Song, and J. Steinhardt (2020)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Measuring massive multitask language understanding</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2009.03300</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.SS2.p1.1" title="4.2 Datasets ‣ 4 Experimental Setup ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§4.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib28">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">X. Ho, A. D. Nguyen, S. Sugawara, and A. Aizawa (2020)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Constructing a multi-hop qa dataset for comprehensive evaluation of reasoning steps</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 28th International Conference on Computational Linguistics</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 6609–6625</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS1.SSS0.Px1.p1.1" title="Training data. ‣ 3.1 Dataset Preparation ‣ 3 Methodology ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§3.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib5">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Y. Li, X. Yi, D. Shi, Y. Cui, G. de Melo, and L. Wang (2025a)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">From construction to injection: edit-based fingerprints for large language models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2509.03122</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib19">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Y. Li, X. Yi, D. Shi, Y. Cui, G. de Melo, and L. Wang (2026)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">AGMark: attention-guided dynamic watermarking for large vision-language models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2602.09611</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib1">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Y. Li, X. Yi, D. Shi, G. De Melo, X. Wang, and L. Wang (2025b)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Hierarchical safety realignment: lightweight restoration of safety in pruned large vision-language models</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Findings of the Association for Computational Linguistics: ACL 2025</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 7600–7612</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib26">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Q. Meng, Y. Wang, L. Chen, Y. Li, W. Wu, W. Jiang, Q. Wang, C. Lu, Y. Gao, Y. Wu, <span class="ltx_text ltx_bib_etal">et al.</span> (2026)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Agent harness for large language model agents: a survey</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S6.SS2.p1.1" title="6.2 Large Language Models as Agents ‣ 6 Related Work ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§6.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib22">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">R. Rafailov, A. Sharma, E. Mitchell, C. D. Manning, S. Ermon, and C. Finn (2023)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Direct preference optimization: your language model is secretly a reward model</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Advances in neural information processing systems</span> <span class="ltx_text ltx_bib_volume">36</span>, <span class="ltx_text ltx_bib_pages"> pp. 53728–53741</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S6.SS1.p1.1" title="6.1 Reinforcement Learning ‣ 6 Related Work ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§6.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib21">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">J. Schulman, F. Wolski, P. Dhariwal, A. Radford, and O. Klimov (2017)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Proximal policy optimization algorithms</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:1707.06347</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S6.SS1.p1.1" title="6.1 Reinforcement Learning ‣ 6 Related Work ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§6.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib10">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Z. Sha, S. Cui, and W. Wang (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Sem: reinforcement learning for search-efficient large language models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2505.07903</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S6.SS1.p2.1" title="6.1 Reinforcement Learning ‣ 6 Related Work ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§6.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib23">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Z. Shao, P. Wang, Q. Zhu, R. Xu, J. Song, X. Bi, H. Zhang, M. Zhang, Y. Li, Y. Wu, <span class="ltx_text ltx_bib_etal">et al.</span> (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Deepseekmath: pushing the limits of mathematical reasoning in open language models</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2402.03300</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S6.SS1.p1.1" title="6.1 Reinforcement Learning ‣ 6 Related Work ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§6.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib13">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">D. Shi, Y. Li, X. Yi, Y. Cui, H. Feng, and L. Wang (2026a)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">SURGENT: a surgical multi-agent assistance system across the perioperative workflow</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2605.29368</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S6.SS2.p1.1" title="6.2 Large Language Models as Agents ‣ 6 Related Work ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§6.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib18">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">D. Shi, X. Yi, Y. Li, and L. Wang (2026b)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Benchmarking large language models for end-to-end clinical support in traditional chinese medicine</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Expert Systems with Applications</span>, <span class="ltx_text ltx_bib_pages"> pp. 132267</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib7">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Q. Team (2026)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Qwen3.5: accelerating productivity with native multimodal agents</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://qwen.ai/blog?id=qwen3.5" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p1.1" title="2 Preliminary ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§2</span></a>,
+<a class="ltx_ref" href="#S4.SS1.p1.12" title="4.1 Training details ‣ 4 Experimental Setup ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§4.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib29">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">H. Trivedi, N. Balasubramanian, T. Khot, and A. Sabharwal (2022)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">MuSiQue: multihop questions via single-hop question composition</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Transactions of the Association for Computational Linguistics</span> <span class="ltx_text ltx_bib_volume">10</span>, <span class="ltx_text ltx_bib_pages"> pp. 539–554</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS1.SSS0.Px1.p1.1" title="Training data. ‣ 3.1 Dataset Preparation ‣ 3 Methodology ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§3.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib30">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">A. Xu, B. Lin, B. Xue, B. Wang, B. Xu, B. Wu, B. Zhang, C. Lin, C. Dong, C. Ling, <span class="ltx_text ltx_bib_etal">et al.</span> (2026)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Deepseek-v4: towards highly efficient million-token context intelligence</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2606.19348</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS3.p4.7" title="3.3 Reward Policy ‣ 3 Methodology ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§3.3</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib27">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Z. Yang, P. Qi, S. Zhang, Y. Bengio, W. W. Cohen, R. Salakhutdinov, and C. D. Manning (2018)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">HotpotQA: a dataset for diverse, explainable multi-hop question answering</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 2369–2380</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS1.SSS0.Px1.p1.1" title="Training data. ‣ 3.1 Dataset Preparation ‣ 3 Methodology ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§3.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib25">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Y. Yao, X. Tan, C. Liu, Y. Li, Z. Wang, W. Yu, Z. Tan, Y. Tian, G. Zhao, L. Sun, <span class="ltx_text ltx_bib_etal">et al.</span> (2026)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Harness-bench: measuring harness effects across models in realistic agent workflows</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2605.27922</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S6.SS2.p1.1" title="6.2 Large Language Models as Agents ‣ 6 Related Work ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§6.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib2">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">X. Yi, Y. Li, D. Shi, L. Wang, X. Wang, and L. He (2025a)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Latent-space adversarial training with post-aware calibration for defending large language models against jailbreak attacks</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Expert Systems with Applications</span>, <span class="ltx_text ltx_bib_pages"> pp. 129101</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib4">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">X. Yi, Y. Li, D. Shi, L. Wang, X. Wang, and L. He (2025b)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Unified defense for large language models against jailbreak and fine-tuning attacks in education</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2511.14423</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib6">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">X. Yi, Y. Li, S. Zheng, L. Wang, X. Wang, and L. He (2025c)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Unified attacks to large language model watermarks: spoofing and scrubbing in unauthorized knowledge distillation</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Knowledge-Based Systems</span>, <span class="ltx_text ltx_bib_pages"> pp. 114295</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib20">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Q. Yu, Z. Zhang, R. Zhu, Y. Yuan, X. Zuo, Y. Yue, W. Dai, T. Fan, G. Liu, L. Liu, <span class="ltx_text ltx_bib_etal">et al.</span> (2026)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Dapo: an open-source llm reinforcement learning system at scale</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Advances in Neural Information Processing Systems</span> <span class="ltx_text ltx_bib_volume">38</span>, <span class="ltx_text ltx_bib_pages"> pp. 113222–113244</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S3.p1.7" title="3 Methodology ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§3</span></a>,
+<a class="ltx_ref" href="#S6.SS1.p1.1" title="6.1 Reinforcement Learning ‣ 6 Related Work ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§6.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib17">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">K. Zhang, M. Hu, H. A. D. Le, F. K. Torsha, Z. Jiang, M. K. Bui, C. Chang, Y. Chuang, Z. Xiong, Y. Lin, G. Wang, and N. Zou (2026a)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A survey on evaluating quality and trustworthiness in LLM-generated data</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Transactions on Machine Learning Research</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"></span>
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text issn ltx_bib_external">ISSN 2835-8856</span>,
+<a class="ltx_ref ltx_bib_external" href="https://openreview.net/forum?id=f2gS9Ly6tA" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib16">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">K. Zhang, Z. Xiong, M. Zhong, Z. Jiang, Z. Yuan, Z. Li, and Y. Lin (2026b)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Are tools all we need? unveiling the tool-use tax in llm agents</span>.
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><span class="ltx_text ltx_bib_external">2605.00136</span>,
+<a class="ltx_ref ltx_bib_external" href="https://arxiv.org/abs/2605.00136" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S6.SS1.p2.1" title="6.1 Reinforcement Learning ‣ 6 Related Work ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§6.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib12">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Z. Zhang, W. Xu, F. Wu, and C. K. Reddy (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">FalseReject: a resource for improving contextual safety and mitigating over-refusals in LLMs via structured reasoning</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Second Conference on Language Modeling</span>,
+</span>
+<span class="ltx_bibblock">External Links: <span class="ltx_text ltx_bib_links"><a class="ltx_ref ltx_bib_external" href="https://openreview.net/forum?id=1w9Hay7tvm" title="">Link</a></span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1 Introduction ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib24">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">C. Zheng, S. Liu, M. Li, X. Chen, B. Yu, C. Gao, K. Dang, Y. Liu, R. Men, A. Yang, <span class="ltx_text ltx_bib_etal">et al.</span> (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Group sequence policy optimization</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2507.18071</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S6.SS1.p1.1" title="6.1 Reinforcement Learning ‣ 6 Related Work ‣ Reinforcement Learning for Large Language Model Selective Evidence Adoption from Contaminated Retrieval Results"><span class="ltx_text ltx_ref_tag">§6.1</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2607.20090v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer><footer class="ds-site-footer">
+<div class="ds-site-footer-grid">
+<div class="ds-site-footer-main">
+<div class="ds-site-footer-ack"><span class="translated-text">我们衷心感谢来自
+        我们的</span><span class="original-text">We gratefully acknowledge support from
+        our</span><strong><span class="translated-text">主要资助者</span><span class="original-text">major funders</span></strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong><span class="translated-text">成员机构</span><span class="original-text">member institutions</span></strong></a><span class="ack-member-inline" hidden="">, <strong></strong></span><span class="translated-text">,
+        以及所有贡献者。</span><span class="original-text">,
+        and all contributors.</span></div>
+<nav aria-label="Site navigation" class="ds-site-footer-links">
+<a href="https://info.arxiv.org/about"><span class="translated-text">关于</span><span class="original-text">About</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help"><span class="translated-text">帮助</span><span class="original-text">Help</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/contact.html"><span class="translated-text">联系方式</span><span class="original-text">Contact</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/subscribe"><span class="translated-text">订阅</span><span class="original-text">Subscribe</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/license/index.html"><span class="translated-text">版权</span><span class="original-text">Copyright</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/policies/privacy_policy.html"><span class="translated-text">隐私</span><span class="original-text">Privacy</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/web_accessibility.html"><span class="translated-text">无障碍</span><span class="original-text">Accessibility</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://status.arxiv.org" rel="noopener noreferrer" target="_blank"><span class="translated-text">运营状况</span><span class="original-text">Operational Status</span><span class="is-sr-only"><span class="translated-text">（在新选项卡中打开）</span><span class="original-text">(opens in new tab)</span></span></a>
+</nav>
+</div>
+<div aria-label="Major funders" class="ds-site-footer-funders">
+<div class="ds-site-footer-funders-label"><span class="translated-text">主要资金支持来自</span><span class="original-text">Major funding support from</span></div>
+<div class="ds-site-footer-funders-logos">
+<a class="ds-funder-link" href="https://www.simonsfoundation.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.sfi.org.bm/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation International" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation-international.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.schmidtsciences.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Schmidt Sciences" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/schmidt-sciences.png"/>
+</a>
+</div>
+</div>
+</div>
+</footer><div id="fixed-buttons-container">
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
