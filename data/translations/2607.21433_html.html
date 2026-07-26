@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">思想链模型中的代币预算饱和和推理不收敛的机制早期检测</span><span class="original-text">Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 7 月 23 日星期四 15:35:55 生成 http://dlmf.nist.gov/LaTeXML/。</span><span class="original-text">Generated on Thu Jul 23 15:35:55 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+    // Pre-apply spinout-banner dismissal here, before the banner paints, so it
+    // never flashes in only to be hidden later by the deferred arxiv-header.js.
+    // Key matches arxiv-header.js: "arxiv-banner-dismissed:" + data-banner-name.
+    if (localStorage.getItem('arxiv-banner-dismissed:spinout-nonprofit')) {
+      document.documentElement.setAttribute("data-banner-dismissed", "");
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/><link href="https://arxiv.org/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626" media="screen" rel="stylesheet" type="text/css"/><style>
+  /* Banner pre-dismissal (set above before paint -> no flash-then-hide) and
+     reading-mode chrome hiding. */
+  html[data-banner-dismissed] .ds-announcement { display: none; }
+  html[data-reading-mode="enabled"] .ds-announcement,
+  html[data-reading-mode="enabled"] .ds-site-footer { display: none; }
+  /* Keep the announcement text dark on the Open-Blue band in both colour themes
+     (otherwise it inherits the paper's warm-wash text in dark mode and washes out). */
+  .ds-announcement-text { color: var(--arxiv-ink, #1c1a17); }
+</style>
+<script defer="" src="https://arxiv.org/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2607.21433" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2607.21433" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog><div aria-label="Announcement" class="ds-announcement" data-banner-name="spinout-nonprofit" id="announcement-banner" role="region">
+<img alt="" aria-hidden="true" class="ds-announcement-glyph" src="https://arxiv.org/static/base/1.0.1/images/icons/smileybones-small.svg"/>
+<span class="ds-announcement-text"><span class="translated-text">arXiv 现在是一个独立的非营利组织！</span><span class="original-text">arXiv is now an independent nonprofit!</span></span>
+<a class="ds-announcement-link" href="https://info.arxiv.org/about"><span class="translated-text">了解更多</span><span class="original-text">Learn more</span></a>
+<button aria-label="Dismiss announcement" class="ds-announcement-close" type="button">×</button>
+</div>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/"><img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/base/1.0.1/images/arxiv-logo-primary-light.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2607.21433v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2607.21433v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S2" title="In Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Related work</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS1" title="In 2 Related work ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.1 </span>Test-time compute and chain-of-thought reasoning</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS2" title="In 2 Related work ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.2 </span>Reasoning failure modes</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S2.SS3" title="In 2 Related work ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2.3 </span>Probing and mechanistic interpretability</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Budget-forcing study</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S3.SS1" title="In 3 Budget-forcing study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Experimental setup</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS1.SSS1" title="In 3.1 Experimental setup ‣ 3 Budget-forcing study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1.1 </span>Model and inference configuration</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS1.SSS2" title="In 3.1 Experimental setup ‣ 3 Budget-forcing study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1.2 </span>Budget-forcing mechanism</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS1.SSS3" title="In 3.1 Experimental setup ‣ 3 Budget-forcing study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1.3 </span>Benchmarks and sampling</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS1.SSS4" title="In 3.1 Experimental setup ‣ 3 Budget-forcing study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1.4 </span>Metrics</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S3.SS2" title="In 3 Budget-forcing study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Results</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS1" title="In 3.2 Results ‣ 3 Budget-forcing study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2.1 </span>Budget saturation on GSM8K and MATH-500</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS2" title="In 3.2 Results ‣ 3 Budget-forcing study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2.2 </span>Bimodal convergence on AIME</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS3" title="In 3.2 Results ‣ 3 Budget-forcing study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2.3 </span>Convergence is not explained by difficulty</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS4" title="In 3.2 Results ‣ 3 Budget-forcing study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2.4 </span>Practical implications</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Early detection study</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S4.SS1" title="In 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>Experimental setup</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS1.SSS1" title="In 4.1 Experimental setup ‣ 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1.1 </span>Instrumented generation</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS1.SSS2" title="In 4.1 Experimental setup ‣ 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1.2 </span>Fresh run validation</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection">
+<a class="ltx_ref" href="#S4.SS1.SSS3" title="In 4.1 Experimental setup ‣ 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1.3 </span>Probe design</span></a>
+<ol class="ltx_toclist ltx_toclist_subsubsection">
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS1.SSS3.Px1" title="In 4.1.3 Probe design ‣ 4.1 Experimental setup ‣ 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title">Activation probe.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS1.SSS3.Px2" title="In 4.1.3 Probe design ‣ 4.1 Experimental setup ‣ 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title">Behavioral baseline.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_paragraph"><a class="ltx_ref" href="#S4.SS1.SSS3.Px3" title="In 4.1.3 Probe design ‣ 4.1 Experimental setup ‣ 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title">Combined probe.</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS1.SSS4" title="In 4.1 Experimental setup ‣ 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1.4 </span>Evaluation protocol</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S4.SS2" title="In 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2 </span>Results</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS2.SSS1" title="In 4.2 Results ‣ 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2.1 </span>Checkpoint position sweep</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS2.SSS2" title="In 4.2 Results ‣ 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2.2 </span>Consistent directional advantage across checkpoints</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS2.SSS3" title="In 4.2 Results ‣ 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2.3 </span>Signal dynamics across checkpoints</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS2.SSS4" title="In 4.2 Results ‣ 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2.4 </span>Layer sweep results</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S4.SS2.SSS5" title="In 4.2 Results ‣ 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2.5 </span>Contamination check on AIME 2025</span></a></li>
+</ol>
+</li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S5" title="In Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Discussion</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS1" title="In 5 Discussion ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5.1 </span>Rethinking token budgets</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS2" title="In 5 Discussion ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5.2 </span>Nature of the non-convergence signal</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS3" title="In 5 Discussion ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5.3 </span>Toward practical early-exit systems</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S6" title="In Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6 </span>Limitations</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S7" title="In Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">7 </span>Conclusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：arXiv.org 永久非独占许可证</span><span class="original-text">License: arXiv.org perpetual non-exclusive license</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2607.21433v1 [cs.CL] 2026 年 7 月 23 日</span><span class="original-text">arXiv:2607.21433v1 [cs.CL] 23 Jul 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">代币预算饱和和机制早期检测</span><span class="original-text">Token Budget Saturation and Mechanistic Early-Detection of</span><br class="ltx_break"/><span class="translated-text">思维链模型中的不收敛推理</span><span class="original-text">Reasoning Non-Convergence in Chain-of-Thought Models</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Renuka Oladri 
+<br class="ltx_break"/>Computer, Mathematical, and Natural Sciences 
+<br class="ltx_break"/>University of Maryland 
+<br class="ltx_break"/>College Park, MD, USA 
+<br class="ltx_break"/><span class="ltx_text ltx_font_typewriter" id="id1.1.id1">roladri@umd.edu</span>
+&amp;Niveda Jawahar 
+<br class="ltx_break"/>Computer, Mathematical, and Natural Sciences 
+<br class="ltx_break"/>University of Maryland 
+<br class="ltx_break"/>College Park, MD, USA 
+<br class="ltx_break"/><span class="ltx_text ltx_font_typewriter" id="id2.2.id2">nivedaj@umd.edu</span>
+&amp;Abdirisak Mohamed 
+<br class="ltx_break"/>University of Maryland 
+<br class="ltx_break"/>SAP Labs, LLC 
+<br class="ltx_break"/>College Park, MD, USA 
+<br class="ltx_break"/><span class="ltx_text ltx_font_typewriter" id="id3.3.id3">amoham70@umd.edu</span>
+</span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">大型语言模型中的思维链推理会带来巨大的推理成本，但分配的思维预算和下游准确性之间的关系仍然很少被描述。
+我们提出了关于 DeepSeek-R1-Distill-Qwen-7B 的两项相互关联的研究，涉及三个数学基准（GSM8K、MATH-500、AIME 1983-2024）。
+在第一项研究中，我们采用了预算强制机制</span><span class="original-text">Chain-of-thought reasoning in large language models carries a substantial inference cost, yet the relationship between allocated thinking budget and downstream accuracy remains poorly characterized.
+We present two interconnected studies on DeepSeek-R1-Distill-Qwen-7B across three mathematics benchmarks (GSM8K, MATH-500, AIME 1983–2024).
+In the first study, we adapt the budget-forcing mechanism of</span><cite class="ltx_cite ltx_citemacro_citet">Muennighoff<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib11" title="S1: simple test-time scaling">2025</a>)</cite><span class="translated-text">限制模型的思维标记并衡量作为预算函数的准确性。
+我们发现，GSM8K 和 MATH-500 在仅 256 个思考令牌的情况下就达到了 95% 的无上限准确度，而 AIME 则表现出明显的双峰模式：56.5% 的世代以 96.5% 的准确度自然收敛，而剩下的 43.5% 即使在 10,000 个令牌的上限下也从未终止其推理链，仅达到 11.5% 的准确度。
+这种双峰性在所有难度级别上都存在，并且只能通过问题难度进行微弱预测（</span><span class="original-text">to constrain the model’s thinking tokens and measure accuracy as a function of budget.
+We find that GSM8K and MATH-500 reach 95% of their uncapped accuracy at just 256 tokens of thinking, while AIME exhibits a pronounced bimodal pattern: 56.5% of generations converge naturally with 96.5% accuracy, while the remaining 43.5% never terminate their reasoning chain even at a 10,000-token ceiling and achieve only 11.5% accuracy.
+This bimodality persists across all difficulty levels and is only weakly predicted by problem difficulty (</span><math alttext="r^{2}\approx 0.186" class="ltx_Math" display="inline" intent=":literal"><semantics><mrow><msup><mi>r</mi><mn>2</mn></msup><mo>≈</mo><mn>0.186</mn></mrow><annotation encoding="application/x-tex">r^{2}\approx 0.186</annotation></semantics></math><span class="translated-text">）。
+在第二项研究中，我们探讨了在行为失败出现之前是否可以从内部表征中检测到收敛失败。
+扫描令牌 150 处的所有 28 层，我们发现第 20 层产生最强信号（AUC</span><span class="original-text">).
+In the second study, we probe whether convergence failure is detectable from internal representations before behavioral failure manifests.
+Sweeping all 28 layers at token 150, we find layer 20 yields the strongest signal (AUC</span><math alttext="0.608\pm 0.080" class="ltx_Math" display="inline" intent=":literal"><semantics><mrow><mn>0.608</mn><mo>±</mo><mn>0.080</mn></mrow><annotation encoding="application/x-tex">0.608\pm 0.080</annotation></semantics></math><span class="translated-text">）。
+九个位置检查点扫描（50-300 个标记）显示激活探针在 9 个位置中的 8 个位置上优于行为基线（平均</span><span class="original-text">).
+A nine-position checkpoint sweep (50–300 tokens) shows activation probes outperforming behavioral baselines at 8 of 9 positions (mean</span><math alttext="\Delta" class="ltx_Math" display="inline" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math><span class="translated-text">曲线下面积</span><span class="original-text">AUC</span><math alttext="=+0.035" class="ltx_Math" display="inline" intent=":literal"><semantics><mrow><mi></mi><mo>=</mo><mrow><mo>+</mo><mn>0.035</mn></mrow></mrow><annotation encoding="application/x-tex">=+0.035</annotation></semantics></math><span class="translated-text">），一致的方向优势</span><span class="original-text">), a consistent directional advantage that</span><math alttext="n=200" class="ltx_Math" display="inline" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>200</mn></mrow><annotation encoding="application/x-tex">n=200</annotation></semantics></math><span class="translated-text">没有能力在各个检查站进行统计确认。
+对截止后 AIME 2025 问题的污染检查证实，收敛正确性关系在未见过的数据上成立（收敛精度 100%，非收敛精度 0%），排除了记忆作为主要驱动因素。
+这些发现表明，推理模型在其内部状态变得可观察之前就将其内部状态编码为收敛命运，从而激发了基于机械的早期退出策略以降低推理成本。</span><span class="original-text">is underpowered to confirm statistically at individual checkpoints.
+A contamination check on post-cutoff AIME 2025 problems confirms that the convergence–correctness relationship holds on unseen data (converged accuracy 100%, non-converged accuracy 0%), ruling out memorization as the primary driver.
+These findings suggest that reasoning models encode convergence fate in their internal state well before it becomes externally observable, motivating mechanistically-grounded early-exit strategies for inference cost reduction.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para ltx_noindent" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">思想链（CoT）提示的出现</span><span class="original-text">The emergence of chain-of-thought (CoT) prompting</span><cite class="ltx_cite ltx_citemacro_citep">(Wei<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib1" title="Chain-of-thought prompting elicits reasoning in large language models">2022</a>)</cite><span class="translated-text">以及专用推理模型，例如 OpenAI 的 o1</span><span class="original-text">and dedicated reasoning models such as OpenAI’s o1</span><cite class="ltx_cite ltx_citemacro_citep">(OpenAI, <a class="ltx_ref" href="#bib.bib2" title="Learning to reason with LLMs">2024</a>)</cite><span class="translated-text">和 DeepSeek-R1</span><span class="original-text">and DeepSeek-R1</span><cite class="ltx_cite ltx_citemacro_citep">(DeepSeek-AI, <a class="ltx_ref" href="#bib.bib3" title="DeepSeek-R1: incentivizing reasoning capability in LLMs via reinforcement learning">2025</a>)</cite><span class="translated-text">将大型语言模型 (LLM) 推理中的计算瓶颈从模型大小转移到生成长度。
+这些系统在得出最终答案之前会产生扩展的内部独白（通常是数千个标记）。
+该领域普遍的假设是，较长的推理会产生更好的结果，这一假设支撑了人们对测试时计算扩展日益增长的兴趣</span><span class="original-text">has shifted the computational bottleneck in large language model (LLM) inference from model size to generation length.
+These systems produce extended internal monologues—often thousands of tokens—before arriving at a final answer.
+The prevailing assumption in the field is that longer reasoning yields better outcomes, an assumption that underpins the growing interest in test-time compute scaling</span><cite class="ltx_cite ltx_citemacro_citep">(Snell<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib4" title="Scaling LLM test-time compute optimally can be more effective than scaling model parameters">2024</a>)</cite>.</p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">然而，这一假设在各代人的层面上受到了有限的实证检验。
+虽然总体基准显示推理模型优于非推理模型，但仍不清楚所产生的思维有多少实际上是富有成效的。
+在超时之前产生 10,000 个循环推理令牌的一代所消耗的计算量与完全收敛于 4,000 个令牌的一代所消耗的计算量相同，但这两种结果在准确性上存在巨大差异。</span><span class="original-text">This assumption, however, has received limited empirical scrutiny at the level of individual generations.
+While aggregate benchmarks show that reasoning models outperform their non-reasoning counterparts, it remains unclear how much of the generated thinking is actually productive.
+A generation that produces 10,000 tokens of circular reasoning before timing out consumes the same compute as one that converges cleanly at 4,000 tokens—yet the two outcomes differ drastically in accuracy.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">我们通过对 DeepSeek-R1-Distill-Qwen-7B 进行的两项研究来调查这个问题，这是一个从 DeepSeek-R1 中提取并基于 Qwen2 架构构建的 70 亿参数模型</span><span class="original-text">We investigate this question through two studies conducted on DeepSeek-R1-Distill-Qwen-7B, a 7-billion parameter model distilled from DeepSeek-R1 and built on the Qwen2 architecture</span><cite class="ltx_cite ltx_citemacro_citep">(Yang and others, <a class="ltx_ref" href="#bib.bib5" title="Qwen2 technical report">2024</a>)</cite><span class="translated-text">。
+我们通过涵盖广泛难度范围的三个基准对其进行评估： GSM8K</span><span class="original-text">.
+We evaluate it across three benchmarks spanning a wide difficulty range: GSM8K</span><cite class="ltx_cite ltx_citemacro_citep">(Cobbe<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib6" title="Training verifiers to solve math word problems">2021</a>)</cite><span class="translated-text">（小学），MATH-500</span><span class="original-text">(grade school), MATH-500</span><cite class="ltx_cite ltx_citemacro_citep">(Hendrycks<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib7" title="Measuring mathematical problem solving with the MATH dataset">2021</a>)</cite><span class="translated-text">（竞赛级别），以及 AIME 1983–2024 的 200 个问题子集</span><span class="original-text">(competition-level), and a 200-problem subset of AIME 1983–2024</span><cite class="ltx_cite ltx_citemacro_citep">(Neubig, <a class="ltx_ref" href="#bib.bib8" title="AIME 1983–2024 dataset">2024</a>)</cite><span class="translated-text">（奥林匹克级别）。</span><span class="original-text">(olympiad-level).</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">在第一项研究中（第</span><span class="original-text">In the first study (Section</span><a class="ltx_ref" href="#S3" title="3 Budget-forcing study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">），我们采用预算强制技术</span><span class="original-text">), we adapt the budget-forcing technique of</span><cite class="ltx_cite ltx_citemacro_citet">Muennighoff<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib11" title="S1: simple test-time scaling">2025</a>)</cite><span class="translated-text">进入 logits 处理器，该处理器将模型的思考阶段限制为指定的标记计数。
+通过将预算从 256 个代币扫到 4,096 个代币，并与无上限基线（10,000 个代币上限）进行比较，我们描述了不同难度级别的额外思维代币的边际价值。
+我们的主要发现是，GSM8K 和 MATH-500 的准确性在早期就明显饱和，而 AIME 揭示了一种双峰故障模式，其中无论预算如何，很大一部分世代都不会收敛。</span><span class="original-text">into a logits processor that constrains the model’s thinking phase to a specified token count.
+By sweeping budgets from 256 to 4,096 tokens and comparing against an uncapped baseline (10,000-token ceiling), we characterize the marginal value of additional thinking tokens across difficulty levels.
+Our central finding is that accuracy saturates remarkably early on GSM8K and MATH-500, while AIME reveals a bimodal failure mode where a large fraction of generations never converge regardless of budget.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">在第二项研究中（第</span><span class="original-text">In the second study (Section</span><a class="ltx_ref" href="#S4" title="4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">），我们询问在失败变得行为明显之前，这种收敛失败是否可以根据模型的内部状态进行预测。
+我们使用前向钩子来检测模型，以捕获推理链中早期检查点的隐藏状态激活，然后训练线性探针来预测最终的收敛。
+通过将这些探针与仅使用表面信号（logit 熵、重复统计）的行为基线进行比较，我们分离出内部表征对早期检测的贡献。</span><span class="original-text">), we ask whether this convergence failure is predictable from the model’s internal state before the failure becomes behaviorally apparent.
+We instrument the model with forward hooks to capture hidden-state activations at early checkpoints in the reasoning chain, then train linear probes to predict eventual convergence.
+By comparing these probes against a behavioral baseline that uses only surface-level signals (logit entropy, repetition statistics), we isolate the contribution of internal representations to early detection.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1"><span class="translated-text">这项工作的贡献是：</span><span class="original-text">The contributions of this work are:</span></p>
+<ul class="ltx_itemize" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="translated-text">经验证据表明，对于 GSM8K 和 MATH-500，思考代币预算饱和于 256 个代币，这挑战了更多思考一致有益的假设。</span><span class="original-text">Empirical evidence that thinking token budgets saturate at 256 tokens for GSM8K and MATH-500, challenging the assumption that more thinking is uniformly beneficial.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="translated-text">AIME 上双峰收敛模式的特征仅部分由问题难度来解释（</span><span class="original-text">Characterization of a bimodal convergence pattern on AIME that is only partially explained by problem difficulty (</span><math alttext="r^{2}\approx 0.19" class="ltx_Math" display="inline" id="S1.I1.i2.p1.1.m1" intent=":literal"><semantics><mrow><msup><mi>r</mi><mn>2</mn></msup><mo>≈</mo><mn>0.19</mn></mrow><annotation encoding="application/x-tex">r^{2}\approx 0.19</annotation></semantics></math><span class="translated-text">）并且在注定失败的世代上浪费了大约 40% 的推理计算。</span><span class="original-text">) and wastes approximately 40% of inference compute on doomed generations.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1"><span class="translated-text">在令牌 150 处对所有 28 个模型层进行层扫描，将第 20 层识别为最强的信号载体 (AUC</span><span class="original-text">Layer sweep across all 28 model layers at token 150, identifying layer 20 as the strongest signal carrier (AUC</span><math alttext="0.608\pm 0.080" class="ltx_Math" display="inline" id="S1.I1.i3.p1.1.m1" intent=":literal"><semantics><mrow><mn>0.608</mn><mo>±</mo><mn>0.080</mn></mrow><annotation encoding="application/x-tex">0.608\pm 0.080</annotation></semantics></math><span class="translated-text">）并揭示了收敛信息在中上表示层中达到峰值，而不是在输出相邻层中。</span><span class="original-text">) and revealing that convergence information peaks in upper-middle representational layers, not output-adjacent layers.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i4" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i4.p1">
+<p class="ltx_p" id="S1.I1.i4.p1.2"><span class="translated-text">九个位置检查点扫描（50-300 个令牌）表明激活探针在 9 个位置中的 8 个位置上始终优于行为基线，在 50 个令牌时具有最强的早期优势（</span><span class="original-text">Nine-position checkpoint sweep (50–300 tokens) demonstrating that activation probes consistently outperform behavioral baselines at 8 of 9 positions, with the strongest early advantage at 50 tokens (</span><math alttext="\Delta" class="ltx_Math" display="inline" id="S1.I1.i4.p1.1.m1" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math><span class="translated-text">曲线下面积</span><span class="original-text">AUC</span><math alttext="=+0.074" class="ltx_Math" display="inline" id="S1.I1.i4.p1.2.m2" intent=":literal"><semantics><mrow><mi></mi><mo>=</mo><mrow><mo>+</mo><mn>0.074</mn></mrow></mrow><annotation encoding="application/x-tex">=+0.074</annotation></semantics></math><span class="translated-text">），确认内部表示在表面信号出现之前携带收敛信息。</span><span class="original-text">), confirming that internal representations carry convergence information before surface-level signals emerge.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i5" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i5.p1">
+<p class="ltx_p" id="S1.I1.i5.p1.1"><span class="translated-text">对截止后 AIME 2025 问题的污染分析表明，收敛-正确性关系适用于模型无法记忆的数据（收敛精度 100%，未收敛 0%），验证了我们的研究结果与记忆假设的关系。</span><span class="original-text">Contamination analysis on post-cutoff AIME 2025 problems showing that the convergence–correctness relationship holds on data the model cannot have memorized (converged accuracy 100%, non-converged 0%), validating our findings against the memorization hypothesis.</span></p>
+</div>
+</li>
+</ul>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">相关工作</span><span class="original-text">Related work</span></h2>
+<section class="ltx_subsection" id="S2.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.1 </span><span class="translated-text">测试时计算和思维链推理</span><span class="original-text">Test-time compute and chain-of-thought reasoning</span></h3>
+<div class="ltx_para ltx_noindent" id="S2.SS1.p1">
+<p class="ltx_p" id="S2.SS1.p1.1"><cite class="ltx_cite ltx_citemacro_citet">Wei<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib1" title="Chain-of-thought prompting elicits reasoning in large language models">2022</a>)</cite><span class="translated-text">证明思维链提示可以显着改善多步骤推理。</span><span class="original-text">demonstrated that chain-of-thought prompting substantially improves multi-step reasoning.</span><cite class="ltx_cite ltx_citemacro_citet">Snell<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib4" title="Scaling LLM test-time compute optimally can be more effective than scaling model parameters">2024</a>)</cite><span class="translated-text">表明测试时计算扩展在超过特定阈值时表现出收益递减。
+DeepSeek-R1 系列</span><span class="original-text">showed that test-time compute scaling exhibits diminishing returns beyond certain thresholds.
+The DeepSeek-R1 family</span><cite class="ltx_cite ltx_citemacro_citep">(DeepSeek-AI, <a class="ltx_ref" href="#bib.bib3" title="DeepSeek-R1: incentivizing reasoning capability in LLMs via reinforcement learning">2025</a>)</cite><span class="translated-text">产生长长的思维链，封闭在</span><span class="original-text">produces long thinking chains enclosed in</span><span class="ltx_text ltx_font_typewriter" id="S2.SS1.p1.1.1"><span class="translated-text">&lt;思考&gt;</span><span class="original-text">&lt;think&gt;</span><math alttext="\ldots" class="ltx_Math" display="inline" id="S2.SS1.p1.1.1.m1" intent=":literal"><semantics><mi mathvariant="normal">…</mi><annotation encoding="application/x-tex">\ldots</annotation></semantics></math><span class="translated-text"><!--认为--></span><span class="original-text">&lt;/think&gt;</span></span><span class="translated-text">分隔符。
+强制预算是由</span><span class="original-text">delimiters.
+Budget forcing was introduced by</span><cite class="ltx_cite ltx_citemacro_citet">Muennighoff<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib11" title="S1: simple test-time scaling">2025</a>)</cite><span class="translated-text">在s1框架中；我们的贡献是它在三个基准上的系统应用，以及扩展到代币级 Logits 处理器以进行细粒度的预算扫描。</span><span class="original-text">in the s1 framework; our contribution is its systematic application across three benchmarks and extension to a token-level logits processor for fine-grained budget sweeps.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.2 </span><span class="translated-text">推理故障模式</span><span class="original-text">Reasoning failure modes</span></h3>
+<div class="ltx_para ltx_noindent" id="S2.SS2.p1">
+<p class="ltx_p" id="S2.SS2.p1.1"><span class="translated-text">众所周知，DeepSeek-R1 蒸馏模型表现出非终止故障模式，其中模型进入重复循环并且从不发射</span><span class="original-text">DeepSeek-R1-distilled models are known to exhibit a non-termination failure mode where the model enters a repetitive loop and never emits</span><span class="ltx_text ltx_font_typewriter" id="S2.SS2.p1.1.1"><span class="translated-text"><!--认为--></span><span class="original-text">&lt;/think&gt;</span></span><span class="translated-text">，消耗全部代币预算</span><span class="original-text">, consuming the full token budget</span><cite class="ltx_cite ltx_citemacro_citep">(Pipis<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib12" title="Wait, wait, wait… why do reasoning models loop?">2025</a>)</cite>.
+<cite class="ltx_cite ltx_citemacro_citet">Pipis<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib12" title="Wait, wait, wait… why do reasoning models loop?">2025</a>)</cite><span class="translated-text">表明这是蒸馏特定的：学生模型比老师循环更多。
+我们的工作增加了这种失败的双峰结构的系统表征，并且独特地探讨了在行为可观察之前是否可以通过内部激活来预测它。</span><span class="original-text">show this is distillation-specific: student models loop substantially more than their teacher.
+Our work adds systematic characterization of the bimodal structure of this failure and, uniquely, probes whether it is predictable from internal activations before it becomes behaviorally observable.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S2.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">2.3 </span><span class="translated-text">探索和机械解释</span><span class="original-text">Probing and mechanistic interpretability</span></h3>
+<div class="ltx_para ltx_noindent" id="S2.SS3.p1">
+<p class="ltx_p" id="S2.SS3.p1.1"><span class="translated-text">内部表示的线性探测已成为理解神经网络在各个层编码的信息的标准工具</span><span class="original-text">Linear probing of internal representations has become a standard tool for understanding what information neural networks encode at various layers</span><cite class="ltx_cite ltx_citemacro_citep">(Belinkov, <a class="ltx_ref" href="#bib.bib13" title="Probing classifiers: promises, shortcomings, and advances">2022</a>)</cite><span class="translated-text">。
+在语言模型的背景下，探针已被用来检测事实知识</span><span class="original-text">.
+In the context of language models, probes have been used to detect factual knowledge</span><cite class="ltx_cite ltx_citemacro_citep">(Meng<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib17" title="Locating and editing factual associations in GPT">2022</a>)</cite><span class="translated-text">, 情绪</span><span class="original-text">, sentiment</span><cite class="ltx_cite ltx_citemacro_citep">(Burns<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib14" title="Discovering latent knowledge in language models without supervision">2023</a>)</cite><span class="translated-text">和真实性</span><span class="original-text">, and truthfulness</span><cite class="ltx_cite ltx_citemacro_citep">(Azaria and Mitchell, <a class="ltx_ref" href="#bib.bib16" title="The internal state of an LLM knows when it’s lying">2023</a>; Li<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib15" title="Inference-time intervention: eliciting truthful answers from a language model">2024</a>)</cite><span class="translated-text">。
+我们的应用程序——探测正在进行的一代的最终行为结果——与之前的工作不同，因为目标变量（收敛与不收敛）是完整生成轨迹的属性，而不是输入或当前令牌的属性。</span><span class="original-text">.
+Our application—probing for eventual behavioral outcomes of an ongoing generation—differs from prior work in that the target variable (convergence vs. non-convergence) is a property of the full generation trajectory, not of the input or the current token.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">预算强制研究</span><span class="original-text">Budget-forcing study</span></h2>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">实验装置</span><span class="original-text">Experimental setup</span></h3>
+<section class="ltx_subsubsection" id="S3.SS1.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.1.1 </span><span class="translated-text">模型和推理配置</span><span class="original-text">Model and inference configuration</span></h4>
+<div class="ltx_para ltx_noindent" id="S3.SS1.SSS1.p1">
+<p class="ltx_p" id="S3.SS1.SSS1.p1.1"><span class="translated-text">所有实验均使用在 NVIDIA RTX A5000 (24 GB VRAM) 上以 float16 精度加载的 DeepSeek-R1-Distill-Qwen-7B。
+生成使用贪婪解码（</span><span class="original-text">All experiments use DeepSeek-R1-Distill-Qwen-7B loaded in float16 precision on an NVIDIA RTX A5000 (24 GB VRAM).
+Generation uses greedy decoding (</span><span class="ltx_text ltx_font_typewriter" id="S3.SS1.SSS1.p1.1.1"><span class="translated-text">do_sample=假</span><span class="original-text">do_sample=False</span></span><span class="translated-text">）以最大限度地提高再现性。
+模特的聊天模板已附加</span><span class="original-text">) to maximize reproducibility.
+The model’s chat template appends</span><span class="ltx_text ltx_font_typewriter" id="S3.SS1.SSS1.p1.1.2"><span class="translated-text">&lt;思考&gt;</span><span class="original-text">&lt;think&gt;</span></span><span class="translated-text">\n 到提示符，从第一个生成的标记开始将模型置于思考模式。</span><span class="original-text">\n to the prompt, placing the model in thinking mode from the first generated token.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS1.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.1.2 </span><span class="translated-text">预算强制机制</span><span class="original-text">Budget-forcing mechanism</span></h4>
+<div class="ltx_para ltx_noindent" id="S3.SS1.SSS2.p1">
+<p class="ltx_p" id="S3.SS1.SSS2.p1.3"><span class="translated-text">我们实施自定义</span><span class="original-text">We implement a custom</span><span class="ltx_text ltx_font_typewriter" id="S3.SS1.SSS2.p1.3.2"><span class="translated-text">逻辑处理器</span><span class="original-text">LogitsProcessor</span></span><span class="translated-text">监控思考阶段令牌的生成流。
+处理器维护在内部生成的令牌的计数器</span><span class="original-text">that monitors the generation stream for thinking-phase tokens.
+The processor maintains a counter of tokens generated within the</span><span class="ltx_text ltx_font_typewriter" id="S3.SS1.SSS2.p1.1.1"><span class="translated-text">&lt;思考&gt;</span><span class="original-text">&lt;think&gt;</span><math alttext="\ldots" class="ltx_Math" display="inline" id="S3.SS1.SSS2.p1.1.1.m1" intent=":literal"><semantics><mi mathvariant="normal">…</mi><annotation encoding="application/x-tex">\ldots</annotation></semantics></math><span class="translated-text"><!--认为--></span><span class="original-text">&lt;/think&gt;</span></span><span class="translated-text">地区。
+当该计数器达到指定预算时</span><span class="original-text">region.
+When this counter reaches the specified budget</span><math alttext="B" class="ltx_Math" display="inline" id="S3.SS1.SSS2.p1.2.m1" intent=":literal"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math><span class="translated-text">，处理器强制发射</span><span class="original-text">, the processor forces emission of the</span><span class="ltx_text ltx_font_typewriter" id="S3.SS1.SSS2.p1.3.3"><span class="translated-text"><!--认为--></span><span class="original-text">&lt;/think&gt;</span></span><span class="translated-text">通过将所有其他 logits 设置为 token</span><span class="original-text">token by setting all other logits to</span><math alttext="-\infty" class="ltx_Math" display="inline" id="S3.SS1.SSS2.p1.3.m2" intent=":literal"><semantics><mrow><mo>−</mo><mi mathvariant="normal">∞</mi></mrow><annotation encoding="application/x-tex">-\infty</annotation></semantics></math><span class="translated-text">。
+一个关键的实现细节：处理器在思考模式下初始化（</span><span class="original-text">.
+A critical implementation detail: the processor initializes in thinking mode (</span><span class="ltx_text ltx_font_typewriter" id="S3.SS1.SSS2.p1.3.4"><span class="translated-text">自我思考=真实</span><span class="original-text">self.thinking = True</span></span><span class="translated-text">）因为聊天模板已经将思考阶段作为提示的一部分打开，而不是作为生成的输出。</span><span class="original-text">) because the chat template already opens the thinking phase as part of the prompt, not as generated output.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS1.SSS3">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.1.3 </span><span class="translated-text">基准和抽样</span><span class="original-text">Benchmarks and sampling</span></h4>
+<div class="ltx_para ltx_noindent" id="S3.SS1.SSS3.p1">
+<p class="ltx_p" id="S3.SS1.SSS3.p1.1"><span class="translated-text">我们根据难度不断增加的三个基准进行评估：</span><span class="original-text">We evaluate on three benchmarks of increasing difficulty:</span></p>
+<ul class="ltx_itemize" id="S3.I1">
+<li class="ltx_item" id="S3.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i1.p1">
+<p class="ltx_p" id="S3.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i1.p1.1.1">GSM8K</span> <cite class="ltx_cite ltx_citemacro_citep">(Cobbe<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib6" title="Training verifiers to solve math word problems">2021</a>)</cite><span class="translated-text">：从测试分组中抽取 200 个问题（种子 = 42）。小学算术。</span><span class="original-text">: 200 problems sampled from the test split (seed=42). Grade school arithmetic.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i2.p1">
+<p class="ltx_p" id="S3.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i2.p1.1.1"><span class="translated-text">数学500</span><span class="original-text">MATH-500</span></span> <cite class="ltx_cite ltx_citemacro_citep">(Hendrycks<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib7" title="Measuring mathematical problem solving with the MATH dataset">2021</a>)</cite><span class="translated-text">：从测试分组中抽取 200 个问题（种子 = 42）。竞赛级别的数学。</span><span class="original-text">: 200 problems sampled from the test split (seed=42). Competition-level mathematics.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S3.I1.i3.p1">
+<p class="ltx_p" id="S3.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S3.I1.i3.p1.1.1"><span class="translated-text">艾梅 1983–2024</span><span class="original-text">AIME 1983–2024</span></span> <cite class="ltx_cite ltx_citemacro_citep">(Neubig, <a class="ltx_ref" href="#bib.bib8" title="AIME 1983–2024 dataset">2024</a>)</cite><span class="translated-text">：从完整的 933 个问题数据集中抽取 200 个问题（种子 = 42）。美国数学邀请赛，奥林匹克级别。</span><span class="original-text">: 200 problems sampled from the full 933-problem dataset (seed=42). American Invitational Mathematics Examination, olympiad-level.</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS1.SSS3.p2">
+<p class="ltx_p" id="S3.SS1.SSS3.p2.1"><span class="translated-text">对于每个基准，我们都按预算运行发电</span><span class="original-text">For each benchmark, we run generation at budgets</span><math alttext="B\in\{256,512,1024,2048,4096\}" class="ltx_Math" display="inline" id="S3.SS1.SSS3.p2.1.m1" intent=":literal"><semantics><mrow><mi>B</mi><mo>∈</mo><mrow><mo stretchy="false">{</mo><mn>256</mn><mo>,</mo><mn>512</mn><mo>,</mo><mn>1024</mn><mo>,</mo><mn>2048</mn><mo>,</mo><mn>4096</mn><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">B\in\{256,512,1024,2048,4096\}</annotation></semantics></math><span class="translated-text">代币加上“无上限”条件。在所有情况下，代币总数的实际上限为 10,000 个；我们将未编入预算的条件称为无上限，但有此警告，请在第 1 节中重新讨论</span><span class="original-text">tokens plus an “uncapped” condition. In all conditions, a practical ceiling of 10,000 total tokens is imposed; we refer to the unbudgeted condition as uncapped with this caveat, revisited in Section</span><a class="ltx_ref" href="#S6" title="6 Limitations ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">。
+答案提取使用级联正则表达式模式：</span><span class="original-text">.
+Answer extraction uses cascading regex patterns:</span><span class="ltx_text ltx_font_typewriter" id="S3.SS1.SSS3.p2.1.1"><span class="translated-text">\盒装{}</span><span class="original-text">\boxed{}</span></span><span class="translated-text">首先，然后是“答案是”模式，然后是最终的数字标记</span><span class="original-text">first, then “the answer is” patterns, then the final numeric token after</span><span class="ltx_text ltx_font_typewriter" id="S3.SS1.SSS3.p2.1.2"><span class="translated-text"><!--认为--></span><span class="original-text">&lt;/think&gt;</span></span>.</p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS1.SSS4">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.1.4 </span><span class="translated-text">指标</span><span class="original-text">Metrics</span></h4>
+<div class="ltx_para ltx_noindent" id="S3.SS1.SSS4.p1">
+<p class="ltx_p" id="S3.SS1.SSS4.p1.3"><span class="translated-text">我们定义</span><span class="original-text">We define the</span><em class="ltx_emph ltx_font_italic" id="S3.SS1.SSS4.p1.3.1"><span class="translated-text">最低充足预算</span><span class="original-text">minimum sufficient budget</span></em> <math alttext="B^{*}" class="ltx_Math" display="inline" id="S3.SS1.SSS4.p1.1.m1" intent=":literal"><semantics><msup><mi>B</mi><mo>∗</mo></msup><annotation encoding="application/x-tex">B^{*}</annotation></semantics></math><span class="translated-text">作为模型实现的最小预算</span><span class="original-text">as the smallest budget at which the model achieves</span><math alttext="\geq" class="ltx_Math" display="inline" id="S3.SS1.SSS4.p1.2.m2" intent=":literal"><semantics><mo>≥</mo><annotation encoding="application/x-tex">\geq</annotation></semantics></math><span class="translated-text">95% 的无上限准确度，在所有较高的预算下都能维持。
+我们计算 95% 置信区间</span><span class="original-text">95% of its uncapped accuracy, sustained at all higher budgets.
+We compute 95% confidence intervals for</span><math alttext="B^{*}" class="ltx_Math" display="inline" id="S3.SS1.SSS4.p1.3.m3" intent=":literal"><semantics><msup><mi>B</mi><mo>∗</mo></msup><annotation encoding="application/x-tex">B^{*}</annotation></semantics></math><span class="translated-text">通过引导重采样（1,000 次迭代）。
+对于二元比例（准确度、收敛速度），我们报告威尔逊得分区间。</span><span class="original-text">via bootstrap resampling (1,000 iterations).
+For binary proportions (accuracy, convergence rate), we report Wilson score intervals.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span><span class="translated-text">结果</span><span class="original-text">Results</span></h3>
+<section class="ltx_subsubsection" id="S3.SS2.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.1 </span><span class="translated-text">GSM8K 和 MATH-500 的预算饱和</span><span class="original-text">Budget saturation on GSM8K and MATH-500</span></h4>
+<div class="ltx_para ltx_noindent" id="S3.SS2.SSS1.p1">
+<p class="ltx_p" id="S3.SS2.SSS1.p1.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S3.T1" title="Table 1 ‣ 3.2.1 Budget saturation on GSM8K and MATH-500 ‣ 3.2 Results ‣ 3 Budget-forcing study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">介绍了主要的预算强制结果。
+GSM8K 和 MATH-500 都达到了</span><span class="original-text">presents the main budget-forcing results.
+Both GSM8K and MATH-500 reach their</span><math alttext="B^{*}" class="ltx_Math" display="inline" id="S3.SS2.SSS1.p1.1.m1" intent=":literal"><semantics><msup><mi>B</mi><mo>∗</mo></msup><annotation encoding="application/x-tex">B^{*}</annotation></semantics></math><span class="translated-text">最小测试预算为 256 个代币。
+所有预算级别（包括无上限预算）的准确性基本上持平。</span><span class="original-text">at the smallest tested budget of 256 tokens.
+Accuracy is essentially flat across all budget levels, including uncapped.</span></p>
+</div>
+<figure class="ltx_table" id="S3.T1">
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T1.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S3.T1.1.1.2"><span class="ltx_text ltx_font_bold" id="S3.T1.1.1.2.1">Benchmark</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S3.T1.1.1.1"><math alttext="\mathbf{B^{*}}" class="ltx_Math" display="inline" id="S3.T1.1.1.1.m1" intent=":literal"><semantics><msup><mi>𝐁</mi><mo>∗</mo></msup><annotation encoding="application/x-tex">\mathbf{B^{*}}</annotation></semantics></math></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T1.1.1.3"><span class="ltx_text ltx_font_bold" id="S3.T1.1.1.3.1">95% CI</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T1.1.1.4"><span class="ltx_text ltx_font_bold" id="S3.T1.1.1.4.1">Uncapped Acc.</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T1.1.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S3.T1.1.2.1.1">GSM8K</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t" id="S3.T1.1.2.1.2">256</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.1.2.1.3">[256, 512]</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T1.1.2.1.4">0.740</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.1.3.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T1.1.3.2.1">MATH-500</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row" id="S3.T1.1.3.2.2">256</th>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.3.2.3">[256, 4096]</td>
+<td class="ltx_td ltx_align_center" id="S3.T1.1.3.2.4">0.625</td>
+</tr>
+<tr class="ltx_tr" id="S3.T1.1.4.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S3.T1.1.4.3.1">AIME</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_bb" id="S3.T1.1.4.3.2">—</th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T1.1.4.3.3">—</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T1.1.4.3.4">0.595</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 1: </span>Minimum sufficient budget (<math alttext="B^{*}" class="ltx_Math" display="inline" id="S3.T1.3.m1" intent=":literal"><semantics><msup><mi>B</mi><mo>∗</mo></msup><annotation encoding="application/x-tex">B^{*}</annotation></semantics></math>) and uncapped accuracy.</figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S3.SS2.SSS1.p2">
+<p class="ltx_p" id="S3.SS2.SSS1.p2.1"><span class="translated-text">这一结果挑战了推理模型受益于对常规数学任务的扩展思考的直觉。
+超过 256 个令牌所花费的边际计算在任一基准上都没有产生可测量的准确性改进，这表明模型的答案是在前 256 个令牌的思维范围内有效确定的。</span><span class="original-text">This result challenges the intuition that reasoning models benefit from extended thinking on routine mathematical tasks.
+The marginal compute spent beyond 256 tokens yields no measurable accuracy improvement on either benchmark, suggesting that the model’s answer is effectively determined within the first 256 tokens of thinking.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS2.SSS1.p3">
+<p class="ltx_p" id="S3.SS2.SSS1.p3.1"><span class="translated-text">AIME 不会产生有限的</span><span class="original-text">AIME does not yield a finite</span><math alttext="B^{*}" class="ltx_Math" display="inline" id="S3.SS2.SSS1.p3.1.m1" intent=":literal"><semantics><msup><mi>B</mi><mo>∗</mo></msup><annotation encoding="application/x-tex">B^{*}</annotation></semantics></math><span class="translated-text">因为准确性永远不会稳定——双峰收敛模式确保非收敛代总是拖累总体，无论预算如何。</span><span class="original-text">because accuracy never stabilizes—the bimodal convergence pattern ensures that non-converging generations always drag down the aggregate regardless of budget.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS2.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.2 </span><span class="translated-text">AIME 上的双峰收敛</span><span class="original-text">Bimodal convergence on AIME</span></h4>
+<div class="ltx_para ltx_noindent" id="S3.SS2.SSS2.p1">
+<p class="ltx_p" id="S3.SS2.SSS2.p1.1"><span class="translated-text">AIME 结果揭示了其他基准测试中不存在的惊人双峰模式。
+几代人完全分为两类：那些产生了</span><span class="original-text">The AIME results reveal a striking bimodal pattern not present in the other benchmarks.
+Generations split cleanly into two groups: those that produce a</span><span class="ltx_text ltx_font_typewriter" id="S3.SS2.SSS2.p1.1.1"><span class="translated-text"><!--认为--></span><span class="original-text">&lt;/think&gt;</span></span><span class="translated-text">令牌和终止（聚合），以及那些从不发出的</span><span class="original-text">token and terminate (converged), and those that never emit</span><span class="ltx_text ltx_font_typewriter" id="S3.SS2.SSS2.p1.1.2"><span class="translated-text"><!--认为--></span><span class="original-text">&lt;/think&gt;</span></span><span class="translated-text">10,000 个代币上限以内（未收敛）。
+表</span><span class="original-text">within the 10,000-token ceiling (non-converged).
+Table</span><a class="ltx_ref" href="#S3.T2" title="Table 2 ‣ 3.2.2 Bimodal convergence on AIME ‣ 3.2 Results ‣ 3 Budget-forcing study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">显示汇总统计数据。</span><span class="original-text">shows the aggregate statistics.</span></p>
+</div>
+<figure class="ltx_table" id="S3.T2">
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T2.2">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T2.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S3.T2.1.1.2"><span class="ltx_text ltx_font_bold" id="S3.T2.1.1.2.1">Group</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S3.T2.1.1.1"><math alttext="n" class="ltx_Math" display="inline" id="S3.T2.1.1.1.m1" intent=":literal"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T2.1.1.3"><span class="ltx_text ltx_font_bold" id="S3.T2.1.1.3.1">Share</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T2.1.1.4"><span class="ltx_text ltx_font_bold" id="S3.T2.1.1.4.1">Accuracy</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T2.1.1.5"><span class="ltx_text ltx_font_bold" id="S3.T2.1.1.5.1">Avg Tokens</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T2.2.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S3.T2.2.2.2">Converged</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_t" id="S3.T2.2.2.3">113</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.2.2.4">56.5%</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.2.2.5">96.5%</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T2.2.2.1">
+<math alttext="\sim" class="ltx_Math" display="inline" id="S3.T2.2.2.1.m1" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math>4,100</td>
+</tr>
+<tr class="ltx_tr" id="S3.T2.2.3.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S3.T2.2.3.1.1">Non-converged</th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_row ltx_border_bb" id="S3.T2.2.3.1.2">87</th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.2.3.1.3">43.5%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.2.3.1.4">11.5%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T2.2.3.1.5">10,000</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 2: </span>AIME convergence analysis (uncapped, <math alttext="n=200" class="ltx_Math" display="inline" id="S3.T2.4.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>200</mn></mrow><annotation encoding="application/x-tex">n=200</annotation></semantics></math>).</figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S3.SS2.SSS2.p2">
+<p class="ltx_p" id="S3.SS2.SSS2.p2.1"><span class="translated-text">两组之间的准确度差距巨大：收敛几乎等于正确性（96.5%），而不收敛几乎肯定会失败（11.5%）。
+非融合代消耗了全部代币预算，而对准确性几乎没有任何贡献。</span><span class="original-text">The accuracy gap between the two groups is enormous: convergence is nearly synonymous with correctness (96.5%), while non-convergence nearly guarantees failure (11.5%).
+Non-converged generations consume the full token budget while contributing almost nothing to accuracy.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS2.SSS3">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.3 </span><span class="translated-text">收敛不能用难度来解释</span><span class="original-text">Convergence is not explained by difficulty</span></h4>
+<div class="ltx_para ltx_noindent" id="S3.SS2.SSS3.p1">
+<p class="ltx_p" id="S3.SS2.SSS3.p1.3"><span class="translated-text">一个自然的假设是，不收敛仅仅反映了问题的难度——模型陷入了难题。
+收敛状态和问题数产量之间的点双列相关性</span><span class="original-text">A natural hypothesis is that non-convergence simply reflects problem difficulty—the model gets stuck on hard problems.
+Point-biserial correlation between convergence status and problem number yields</span><math alttext="r=0.431" class="ltx_Math" display="inline" id="S3.SS2.SSS3.p1.1.m1" intent=":literal"><semantics><mrow><mi>r</mi><mo>=</mo><mn>0.431</mn></mrow><annotation encoding="application/x-tex">r=0.431</annotation></semantics></math> (<math alttext="p&lt;0.0001" class="ltx_Math" display="inline" id="S3.SS2.SSS3.p1.2.m2" intent=":literal"><semantics><mrow><mi>p</mi><mo>&lt;</mo><mn>0.0001</mn></mrow><annotation encoding="application/x-tex">p&lt;0.0001</annotation></semantics></math><span class="translated-text">），确认了适度的关系，但是</span><span class="original-text">), confirming a moderate relationship, but</span><math alttext="r^{2}\approx 0.186" class="ltx_Math" display="inline" id="S3.SS2.SSS3.p1.3.m3" intent=":literal"><semantics><mrow><msup><mi>r</mi><mn>2</mn></msup><mo>≈</mo><mn>0.186</mn></mrow><annotation encoding="application/x-tex">r^{2}\approx 0.186</annotation></semantics></math><span class="translated-text">意味着问题顺序解释了不到 19% 的收敛方差。</span><span class="original-text">means that problem order explains less than 19% of convergence variance.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS2.SSS3.p2">
+<p class="ltx_p" id="S3.SS2.SSS3.p2.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S3.T3" title="Table 3 ‣ 3.2.3 Convergence is not explained by difficulty ‣ 3.2 Results ‣ 3 Budget-forcing study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">按难度三分位数细分精度，表明即使在每个三分位数内，收敛精度差距仍然存在。</span><span class="original-text">breaks down accuracy by difficulty tercile, showing that the convergence–accuracy gap persists even within each tercile.</span></p>
+</div>
+<figure class="ltx_table" id="S3.T3">
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S3.T3.2">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S3.T3.2.3.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S3.T3.2.3.1.1"><span class="ltx_text ltx_font_bold" id="S3.T3.2.3.1.1.1">Difficulty Tercile</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.2.3.1.2"><span class="ltx_text ltx_font_bold" id="S3.T3.2.3.1.2.1">Converged Acc.</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S3.T3.2.3.1.3"><span class="ltx_text ltx_font_bold" id="S3.T3.2.3.1.3.1">Non-conv. Acc.</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S3.T3.2.4.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S3.T3.2.4.1.1">Easy (Problems 1–5)</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.2.4.1.2">95.5%</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S3.T3.2.4.1.3">18.2%</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.2.5.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S3.T3.2.5.2.1">Medium (Problems 6–10)</th>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.5.2.2">95.1%</td>
+<td class="ltx_td ltx_align_center" id="S3.T3.2.5.2.3">11.1%</td>
+</tr>
+<tr class="ltx_tr" id="S3.T3.2.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S3.T3.2.2.3">Hard (Problems 11–15)</th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.1.1.1">100% (<math alttext="n=18" class="ltx_Math" display="inline" id="S3.T3.1.1.1.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>18</mn></mrow><annotation encoding="application/x-tex">n=18</annotation></semantics></math>)</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S3.T3.2.2.2">0% (<math alttext="n=41" class="ltx_Math" display="inline" id="S3.T3.2.2.2.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>41</mn></mrow><annotation encoding="application/x-tex">n=41</annotation></semantics></math>)</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 3: </span>Accuracy by convergence status and difficulty tercile.</figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S3.SS2.SSS3.p3">
+<p class="ltx_p" id="S3.SS2.SSS3.p3.1"><span class="translated-text">硬三分线尤其引人注目：在一个难题上，每个融合的一代都是正确的，而非融合的一代则一无所获。
+这表明收敛性和正确性在困难问题上几乎是同时存在的。</span><span class="original-text">The hard tercile is particularly striking: every converged generation on a hard problem is correct, while non-converged generations achieve nothing.
+This suggests convergence and correctness are nearly co-extensive on difficult problems.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS2.SSS4">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.4 </span><span class="translated-text">实际意义</span><span class="original-text">Practical implications</span></h4>
+<div class="ltx_para ltx_noindent" id="S3.SS2.SSS4.p1">
+<p class="ltx_p" id="S3.SS2.SSS4.p1.1"><span class="translated-text">非融合代每消耗大约 10,000 个代币，同时贡献几乎为零的正确性信号。
+如果预言机能够在一代开始时识别非收敛代并中止它们，则可以节省大约 43.5% 的 AIME 推理计算量。
+早期检测研究（第</span><span class="original-text">Non-converged generations consume approximately 10,000 tokens each while contributing almost zero correctness signal.
+If an oracle could identify non-converging generations at generation start and abort them, approximately 43.5% of AIME inference compute could be saved.
+The early-detection study (Section</span><a class="ltx_ref" href="#S4" title="4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">）研究了基于探针的系统如何接近这个预言。</span><span class="original-text">) investigates how closely a probe-based system can approximate this oracle.</span></p>
+</div>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">早期检测研究</span><span class="original-text">Early detection study</span></h2>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span><span class="translated-text">实验装置</span><span class="original-text">Experimental setup</span></h3>
+<section class="ltx_subsubsection" id="S4.SS1.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.1.1 </span><span class="translated-text">仪表化一代</span><span class="original-text">Instrumented generation</span></h4>
+<div class="ltx_para ltx_noindent" id="S4.SS1.SSS1.p1">
+<p class="ltx_p" id="S4.SS1.SSS1.p1.1"><span class="translated-text">我们使用相同的配置重新生成所有 200 个 AIME 问题（贪婪解码，种子 = 42，10,000 个令牌上限），添加两个前向钩子：</span><span class="original-text">We regenerate all 200 AIME problems with the same configuration (greedy decoding, seed=42, 10,000-token ceiling), adding two forward hooks:</span></p>
+<ul class="ltx_itemize" id="S4.I1">
+<li class="ltx_item" id="S4.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i1.p1">
+<p class="ltx_p" id="S4.I1.i1.p1.1">A <span class="ltx_text ltx_font_bold" id="S4.I1.i1.p1.1.1"><span class="translated-text">隐藏状态钩子</span><span class="original-text">hidden-state hook</span></span><span class="translated-text">在标记位置 150 处的所有 28 层上，捕获模型整个深度的激活向量。</span><span class="original-text">on all 28 layers at token position 150, capturing activation vectors across the full depth of the model.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I1.i2.p1">
+<p class="ltx_p" id="S4.I1.i2.p1.1">A <span class="ltx_text ltx_font_bold" id="S4.I1.i2.p1.1.1"><span class="translated-text">逻辑钩子</span><span class="original-text">logit hook</span></span><span class="translated-text">于</span><span class="original-text">on the</span><span class="ltx_text ltx_font_typewriter" id="S4.I1.i2.p1.1.2"><span class="translated-text">流媒体头</span><span class="original-text">lm_head</span></span><span class="translated-text">层，在九个检查点位置（50、75、100、125、150、175、200、250、300 个令牌）动态计算令牌级熵。</span><span class="original-text">layer, computing token-level entropy on the fly at each of nine checkpoint positions (50, 75, 100, 125, 150, 175, 200, 250, 300 tokens).</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS1.SSS1.p2">
+<p class="ltx_p" id="S4.SS1.SSS1.p2.1"><span class="translated-text">一个关键的实施问题是预填充和自回归步骤之间的区别</span><span class="original-text">A critical implementation concern is the distinction between prefill and autoregressive steps in</span><span class="ltx_text ltx_font_typewriter" id="S4.SS1.SSS1.p2.1.1"><span class="translated-text">变形金刚</span><span class="original-text">transformers</span></span><span class="translated-text">：钩子会在每次向前传递时触发，包括完整的提示预填充。
+我们跟踪生成步骤计数，以确保钩子仅捕获指定位置的自回归步骤，而不是预填充激活。</span><span class="original-text">: the hook fires for every forward pass, including the full prompt prefill.
+We track the generation step count to ensure hooks capture only the autoregressive steps at the specified positions, not prefill activations.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS1.SSS1.p3">
+<p class="ltx_p" id="S4.SS1.SSS1.p3.1"><span class="translated-text">每个样本的收敛标签和激活都是从</span><span class="original-text">Each sample’s convergence label and activation are captured from the</span><span class="ltx_text ltx_font_bold" id="S4.SS1.SSS1.p3.1.1"><span class="translated-text">一样</span><span class="original-text">same</span></span><span class="translated-text">一代运行。</span><span class="original-text">generation run.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S4.SS1.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.1.2 </span><span class="translated-text">新运行验证</span><span class="original-text">Fresh run validation</span></h4>
+<div class="ltx_para ltx_noindent" id="S4.SS1.SSS2.p1">
+<p class="ltx_p" id="S4.SS1.SSS2.p1.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#S4.T4" title="Table 4 ‣ 4.1.2 Fresh run validation ‣ 4.1 Experimental setup ‣ 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">将新的仪器运行与原始预算强制结果进行比较，以验证一致性。</span><span class="original-text">compares the fresh instrumented run against the original budget-forcing results to verify consistency.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T4">
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T4.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T4.1.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T4.1.2.1.1"><span class="ltx_text ltx_font_bold" id="S4.T4.1.2.1.1.1">Metric</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T4.1.2.1.2"><span class="ltx_text ltx_font_bold" id="S4.T4.1.2.1.2.1">Fresh Run</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T4.1.2.1.3"><span class="ltx_text ltx_font_bold" id="S4.T4.1.2.1.3.1">Original</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T4.1.3.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T4.1.3.1.1">Convergence rate</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.1.3.1.2">62.0%</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T4.1.3.1.3">56.5%</td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.1.4.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T4.1.4.2.1">Converged accuracy</th>
+<td class="ltx_td ltx_align_center" id="S4.T4.1.4.2.2">90.3%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.1.4.2.3">96.5%</td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.1.5.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T4.1.5.3.1">Non-conv. accuracy</th>
+<td class="ltx_td ltx_align_center" id="S4.T4.1.5.3.2">6.6%</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.1.5.3.3">11.5%</td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T4.1.1.2">Avg tokens (conv.)</th>
+<td class="ltx_td ltx_align_center" id="S4.T4.1.1.3">4,889</td>
+<td class="ltx_td ltx_align_center" id="S4.T4.1.1.1">
+<math alttext="\sim" class="ltx_Math" display="inline" id="S4.T4.1.1.1.m1" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math>4,100</td>
+</tr>
+<tr class="ltx_tr" id="S4.T4.1.6.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S4.T4.1.6.4.1">Avg tokens (non-conv.)</th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T4.1.6.4.2">10,000</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T4.1.6.4.3">10,000</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 4: </span>Sanity check: fresh instrumented run vs. original budget-forcing run.</figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S4.SS1.SSS2.p2">
+<p class="ltx_p" id="S4.SS1.SSS2.p2.1"><span class="translated-text">保留了定性模式：强双峰分裂、高收敛精度、接近零的不收敛精度。
+较小的定量差异（62.0% 与 56.5% 收敛率）在预期的抽样变异范围内</span><span class="original-text">The qualitative pattern is preserved: strong bimodal split, high convergence accuracy, near-zero non-convergence accuracy.
+The minor quantitative differences (62.0% vs. 56.5% convergence rate) are within expected sampling variability for</span><math alttext="n=200" class="ltx_Math" display="inline" id="S4.SS1.SSS2.p2.1.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>200</mn></mrow><annotation encoding="application/x-tex">n=200</annotation></semantics></math>.</p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S4.SS1.SSS3">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.1.3 </span><span class="translated-text">探头设计</span><span class="original-text">Probe design</span></h4>
+<section class="ltx_paragraph" id="S4.SS1.SSS3.Px1">
+<h5 class="ltx_title ltx_title_paragraph"><span class="translated-text">激活探针。</span><span class="original-text">Activation probe.</span></h5>
+<div class="ltx_para ltx_noindent" id="S4.SS1.SSS3.Px1.p1">
+<p class="ltx_p" id="S4.SS1.SSS3.Px1.p1.1"><span class="translated-text">逻辑回归分类器（</span><span class="original-text">A logistic regression classifier (</span><math alttext="C=1.0" class="ltx_Math" display="inline" id="S4.SS1.SSS3.Px1.p1.1.m1" intent=":literal"><semantics><mrow><mi>C</mi><mo>=</mo><mn>1.0</mn></mrow><annotation encoding="application/x-tex">C=1.0</annotation></semantics></math><span class="translated-text">，L-BFGS 求解器，最大 2,000 次迭代）在给定层和检查点位置的隐藏状态激活向量上进行训练。
+输入维度等于模型的隐藏大小（DeepSeek-R1-Distill-Qwen-7B 为 3,584）。</span><span class="original-text">, L-BFGS solver, 2,000 max iterations) trained on the hidden-state activation vector at a given layer and checkpoint position.
+The input dimensionality equals the model’s hidden size (3,584 for DeepSeek-R1-Distill-Qwen-7B).</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS1.SSS3.Px2">
+<h5 class="ltx_title ltx_title_paragraph"><span class="translated-text">行为基线。</span><span class="original-text">Behavioral baseline.</span></h5>
+<div class="ltx_para ltx_noindent" id="S4.SS1.SSS3.Px2.p1">
+<p class="ltx_p" id="S4.SS1.SSS3.Px2.p1.1"><span class="translated-text">具有相同超参数的逻辑回归分类器，在无需模型内部即可观察到的七个表面级特征上进行训练：</span><span class="original-text">A logistic regression classifier with identical hyperparameters, trained on seven surface-level features observable without model internals:</span></p>
+<ul class="ltx_itemize" id="S4.I2">
+<li class="ltx_item" id="S4.I2.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i1.p1">
+<p class="ltx_p" id="S4.I2.i1.p1.1"><span class="translated-text">熵统计：平均值、最大值、标准差和线性趋势（生成令牌的熵斜率）。</span><span class="original-text">Entropy statistics: mean, maximum, standard deviation, and linear trend (slope of entropy over generated tokens).</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I2.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i2.p1">
+<p class="ltx_p" id="S4.I2.i2.p1.1"><span class="translated-text">N-gram 重复率：生成的 token 序列中重复的二元组和三元组的分数。</span><span class="original-text">N-gram repetition rates: fraction of repeated bigrams and trigrams in the generated token sequence.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S4.I2.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S4.I2.i3.p1">
+<p class="ltx_p" id="S4.I2.i3.p1.1"><span class="translated-text">检查点的原始令牌计数。</span><span class="original-text">Raw token count at the checkpoint.</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS1.SSS3.Px2.p2">
+<p class="ltx_p" id="S4.SS1.SSS3.Px2.p2.1"><span class="translated-text">这些功能捕获可用于监控模型输出流的系统的信息，而无需访问内部状态。</span><span class="original-text">These features capture the information available to a system monitoring the model’s output stream without access to internal states.</span></p>
+</div>
+</section>
+<section class="ltx_paragraph" id="S4.SS1.SSS3.Px3">
+<h5 class="ltx_title ltx_title_paragraph"><span class="translated-text">组合探头。</span><span class="original-text">Combined probe.</span></h5>
+<div class="ltx_para ltx_noindent" id="S4.SS1.SSS3.Px3.p1">
+<p class="ltx_p" id="S4.SS1.SSS3.Px3.p1.1"><span class="translated-text">根据激活向量和七个行为特征的串联进行训练的逻辑回归分类器。</span><span class="original-text">A logistic regression classifier trained on the concatenation of the activation vector and the seven behavioral features.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsubsection" id="S4.SS1.SSS4">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.1.4 </span><span class="translated-text">评估方案</span><span class="original-text">Evaluation protocol</span></h4>
+<div class="ltx_para ltx_noindent" id="S4.SS1.SSS4.p1">
+<p class="ltx_p" id="S4.SS1.SSS4.p1.5"><span class="translated-text">鉴于样本量适中（</span><span class="original-text">Given the modest sample size (</span><math alttext="n=200" class="ltx_Math" display="inline" id="S4.SS1.SSS4.p1.1.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>200</mn></mrow><annotation encoding="application/x-tex">n=200</annotation></semantics></math><span class="translated-text">，大约有 124 个收敛样本和 76 个非收敛样本），我们使用 5 倍分层交叉验证，以 AUC-ROC 作为主要指标。
+我们应用修正</span><span class="original-text">, with approximately 124 converged and 76 non-converged samples), we use 5-fold stratified cross-validation with AUC-ROC as the primary metric.
+We apply the correction</span><math alttext="\max(\text{AUC},1-\text{AUC})" class="ltx_Math" display="inline" id="S4.SS1.SSS4.p1.2.m2" intent=":literal"><semantics><mrow><mi>max</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mtext>AUC</mtext><mo>,</mo><mrow><mn>1</mn><mo>−</mo><mtext>AUC</mtext></mrow><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\max(\text{AUC},1-\text{AUC})</annotation></semantics></math><span class="translated-text">解释线性探针中标签翻转的模糊性。
+每个检查点的显着性通过配对排列测试进行评估（</span><span class="original-text">to account for label-flip ambiguity in linear probes.
+Per-checkpoint significance is assessed via a paired permutation test (</span><math alttext="B=10{,}000" class="ltx_Math" display="inline" id="S4.SS1.SSS4.p1.3.m3" intent=":literal"><semantics><mrow><mi>B</mi><mo>=</mo><mrow><mn>10</mn><mo>,</mo><mn>000</mn></mrow></mrow><annotation encoding="application/x-tex">B=10{,}000</annotation></semantics></math><span class="translated-text">排列）对倍数水平 AUC 差异的影响。由于这 9 个检查点不是独立的（它们源自相同的 200 代），因此我们还运行了扫描级排列测试，在所有检查点上以相同的方式翻转激活和行为标签，计算平均值</span><span class="original-text">permutations) on fold-level AUC differences. Because the nine checkpoints are not independent (they derive from the same 200 generations), we additionally run a sweep-level permutation test that flips activation and behavioral labels identically across all checkpoints, computing the mean</span><math alttext="\Delta" class="ltx_Math" display="inline" id="S4.SS1.SSS4.p1.4.m4" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math><span class="translated-text">下 AUC</span><span class="original-text">AUC under</span><math alttext="B=100{,}000" class="ltx_Math" display="inline" id="S4.SS1.SSS4.p1.5.m5" intent=":literal"><semantics><mrow><mi>B</mi><mo>=</mo><mrow><mn>100</mn><mo>,</mo><mn>000</mn></mrow></mrow><annotation encoding="application/x-tex">B=100{,}000</annotation></semantics></math><span class="translated-text">排列。</span><span class="original-text">permutations.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span><span class="translated-text">结果</span><span class="original-text">Results</span></h3>
+<section class="ltx_subsubsection" id="S4.SS2.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.2.1 </span><span class="translated-text">检查点位置扫描</span><span class="original-text">Checkpoint position sweep</span></h4>
+<div class="ltx_para ltx_noindent" id="S4.SS2.SSS1.p1">
+<p class="ltx_p" id="S4.SS2.SSS1.p1.1"><span class="translated-text">图</span><span class="original-text">Figure</span><a class="ltx_ref" href="#S4.F1" title="Figure 1 ‣ 4.2.1 Checkpoint position sweep ‣ 4.2 Results ‣ 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">显示了跨 9 个检查点位置（50-300 个令牌）的探测 AUC，在单个检测生成运行中捕获，并始终挂钩第 16 层。在运行层扫描之前，选择第 16 层作为中间深度默认值；层扫描随后将第 20 层识别为最强的信号载波（第 20 节）</span><span class="original-text">shows probe AUC across nine checkpoint positions (50–300 tokens), captured in a single instrumented generation run with layer 16 hooked throughout. Layer 16 was chosen as a mid-depth default before the layer sweep was run; the layer sweep subsequently identified layer 20 as the strongest signal carrier (Section</span><a class="ltx_ref" href="#S4.SS2.SSS4" title="4.2.4 Layer sweep results ‣ 4.2 Results ‣ 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">4.2.4</span></a><span class="translated-text">），因此检查点扫描可能会略微低估可实现的峰值 AUC。</span><span class="original-text">), so the checkpoint sweep likely underestimates the peak achievable AUC by a small margin.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="409" id="S4.F1.g1" src="https://arxiv.org/html/2607.21433v1/x1.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Activation probe, behavioral baseline, and combined probe AUC vs. checkpoint position (5-fold CV, layer 16, <math alttext="n=200" class="ltx_Math" display="inline" id="S4.F1.3.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>200</mn></mrow><annotation encoding="application/x-tex">n=200</annotation></semantics></math>). Error bars show <math alttext="\pm" class="ltx_Math" display="inline" id="S4.F1.4.m2" intent=":literal"><semantics><mo>±</mo><annotation encoding="application/x-tex">\pm</annotation></semantics></math>1 standard deviation across folds. The activation probe (blue) consistently leads the behavioral baseline (orange) across all positions; the combined probe (green) tracks the activation probe closely, indicating that behavioral features add little once activations are included.</figcaption>
+</figure>
+</section>
+<section class="ltx_subsubsection" id="S4.SS2.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.2.2 </span><span class="translated-text">跨检查点一致的方向优势</span><span class="original-text">Consistent directional advantage across checkpoints</span></h4>
+<div class="ltx_para ltx_noindent" id="S4.SS2.SSS2.p1">
+<p class="ltx_p" id="S4.SS2.SSS2.p1.7"><span class="translated-text">在所有 9 个检查点位置中，激活探针在 9 个位置中的 8 个位置上优于行为基线（除了 175 个标记外，它们基本上都与</span><span class="original-text">Across all nine checkpoint positions, activation probes outperform behavioral baselines at 8 of 9 positions (all except 175 tokens, where they are essentially tied at</span><math alttext="\Delta" class="ltx_Math" display="inline" id="S4.SS2.SSS2.p1.1.m1" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math><span class="translated-text">曲线下面积</span><span class="original-text">AUC</span><math alttext="=-0.001" class="ltx_Math" display="inline" id="S4.SS2.SSS2.p1.2.m2" intent=":literal"><semantics><mrow><mi></mi><mo>=</mo><mrow><mo>−</mo><mn>0.001</mn></mrow></mrow><annotation encoding="application/x-tex">=-0.001</annotation></semantics></math><span class="translated-text">）。
+所有位置的平均优势为</span><span class="original-text">).
+The mean advantage across all positions is</span><math alttext="\Delta" class="ltx_Math" display="inline" id="S4.SS2.SSS2.p1.3.m3" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math><span class="translated-text">曲线下面积</span><span class="original-text">AUC</span><math alttext="=+0.035" class="ltx_Math" display="inline" id="S4.SS2.SSS2.p1.4.m4" intent=":literal"><semantics><mrow><mi></mi><mo>=</mo><mrow><mo>+</mo><mn>0.035</mn></mrow></mrow><annotation encoding="application/x-tex">=+0.035</annotation></semantics></math><span class="translated-text">。
+最强的早期优势是 50 个代币（激活 AUC</span><span class="original-text">.
+The strongest early advantage is at 50 tokens (activation AUC</span><math alttext="=0.615\pm 0.066" class="ltx_Math" display="inline" id="S4.SS2.SSS2.p1.5.m5" intent=":literal"><semantics><mrow><mi></mi><mo>=</mo><mrow><mn>0.615</mn><mo>±</mo><mn>0.066</mn></mrow></mrow><annotation encoding="application/x-tex">=0.615\pm 0.066</annotation></semantics></math><span class="translated-text">与行为</span><span class="original-text">vs. behavioral</span><math alttext="0.541\pm 0.044" class="ltx_Math" display="inline" id="S4.SS2.SSS2.p1.6.m6" intent=":literal"><semantics><mrow><mn>0.541</mn><mo>±</mo><mn>0.044</mn></mrow><annotation encoding="application/x-tex">0.541\pm 0.044</annotation></semantics></math>, <math alttext="\Delta=+0.074" class="ltx_Math" display="inline" id="S4.SS2.SSS2.p1.7.m7" intent=":literal"><semantics><mrow><mi mathvariant="normal">Δ</mi><mo>=</mo><mrow><mo>+</mo><mn>0.074</mn></mrow></mrow><annotation encoding="application/x-tex">\Delta=+0.074</annotation></semantics></math>).</p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS2.SSS2.p2">
+<p class="ltx_p" id="S4.SS2.SSS2.p2.1"><span class="translated-text">首先，每个位置的行为基线都很弱，在整个扫描过程中徘徊在机会附近（AUC 0.533-0.595），其最低值出现在 50-100 个代币窗口中。
+在这个早期阶段，表面级统计数据几乎没有关于最终收敛的信息：令牌 50 处的 Logit 熵反映了模型对下一个令牌的不确定性，而不是整体推理轨迹是否会终止，并且重复尚未积累到足以具有区分性。</span><span class="original-text">First, the behavioral baseline is weak at every position, hovering near chance throughout the sweep (AUC 0.533–0.595), with its lowest values in the 50–100 token window.
+At this early stage, surface-level statistics carry little information about eventual convergence: logit entropy at token 50 reflects the model’s uncertainty about the next token, not about whether the overall reasoning trajectory will terminate, and repetition has not yet accumulated enough to be discriminative.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS2.SSS2.p3">
+<p class="ltx_p" id="S4.SS2.SSS2.p3.4"><span class="translated-text">其次，激活探针的性能在各个检查点（AUC 0.561-0.615）和折叠中是一致的，其相对于行为基线的最大优势正是在基线最弱的地方（</span><span class="original-text">Second, activation probe performance is consistent across checkpoints (AUC 0.561–0.615) and folds, with its largest advantage over the behavioral baseline precisely where the baseline is weakest (</span><math alttext="\Delta=+0.074" class="ltx_Math" display="inline" id="S4.SS2.SSS2.p3.1.m1" intent=":literal"><semantics><mrow><mi mathvariant="normal">Δ</mi><mo>=</mo><mrow><mo>+</mo><mn>0.074</mn></mrow></mrow><annotation encoding="application/x-tex">\Delta=+0.074</annotation></semantics></math><span class="translated-text">50 个代币，</span><span class="original-text">at 50 tokens,</span><math alttext="\Delta=+0.059" class="ltx_Math" display="inline" id="S4.SS2.SSS2.p3.2.m2" intent=":literal"><semantics><mrow><mi mathvariant="normal">Δ</mi><mo>=</mo><mrow><mo>+</mo><mn>0.059</mn></mrow></mrow><annotation encoding="application/x-tex">\Delta=+0.059</annotation></semantics></math><span class="translated-text">100 个代币）。
+均值的配对排列检验</span><span class="original-text">at 100 tokens).
+A paired permutation test on the mean</span><math alttext="\Delta" class="ltx_Math" display="inline" id="S4.SS2.SSS2.p3.3.m3" intent=":literal"><semantics><mi mathvariant="normal">Δ</mi><annotation encoding="application/x-tex">\Delta</annotation></semantics></math><span class="translated-text">所有 9 个检查点的 AUC 旨在保持检查点之间的依赖性（每个位置都有相同的 200 代），得出</span><span class="original-text">AUC across all nine checkpoints, constructed to preserve the dependence between checkpoints (the same 200 generations underlie every position), yields</span><math alttext="p=0.063" class="ltx_Math" display="inline" id="S4.SS2.SSS2.p3.4.m4" intent=":literal"><semantics><mrow><mi>p</mi><mo>=</mo><mn>0.063</mn></mrow><annotation encoding="application/x-tex">p=0.063</annotation></semantics></math><span class="translated-text">，与此样本量无法在传统阈值下确认的适度信号一致。</span><span class="original-text">, consistent with a modest signal that this sample size cannot confirm at conventional thresholds.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS2.SSS2.p4">
+<p class="ltx_p" id="S4.SS2.SSS2.p4.1"><span class="translated-text">虽然考虑到我们的样本量，没有哪个单独的检查点达到统计显着性，但扫描级别排列测试（</span><span class="original-text">While no individual checkpoint reaches statistical significance given our sample size, the sweep-level permutation test (</span><math alttext="p=0.063" class="ltx_Math" display="inline" id="S4.SS2.SSS2.p4.1.m1" intent=":literal"><semantics><mrow><mi>p</mi><mo>=</mo><mn>0.063</mn></mrow><annotation encoding="application/x-tex">p=0.063</annotation></semantics></math><span class="translated-text">）和一致的方向性（9 个位置中的 8 个为正）共同构成了激活空间中真实（如果适度）信号的证据。</span><span class="original-text">) and the consistent directionality (8 of 9 positions positive) together constitute evidence for a real, if modest, signal in the activation space.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S4.SS2.SSS3">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.2.3 </span><span class="translated-text">跨检查点的信号动态</span><span class="original-text">Signal dynamics across checkpoints</span></h4>
+<div class="ltx_para ltx_noindent" id="S4.SS2.SSS3.p1">
+<p class="ltx_p" id="S4.SS2.SSS3.p1.1"><span class="translated-text">扫描并没有揭示任一探针的单调趋势：行为基线在整个 50-300 个令牌范围内 (AUC 0.533-0.595) 仍然较弱，并且激活探针的 AUC 在窄带 (0.561-0.615) 内波动，而不是随着附加上下文而增长。
+实际意义有利于提前退出：由于激活信号已经达到 50 个令牌的全部强度（行为基线最接近机会的位置），因此等待不会获得任何好处。
+在行为失败变得明确之前（不排放</span><span class="original-text">The sweep does not reveal a monotone trend in either probe: the behavioral baseline remains weak across the full 50–300 token range (AUC 0.533–0.595), and the activation probe’s AUC fluctuates within a narrow band (0.561–0.615) rather than growing with additional context.
+The practical implication is favorable for early exit: since the activation signal is already at full strength by 50 tokens—the position where the behavioral baseline is closest to chance—nothing is gained by waiting.
+A probe deployed at 50 tokens could in principle flag non-converging generations roughly 4,000–9,000 tokens before behavioral failure becomes unambiguous (non-emission of</span><span class="ltx_text ltx_font_typewriter" id="S4.SS2.SSS3.p1.1.1"><span class="translated-text"><!--认为--></span><span class="original-text">&lt;/think&gt;</span></span><span class="translated-text">接近上限），代表最大可能的计算节省，受到第 5 节中讨论的歧视限制的约束</span><span class="original-text">near the ceiling), representing the maximum possible compute saving, subject to the discrimination limits discussed in Section</span><a class="ltx_ref" href="#S6" title="6 Limitations ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">6</span></a>.</p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S4.SS2.SSS4">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.2.4 </span><span class="translated-text">层扫描结果</span><span class="original-text">Layer sweep results</span></h4>
+<figure class="ltx_figure" id="S4.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="409" id="S4.F2.g1" src="https://arxiv.org/html/2607.21433v1/x2.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Probe AUC across all 28 layers at token 150 (5-fold CV). The signal peaks at layer 20 (AUC <math alttext="0.608\pm 0.080" class="ltx_Math" display="inline" id="S4.F2.4.m1" intent=":literal"><semantics><mrow><mn>0.608</mn><mo>±</mo><mn>0.080</mn></mrow><annotation encoding="application/x-tex">0.608\pm 0.080</annotation></semantics></math>) and drops toward chance in early (<math alttext="\leq" class="ltx_Math" display="inline" id="S4.F2.5.m2" intent=":literal"><semantics><mo>≤</mo><annotation encoding="application/x-tex">\leq</annotation></semantics></math>3) and final (<math alttext="\geq" class="ltx_Math" display="inline" id="S4.F2.6.m3" intent=":literal"><semantics><mo>≥</mo><annotation encoding="application/x-tex">\geq</annotation></semantics></math>25) layers, indicating that convergence information concentrates in upper-middle representational layers.</figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S4.SS2.SSS4.p1">
+<p class="ltx_p" id="S4.SS2.SSS4.p1.4"><span class="translated-text">为了确定哪一层承载最强的收敛信号，我们在令牌 150 处独立探测所有 28 层（图</span><span class="original-text">To identify which layer carries the strongest convergence signal, we probe all 28 layers at token 150 independently (Figure</span><a class="ltx_ref" href="#S4.F2" title="Figure 2 ‣ 4.2.4 Layer sweep results ‣ 4.2 Results ‣ 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">）。
+AUC 从早期层中的近似概率上升（第 0 层：AUC</span><span class="original-text">).
+The AUC rises from near-chance in early layers (layer 0: AUC</span><math alttext="0.536" class="ltx_Math" display="inline" id="S4.SS2.SSS4.p1.1.m1" intent=":literal"><semantics><mn>0.536</mn><annotation encoding="application/x-tex">0.536</annotation></semantics></math><span class="translated-text">），中上层的峰值（第 20 层：AUC</span><span class="original-text">), peaks in the upper-middle layers (layer 20: AUC</span><math alttext="0.608\pm 0.080" class="ltx_Math" display="inline" id="S4.SS2.SSS4.p1.2.m2" intent=":literal"><semantics><mrow><mn>0.608</mn><mo>±</mo><mn>0.080</mn></mrow><annotation encoding="application/x-tex">0.608\pm 0.080</annotation></semantics></math><span class="translated-text">;第21层：AUC</span><span class="original-text">; layer 21: AUC</span><math alttext="0.606\pm 0.070" class="ltx_Math" display="inline" id="S4.SS2.SSS4.p1.3.m3" intent=":literal"><semantics><mrow><mn>0.606</mn><mo>±</mo><mn>0.070</mn></mrow><annotation encoding="application/x-tex">0.606\pm 0.070</annotation></semantics></math><span class="translated-text">），并在最后几层（第 27 层：AUC</span><span class="original-text">), and drops back toward chance in the final layers (layer 27: AUC</span><math alttext="0.541" class="ltx_Math" display="inline" id="S4.SS2.SSS4.p1.4.m4" intent=":literal"><semantics><mn>0.541</mn><annotation encoding="application/x-tex">0.541</annotation></semantics></math><span class="translated-text">）。
+这种模式表明收敛信息被编码在变压器的中上表示层中，而不是在与令牌预测最直接相关的输出相邻层中。</span><span class="original-text">).
+This pattern suggests that convergence information is encoded in the upper-middle representational layers of the transformer, not in the output-adjacent layers most directly tied to token prediction.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S4.SS2.SSS5">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">4.2.5 </span><span class="translated-text">AIME 2025 污染检查</span><span class="original-text">Contamination check on AIME 2025</span></h4>
+<div class="ltx_para ltx_noindent" id="S4.SS2.SSS5.p1">
+<p class="ltx_p" id="S4.SS2.SSS5.p1.1"><span class="translated-text">AIME 1983-2024 结果的一个问题是，该模型可能在训练期间记住了历史问题（训练截止日期：2024 年 7 月）。
+为了测试这一点，我们使用相同的模型和贪婪解码对所有 30 个 AIME 2025 问题（2025 年 2 月发布，严格在训练截止后）运行无上限推理。
+表</span><span class="original-text">A concern with AIME 1983–2024 results is that the model may have memorized historical problems during training (training cutoff: July 2024).
+To test this, we run uncapped inference on all 30 AIME 2025 problems (released February 2025, strictly after the training cutoff) using the same model and greedy decoding.
+Table</span><a class="ltx_ref" href="#S4.T5" title="Table 5 ‣ 4.2.5 Contamination check on AIME 2025 ‣ 4.2 Results ‣ 4 Early detection study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">比较结果。</span><span class="original-text">compares the results.</span></p>
+</div>
+<figure class="ltx_table" id="S4.T5">
+<table class="ltx_tabular ltx_centering ltx_guessed_headers ltx_align_middle" id="S4.T5.1">
+<thead class="ltx_thead">
+<tr class="ltx_tr" id="S4.T5.1.1.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_column ltx_th_row ltx_border_tt" id="S4.T5.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S4.T5.1.1.1.1.1">Metric</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T5.1.1.1.2"><span class="ltx_text ltx_font_bold" id="S4.T5.1.1.1.2.1">AIME 1983–2024</span></th>
+<th class="ltx_td ltx_align_center ltx_th ltx_th_column ltx_border_tt" id="S4.T5.1.1.1.3"><span class="ltx_text ltx_font_bold" id="S4.T5.1.1.1.3.1">AIME 2025</span></th>
+</tr>
+</thead>
+<tbody class="ltx_tbody">
+<tr class="ltx_tr" id="S4.T5.1.2.1">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_t" id="S4.T5.1.2.1.1">Convergence rate</th>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.1.2.1.2">62.0%</td>
+<td class="ltx_td ltx_align_center ltx_border_t" id="S4.T5.1.2.1.3">36.7%</td>
+</tr>
+<tr class="ltx_tr" id="S4.T5.1.3.2">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T5.1.3.2.1">Overall accuracy</th>
+<td class="ltx_td ltx_align_center" id="S4.T5.1.3.2.2">58.5%</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.1.3.2.3">36.7%</td>
+</tr>
+<tr class="ltx_tr" id="S4.T5.1.4.3">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row" id="S4.T5.1.4.3.1">Converged accuracy</th>
+<td class="ltx_td ltx_align_center" id="S4.T5.1.4.3.2">90.3%</td>
+<td class="ltx_td ltx_align_center" id="S4.T5.1.4.3.3">100.0% (11/11)</td>
+</tr>
+<tr class="ltx_tr" id="S4.T5.1.5.4">
+<th class="ltx_td ltx_align_left ltx_th ltx_th_row ltx_border_bb" id="S4.T5.1.5.4.1">Non-converged accuracy</th>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T5.1.5.4.2">6.6%</td>
+<td class="ltx_td ltx_align_center ltx_border_bb" id="S4.T5.1.5.4.3">0.0% (0/19)</td>
+</tr>
+</tbody>
+</table>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 5: </span>Contamination check: AIME 2025 vs. AIME 1983–2024.</figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S4.SS2.SSS5.p2">
+<p class="ltx_p" id="S4.SS2.SSS5.p2.1"><span class="translated-text">AIME 2025 的整体准确率较低（36.7% vs. 58.5%）是由于收敛率较低（36.7% vs. 62.0%），而不是每个问题推理质量的崩溃。
+当模型收敛于 2025 年问题时，它的准确率达到 100%，高于历史问题的 90.3%。
+当它不收敛时，准确率为 0%，而历史数据的准确率为 6.6%。
+历史问题 6.6% 的不收敛准确率可能反映了对答案值的部分记忆；正如预期的那样，这种影响在截止后数据上完全消失。
+2025 年问题的收敛速度降低与它们更难或更不分布一致，而不是与依赖记忆答案的模型一致。</span><span class="original-text">The lower overall accuracy on AIME 2025 (36.7% vs. 58.5%) is attributable to a lower convergence rate (36.7% vs. 62.0%), not a collapse in per-problem reasoning quality.
+When the model converges on a 2025 problem, it achieves 100% accuracy—higher than the 90.3% on historical problems.
+When it does not converge, accuracy is 0%, compared to 6.6% on historical data.
+The 6.6% non-convergence accuracy on historical problems likely reflects partial memorization of answer values; this effect disappears entirely on post-cutoff data, as expected.
+The reduced convergence rate on 2025 problems is consistent with their being harder or more out-of-distribution, not with the model relying on memorized answers.</span></p>
+</div>
+</section>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span><span class="translated-text">讨论</span><span class="original-text">Discussion</span></h2>
+<section class="ltx_subsection" id="S5.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.1 </span><span class="translated-text">重新思考代币预算</span><span class="original-text">Rethinking token budgets</span></h3>
+<div class="ltx_para ltx_noindent" id="S5.SS1.p1">
+<p class="ltx_p" id="S5.SS1.p1.1"><span class="translated-text">GSM8K 和 MATH-500 的预算饱和结果会对部署产生影响。
+当前的推理模型默认生成数千个思维标记，但我们的结果表明，对于常规数学推理，256 个结构化思维标记就足够了。
+花费在额外代币上的边际计算不会产生可衡量的收益，并且代表纯粹的效率损失。</span><span class="original-text">The budget saturation results on GSM8K and MATH-500 carry implications for deployment.
+Current reasoning models generate thousands of thinking tokens by default, but our results suggest that for routine mathematical reasoning, 256 tokens of structured thinking suffice.
+The marginal compute spent on additional tokens yields no measurable benefit and represents a pure efficiency loss.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S5.SS1.p2">
+<p class="ltx_p" id="S5.SS1.p2.1"><span class="translated-text">AIME 的结果使情况变得更加复杂。
+不存在有限的</span><span class="original-text">The AIME results complicate this picture.
+The absence of a finite</span><math alttext="B^{*}" class="ltx_Math" display="inline" id="S5.SS1.p2.1.m1" intent=":literal"><semantics><msup><mi>B</mi><mo>∗</mo></msup><annotation encoding="application/x-tex">B^{*}</annotation></semantics></math><span class="translated-text">并不意味着更多的预算有帮助；相反，它反映了双峰故障模式，其中额外的代币不能拯救非收敛的世代。
+问题不是预算不足，而是本质上不同的故障模式，更多的计算无法解决。</span><span class="original-text">does not mean that more budget helps; rather, it reflects the bimodal failure mode where additional tokens do not rescue non-converging generations.
+The problem is not insufficient budget but a qualitatively different failure mode that more compute cannot resolve.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S5.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.2 </span><span class="translated-text">非收敛信号的性质</span><span class="original-text">Nature of the non-convergence signal</span></h3>
+<div class="ltx_para ltx_noindent" id="S5.SS2.p1">
+<p class="ltx_p" id="S5.SS2.p1.1"><span class="translated-text">早期检测结果引发了关于线性探针在 150 个标记的隐藏状态下检测到的内容的问题。
+有几个假设是合理的：</span><span class="original-text">The early-detection results raise questions about what the linear probe is detecting in the hidden state at 150 tokens.
+Several hypotheses are plausible:</span></p>
+<ul class="ltx_itemize" id="S5.I1">
+<li class="ltx_item" id="S5.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S5.I1.i1.p1">
+<p class="ltx_p" id="S5.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S5.I1.i1.p1.1.1"><span class="translated-text">问题表征质量</span><span class="original-text">Problem representation quality</span></span><span class="translated-text">：模型可能会在前 150 个推理标记期间形成或多或少连贯的问题表示，并且这种表示质量可以预测最终的收敛。格式不当的表示会导致循环推理。</span><span class="original-text">: The model may form a more or less coherent representation of the problem during the first 150 tokens of reasoning, and this representation quality is predictive of eventual convergence. A poorly-formed representation leads to circular reasoning.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S5.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S5.I1.i2.p1">
+<p class="ltx_p" id="S5.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S5.I1.i2.p1.1.1"><span class="translated-text">策略选择</span><span class="original-text">Strategy selection</span></span><span class="translated-text">：模型可能会尽早致力于解决方案策略。富有成效的策略导致趋同；低效的会导致循环。 150 个标记处的隐藏状态可以对选择的策略类别进行编码。</span><span class="original-text">: The model may commit to a solution strategy early. Productive strategies lead to convergence; unproductive ones lead to loops. The hidden state at 150 tokens may encode which strategy class was selected.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S5.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S5.I1.i3.p1">
+<p class="ltx_p" id="S5.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S5.I1.i3.p1.1.1"><span class="translated-text">置信度校准</span><span class="original-text">Confidence calibration</span></span><span class="translated-text">：隐藏状态可以对模型对其当前推理轨迹是否有效的隐式评估进行编码，甚至在该评估显示在输出标记统计数据之前。</span><span class="original-text">: The hidden state may encode the model’s implicit assessment of whether its current reasoning trajectory is productive, even before this assessment manifests in output token statistics.</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para ltx_noindent" id="S5.SS2.p2">
+<p class="ltx_p" id="S5.SS2.p2.1"><span class="translated-text">区分这些假设将需要更有针对性的可解释技术（例如，激活补丁</span><span class="original-text">Distinguishing these hypotheses would require more targeted interpretability techniques (e.g., activation patching</span><cite class="ltx_cite ltx_citemacro_citep">(Meng<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib17" title="Locating and editing factual associations in GPT">2022</a>)</cite><span class="translated-text">）并且超出了本工作的范围。</span><span class="original-text">) and is beyond the scope of this work.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S5.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.3 </span><span class="translated-text">建立实用的提前退出系统</span><span class="original-text">Toward practical early-exit systems</span></h3>
+<div class="ltx_para ltx_noindent" id="S5.SS3.p1">
+<p class="ltx_p" id="S5.SS3.p1.2"><span class="translated-text">一个在操作上有用的提前退出系统需要比观察到的最佳 AUC 更高的辨别力（</span><span class="original-text">An operationally useful early-exit system would require substantially higher discrimination than the best observed AUC (</span><math alttext="\sim" class="ltx_Math" display="inline" id="S5.SS3.p1.1.m1" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math><span class="translated-text">0.61），但目前的结果奠定了基础。
+直接方向包括非线性探针（MLP 或基于注意力的分类器），因为我们的线性探针是可提取信息的下限；鉴于第 20 层是最强但不是唯一的信号载体，结合多个层而不是单个层的激活；跨检查点滑动窗口而不是单个位置的时间整合。
+更大的评估集（</span><span class="original-text">0.61), but the current results establish a foundation.
+Immediate directions include nonlinear probes (MLP or attention-based classifiers) as our linear probe is a lower bound on extractable information; combining activations across multiple layers rather than a single layer, given that layer 20 is the strongest but not the only signal carrier; and temporal integration across a sliding window of checkpoints rather than a single position.
+Larger evaluation sets (</span><math alttext="n\gg 200" class="ltx_Math" display="inline" id="S5.SS3.p1.2.m2" intent=":literal"><semantics><mrow><mi>n</mi><mo>≫</mo><mn>200</mn></mrow><annotation encoding="application/x-tex">n\gg 200</annotation></semantics></math><span class="translated-text">）还将收紧估计并实现更具表现力的架构。</span><span class="original-text">) would also tighten estimates and enable more expressive architectures.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span><span class="translated-text">局限性</span><span class="original-text">Limitations</span></h2>
+<div class="ltx_para ltx_noindent" id="S6.p1">
+<p class="ltx_p" id="S6.p1.1"><span class="ltx_text ltx_font_bold" id="S6.p1.1.1"><span class="translated-text">单一型号。</span><span class="original-text">Single model.</span></span><span class="translated-text">所有实验均使用 DeepSeek-R1-Distill-Qwen-7B。双峰收敛模式、预算饱和行为和早期检测信号可能无法推广到其他模型系列、规模或训练程序。</span><span class="original-text">All experiments use DeepSeek-R1-Distill-Qwen-7B. The bimodal convergence pattern, budget saturation behavior, and early-detection signal may not generalize to other model families, scales, or training procedures.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S6.p2">
+<p class="ltx_p" id="S6.p2.1"><span class="ltx_text ltx_font_bold" id="S6.p2.1.1"><span class="translated-text">实用的代币上限。</span><span class="original-text">Practical token ceiling.</span></span><span class="translated-text">“无上限”条件规定了 10,000 个代币的上限。虽然非收敛代没有显示出在此极限下接近收敛的迹象，但我们不能排除在给予更多代币的情况下某些代会收敛的可能性。</span><span class="original-text">The “uncapped” condition imposes a 10,000-token ceiling. While non-converged generations show no signs of approaching convergence at this limit, we cannot rule out that some would converge given substantially more tokens.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S6.p3">
+<p class="ltx_p" id="S6.p3.4"><span class="ltx_text ltx_font_bold" id="S6.p3.4.1"><span class="translated-text">样本量和统计功效。</span><span class="original-text">Sample size and statistical power.</span></span><span class="translated-text">与</span><span class="original-text">With</span><math alttext="n=200" class="ltx_Math" display="inline" id="S6.p3.1.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>200</mn></mrow><annotation encoding="application/x-tex">n=200</annotation></semantics></math><span class="translated-text">和交叉验证折叠</span><span class="original-text">and cross-validation folds of</span><math alttext="\sim" class="ltx_Math" display="inline" id="S6.p3.2.m2" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math><span class="translated-text">40个样品，功率有限；细胞尺寸达到</span><span class="original-text">40 samples, power is limited; cell sizes reach</span><math alttext="n=18" class="ltx_Math" display="inline" id="S6.p3.3.m3" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>18</mn></mrow><annotation encoding="application/x-tex">n=18</annotation></semantics></math><span class="translated-text">（硬收敛）和</span><span class="original-text">(converged-hard) and</span><math alttext="n=4" class="ltx_Math" display="inline" id="S6.p3.4.m4" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">n=4</annotation></semantics></math><span class="translated-text">（一些引导单元）。该调查还表明，预测信息是</span><span class="original-text">(some bootstrap cells). The probe also demonstrates that predictive information is</span><em class="ltx_emph ltx_font_italic" id="S6.p3.4.2"><span class="translated-text">现在</span><span class="original-text">present</span></em><span class="translated-text">处于隐藏状态，而不是它</span><span class="original-text">in the hidden state, not that it</span><em class="ltx_emph ltx_font_italic" id="S6.p3.4.3"><span class="translated-text">因果决定</span><span class="original-text">causally determines</span></em><span class="translated-text">收敛；建立因果关系需要干预实验，例如激活补丁。</span><span class="original-text">convergence; establishing causality requires intervention experiments such as activation patching.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S6.p4">
+<p class="ltx_p" id="S6.p4.1"><span class="ltx_text ltx_font_bold" id="S6.p4.1.1"><span class="translated-text">贪心解码。</span><span class="original-text">Greedy decoding.</span></span><span class="translated-text">所有世代都使用贪婪解码（</span><span class="original-text">All generations use greedy decoding (</span><span class="ltx_text ltx_font_typewriter" id="S6.p4.1.2"><span class="translated-text">do_sample=假</span><span class="original-text">do_sample=False</span></span><span class="translated-text">）以最大限度地提高再现性。 DeepSeek 自己对 R1 系列的使用建议建议不要贪婪解码，指出它会导致重复生成，并建议温度在 0.6 左右。这就提出了一个问题：43.5% 的不收敛率是固有模型属性还是解码伪影。我们注意到我们记录的双峰结构——干净</span><span class="original-text">) to maximize reproducibility. DeepSeek’s own usage recommendations for the R1 series advise against greedy decoding, noting it can cause repetitive generation, and suggest a temperature around 0.6. This raises the question of whether the 43.5% non-convergence rate is an intrinsic model property or a decoding artifact. We note that the bimodal structure we document—clean</span><span class="ltx_text ltx_font_typewriter" id="S6.p4.1.3"><span class="translated-text"><!--认为--></span><span class="original-text">&lt;/think&gt;</span></span><span class="translated-text">终止与没有任何部分终止的无限重复 - 与</span><span class="original-text">termination versus unbounded repetition without any partial termination—is consistent with</span><cite class="ltx_cite ltx_citemacro_citet">Pipis<span class="ltx_text ltx_bib_etal"> et al.</span> (<a class="ltx_ref" href="#bib.bib12" title="Wait, wait, wait… why do reasoning models loop?">2025</a>)</cite><span class="translated-text">，他们在标准推理设置下记录了 R1-distill 中相同的循环故障模式。尽管如此，在温度 0.6 下对多个种子进行直接比较将加强因果关系，并留待将来的工作。</span><span class="original-text">, who document the same loop failure mode in R1-distill under standard inference settings. Nonetheless, a direct comparison run at temperature 0.6 across multiple seeds would strengthen the causal claim and is left for future work.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S6.p5">
+<p class="ltx_p" id="S6.p5.1"><span class="ltx_text ltx_font_bold" id="S6.p5.1.1"><span class="translated-text">对历史数据的潜在记忆。</span><span class="original-text">Potential memorization on historical data.</span></span><span class="translated-text">我们对 AIME 2025 的污染检查表明，6.6% 的非收敛历史生成是正确的，这可能是由于部分记忆了答案值。这种影响在截断后的数据中不存在，这表明我们的历史基线稍微高估了模型解决新问题的真实数学能力。</span><span class="original-text">Our contamination check on AIME 2025 shows that 6.6% of non-converged historical generations are correct, likely due to partial memorization of answer values. This effect is absent on post-cutoff data, suggesting our historical baseline slightly overestimates the model’s true mathematical capability on novel problems.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S6.p6">
+<p class="ltx_p" id="S6.p6.1"><span class="ltx_text ltx_font_bold" id="S6.p6.1.1"><span class="translated-text">难度代理。</span><span class="original-text">Difficulty proxy.</span></span><span class="translated-text">AIME 问题编号可以作为不完美的难度代理。每项考试中的问题并不是按难度统一排序的，而且不同考试年份的难度也有所不同。</span><span class="original-text">AIME problem number serves as an imperfect difficulty proxy. Problems are not uniformly ordered by difficulty within each exam, and difficulty varies across exam years.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S7">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">7 </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h2>
+<div class="ltx_para ltx_noindent" id="S7.p1">
+<p class="ltx_p" id="S7.p1.1"><span class="translated-text">我们提供的证据表明，思维链推理模型表现出两种不同的低效率模式：预算饱和，其中准确性在模型最大思维长度的一小部分处停滞不前，以及双峰收敛失败，其中很大一部分代人进入非终止循环，消耗全部代币预算而不影响准确性。</span><span class="original-text">We have presented evidence that chain-of-thought reasoning models exhibit two distinct inefficiency patterns: budget saturation, where accuracy plateaus at a small fraction of the model’s maximum thinking length, and bimodal convergence failure, where a substantial fraction of generations enter non-terminating loops that consume the full token budget without contributing to accuracy.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S7.p2">
+<p class="ltx_p" id="S7.p2.1"><span class="translated-text">更引人注目的是，我们已经证明，收敛结果早在行为表现之前就已部分编码在模型的内部表示中。
+隐藏状态激活的线性探针在 9 个测试检查点中的 8 个处显示出比行为基线一致的方向优势，信号可在任何表面故障指标出现之前早在 50 个标记处检测到。
+最强的信号出现在第 20 层（共 28 层），这表明收敛信息是在中上表示层中编码的，而不是在输出相邻层中编码的。</span><span class="original-text">More strikingly, we have shown that the convergence outcome is partially encoded in the model’s internal representations well before it manifests behaviorally.
+A linear probe on hidden-state activations shows a consistent directional advantage over behavioral baselines at 8 of 9 tested checkpoints, with signal detectable as early as 50 tokens—before any surface-level indicators of failure appear.
+The strongest signal is found at layer 20 (of 28), suggesting convergence information is encoded in upper-middle representational layers rather than output-adjacent ones.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S7.p3">
+<p class="ltx_p" id="S7.p3.1"><span class="translated-text">这些发现指出了一类推理时间优化策略，这些策略基于模型自身的内部表示而不是行为启发法。
+虽然当前的探针精度不足以满足生产部署，但一致（如果适度）的早期信号的存在确立了机械提前退出方法的可行性，并激励通过更具表现力的探针、更大的数据集和因果验证进行进一步的研究。</span><span class="original-text">These findings point toward a class of inference-time optimization strategies that are grounded in the model’s own internal representations rather than in behavioral heuristics.
+While the current probe accuracy is insufficient for production deployment, the existence of a consistent, if modest, early signal establishes the feasibility of mechanistic early-exit approaches and motivates further investigation with more expressive probes, larger datasets, and causal validation.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="Sx1">
+<h2 class="ltx_title ltx_title_section"><span class="translated-text">数据和代码可用性</span><span class="original-text">Data and code availability</span></h2>
+<div class="ltx_para ltx_noindent" id="Sx1.p1">
+<p class="ltx_p" id="Sx1.p1.1"><span class="translated-text">所有代码、仪表化生成管道和结果将在论文被接受后提供。</span><span class="original-text">All code, instrumented generation pipelines, and results will be made available upon acceptance of the paper.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib16">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">A. Azaria and T. Mitchell (2023)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">The internal state of an LLM knows when it’s lying</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Findings of the Association for Computational Linguistics: EMNLP 2023</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.p1.1" title="2.3 Probing and mechanistic interpretability ‣ 2 Related work ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§2.3</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib13">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Y. Belinkov (2022)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Probing classifiers: promises, shortcomings, and advances</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Computational Linguistics</span> <span class="ltx_text ltx_bib_volume">48</span> (<span class="ltx_text ltx_bib_number">1</span>), <span class="ltx_text ltx_bib_pages"> pp. 207–219</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.p1.1" title="2.3 Probing and mechanistic interpretability ‣ 2 Related work ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§2.3</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib14">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">C. Burns, H. Ye, D. Klein, and J. Steinhardt (2023)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Discovering latent knowledge in language models without supervision</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">International Conference on Learning Representations</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.p1.1" title="2.3 Probing and mechanistic interpretability ‣ 2 Related work ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§2.3</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib6">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">K. Cobbe, V. Kosaraju, M. Bavarian, M. Chen, H. Jun, L. Kaiser, M. Plappert, J. Tworek, J. Hilton, R. Nakano, C. Hesse, and J. Schulman (2021)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Training verifiers to solve math word problems</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2110.14168</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S3.I1.i1.p1.1" title="In 3.1.3 Benchmarks and sampling ‣ 3.1 Experimental setup ‣ 3 Budget-forcing study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">1st item</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib3">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">DeepSeek-AI (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">DeepSeek-R1: incentivizing reasoning capability in LLMs via reinforcement learning</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2501.12948</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Test-time compute and chain-of-thought reasoning ‣ 2 Related work ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib7">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">D. Hendrycks, C. Burns, S. Kadavath, A. Arora, S. Basart, E. Tang, D. Song, and J. Steinhardt (2021)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Measuring mathematical problem solving with the MATH dataset</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Advances in Neural Information Processing Systems</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S3.I1.i2.p1.1" title="In 3.1.3 Benchmarks and sampling ‣ 3.1 Experimental setup ‣ 3 Budget-forcing study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">2nd item</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib15">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">K. Li, A. K. Hopkins, D. Bau, F. Viégas, H. Pfister, and M. Wattenberg (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Inference-time intervention: eliciting truthful answers from a language model</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Advances in Neural Information Processing Systems</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.p1.1" title="2.3 Probing and mechanistic interpretability ‣ 2 Related work ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§2.3</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib17">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">K. Meng, D. Bau, A. Andonian, and Y. Belinkov (2022)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Locating and editing factual associations in GPT</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Advances in Neural Information Processing Systems</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS3.p1.1" title="2.3 Probing and mechanistic interpretability ‣ 2 Related work ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§2.3</span></a>,
+<a class="ltx_ref" href="#S5.SS2.p2.1" title="5.2 Nature of the non-convergence signal ‣ 5 Discussion ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§5.2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib11">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">N. Muennighoff, Z. Yang, W. Shi, X. L. Li, L. Fei-Fei, H. Hajishirzi, L. Zettlemoyer, P. Liang, E. Candès, and T. Hashimoto (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">S1: simple test-time scaling</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2501.19393</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p4.1" title="1 Introduction ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Test-time compute and chain-of-thought reasoning ‣ 2 Related work ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib8">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">G. Neubig (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">AIME 1983–2024 dataset</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://huggingface.co/datasets/gneubig/aime-1983-2024" title="">https://huggingface.co/datasets/gneubig/aime-1983-2024</a>HuggingFace Datasets</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S3.I1.i3.p1.1" title="In 3.1.3 Benchmarks and sampling ‣ 3.1 Experimental setup ‣ 3 Budget-forcing study ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">3rd item</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_misc" id="bib.bib2">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">OpenAI (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Learning to reason with LLMs</span>.
+</span>
+<span class="ltx_bibblock">Note: <span class="ltx_text ltx_bib_note"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://openai.com/index/learning-to-reason-with-llms/" title="">https://openai.com/index/learning-to-reason-with-llms/</a>OpenAI Blog, September 2024</span>
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib12">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">C. Pipis, S. Garg, V. Kontonis, V. Shrivastava, A. Krishnamurthy, and D. Papailiopoulos (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Wait, wait, wait… why do reasoning models loop?</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2512.12895</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.SS2.p1.1" title="2.2 Reasoning failure modes ‣ 2 Related work ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§2.2</span></a>,
+<a class="ltx_ref" href="#S6.p4.1" title="6 Limitations ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§6</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib4">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">C. Snell, J. Lee, K. Xu, and A. Kumar (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Scaling LLM test-time compute optimally can be more effective than scaling model parameters</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2408.03314</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Test-time compute and chain-of-thought reasoning ‣ 2 Related work ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib1">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">J. Wei, X. Wang, D. Schuurmans, M. Bosma, B. Ichter, F. Xia, E. Chi, Q. Le, and D. Zhou (2022)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Chain-of-thought prompting elicits reasoning in large language models</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">Advances in Neural Information Processing Systems</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p1.1" title="1 Introduction ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§1</span></a>,
+<a class="ltx_ref" href="#S2.SS1.p1.1" title="2.1 Test-time compute and chain-of-thought reasoning ‣ 2 Related work ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§2.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib5">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">A. Yang <span class="ltx_text ltx_bib_etal">et al.</span> (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Qwen2 technical report</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv preprint arXiv:2407.10671</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p3.1" title="1 Introduction ‣ Token Budget Saturation and Mechanistic Early-Detection of Reasoning Non-Convergence in Chain-of-Thought Models"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2607.21433v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer><footer class="ds-site-footer">
+<div class="ds-site-footer-grid">
+<div class="ds-site-footer-main">
+<div class="ds-site-footer-ack"><span class="translated-text">我们衷心感谢来自
+        我们的</span><span class="original-text">We gratefully acknowledge support from
+        our</span><strong><span class="translated-text">主要资助者</span><span class="original-text">major funders</span></strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong><span class="translated-text">成员机构</span><span class="original-text">member institutions</span></strong></a><span class="ack-member-inline" hidden="">, <strong></strong></span><span class="translated-text">,
+        以及所有贡献者。</span><span class="original-text">,
+        and all contributors.</span></div>
+<nav aria-label="Site navigation" class="ds-site-footer-links">
+<a href="https://info.arxiv.org/about"><span class="translated-text">关于</span><span class="original-text">About</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help"><span class="translated-text">帮助</span><span class="original-text">Help</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/contact.html"><span class="translated-text">联系方式</span><span class="original-text">Contact</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/subscribe"><span class="translated-text">订阅</span><span class="original-text">Subscribe</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/license/index.html"><span class="translated-text">版权</span><span class="original-text">Copyright</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/policies/privacy_policy.html"><span class="translated-text">隐私</span><span class="original-text">Privacy</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/web_accessibility.html"><span class="translated-text">无障碍</span><span class="original-text">Accessibility</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://status.arxiv.org" rel="noopener noreferrer" target="_blank"><span class="translated-text">运营状况</span><span class="original-text">Operational Status</span><span class="is-sr-only"><span class="translated-text">（在新选项卡中打开）</span><span class="original-text">(opens in new tab)</span></span></a>
+</nav>
+</div>
+<div aria-label="Major funders" class="ds-site-footer-funders">
+<div class="ds-site-footer-funders-label"><span class="translated-text">主要资金支持来自</span><span class="original-text">Major funding support from</span></div>
+<div class="ds-site-footer-funders-logos">
+<a class="ds-funder-link" href="https://www.simonsfoundation.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.sfi.org.bm/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation International" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation-international.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.schmidtsciences.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Schmidt Sciences" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/schmidt-sciences.png"/>
+</a>
+</div>
+</div>
+</div>
+</footer><div id="fixed-buttons-container">
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
