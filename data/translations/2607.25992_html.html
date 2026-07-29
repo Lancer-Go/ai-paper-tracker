@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">MemLens：具有基于 LLM 代理的交互式分析的价值感知内存管理系统</span><span class="original-text">MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 7 月 28 日星期二 16:56:15 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Tue Jul 28 16:56:15 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+    // Pre-apply spinout-banner dismissal here, before the banner paints, so it
+    // never flashes in only to be hidden later by the deferred arxiv-header.js.
+    // Key matches arxiv-header.js: "arxiv-banner-dismissed:" + data-banner-name.
+    if (localStorage.getItem('arxiv-banner-dismissed:spinout-nonprofit')) {
+      document.documentElement.setAttribute("data-banner-dismissed", "");
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/><link href="https://arxiv.org/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626" media="screen" rel="stylesheet" type="text/css"/><style>
+  /* Banner pre-dismissal (set above before paint -> no flash-then-hide) and
+     reading-mode chrome hiding. */
+  html[data-banner-dismissed] .ds-announcement { display: none; }
+  html[data-reading-mode="enabled"] .ds-announcement,
+  html[data-reading-mode="enabled"] .ds-site-footer { display: none; }
+  /* Keep the announcement text dark on the Open-Blue band in both colour themes
+     (otherwise it inherits the paper's warm-wash text in dark mode and washes out). */
+  .ds-announcement-text { color: var(--arxiv-ink, #1c1a17); }
+</style>
+<script defer="" src="https://arxiv.org/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2607.25992" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2607.25992" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog><div aria-label="Announcement" class="ds-announcement" data-banner-name="spinout-nonprofit" id="announcement-banner" role="region">
+<img alt="" aria-hidden="true" class="ds-announcement-glyph" src="https://arxiv.org/static/base/1.0.1/images/icons/smileybones-small.svg"/>
+<span class="ds-announcement-text"><span class="translated-text">arXiv 现在是一个独立的非营利组织！</span><span class="original-text">arXiv is now an independent nonprofit!</span></span>
+<a class="ds-announcement-link" href="https://info.arxiv.org/about"><span class="translated-text">了解更多</span><span class="original-text">Learn more</span></a>
+<button aria-label="Dismiss announcement" class="ds-announcement-close" type="button">×</button>
+</div>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/"><img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/base/1.0.1/images/arxiv-logo-primary-light.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2607.25992v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2607.25992v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_title">Abstract.</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S2" title="In MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span><span class="ltx_text ltx_font_sansserif">MemLens </span> Overview</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span><span class="ltx_text ltx_font_sansserif">MemLens </span> System Design</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In 3. MemLens System Design ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Memory Data Evaluation</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS2" title="In 3. MemLens System Design ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Value-Aware Memory Storage</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS3" title="In 3. MemLens System Design ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.3 </span>Memory-Assisted Response</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S4" title="In MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Demonstration Scenarios</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：arXiv.org 永久非独占许可证</span><span class="original-text">License: arXiv.org perpetual non-exclusive license</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2607.25992v1 [cs.DB] 2026 年 7 月 28 日</span><span class="original-text">arXiv:2607.25992v1 [cs.DB] 28 Jul 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line ltx_leqno">
+<h1 class="ltx_title ltx_title_document">
+<span class="ltx_text ltx_font_sansserif" id="id1.id1"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">：价值感知内存管理系统</span><span class="original-text">: A Value-Aware Memory Management System</span><br class="ltx_break"/><span class="translated-text">为基于 LLM 的代理提供交互式分析</span><span class="original-text">with Interactive Analytics for LLM-based Agents</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Shuyue Wei
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_text ltx_affiliation_institution" id="id2.1.id1">
+C-FAIR &amp; School of Software, 
+<br class="ltx_break"/>Shandong University</span>
+</span>
+<span class="ltx_contact ltx_role_email"><a href="https://arxiv.org/html/2607.25992v1/mailto:weishuyue@sdu.edu.cn">weishuyue@sdu.edu.cn</a>
+</span></span></span>
+<span class="ltx_author_before">, </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Chang Liu
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_text ltx_affiliation_institution" id="id3.1.id1">SKLCCSE Lab, 
+<br class="ltx_break"/>Beihang University</span>
+</span>
+<span class="ltx_contact ltx_role_email"><a href="https://arxiv.org/html/2607.25992v1/mailto:bjliuchang@buaa.edu.cn">bjliuchang@buaa.edu.cn</a>
+</span></span></span>
+<span class="ltx_author_before">, </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Zimu Zhou
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_text ltx_affiliation_institution" id="id4.1.id1">Department of Data Science,
+<br class="ltx_break"/>City University of Hong Kong</span>
+</span>
+<span class="ltx_contact ltx_role_email"><a href="https://arxiv.org/html/2607.25992v1/mailto:zimuzhou@cityu.edu.hk">zimuzhou@cityu.edu.hk</a>
+</span></span></span>
+<span class="ltx_author_before">, </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Yongxin Tong
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_text ltx_affiliation_institution" id="id5.1.id1">SKLCCSE Lab, 
+<br class="ltx_break"/>Beihang University</span>
+</span>
+<span class="ltx_contact ltx_role_email"><a href="https://arxiv.org/html/2607.25992v1/mailto:yxtong@buaa.edu.cn">yxtong@buaa.edu.cn</a>
+</span></span></span>
+<span class="ltx_author_before"> and </span><span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">Lizhen Cui
+</span><span class="ltx_author_notes">
+<span class="ltx_contact ltx_role_affiliation"><span class="ltx_text ltx_affiliation_institution" id="id6.1.id1">
+C-FAIR &amp; School of Software, 
+<br class="ltx_break"/>Shandong University</span>
+</span>
+<span class="ltx_contact ltx_role_email"><a href="https://arxiv.org/html/2607.25992v1/mailto:clz@sdu.edu.cn">clz@sdu.edu.cn</a>
+</span></span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要。</span><span class="original-text">Abstract.</span></h6>
+<p class="ltx_p"><span class="translated-text">最近，内存管理已成为基于 LLM 的代理的关键基础设施，因为它直接影响长期推理、个性化响应和知识重用。
+然而，现有的LLM内存系统通常采用粗粒度（与实用程序无关或启发式实用程序）方式，统一处理异构用户-LLM交互记录，导致内存存储库中持久存在冗余和低影响的记录。
+为了应对这一挑战，我们提出</span><span class="original-text">Recently, memory management has become a key infrastructure for LLM-based agents, as it directly affects long-horizon reasoning, personalized responses, and knowledge reuse.
+However, existing LLM memory systems typically adopt a coarse-grained (utility-agnostic or heuristic utility) manner that treats heterogeneous user-LLM interaction records uniformly, leading to redundant and low-impact records persisting in the memory repository.
+To address this challenge, we present</span><span class="ltx_text ltx_font_sansserif"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">，一个值感知的内存管理系统，将内存记录作为一流的数据对象。</span><span class="original-text">, a value-aware memory management system that takes memory records as first-class data objects.</span><span class="ltx_text ltx_font_sansserif"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">提供端到端的交互式分析仪表板，公开完整的内存生命周期，包括 Shapley 式内存评估、价值感知存储和内存辅助响应。
+通过学习副驾驶应用程序，该系统使用户能够检查内存值、可视化分层内存结构，并在响应质量、检索延迟和令牌消耗方面比较各种内存管理策略。
+因此，我们的</span><span class="original-text">provides an end-to-end interactive analytics dashboard that exposes the complete memory lifecycle, including Shapley-style memory evaluation, value-aware storage, and memory-assisted response.
+Through a study-copilot application, the system enables users to inspect memory values, visualize hierarchical memory structures, and compare various memory management strategies in terms of response quality, retrieval latency, and token consumption.
+Therefore, our</span><span class="ltx_text ltx_font_sansserif"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">可以作为代理的高效、可解释和个性化的长期记忆管理系统。</span><span class="original-text">can serve as an efficient, interpretable, and personalized long-term memory management system for agents.</span></p>
+</div>
+<div class="ltx_para" id="p1">
+<p class="ltx_p" id="p1.1"><span class="translated-text">源代码已发布于</span><span class="original-text">The source code have been made available at</span><br class="ltx_break"/>https://github.com/LIUHA1ZHU/MemLens</p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1. </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<figure class="ltx_figure" id="S1.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="208" id="S1.F1.g1" src="https://arxiv.org/html/2607.25992v1/figures/motivation.png" width="539"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S1.F1.4.1.1" style="font-size:90%;">Figure 1</span>. </span><span class="ltx_text" id="S1.F1.5.2" style="font-size:90%;">Comparison between (a) <span class="ltx_text ltx_font_italic" id="S1.F1.5.2.1">utility-agnostic</span> memory management and (b) <span class="ltx_text ltx_font_italic" id="S1.F1.5.2.2">value-aware</span> memory management.</span></figcaption>
+</figure>
+<div class="ltx_para" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">内存数据管理已成为基于 LLM 的代理的关键基础设施层，支持长期任务执行、个性化交互和跨会话知识重用。
+从数据管理的角度来看，代理内存本质上是</span><span class="original-text">Memory data management has emerged as a key infrastructure layer for LLM-based agents, enabling long-horizon task execution, personalized interactions, and cross-session knowledge reuse.
+From a data management perspective, agent memory is inherently</span><span class="ltx_text ltx_font_italic" id="S1.p1.1.1"><span class="translated-text">异质的</span><span class="original-text">heterogeneous</span></span><span class="translated-text">。
+除了对话历史之外，可重用内存还可能来自中间推理轨迹、检索到的文档和工具执行输出。
+随着代理运行较长的会话，记录会累积到不断增长的可重用上下文存储库中，从而使有效的内存管理变得越来越重要。</span><span class="original-text">.
+Beyond dialogue histories, reusable memory may also arise from intermediate reasoning traces, retrieved documents, and tool execution outputs.
+As agents operate over longer sessions, records accumulate into a growing repository of reusable context, making effective memory management increasingly important.</span></p>
+</div>
+<div class="ltx_para" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">然而，现有的LLM记忆系统</span><span class="original-text">However, existing LLM memory systems</span><cite class="ltx_cite ltx_citemacro_citep">(Zhang<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib1" title="A survey on the memory mechanism of large language model-based agents">2025</a>; Hu<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib2" title="Memory in the age of AI agents">2025</a>; Chhikara<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib3" title="Mem0: building production-ready AI agents with scalable long-term memory">2025</a>; Fu<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib15" title="VikingMem: A memory base management system for stateful llm-based applications">2026</a>)</cite><span class="translated-text">通常以粗粒度的方式管理内存。
+他们要么</span><span class="original-text">typically manage memory in a coarse-grained manner.
+They either</span><span class="ltx_text ltx_font_italic" id="S1.p2.1.1"><span class="translated-text">保留几乎所有</span><span class="original-text">retain nearly all</span></span><span class="translated-text">候选记录或使用压缩它们</span><span class="original-text">candidate records or compress them using</span><span class="ltx_text ltx_font_italic" id="S1.p2.1.2"><span class="translated-text">总结导向</span><span class="original-text">summary-oriented</span></span><span class="translated-text">启发式，没有明确建模哪些内存单元对未来的任务真正有用。
+随着内存的积累，与效用无关或启发式评分策略允许冗余和低影响的记录保留在存储库中，这可以稀释与任务相关的上下文，扩大检索空间，并在响应生成过程中消耗不必要的令牌开销（见图 1）。</span><span class="original-text">heuristics, without explicitly modeling which memory units are truly useful for future tasks.
+As memory accumulates, the utility-agnostic or heuristic scoring strategy allows redundant and low-impact records to persist in the repository, which can dilute task-relevant context, enlarge the retrieval space, and consume unnecessary token overhead during response generation (see Fig.</span><a class="ltx_ref" href="#S1.F1" title="Figure 1 ‣ 1. Introduction ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_tag">1</span></a>).</p>
+</div>
+<div class="ltx_para" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">核心挑战是内存的有用性</span><span class="original-text">The core challenge is that memory usefulness is</span><span class="ltx_text ltx_font_italic" id="S1.p3.1.1"><span class="translated-text">既不统一也不静态</span><span class="original-text">neither uniform nor static</span></span><span class="translated-text">。
+对一个未来查询有益的内存单元可能与另一个查询无关，并且其贡献也可能取决于哪些其他内存单元已经可用。
+因此，有效的内存管理需要的不仅仅是一般性的总结。
+这需要一种有原则的方法</span><span class="original-text">.
+A memory unit that is beneficial for one future query may be irrelevant for another, and its contribution may also depend on which other memory units are already available.
+Thus, effective memory management requires more than generic summarization.
+It requires a principled way to</span><span class="ltx_text ltx_font_italic" id="S1.p3.1.2"><span class="translated-text">估计下游效用</span><span class="original-text">estimate the downstream utility</span></span><span class="translated-text">异构内存单元，同时保持这种估计</span><span class="original-text">of heterogeneous memory units, while keeping such estimation</span><span class="ltx_text ltx_font_italic" id="S1.p3.1.3"><span class="translated-text">高效</span><span class="original-text">efficient</span></span><span class="translated-text">足以支持实际的存储和检索决策。</span><span class="original-text">enough to support practical storage and retrieval decisions.</span></p>
+</div>
+<div class="ltx_para" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">为了应对这一挑战，我们提出</span><span class="original-text">To address this challenge, we present</span><span class="ltx_text ltx_font_sansserif" id="S1.p4.1.1"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">，一个价值感知内存管理系统，可为基于 LLM 的代理提供交互式分析。</span><span class="original-text">, a value-aware memory management system with interactive analytics for LLM-based agents.</span><span class="ltx_text ltx_font_sansserif" id="S1.p4.1.2"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">根据其管理内存</span><span class="original-text">manages memory based on its</span><span class="ltx_text ltx_font_italic" id="S1.p4.1.3"><span class="translated-text">值</span><span class="original-text">value</span></span>, <em class="ltx_emph ltx_font_italic" id="S1.p4.1.4"><span class="translated-text">即</span><span class="original-text">i.e.</span></em><span class="translated-text">，内存单元对下游响应质量的贡献。
+具体来说，它将存档的交互分解为细粒度的内存单元，使用轻量级代理模型和基于 LLM 的评分来估计它们对下游推理的效用，有选择地保留高价值内存，并在响应时将简洁而有效的内存注入到 LLM 上下文中。
+由于存储单元的有用性可能取决于哪些其他存储单元已经可用，</span><span class="original-text">, contribution of a memory unit to downstream response quality.
+Specifically, it decomposes archived interactions into fine-grained memory units, estimates their utility for downstream reasoning using a lightweight proxy model together with LLM-based scoring, selectively retains high-value memory, and injects concise yet effective memory into LLM context at response time.
+As the usefulness of a memory unit may depend on which other memory units are already available,</span><span class="ltx_text ltx_font_sansserif" id="S1.p4.1.5"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">通过沙普利式边际贡献分析对记忆价值进行建模，并通过有效的基于采样的近似使这种评估变得实用。
+这些设计产生了统一的内存生命周期</span><span class="original-text">models memory value through Shapley-style marginal contribution analysis, and makes this valuation practical via an efficient sampling-based approximation.
+These designs yield a unified memory lifecycle spanning</span><span class="ltx_text ltx_font_italic" id="S1.p4.1.6"><span class="translated-text">记忆评估</span><span class="original-text">memory evaluation</span></span>, <span class="ltx_text ltx_font_italic" id="S1.p4.1.7"><span class="translated-text">价值感知存储</span><span class="original-text">value-aware storage</span></span><span class="translated-text">, 和</span><span class="original-text">, and</span><span class="ltx_text ltx_font_italic" id="S1.p4.1.8"><span class="translated-text">记忆辅助反应</span><span class="original-text">memory-assisted response</span></span>.</p>
+</div>
+<div class="ltx_para" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">我们展示</span><span class="original-text">We demonstrate</span><span class="ltx_text ltx_font_sansserif" id="S1.p5.1.1"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">通过学习副驾驶应用程序，用户可以交互式地探索完整的记忆生命周期。
+具体来说，用户可以：</span><span class="original-text">through a study-copilot application, where users can interactively explore the full memory lifecycle.
+Specifically, users can:</span><span class="ltx_text ltx_font_italic" id="S1.p5.1.2"><span class="translated-text">(一)</span><span class="original-text">(i)</span></span><span class="translated-text">检查存档的用户与法学硕士互动如何分解为记忆单元和分配的价值感知分数；</span><span class="original-text">inspect how archived user-LLM interactions are decomposed into memory units and assigned value-aware scores;</span><span class="ltx_text ltx_font_italic" id="S1.p5.1.3"><span class="translated-text">(二)</span><span class="original-text">(ii)</span></span><span class="translated-text">可视化记忆在价值阈值和分层组织的指导下如何演变；和</span><span class="original-text">visualize how the memory evolves as retention is guided by value thresholds and hierarchical organization; and</span><span class="ltx_text ltx_font_italic" id="S1.p5.1.4"><span class="translated-text">(三)</span><span class="original-text">(iii)</span></span><span class="translated-text">比较各种内存管理策略，包括</span><span class="original-text">compare various memory management strategies, including</span><span class="ltx_text ltx_font_italic" id="S1.p5.1.5"><span class="translated-text">全部存储</span><span class="original-text">store-all</span></span><span class="translated-text">，基于代理的摘要，并提出</span><span class="original-text">, agent-based summarization, and proposed</span><span class="ltx_text ltx_font_italic" id="S1.p5.1.6"><span class="translated-text">价值意识</span><span class="original-text">value-aware</span></span><span class="translated-text">策略，包括响应质量、检索延迟和令牌消耗。</span><span class="original-text">strategy, in terms of response quality, retrieval latency, and token consumption.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1"><span class="ltx_text ltx_font_bold" id="S1.p6.1.1"><span class="translated-text">贡献。</span><span class="original-text">Contributions.</span></span><span class="translated-text">主要贡献总结如下：</span><span class="original-text">The main contributions are summarized as follows:</span><span class="ltx_text ltx_font_italic" id="S1.p6.1.2"><span class="translated-text">(一)</span><span class="original-text">(i)</span></span><span class="translated-text">我们为基于 LLM 的代理引入了一种价值感知内存管理范例，该范例将内存价值明确建模为下游效用，从而能够选择性保留高影响力的内存单元。</span><span class="original-text">We introduce a value-aware memory management paradigm for LLM-based agents that explicitly models memory value as downstream utility, enabling selective retention of high-impact memory units.</span><span class="ltx_text ltx_font_italic" id="S1.p6.1.3"><span class="translated-text">(二)</span><span class="original-text">(ii)</span></span><span class="translated-text">我们设计了一个端到端的内存生命周期框架，集成了内存评估、价值感知存储和内存辅助响应，为基于 LLM 的代理中的长期内存管理提供了统一且可解释的机制。</span><span class="original-text">We design an end-to-end memory lifecycle framework that integrates memory valuation, value-aware storage, and memory-assisted response, providing a unified and interpretable mechanism for long-term memory management in LLM-based agents.</span><span class="ltx_text ltx_font_italic" id="S1.p6.1.4"><span class="translated-text">(三)</span><span class="original-text">(iii)</span></span><span class="translated-text">我们开发了一个交互式演示系统，可以可视化内存价值、存储演变和响应行为，使用户可以直接观察不同的内存策略如何影响响应质量、检索延迟和令牌消耗。</span><span class="original-text">We develop an interactive demonstration system that visualizes memory value, storage evolution, and response behavior, allowing users to directly observe how different memory strategies affect response quality, retrieval latency, and token consumption.</span></p>
+</div>
+<figure class="ltx_figure" id="S1.F2"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="263" id="S1.F2.g1" src="https://arxiv.org/html/2607.25992v1/figures/overview.png" width="586"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S1.F2.3.1.1" style="font-size:90%;">Figure 2</span>. </span><span class="ltx_text" id="S1.F2.4.2" style="font-size:90%;">System Overview of <span class="ltx_text ltx_font_sansserif" id="S1.F2.4.2.1">MemLens</span> </span></figcaption>
+</figure>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2. </span><span class="ltx_text ltx_font_sansserif" id="S2.1.1"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">概述</span><span class="original-text">Overview</span></h2>
+<div class="ltx_para ltx_noindent" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="ltx_text ltx_font_bold" id="S2.p1.1.1"><span class="translated-text">概述。</span><span class="original-text">Overview.</span></span> <span class="ltx_text ltx_font_sansserif" id="S2.p1.1.2"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">是一种价值感知内存管理系统，它改变了基于 LLM 的代理存储和利用长期内存的方式。
+如图所示</span><span class="original-text">is a value-aware memory management system that shifts how LLM-based agents store and utilize long-term memory.
+As illustrated in Fig.</span><a class="ltx_ref" href="#S1.F2" title="Figure 2 ‣ 1. Introduction ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">，它集成了三个核心组件，包括记忆数据评估、价值感知记忆存储和记忆辅助响应。
+该系统将源自基于 LLM 的代理推理过程的异构记录（例如对话历史、检索到的知识和思维链轨迹）视为候选记忆记录。
+而不是不加区别地存储所有记录，</span><span class="original-text">, it integrates three core components, including memory data evaluation, value-aware memory storage, and memory-assisted response.
+The system treats heterogeneous records originating from the LLM-based agent’s reasoning process (such as dialogue histories, retrieved knowledge, and chain-of-thought traces) as candidate memory records.
+Instead of indiscriminately storing all records,</span><span class="ltx_text ltx_font_sansserif" id="S2.p1.1.3"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">明确量化其效用并选择性地仅保留高价值的。
+在查询响应期间，系统检索并注入简洁但有效的内存来支持复杂的推理，从而以显着降低的令牌开销实现更准确的响应。</span><span class="original-text">explicitly quantifies their utility and selectively retains only the high-value ones.
+During query response, the system retrieves and injects the concise but effective memories to support complex reasoning, enabling more accurate responses with significantly lower token overhead.</span></p>
+</div>
+<div class="ltx_para" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="translated-text">此外，</span><span class="original-text">Furthermore,</span><span class="ltx_text ltx_font_sansserif" id="S2.p2.1.1"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">它还具有交互式分析仪表板，使价值感知内存管理变得透明可见。
+用户可以检查内存值</span><span class="original-text">also features an interactive analytics dashboard that makes value-aware memory management transparent and visible.
+Users can inspect memory values on</span><span class="ltx_text ltx_font_sansserif" id="S2.p2.1.2"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">，其中每条记录都被分配了一个效用分数，并聚合成全局视图，例如价值分布和保留率，从而能够识别关键记忆与冗余记忆。
+该系统还提供了一个可解释的存储视图，突出显示显着的关键词和不断变化的用户偏好配置文件，揭示长期记忆结构是如何连续形成的。
+此外，</span><span class="original-text">, where each record is assigned a utility score and aggregated into global views such as value distributions and retention ratios, enabling identification of the critical versus redundant memories.
+The system also presents an interpretable storage view that highlights salient keywords and evolving user preference profiles, revealing how long-term memory structures are continuously shaped.
+In addition,</span><span class="ltx_text ltx_font_sansserif" id="S2.p2.1.3"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">可以并排比较不同的内存管理策略（</span><span class="original-text">enables side-by-side comparison of different memory management strategies (</span><em class="ltx_emph ltx_font_italic" id="S2.p2.1.4"><span class="translated-text">例如</span><span class="original-text">e.g.</span></em><span class="translated-text">、全存储、基于代理的摘要和价值感知存储），报告测试数据集上的响应质量、检索延迟和令牌消耗，这使用户可以直接观察价值感知内存如何减少不必要的上下文，同时提高响应质量。</span><span class="original-text">, store-all, agent-based summarization, and value-aware storage), reporting response quality, retrieval latency, and token consumption on testing datasets, which allows users to directly observe how value-aware memory reduces unnecessary context while enhancing the response quality.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p3">
+<p class="ltx_p" id="S2.p3.1"><span class="ltx_text ltx_font_bold" id="S2.p3.1.1"><span class="translated-text">工作流程。</span><span class="original-text">Workflow.</span></span> <span class="ltx_text ltx_font_sansserif" id="S2.p3.1.2"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">实现了价值感知的内存生命周期，使 LLM 代理能够保留和利用长期内存。
+一旦用户归档会话，系统就可以将原始记录分解为细粒度的内存单元，并将它们组织成具有多个抽象级别的分层结构。
+然后，使用广泛采用的基于 Shapley 值的框架为每个内存单元分配一个值</span><span class="original-text">implements a value-aware memory lifecycle that enables LLM agents to retain and utilize the long-term memory.
+Once the user archives a session, the system can decompose raw records into fine-grained memory units and organize them into a hierarchical structure with multiple levels of abstraction.
+Then, each memory unit is assigned a value using a widely-adopted Shapley-value-based framework</span><cite class="ltx_cite ltx_citemacro_citep">(Wang<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib6" title="Efficient shapley-based data valuation for federated trajectories">2026</a>; Wei<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib14" title="Federated reasoning llms: a survey">2025b</a>)</cite><span class="translated-text">它捕获了它对下游推理性能的贡献。
+在这些价值观的指导下，</span><span class="original-text">that captures its contribution to downstream reasoning performance.
+Guided by these values,</span><span class="ltx_text ltx_font_sansserif" id="S2.p3.1.3"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">有选择地保留高价值记忆并持续更新用户偏好配置文件。
+最后，系统通过检索相关内存单元并使用用户配置文件来响应用户查询，然后将它们注入到LLM上下文中以提高响应质量，同时避免不必要的上下文扩展。
+上述闭环生命周期允许</span><span class="original-text">selectively preserves high-value memories and continuously updates a user preference profile.
+Finally, the system responds to the user query by retrieving relevant memory units and using the user profile, then injecting them into the LLM context to enhance response quality while avoiding unnecessary context expansion.
+The above closed-loop lifecycle allows</span><span class="ltx_text ltx_font_sansserif" id="S2.p3.1.4"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">自适应地维护紧凑但高影响力和个性化的记忆记录。</span><span class="original-text">to maintain compact yet high-impact and personalized memory records adaptively.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3. </span><span class="ltx_text ltx_font_sansserif" id="S3.1.1"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">系统设计</span><span class="original-text">System Design</span></h2>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1. </span><span class="translated-text">内存数据评估</span><span class="original-text">Memory Data Evaluation</span></h3>
+<div class="ltx_para" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="ltx_text ltx_font_sansserif" id="S3.SS1.p1.1.1"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">将内存记录视为一流的数据对象，并通过基于 Shapley 值的原则方法分两步量化其值：</span><span class="original-text">treats memory records as first-class data objects and quantifies their value via a principled Shapley-value-based approach in two steps:</span><span class="ltx_text ltx_font_italic" id="S3.SS1.p1.1.2"><span class="translated-text">记忆单元构造</span><span class="original-text">memory unit construction</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_italic" id="S3.SS1.p1.1.3"><span class="translated-text">价值评估</span><span class="original-text">value estimation</span></span>.</p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS1.p2">
+<p class="ltx_p" id="S3.SS1.p2.1"><span class="ltx_text ltx_font_bold" id="S3.SS1.p2.1.1"><span class="translated-text">内存单元构造。</span><span class="original-text">Memory Unit Construction.</span></span>
+<span class="ltx_text ltx_font_sansserif" id="S3.SS1.p2.1.2"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">将原始用户-LLM 交互记录转换为结构化内存单元。
+首先，为了进行细粒度分析，将原始记录分割成句子级原子单元。
+然后，系统通过 LLM 将记忆单元分组为多级摘要，提供分层记忆结构，捕获详细语义和高级知识。
+我们还维护从汇总节点到原子存储单元的起源链接
+以避免信息丢失。
+这种设计允许</span><span class="original-text">converts raw user-LLM interaction records into structured memory units.
+Firstly, for fine-grained analysis, the raw record is segmented into sentence-level atomic units.
+The system then groups the memory units into multi-level summaries via LLMs, providing a hierarchical memory structure that captures both detailed semantics and high-level knowledge.
+We maintain provenance links from summarized nodes to the atomic memory units as well
+to avoid the information loss.
+This design allows the</span><span class="ltx_text ltx_font_sansserif" id="S3.SS1.p2.1.3"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">系统将多个低效用片段替换为单个高价值替代品，这可能会提高存储效率和内存质量。</span><span class="original-text">system to replace multiple low-utility fragments into a single high-value alternative, which potentially improves both storage efficiency and memory quality.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS1.p3">
+<p class="ltx_p" id="S3.SS1.p3.5"><span class="ltx_text ltx_font_bold" id="S3.SS1.p3.5.1"><span class="translated-text">内存值估计。</span><span class="original-text">Memory Value Estimation.</span></span>
+<span class="ltx_text ltx_font_sansserif" id="S3.SS1.p3.5.2"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">通过LLM-as-Judge效用分数来评估每个记忆单元的效用，这是一种与记忆评估过程中使用的判断模型不同的判断模型，并衡量单元对下游推理任务的贡献。
+直观地说，如果一个内存单元能够显着提高轻量级代理模型的输出质量，那么它就是有价值的</span><span class="original-text">assesses the utility of each memory unit through an LLM-as-Judge utility score, which is a different judge model from the one employed during memory valuatio and measures unit contribution to the downstream reasoning task.
+Intuitively, a memory unit is valuable if it can significantly improve the output quality of a lightweight proxy model</span><math alttext="\mathop{\mathord{\raise 0.49991pt\hbox{$\displaystyle\mathcal{M}_{p}$}}}\slimits@" class="ltx_Math" display="inline" id="S3.SS1.p3.1.m1" intent=":literal"><semantics><mrow><mpadded voffset="0.5pt"><msub><mi class="ltx_font_mathcaligraphic">ℳ</mi><mi>p</mi></msub></mpadded><merror class="ltx_ERROR undefined undefined"><mtext>\slimits@</mtext></merror></mrow><annotation encoding="application/x-tex">\mathop{\mathord{\raise 0.49991pt\hbox{$\displaystyle\mathcal{M}_{p}$}}}\slimits@</annotation></semantics></math><span class="translated-text">推理能力有限。
+默认情况下，MemLens 使用 Qwen2.5-7B 作为 EduMemBench 中的代理模型，而仪表板允许用户在不同的轻量级模型之间切换。
+具体来说，给定原始用户查询</span><span class="original-text">with limited reasoning capability.
+By default, MemLens uses Qwen2.5-7B as the proxy model in EduMemBench, while the dashboard allows users to switch among different lightweight models.
+Specifically, given the original user query</span><math alttext="q" class="ltx_Math" display="inline" id="S3.SS1.p3.2.m2" intent=":literal"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math><span class="translated-text">及其相关记忆单元子集</span><span class="original-text">and its related memory units subset</span><math alttext="S\subseteq\textsf{M}=\{m_{1},m_{2},\cdots,m_{M}\}" class="ltx_Math" display="inline" id="S3.SS1.p3.3.m3" intent=":literal"><semantics><mrow><mi>S</mi><mo>⊆</mo><mtext class="ltx_mathvariant_sans-serif">M</mtext><mo>=</mo><mrow><mo stretchy="false">{</mo><msub><mi>m</mi><mn>1</mn></msub><mo>,</mo><msub><mi>m</mi><mn>2</mn></msub><mo>,</mo><mi mathvariant="normal">⋯</mi><mo>,</mo><msub><mi>m</mi><mi>M</mi></msub><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">S\subseteq\textsf{M}=\{m_{1},m_{2},\cdots,m_{M}\}</annotation></semantics></math><span class="translated-text">，我们可以形式化效用函数</span><span class="original-text">, we can formalize the utility function</span><math alttext="\mathcal{V}(\cdot)" class="ltx_Math" display="inline" id="S3.SS1.p3.4.m4" intent=":literal"><semantics><mrow><mi class="ltx_font_mathcaligraphic">𝒱</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mo lspace="0em" rspace="0em">⋅</mo><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{V}(\cdot)</annotation></semantics></math><span class="translated-text">一个单位集的</span><span class="original-text">of a unit set</span><math alttext="S" class="ltx_Math" display="inline" id="S3.SS1.p3.5.m5" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math><span class="translated-text">如下，</span><span class="original-text">as follows,</span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E1">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_left" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_left">(1)</span></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\mathcal{V}_{q}(S)=\textbf{Score}\big(\mathcal{M}_{p}(q\oplus S)\big)-\textbf{Score}\big(\mathcal{M}_{p}(q)\big)," class="ltx_Math" display="block" id="S3.E1.m1" intent=":literal"><semantics><mrow><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">𝒱</mi><mi>q</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>S</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><mrow><mtext class="ltx_mathvariant_bold">Score</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="1.200em" minsize="1.200em">(</mo><mrow><msub><mi class="ltx_font_mathcaligraphic">ℳ</mi><mi>p</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><mi>q</mi><mo>⊕</mo><mi>S</mi></mrow><mo stretchy="false">)</mo></mrow></mrow><mo maxsize="1.200em" minsize="1.200em">)</mo></mrow></mrow><mo>−</mo><mrow><mtext class="ltx_mathvariant_bold">Score</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo maxsize="1.200em" minsize="1.200em">(</mo><mrow><msub><mi class="ltx_font_mathcaligraphic">ℳ</mi><mi>p</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>q</mi><mo stretchy="false">)</mo></mrow></mrow><mo maxsize="1.200em" minsize="1.200em">)</mo></mrow></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\mathcal{V}_{q}(S)=\textbf{Score}\big(\mathcal{M}_{p}(q\oplus S)\big)-\textbf{Score}\big(\mathcal{M}_{p}(q)\big),</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.SS1.p3.10"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\mathcal{M}_{p}" class="ltx_Math" display="inline" id="S3.SS1.p3.6.m1" intent=":literal"><semantics><msub><mi class="ltx_font_mathcaligraphic">ℳ</mi><mi>p</mi></msub><annotation encoding="application/x-tex">\mathcal{M}_{p}</annotation></semantics></math><span class="translated-text">是代理模型，</span><span class="original-text">is the proxy model,</span><math alttext="\oplus" class="ltx_Math" display="inline" id="S3.SS1.p3.7.m2" intent=":literal"><semantics><mo>⊕</mo><annotation encoding="application/x-tex">\oplus</annotation></semantics></math><span class="translated-text">表示提示注入操作，</span><span class="original-text">denotes the prompts injection operation, and</span><math alttext="\textbf{Score}(\cdot)" class="ltx_Math" display="inline" id="S3.SS1.p3.8.m3" intent=":literal"><semantics><mrow><mtext class="ltx_mathvariant_bold">Score</mtext><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mo lspace="0em" rspace="0em">⋅</mo><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\textbf{Score}(\cdot)</annotation></semantics></math><span class="translated-text">可以通过法学硕士作为法官的方法来实施。
+如方程。 (</span><span class="original-text">can be implemented via LLM-as-Judge approaches.
+As Eq. (</span><a class="ltx_ref" href="#S3.E1" title="In 3.1. Memory Data Evaluation ‣ 3. MemLens System Design ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">) 使能</span><span class="original-text">) enables</span><span class="ltx_text ltx_font_sansserif" id="S3.SS1.p3.10.1"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">限定一组内存单元的效用</span><span class="original-text">to qualify the utility of a set of memory units</span><math alttext="S" class="ltx_Math" display="inline" id="S3.SS1.p3.9.m4" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math><span class="translated-text">，我们可以定义一个内存单元的值</span><span class="original-text">, we can define the value of a memory unit</span><math alttext="m_{i}\in\textsf{M}" class="ltx_Math" display="inline" id="S3.SS1.p3.10.m5" intent=":literal"><semantics><mrow><msub><mi>m</mi><mi>i</mi></msub><mo>∈</mo><mtext class="ltx_mathvariant_sans-serif">M</mtext></mrow><annotation encoding="application/x-tex">m_{i}\in\textsf{M}</annotation></semantics></math><span class="translated-text">通过将广泛采用的 Shapley 值扩展如下。</span><span class="original-text">by extending the widely-adopted Shapley value as follows.</span></p>
+</div>
+<div class="ltx_theorem ltx_theorem_definition" id="S3.Thmtheorem1">
+<h6 class="ltx_title ltx_runin ltx_font_smallcaps ltx_title_theorem"><span class="translated-text">定义 0（内存 Shapley 值）。</span><span class="original-text">Definition 0 (Memory Shapley Value).</span></h6>
+<div class="ltx_para" id="S3.Thmtheorem1.p1">
+<p class="ltx_p" id="S3.Thmtheorem1.p1.3"><span class="ltx_text ltx_font_italic" id="S3.Thmtheorem1.p1.3.3"><span class="translated-text">给定一个用户查询任务</span><span class="original-text">Given a user query task</span><math alttext="q" class="ltx_Math" display="inline" id="S3.Thmtheorem1.p1.1.1.m1" intent=":literal"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math><span class="translated-text">及其相关的记忆单元</span><span class="original-text">and its related memory units</span><math alttext="\textsf{M}=\{m_{1},\dots,m_{M}\}" class="ltx_Math" display="inline" id="S3.Thmtheorem1.p1.2.2.m2" intent=":literal"><semantics><mrow><mtext class="ltx_mathvariant_sans-serif">M</mtext><mo>=</mo><mrow><mo stretchy="false">{</mo><msub><mi>m</mi><mn>1</mn></msub><mo>,</mo><mi mathvariant="normal">…</mi><mo>,</mo><msub><mi>m</mi><mi>M</mi></msub><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">\textsf{M}=\{m_{1},\dots,m_{M}\}</annotation></semantics></math><span class="translated-text">从用户与 LLM 的交互中，记忆值</span><span class="original-text">from the user-LLM interactions, the memory value of</span><math alttext="m_{i}" class="ltx_Math" display="inline" id="S3.Thmtheorem1.p1.3.3.m3" intent=":literal"><semantics><msub><mi>m</mi><mi>i</mi></msub><annotation encoding="application/x-tex">m_{i}</annotation></semantics></math><span class="translated-text">可以正式定义为，</span><span class="original-text">can be formally defined as,</span></span></p>
+<table class="ltx_equation ltx_eqn_table" id="S3.E2">
+<tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
+<td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_left" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_left">(2)</span></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
+<td class="ltx_eqn_cell ltx_align_center"><math alttext="\phi(m_{i})=\sum_{S\subseteq\textsf{M}\setminus\{m_{i}\}}\frac{|S|!(M-|S|-1)!}{M!}\left[\mathcal{V}_{q}(S\cup\{m_{i}\})-\mathcal{V}_{q}(S)\right]," class="ltx_Math" display="block" id="S3.E2.m1" intent=":literal"><semantics><mrow><mrow><mrow><mi>ϕ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>m</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo rspace="0.111em">=</mo><mrow><munder><mo movablelimits="false">∑</mo><mrow><mi>S</mi><mo>⊆</mo><mrow><mtext class="ltx_mathvariant_sans-serif-italic">M</mtext><mo>∖</mo><mrow><mo stretchy="false">{</mo><msub><mi>m</mi><mi>i</mi></msub><mo stretchy="false">}</mo></mrow></mrow></mrow></munder><mrow><mfrac><mrow><mrow><mrow><mo stretchy="false">|</mo><mi>S</mi><mo stretchy="false">|</mo></mrow><mo>!</mo></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mrow><mo stretchy="false">(</mo><mrow><mi>M</mi><mo>−</mo><mrow><mo stretchy="false">|</mo><mi>S</mi><mo stretchy="false">|</mo></mrow><mo>−</mo><mn>1</mn></mrow><mo stretchy="false">)</mo></mrow><mo>!</mo></mrow></mrow><mrow><mi>M</mi><mo>!</mo></mrow></mfrac><mo lspace="0em" rspace="0em">​</mo><mrow><mo>[</mo><mrow><mrow><msub><mi class="ltx_font_mathcaligraphic">𝒱</mi><mi>q</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><mi>S</mi><mo>∪</mo><mrow><mo stretchy="false">{</mo><msub><mi>m</mi><mi>i</mi></msub><mo stretchy="false">}</mo></mrow></mrow><mo stretchy="false">)</mo></mrow></mrow><mo>−</mo><mrow><msub><mi class="ltx_font_mathcaligraphic">𝒱</mi><mi>q</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>S</mi><mo stretchy="false">)</mo></mrow></mrow></mrow><mo>]</mo></mrow></mrow></mrow></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">\phi(m_{i})=\sum_{S\subseteq\textsf{M}\setminus\{m_{i}\}}\frac{|S|!(M-|S|-1)!}{M!}\left[\mathcal{V}_{q}(S\cup\{m_{i}\})-\mathcal{V}_{q}(S)\right],</annotation></semantics></math></td>
+<td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
+</tr></tbody>
+</table>
+<p class="ltx_p" id="S3.Thmtheorem1.p1.4"><span class="ltx_text ltx_font_italic" id="S3.Thmtheorem1.p1.4.1"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="M" class="ltx_Math" display="inline" id="S3.Thmtheorem1.p1.4.1.m1" intent=":literal"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math><span class="translated-text">是内存单元的总数。
+记忆沙普利值（MS-value）扩展了基于沙普利值的数据评估概念，并继承了一些必需的公平性属性，例如空玩家（或无搭便车者）、对称公平性和线性可加性。</span><span class="original-text">is the total number of memory units.
+The Memory Shapley Value (MS-value) extends the Shapley value-based data valuation concepts and inherits some required fairness properties, such as null player (or no-free-riders), symmetric fairness, and linear-additivity.</span></span></p>
+</div>
+</div>
+<div class="ltx_para" id="S3.SS1.p4">
+<p class="ltx_p" id="S3.SS1.p4.5"><span class="translated-text">为了支持实时交互式内存数据分析和反馈，我们进一步扩展了分层采样策略</span><span class="original-text">To support in-time interactive memory data analytics and feedback, we further extend a stratified sampling strategy</span><cite class="ltx_cite ltx_citemacro_citep">(Wei<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib9" title="Efficient data valuation approximation in federated learning: A sampling-based approach">2025a</a>)</cite><span class="translated-text">有效地近似内存值，其中子集</span><span class="original-text">to approximate memory values efficiently, where subsets</span><math alttext="S" class="ltx_Math" display="inline" id="S3.SS1.p4.1.m1" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math><span class="translated-text">被分组
+按大小进行采样，并按比例抽取样本以减少近似误差。
+那么，评估时间复杂度可以降低为</span><span class="original-text">are grouped
+by size, and samples are drawn proportionally to reduce approximation errors.
+Then, the evaluation time complexity can be reduced to</span><math alttext="O(\rho M)" class="ltx_Math" display="inline" id="S3.SS1.p4.2.m2" intent=":literal"><semantics><mrow><mi>O</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mrow><mi>ρ</mi><mo lspace="0em" rspace="0em">​</mo><mi>M</mi></mrow><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">O(\rho M)</annotation></semantics></math><span class="translated-text">, 其中</span><span class="original-text">, where</span><math alttext="\rho" class="ltx_Math" display="inline" id="S3.SS1.p4.3.m3" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">是抽样预算，</span><span class="original-text">is the sampling budget and</span><math alttext="\rho" class="ltx_Math" display="inline" id="S3.SS1.p4.4.m4" intent=":literal"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math><span class="translated-text">通常设置为</span><span class="original-text">is usually set to</span><math alttext="20\sim 100" class="ltx_Math" display="inline" id="S3.SS1.p4.5.m5" intent=":literal"><semantics><mrow><mn>20</mn><mo>∼</mo><mn>100</mn></mrow><annotation encoding="application/x-tex">20\sim 100</annotation></semantics></math><span class="translated-text">实现高效的交互延迟。
+总之，该模块使我们能够有选择地保存高利用率内存，并提供对内存单元价值的透明和细粒度的洞察。</span><span class="original-text">for efficient interactive latency.
+In summary, this module enables us to save high-utility memories selectively and provides transparent and fine-grained insight into the value of memory units.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2. </span><span class="translated-text">价值感知内存存储</span><span class="original-text">Value-Aware Memory Storage</span></h3>
+<div class="ltx_para" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">基于计算的 Memory Shapley 值，该模块实现了一个值感知内存存储，可在显式效用约束下处理内存保留、组织和演化，提供紧凑但高效用的内存仓库，以平衡存储成本和推理性能。</span><span class="original-text">Building upon the computed Memory Shapley values, this module implements a value-aware memory storage that handles memory retention, organization, and evolution under explicit utility constraints, providing a compact yet high-utility memory warehouse that balances storage cost and reasoning performance.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS2.p2">
+<p class="ltx_p" id="S3.SS2.p2.5"><span class="ltx_text ltx_font_bold" id="S3.SS2.p2.5.1"><span class="translated-text">价值意识存储策略。</span><span class="original-text">Value-Aware Storage Strategy.</span></span><span class="translated-text">对于存储单元</span><span class="original-text">For memory units</span><span class="ltx_text ltx_markedasmath ltx_font_sansserif" id="S3.SS2.p2.5.2">M</span><span class="translated-text">以及它们与价值观的关联</span><span class="original-text">and their associated with values</span><math alttext="\{\phi(m_{i})\}" class="ltx_Math" display="inline" id="S3.SS2.p2.2.m2" intent=":literal"><semantics><mrow><mo stretchy="false">{</mo><mrow><mi>ϕ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>m</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">}</mo></mrow><annotation encoding="application/x-tex">\{\phi(m_{i})\}</annotation></semantics></math>, <span class="ltx_text ltx_font_sansserif" id="S3.SS2.p2.5.3"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">可以通过值阈值选择性存储</span><span class="original-text">can make selectively storage by a value threshold</span><math alttext="\tau" class="ltx_Math" display="inline" id="S3.SS2.p2.3.m3" intent=":literal"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math>, <math alttext="\textsf{M}^{*}=\{m_{i}\in\textsf{M}\mid\phi(m_{i})\geq\tau\}" class="ltx_Math" display="inline" id="S3.SS2.p2.4.m4" intent=":literal"><semantics><mrow><msup><mtext class="ltx_mathvariant_sans-serif">M</mtext><mo>∗</mo></msup><mo>=</mo><mrow><mo stretchy="false">{</mo><mrow><msub><mi>m</mi><mi>i</mi></msub><mo>∈</mo><mtext class="ltx_mathvariant_sans-serif">M</mtext></mrow><mo fence="true" lspace="0em" rspace="0em">∣</mo><mrow><mrow><mi>ϕ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>m</mi><mi>i</mi></msub><mo stretchy="false">)</mo></mrow></mrow><mo>≥</mo><mi>τ</mi></mrow><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">\textsf{M}^{*}=\{m_{i}\in\textsf{M}\mid\phi(m_{i})\geq\tau\}</annotation></semantics></math><span class="translated-text">，让用户灵活调整</span><span class="original-text">, allowing users to flexibly adjust</span><math alttext="\tau" class="ltx_Math" display="inline" id="S3.SS2.p2.5.m5" intent=":literal"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math><span class="translated-text">并探索存储成本和下游推理性能之间的权衡。
+我们还实现了交互式阈值调整，以提供有关内存大小、压缩率和预期效用的即时反馈</span><span class="original-text">and explore a trade-off between storage cost and downstream reasoning performance.
+We also achieve interactive threshold tuning to provide immediate feedback on memory size, compression rate, and expected utility in</span><span class="ltx_text ltx_font_sansserif" id="S3.SS2.p2.5.4"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">系统。</span><span class="original-text">system.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS2.p3">
+<p class="ltx_p" id="S3.SS2.p3.3"><span class="ltx_text ltx_font_bold" id="S3.SS2.p3.3.1"><span class="translated-text">记忆组织和整合。</span><span class="original-text">Memory Organization and Consolidation.</span></span>
+In <span class="ltx_text ltx_font_sansserif" id="S3.SS2.p3.3.2"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">，保存的内存单元被组织成从先前的多级抽象派生的层次树。
+由于句子级原子存储单元被分组为更高级别的语义节点，因此它们可以形成一棵存储树，其中叶节点是原子存储单元，内部节点代表其高级抽象。
+为了减少内存冗余，</span><span class="original-text">, the saved memory units are organized into a hierarchical tree derived from previous multi-level abstractions.
+As sentence-level atomic memory units have been grouped into higher-level semantic nodes, they can form a memory tree in which leaf nodes are atomic memory units and internal nodes represent their high-level abstractions.
+To reduce memory redundancy,</span><span class="ltx_text ltx_font_sansserif" id="S3.SS2.p3.3.3"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">将增量地添加一个新的内存单元到现有的内存树中。
+具体来说，系统应用LLM辅助合并操作员来决定如何处理</span><span class="original-text">will incrementally add a new memory unit to the existing memory tree.
+Specifically, the system applies an LLM-aided consolidation operator to decide how to handle</span><math alttext="m{{}^{\prime}}" class="ltx_math_unparsed" display="inline" id="S3.SS2.p3.1.m1" intent=":literal"><semantics><mrow><mi>m</mi><msup><mi></mi><mo>′</mo></msup></mrow><annotation encoding="application/x-tex">m{{}^{\prime}}</annotation></semantics></math>:
+<span class="ltx_text ltx_font_italic" id="S3.SS2.p3.3.4"><span class="translated-text">(一)</span><span class="original-text">(i)</span></span><span class="translated-text">合并</span><span class="original-text">merge</span><math alttext="m{{}^{\prime}}" class="ltx_math_unparsed" display="inline" id="S3.SS2.p3.2.m2" intent=":literal"><semantics><mrow><mi>m</mi><msup><mi></mi><mo>′</mo></msup></mrow><annotation encoding="application/x-tex">m{{}^{\prime}}</annotation></semantics></math><span class="translated-text">进入现有节点，</span><span class="original-text">into an existing node,</span><span class="ltx_text ltx_font_italic" id="S3.SS2.p3.3.5"><span class="translated-text">(二)</span><span class="original-text">(ii)</span></span><span class="translated-text">更新内存树中的现有节点，或者</span><span class="original-text">update an existing node in memory tree, or</span><span class="ltx_text ltx_font_italic" id="S3.SS2.p3.3.6"><span class="translated-text">(三)</span><span class="original-text">(iii)</span></span><span class="translated-text">插入</span><span class="original-text">insert</span><math alttext="m^{\prime}" class="ltx_Math" display="inline" id="S3.SS2.p3.3.m3" intent=":literal"><semantics><msup><mi>m</mi><mo>′</mo></msup><annotation encoding="application/x-tex">m^{\prime}</annotation></semantics></math><span class="translated-text">作为新节点。
+运算符首先计算传入内存单元和现有节点之间的语义相似度。
+高度相似的节点被合并，部分重叠的节点被更新，不相关的单元被插入作为新节点。
+内存树也可视化为</span><span class="original-text">as a new node.
+The operator first computes semantic similarity between the incoming memory unit and existing nodes.
+Highly similar nodes are merged, partially overlapping nodes are updated, and unrelated units are inserted as new nodes.
+The memory tree is also visualized in</span><span class="ltx_text ltx_font_sansserif" id="S3.SS2.p3.3.7"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">，允许用户直接检查记忆组织和语义关系。</span><span class="original-text">, allowing users to inspect memory organization and semantic relationships directly.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS2.p4">
+<p class="ltx_p" id="S3.SS2.p4.1"><span class="ltx_text ltx_font_bold" id="S3.SS2.p4.1.1"><span class="translated-text">交互式内存分析。</span><span class="original-text">Interactive Memory Analytics.</span></span><span class="translated-text">我们的演示系统还提供交互式分析界面，以提高内存生命周期的透明度和可解释性。
+具体来说，用户配置文件被构造为保留的高价值内存单元的结构化摘要，并作为系统提示注入，这提供了</span><span class="original-text">Our demonstration system also provides an interactive analytics interface to improve transparency and interpretability of the memory lifecycle.
+Specifically, the user profiles are constructed as a structured summary of retained high-value memory units and injected as system prompts, which provides a</span><span class="ltx_text ltx_font_italic" id="S3.SS2.p4.1.2"><span class="translated-text">基于词云的探索</span><span class="original-text">word-cloud-based exploration</span></span><span class="translated-text">保存的内存内容，并呈现</span><span class="original-text">of saved memory content, and presents</span><span class="ltx_text ltx_font_italic" id="S3.SS2.p4.1.3"><span class="translated-text">关键内存统计</span><span class="original-text">key memory statistics</span></span><span class="translated-text">，包括值分布、内存大小和压缩率。
+这些允许用户观察价值感知存储策略如何影响保存的 LLM 内存单元。</span><span class="original-text">, including value distributions, memory size, and compression rates.
+These allow users to observe how a value-aware storage strategy affects the saved LLM memory units.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3. </span><span class="translated-text">记忆辅助反应</span><span class="original-text">Memory-Assisted Response</span></h3>
+<div class="ltx_para" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.1"><span class="translated-text">该模块使用价值感知内存和用户配置文件来生成个性化响应，然后允许用户存档已完成的会话以进行持续的内存演变和管理。</span><span class="original-text">This module uses value-aware memories and user profiles to generate personalized responses, then allows users to archive completed sessions for continuous memory evolution and management.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS3.p2">
+<p class="ltx_p" id="S3.SS3.p2.1"><span class="ltx_text ltx_font_bold" id="S3.SS3.p2.1.1"><span class="translated-text">响应生成。</span><span class="original-text">Response Generation.</span></span>
+<span class="ltx_text ltx_font_sansserif" id="S3.SS3.p2.1.2"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">首先使用从历史高价值记忆构建的用户偏好配置文件作为</span><span class="original-text">first uses the user preference profile, constructed from historical high-value memories, as the</span><span class="ltx_text ltx_font_italic" id="S3.SS3.p2.1.3"><span class="translated-text">系统提示</span><span class="original-text">system prompts</span></span><span class="translated-text">以在各个会话中保持一致的个性化。
+然后，系统从集成向量数据库中检索相关记忆，并根据检索到的单元的 MS 值对它们重新排序</span><span class="original-text">to maintain consistent personalization across sessions.
+Then, the system retrieves relevant memories from the integrated vector database and re-ranks the retrieved units based on their MS-value</span><math alttext="\phi(m)" class="ltx_Math" display="inline" id="S3.SS3.p2.1.m1" intent=":literal"><semantics><mrow><mi>ϕ</mi><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>m</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\phi(m)</annotation></semantics></math><span class="translated-text">，优先考虑语义相关且经验实用性高的单元。
+这些选定的记忆单元将被注入到法学硕士提示中，以提高响应质量。</span><span class="original-text">, prioritizing units that are both semantically relevant and empirically high-utility.
+These selected memory units are injected into the LLM prompts to enhance response quality.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS3.p3">
+<p class="ltx_p" id="S3.SS3.p3.1"><span class="ltx_text ltx_font_bold" id="S3.SS3.p3.1.1"><span class="translated-text">内存归档。</span><span class="original-text">Memory Archiving.</span></span><span class="translated-text">最后，用户可以将交互记录归档，并将其输入到价值感知内存管道中，进行内存单元构建、价值估计和选择性存储，从而建立闭环LLM内存生命周期，不断适应不断变化的用户行为和查询需求。</span><span class="original-text">Finally, the user can archive the interaction records and feed them into the value-aware memory pipeline for memory unit construction, value estimation, and selective storage, which establishes a closed-loop LLM memory lifecycle that continuously adapts to evolving user behavior and query requirements.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4. </span><span class="translated-text">演示场景</span><span class="original-text">Demonstration Scenarios</span></h2>
+<div class="ltx_para" id="S4.p1">
+<p class="ltx_p" id="S4.p1.1"><span class="translated-text">我们展示</span><span class="original-text">We demonstrate</span><span class="ltx_text ltx_font_sansserif" id="S4.p1.1.1"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">通过交互式学习副驾驶场景，它可以帮助学生理解关键概念、创建配置文件并在各个课程中保持记忆。</span><span class="original-text">through an interactive study-copilot scenario, where it assists students in understanding key concepts, creating profiles, and maintaining memory across sessions.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.p2">
+<p class="ltx_p" id="S4.p2.1"><span class="ltx_text ltx_font_bold" id="S4.p2.1.1"><span class="translated-text">模拟环境。</span><span class="original-text">Simulation Environment.</span></span><span class="translated-text">为了模拟真实的用户行为，我们构建了一个综合基准数据集，</span><span class="original-text">To emulate realistic user behavior, we construct a synthetic benchmark dataset,</span><span class="ltx_text ltx_font_sansserif" id="S4.p2.1.2">EduMemBench</span><span class="translated-text">，包含由基于 LLM 的学生代理生成的 2,000 多个多轮对话会话，涵盖事务、索引和并发控制等核心数据库主题。
+基于这些交互，我们进一步派生出包含 500 个查询答案对和参考答案的测试集，从而能够系统评估不同内存管理策略下的记忆辅助响应质量、检索延迟和令牌消耗开销。</span><span class="original-text">, containing over 2,000 multi-turn dialogue sessions generated by an LLM-based student agent, covering core database topics such as transactions, indexing, and concurrency control.
+Based on these interactions, we further derive a testing set of 500 query–answer pairs with reference answers, enabling systematic evaluation of memory-assisted response quality, retrieval latency and token consumption overhead under different memory management strategies.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.p3">
+<p class="ltx_p" id="S4.p3.1"><span class="ltx_text ltx_font_bold" id="S4.p3.1.1"><span class="translated-text">交互式演示工作流程。</span><span class="original-text">Interactive Demonstration Workflow.</span></span><span class="translated-text">的</span><span class="original-text">The</span><span class="ltx_text ltx_font_sansserif" id="S4.p3.1.2"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">提供了与LLM内存生命周期对应的三个协调接口：</span><span class="original-text">provides three coordinated interfaces corresponding to the LLM memory lifecycle:</span><span class="ltx_text ltx_font_italic" id="S4.p3.1.3"><span class="translated-text">(一) 记忆力评估</span><span class="original-text">(i) memory evaluation</span></span>, <span class="ltx_text ltx_font_italic" id="S4.p3.1.4"><span class="translated-text">(ii) 价值感知记忆存储</span><span class="original-text">(ii) value-aware memory storage</span></span><span class="translated-text">, 和</span><span class="original-text">, and</span><span class="ltx_text ltx_font_italic" id="S4.p3.1.5"><span class="translated-text">(三) 记忆辅助反应</span><span class="original-text">(iii) memory-assisted response</span></span><span class="translated-text">。
+通过</span><span class="original-text">.
+Through</span><span class="ltx_text ltx_font_sansserif" id="S4.p3.1.6"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">用户可以交互式地探索如何评估、组织和利用LLM记忆单元，从而创建完整的端到端体验。</span><span class="original-text">users can interactively explore how LLM memory units are valued, organized, and utilized, which creates a complete end-to-end experience.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="323" id="S4.F3.g1" src="https://arxiv.org/html/2607.25992v1/figures/interface_1.png" width="586"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F3.2.1.1" style="font-size:90%;">Figure 3</span>. </span><span class="ltx_text" id="S4.F3.3.2" style="font-size:90%;">Memory Evaluation Interface</span></figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S4.p4">
+<p class="ltx_p" id="S4.p4.1"><span class="ltx_text ltx_font_italic" id="S4.p4.1.1"><span class="translated-text">(i) 内存评估接口</span><span class="original-text">(i) Memory Evaluation Interface</span></span><span class="translated-text">（如图。</span><span class="original-text">(in Fig.</span><a class="ltx_ref" href="#S4.F3" title="Figure 3 ‣ 4. Demonstration Scenarios ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">）。
+用户可以首先探索内存值是如何分配的。
+① 系统支持可配置的评估设置，允许用户选择不同的LLM作为评分模型和轻量级代理模型进行效用评估。
+② 每个存档会话都被分解为细粒度的内存单元，其值通过颜色编码的突出显示进行可视化，从而可以立即识别高价值和低价值的内存片段。
+③ 交互式阈值控制器允许用户动态调整保留阈值并观察内存压缩的相应变化。
+④ 记忆评估界面进一步呈现价值分布，揭示多个会话的记忆经验模式。</span><span class="original-text">).
+Users can first explore how memory values are assigned.
+① The system supports configurable evaluation settings, allowing users to select different LLMs as scoring models and lightweight proxy models for utility estimation.
+② Each archived session is decomposed into fine-grained memory units, whose values are visualized via color-coded highlights, enabling immediate identification of high- and low-value memory fragments.
+③ An interactive threshold controller allows users to dynamically adjust the retention threshold and observe corresponding changes in memory compression.
+④ The memory evaluation interface further presents value distributions, revealing the empirical patterns of memory across multiple sessions.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F4"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="323" id="S4.F4.g1" src="https://arxiv.org/html/2607.25992v1/figures/interface_2.png" width="586"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F4.2.1.1" style="font-size:90%;">Figure 4</span>. </span><span class="ltx_text" id="S4.F4.3.2" style="font-size:90%;">Value-Aware Memory Storage Interface</span></figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S4.p5">
+<p class="ltx_p" id="S4.p5.1"><span class="ltx_text ltx_font_italic" id="S4.p5.1.1"><span class="translated-text">(ii) 价值感知内存存储接口</span><span class="original-text">(ii) Value-Aware Memory Storage Interface</span></span><span class="translated-text">（如图。</span><span class="original-text">(in Fig.</span><a class="ltx_ref" href="#S4.F4" title="Figure 4 ‣ 4. Demonstration Scenarios ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">）。
+然后，用户检查内存是如何组织和存储的。
+① 系统将分层内存结构可视化为交互式树，其中节点颜色编码内存效用。
+用户可以通过单击内存树中的节点来探索树，以检查其内容和语义关系。
+② 该面板不断更新源自保留记忆的用户偏好配置文件，反映长期学习行为。
+③ 该面板显示内存统计信息（</span><span class="original-text">).
+Users then inspect how memory is organized and stored.
+① The system visualizes the hierarchical memory structure as an interactive tree, where node colors encode memory utility.
+Users can explore the tree by clicking nodes in the memory tree to examine their contents and semantic relationships.
+② This panel continuously updates a user preference profile derived from retained memories, reflecting long-term learning behavior.
+③ This panel presents memory statistics (</span><em class="ltx_emph ltx_font_italic" id="S4.p5.1.2"><span class="translated-text">例如</span><span class="original-text">e.g.</span></em><span class="translated-text">、内存单元大小、压缩率和存储容量），使用户能够观察价值感知存储如何重塑内存存储库。
+④</span><span class="original-text">, memory unit size, compression rate, and storage capacity), enabling users to observe how value-aware storage reshapes the memory repository.
+④</span><span class="ltx_text ltx_font_sansserif" id="S4.p5.1.3"><span class="translated-text">记忆透镜</span><span class="original-text">MemLens</span></span><span class="translated-text">还提供词云视图，根据频率突出显示存储记忆中的关键概念，使用户能够在个性化知识学习过程中快速掌握主导记忆模式。</span><span class="original-text">also provides a word-cloud view that highlights the key concepts in stored memory based on their frequency, enabling users to quickly grasp the dominant memory patterns during their personalized knowledge learning process.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F5"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="323" id="S4.F5.g1" src="https://arxiv.org/html/2607.25992v1/figures/interface_3.png" width="586"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure"><span class="ltx_text" id="S4.F5.2.1.1" style="font-size:90%;">Figure 5</span>. </span><span class="ltx_text" id="S4.F5.3.2" style="font-size:90%;">Memory-Assisted Response Interface</span></figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S4.p6">
+<p class="ltx_p" id="S4.p6.1"><span class="ltx_text ltx_font_italic" id="S4.p6.1.1"><span class="translated-text">(iii) 记忆辅助响应接口。</span><span class="original-text">(iii) Memory-Assisted Response Interface.</span></span><span class="translated-text">（如图。</span><span class="original-text">(in Fig.</span><a class="ltx_ref" href="#S4.F5" title="Figure 5 ‣ 4. Demonstration Scenarios ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">）。
+最后，用户与系统实时交互，观察记忆对反应的影响，这有助于他们回忆以前的交互。
+①用户可以选择不同的向量后端（</span><span class="original-text">).
+Finally, users interact with the system in real time to observe the impact of memory on responses, which helps them to recall previous interactions.
+①Users can select different vector backends (</span><em class="ltx_emph ltx_font_italic" id="S4.p6.1.2"><span class="translated-text">例如</span><span class="original-text">e.g.</span></em><span class="translated-text">, 费斯</span><span class="original-text">, FAISS</span><cite class="ltx_cite ltx_citemacro_citep">(Douze<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib10" title="The faiss library">2025</a>)</cite><span class="translated-text">) 设置系统配置。
+②系统使用检索到的记忆和用户配置文件生成响应，允许用户直接观察答案相关性和一致性的改进。
+③用户可以归档已完成的会话，触发完整的内存管道，从而关闭内存生命周期。
+④该面板支持不同内存策略的基准测试，并以雷达图形式呈现响应质量、检索时间和令牌消耗的分数，使用户能够观察各种内存策略的权衡和优势。
+EduMemBench 上的实验表明，价值感知策略持续改善响应质量、延迟和代币消耗之间的权衡。
+尽管 EduMemBench 被用作主要演示工作负载，但 MemLens 与基准无关，并且可以轻松扩展到公共长期内存基准，例如 LoCoMo</span><span class="original-text">) to set system configurations.
+②The system generates responses using both retrieved memory and user profiles, allowing users to observe improvements in answer relevance and consistency directly.
+③Users can archive completed sessions, triggering the full memory pipeline, thereby closing the memory lifecycle.
+④This panel supports benchmarking across different memory strategies and also presents scores of response quality, retrieval time, and token consumption in a radar plot, enabling users to observe the trade-offs and advantages of various memory strategies.
+Experiments on EduMemBench shows that the value-aware strategy consistently improves the trade-off among response quality, latency, and token consumption.
+Though EduMemBench is used as the primary demonstration workload, MemLens is benchmark-agnostic and can be readily extended to public long-term memory benchmarks such as LoCoMo</span><cite class="ltx_cite ltx_citemacro_citep">(Maharana<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib13" title="Evaluating very long-term conversational memory of LLM agents">2024</a>)</cite><span class="translated-text">和 LongMemEval</span><span class="original-text">and LongMemEval</span><cite class="ltx_cite ltx_citemacro_citep">(Wu<span class="ltx_text ltx_bib_etal"> et al.</span>, <a class="ltx_ref" href="#bib.bib12" title="LongMemEval: benchmarking chat assistants on long-term interactive memory">2025</a>)</cite>.</p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist" id="bib.L1">
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib3">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">P. Chhikara, D. Khant, S. Aryan, <span class="ltx_text ltx_bib_etal">et al.</span> (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Mem0: building production-ready AI agents with scalable long-term memory</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">ECAI</span>,
+</span>
+<span class="ltx_bibblock">Vol. <span class="ltx_text ltx_bib_volume">413</span>, <span class="ltx_text ltx_bib_pages"> pp. 2993–3000</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1. Introduction ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib10">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">M. Douze, A. Guzhva, C. Deng, J. Johnson, G. Szilvasy, <span class="ltx_text ltx_bib_etal">et al.</span> (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">The faiss library</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">IEEE Transactions on Big Data</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.p6.1" title="4. Demonstration Scenarios ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_tag">§4</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib15">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">J. Fu, J. Chen, <span class="ltx_text ltx_bib_etal">et al.</span> (2026)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">VikingMem: A memory base management system for stateful llm-based applications</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv</span> <span class="ltx_text ltx_bib_volume">abs/2605.29640</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1. Introduction ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib2">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Y. Hu, S. Liu, Y. Yue, G. Zhang, B. Liu, <span class="ltx_text ltx_bib_etal">et al.</span> (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Memory in the age of AI agentsMemory in the age of AI agents</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">arXiv</span> <span class="ltx_text ltx_bib_volume">abs/2512.13564</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1. Introduction ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib13">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">A. Maharana, D. Lee, S. Tulyakov, <span class="ltx_text ltx_bib_etal">et al.</span> (2024)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Evaluating very long-term conversational memory of LLM agents</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">ACL</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 13851–13870</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.p6.1" title="4. Demonstration Scenarios ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_tag">§4</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib6">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Y. Wang, S. Li, <span class="ltx_text ltx_bib_etal">et al.</span> (2026)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Efficient shapley-based data valuation for federated trajectories</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Frontiers Comput. Sci.</span> <span class="ltx_text ltx_bib_volume">20</span> (<span class="ltx_text ltx_bib_number">9</span>), <span class="ltx_text ltx_bib_pages"> pp. 2009621</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p3.1" title="2. MemLens Overview ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib9">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">S. Wei, Y. Tong, Z. Zhou, T. He, and Y. Xu (2025a)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Efficient data valuation approximation in federated learning: A sampling-based approach</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">ICDE</span>,
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_pages"> pp. 2922–2934</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S3.SS1.p4.5" title="3.1. Memory Data Evaluation ‣ 3. MemLens System Design ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_tag">§3.1</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib14">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">S. Wei, Y. Tong, Z. Zhou, <span class="ltx_text ltx_bib_etal">et al.</span> (2025b)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">Federated reasoning llms: a survey</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">Frontiers Comput. Sci.</span> <span class="ltx_text ltx_bib_volume">19</span> (<span class="ltx_text ltx_bib_number">12</span>), <span class="ltx_text ltx_bib_pages"> pp. 1912613</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S2.p3.1" title="2. MemLens Overview ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_tag">§2</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_inproceedings" id="bib.bib12">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">D. Wu, H. Wang, W. Yu, <span class="ltx_text ltx_bib_etal">et al.</span> (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">LongMemEval: benchmarking chat assistants on long-term interactive memory</span>.
+</span>
+<span class="ltx_bibblock">In <span class="ltx_text ltx_bib_inbook">ICLR</span>,
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S4.p6.1" title="4. Demonstration Scenarios ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_tag">§4</span></a>.
+</span>
+</li>
+<li class="ltx_bibitem ltx_bib_article" id="bib.bib1">
+<span class="ltx_tag ltx_bib_author-year ltx_role_refnum ltx_tag_bibitem">Z. Zhang, Q. Dai, <span class="ltx_text ltx_bib_etal">et al.</span> (2025)</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_title">A survey on the memory mechanism of large language model-based agents</span>.
+</span>
+<span class="ltx_bibblock"><span class="ltx_text ltx_bib_journal">ACM TOIS</span> <span class="ltx_text ltx_bib_volume">43</span> (<span class="ltx_text ltx_bib_number">6</span>), <span class="ltx_text ltx_bib_pages"> pp. 155:1–155:47</span>.
+</span>
+<span class="ltx_bibblock ltx_bib_cited">Cited by: <a class="ltx_ref" href="#S1.p2.1" title="1. Introduction ‣ MemLens: A Value-Aware Memory Management System with Interactive Analytics for LLM-based Agents"><span class="ltx_text ltx_ref_tag">§1</span></a>.
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2607.25992v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer><footer class="ds-site-footer">
+<div class="ds-site-footer-grid">
+<div class="ds-site-footer-main">
+<div class="ds-site-footer-ack"><span class="translated-text">我们衷心感谢来自
+        我们的</span><span class="original-text">We gratefully acknowledge support from
+        our</span><strong><span class="translated-text">主要资助者</span><span class="original-text">major funders</span></strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong><span class="translated-text">成员机构</span><span class="original-text">member institutions</span></strong></a><span class="ack-member-inline" hidden="">, <strong></strong></span><span class="translated-text">,
+        以及所有贡献者。</span><span class="original-text">,
+        and all contributors.</span></div>
+<nav aria-label="Site navigation" class="ds-site-footer-links">
+<a href="https://info.arxiv.org/about"><span class="translated-text">关于</span><span class="original-text">About</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help"><span class="translated-text">帮助</span><span class="original-text">Help</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/contact.html"><span class="translated-text">联系方式</span><span class="original-text">Contact</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/subscribe"><span class="translated-text">订阅</span><span class="original-text">Subscribe</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/license/index.html"><span class="translated-text">版权</span><span class="original-text">Copyright</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/policies/privacy_policy.html"><span class="translated-text">隐私</span><span class="original-text">Privacy</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/web_accessibility.html"><span class="translated-text">无障碍</span><span class="original-text">Accessibility</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://status.arxiv.org" rel="noopener noreferrer" target="_blank"><span class="translated-text">运营状况</span><span class="original-text">Operational Status</span><span class="is-sr-only"><span class="translated-text">（在新选项卡中打开）</span><span class="original-text">(opens in new tab)</span></span></a>
+</nav>
+</div>
+<div aria-label="Major funders" class="ds-site-footer-funders">
+<div class="ds-site-footer-funders-label"><span class="translated-text">主要资金支持来自</span><span class="original-text">Major funding support from</span></div>
+<div class="ds-site-footer-funders-logos">
+<a class="ds-funder-link" href="https://www.simonsfoundation.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.sfi.org.bm/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation International" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation-international.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.schmidtsciences.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Schmidt Sciences" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/schmidt-sciences.png"/>
+</a>
+</div>
+</div>
+</div>
+</footer><div id="fixed-buttons-container">
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
