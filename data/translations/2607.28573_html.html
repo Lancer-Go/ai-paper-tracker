@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+<title><span class="translated-text">重新思考本地计算机使用代理中的推理时间缩放：故障模式和计算权衡</span><span class="original-text">Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs</span></title>
+<span class="translated-text">由 LaTeXML（版本 0.8.8）于 2026 年 7 月 30 日星期四 17:32:03 http://dlmf.nist.gov/LaTeXML/ 生成。</span><span class="original-text">Generated on Thu Jul 30 17:32:03 2026 by LaTeXML (version 0.8.8) http://dlmf.nist.gov/LaTeXML/.</span>
+<meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>
+<link href="https://arxiv.org/static/browse/0.3.4/css/arxiv-html-papers-20260131.css" rel="stylesheet" type="text/css"/>
+<script src="https://arxiv.org/static/browse/0.3.4/js/arxiv-html-papers-20260131.js"></script>
+<script>
+  // Restore the saved color scheme preference, or
+  // enact the browser preference if "automatic", 
+  // without expecting DOM load to have completed.
+  //
+  // Also restore any saved readingmode and ToC display preferences.
+  function initializeReadingPreferences() {
+    let saved_theme = localStorage.getItem("ar5iv_theme") || "automatic";
+    if (saved_theme === "automatic") {
+      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+        saved_theme = "dark";
+      }
+    }
+    if (saved_theme == "dark") {
+      document.documentElement.setAttribute("data-theme", "dark");
+    } else {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+
+    const tocDisplay = localStorage.getItem('arxiv_html_paper_toc_display');
+    if (tocDisplay) {
+      document.documentElement.setAttribute("data-toc-display", tocDisplay);
+    }
+    const readingMode = localStorage.getItem('arxiv_html_paper_reading_mode');
+    if (readingMode) {
+      document.documentElement.setAttribute("data-reading-mode", readingMode);
+    }
+    // Pre-apply spinout-banner dismissal here, before the banner paints, so it
+    // never flashes in only to be hidden later by the deferred arxiv-header.js.
+    // Key matches arxiv-header.js: "arxiv-banner-dismissed:" + data-banner-name.
+    if (localStorage.getItem('arxiv-banner-dismissed:spinout-nonprofit')) {
+      document.documentElement.setAttribute("data-banner-dismissed", "");
+    }
+  }
+  // Run as soon as JS starts, to minimize repainting
+  initializeReadingPreferences();
+</script>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="https://arxiv.org/static/browse/0.3.4/images/icons/site.webmanifest" rel="manifest"/>
+<link color="#5bbad5" href="https://arxiv.org/static/browse/0.3.4/images/icons/safari-pinned-tab.svg" rel="mask-icon"/>
+<link href="https://use.typekit.net/utz6mli.css" media="screen" rel="stylesheet" type="text/css"/><link href="https://arxiv.org/static/base/1.0.1/css/arxiv-header-footer.css?v=20260626" media="screen" rel="stylesheet" type="text/css"/><style>
+  /* Banner pre-dismissal (set above before paint -> no flash-then-hide) and
+     reading-mode chrome hiding. */
+  html[data-banner-dismissed] .ds-announcement { display: none; }
+  html[data-reading-mode="enabled"] .ds-announcement,
+  html[data-reading-mode="enabled"] .ds-site-footer { display: none; }
+  /* Keep the announcement text dark on the Open-Blue band in both colour themes
+     (otherwise it inherits the paper's warm-wash text in dark mode and washes out). */
+  .ds-announcement-text { color: var(--arxiv-ink, #1c1a17); }
+</style>
+<script defer="" src="https://arxiv.org/static/base/1.0.1/js/arxiv-header.js?v=20260626"></script>
+
+<style id="ai-tracker-theme">
+        /* 白底学术主题覆盖 */
+        body {
+            background: #ffffff !important;
+            color: #333333 !important;
+            font-family: 'Georgia', 'Times New Roman', 'SimSun', serif !important;
+            line-height: 1.8 !important;
+            padding-top: 56px !important;  /* 为固定导航栏留空 */
+        }
+        
+        /* 翻译文本样式 */
+        .translated-text { }
+        .original-text { display: none !important; color: #999; font-size: 0.85em; font-style: italic; }
+        body.bilingual .original-text { display: block !important; margin-top: 4px; }
+        
+        /* 导航栏样式 */
+        #ai-tracker-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: #1a1a2e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 99999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #ai-tracker-nav a, #ai-tracker-nav button {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            transition: background 0.2s;
+        }
+        #ai-tracker-nav a:hover, #ai-tracker-nav button:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        #ai-tracker-nav .nav-left { display: flex; align-items: center; gap: 8px; }
+        #ai-tracker-nav .nav-right { display: flex; align-items: center; gap: 6px; }
+        #ai-tracker-nav .toggle-btn {
+            background: rgba(99,102,241,0.3);
+            border: 1px solid rgba(99,102,241,0.5);
+            color: #a5b4fc;
+            font-weight: 500;
+        }
+        #ai-tracker-nav .toggle-btn.active {
+            background: rgba(99,102,241,0.6);
+            color: #fff;
+        }
+        
+        /* 降级 Alert */
+        .ai-tracker-degraded-alert {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin: 16px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* 图片自适应 */
+        img { max-width: 100%; height: auto; }
+        
+        /* 表格样式增强 */
+        table { border-collapse: collapse; max-width: 100%; overflow-x: auto; display: block; }
+        td, th { padding: 8px 12px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+<div id="ai-tracker-nav">
+<div class="nav-left">
+<a href="javascript:history.back()" title="返回热榜">← 返回热榜</a>
+</div>
+<div class="nav-right">
+<button class="toggle-btn" id="bilingualToggle" onclick="toggleBilingual()">
+                🔄 中英对照
+            </button>
+<a href="https://arxiv.org/abs/2607.28573" target="_blank">🔗 arXiv 原文</a>
+<a href="https://arxiv.org/pdf/2607.28573" target="_blank">📥 PDF 下载</a>
+</div>
+</div>
+
+<dialog aria-labelledby="modal-title" closedby="any" id="modal-form">
+<form enctype="multipart/form-data" id="modal-form-content" method="dialog">
+<header class="modal-header">
+<h5 class="modal-title" id="modal-title"><span class="translated-text">报告 GitHub 问题</span><span class="original-text">Report GitHub Issue</span></h5>
+<button aria-label="Close" class="modal-close" formnovalidate="" type="submit">×</button>
+</header>
+<div class="modal-body">
+<label for="form_title"><span class="translated-text">标题：</span><span class="original-text">Title:</span></label>
+<input class="form-control" id="form_title" name="form_title" placeholder="Enter title" required=""/>
+<p hidden="" id="selectedTextModalDescription"><span class="translated-text">内容选择已保存。描述以下问题：</span><span class="original-text">Content selection saved. Describe the issue below:</span></p>
+<label for="description"><span class="translated-text">说明：</span><span class="original-text">Description:</span></label>
+<textarea class="form-control" id="description" maxlength="500" name="description" placeholder="500 characters maximum" required=""></textarea>
+</div>
+<footer class="modal-footer">
+<button class="sr-only modal-submit" type="submit" value="internal-report"><span class="translated-text">不使用 GitHub 提交</span><span class="original-text">Submit without GitHub</span></button>
+<button class="modal-submit" type="submit" value="github-report"><span class="translated-text">在 GitHub 中提交</span><span class="original-text">Submit in GitHub</span></button>
+</footer>
+</form>
+</dialog><div aria-label="Announcement" class="ds-announcement" data-banner-name="spinout-nonprofit" id="announcement-banner" role="region">
+<img alt="" aria-hidden="true" class="ds-announcement-glyph" src="https://arxiv.org/static/base/1.0.1/images/icons/smileybones-small.svg"/>
+<span class="ds-announcement-text"><span class="translated-text">arXiv 现在是一个独立的非营利组织！</span><span class="original-text">arXiv is now an independent nonprofit!</span></span>
+<a class="ds-announcement-link" href="https://info.arxiv.org/about"><span class="translated-text">了解更多</span><span class="original-text">Learn more</span></a>
+<button aria-label="Dismiss announcement" class="ds-announcement-close" type="button">×</button>
+</div>
+<header class="arxiv-html-header">
+<div class="html-header-logo">
+<a href="https://arxiv.org/"><img alt="arXiv logo" class="logo desktop-only" src="https://arxiv.org/static/base/1.0.1/images/arxiv-logo-primary-light.svg" width="100"/>
+<span class="sr-only"><span class="translated-text">返回 arXiv</span><span class="original-text">Back to arXiv</span></span>
+</a>
+</div>
+<span class="translated-text">TOC、深色模式、链接</span><span class="original-text">TOC, dark mode, links</span>
+<nav class="html-header-nav">
+<a class="header-button hover-effect desktop-only" href="https://info.arxiv.org/about/accessible_HTML.html" target="_blank"><span class="translated-text">为什么是 HTML？</span><span class="original-text">Why HTML?</span></a>
+<a class="header-button" href="#" onclick="event.preventDefault(); showModalForm();" title="Report an issue">
+<svg aria-hidden="true" class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">报告问题</span><span class="original-text">Report Issue</span></span></a>
+<span class="translated-text">回到摘要</span><span class="original-text">back to abstract</span>
+<a aria-label="Back to abstract page" class="header-button" href="https://arxiv.org/abs/2607.28573v1" title="Back to abstract page">
+<svg aria-hidden="true" class="mobile-only toggle-icon" fill="#ffffff" height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M502.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-128-128c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L402.7 224 192 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l210.7 0-73.4 73.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l128-128zM160 96c17.7 0 32-14.3 32-32s-14.3-32-32-32L96 32C43 32 0 75 0 128L0 384c0 53 43 96 96 96l64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0c-17.7 0-32-14.3-32-32l0-256c0-17.7 14.3-32 32-32l64 0z">
+</path>
+</svg>
+<span class="desktop-only"><span class="translated-text">返回摘要</span><span class="original-text">Back to Abstract</span></span>
+</a>
+<span class="translated-text">PDF下载链接</span><span class="original-text">PDF download link</span>
+<a class="header-button" href="https://arxiv.org/pdf/2607.28573v1" target="_blank" title="Download PDF">
+<svg class="mobile-only toggle-icon" height="1.25rem" role="presentation" viewbox="0 0 576 542">
+<path d="M208 48L96 48c-8.8 0-16 7.2-16 16l0 384c0 8.8 7.2 16 16 16l80 0 0 48-80 0c-35.3 0-64-28.7-64-64L32 64C32 28.7 60.7 0 96 0L229.5 0c17 0 33.3 6.7 45.3 18.7L397.3 141.3c12 12 18.7 28.3 18.7 45.3l0 149.5-48 0 0-128-88 0c-39.8 0-72-32.2-72-72l0-88zM348.1 160L256 67.9 256 136c0 13.3 10.7 24 24 24l68.1 0zM240 380l32 0c33.1 0 60 26.9 60 60s-26.9 60-60 60l-12 0 0 28c0 11-9 20-20 20s-20-9-20-20l0-128c0-11 9-20 20-20zm32 80c11 0 20-9 20-20s-9-20-20-20l-12 0 0 40 12 0zm96-80l32 0c28.7 0 52 23.3 52 52l0 64c0 28.7-23.3 52-52 52l-32 0c-11 0-20-9-20-20l0-128c0-11 9-20 20-20zm32 128c6.6 0 12-5.4 12-12l0-64c0-6.6-5.4-12-12-12l-12 0 0 88 12 0zm76-108c0-11 9-20 20-20l48 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 24 28 0c11 0 20 9 20 20s-9 20-20 20l-28 0 0 44c0 11-9 20-20 20s-20-9-20-20l0-128z"></path>
+</svg>
+<span class="desktop-only"><span class="translated-text">下载PDF</span><span class="original-text">Download PDF</span></span></a>
+<span class="translated-text">导航目录切换</span><span class="original-text">navigational table of contents toggle</span>
+<a aria-label="Toggle navigation" class="header-button toggle-icon" href="javascript:toggleNavTOC();" title="Toggle navigation">
+<svg height="1.25rem" role="presentation" viewbox="0 0 512 512">
+<path d="M40 48C26.7 48 16 58.7 16 72v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V72c0-13.3-10.7-24-24-24H40zM192 64c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zm0 160c-17.7 0-32 14.3-32 32s14.3 32 32 32H480c17.7 0 32-14.3 32-32s-14.3-32-32-32H192zM16 232v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V232c0-13.3-10.7-24-24-24H40c-13.3 0-24 10.7-24 24zM40 368c-13.3 0-24 10.7-24 24v48c0 13.3 10.7 24 24 24H88c13.3 0 24-10.7 24-24V392c0-13.3-10.7-24-24-24H40z">
+</path>
+</svg>
+</a>
+<span class="translated-text">- 可折叠标题/阅读模式切换</span><span class="original-text">- collapsable header / reading mode toggle</span>
+<a class="header-button toggle-icon" href="javascript:toggleReadingMode();" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M32 32C14.3 32 0 46.3 0 64l0 96c0 17.7 14.3 32 32 32s32-14.3 32-32l0-64 64 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 32zM64 352c0-17.7-14.3-32-32-32S0 334.3 0 352l0 96c0 17.7 14.3 32 32 32l96 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-64 0 0-64zM320 32c-17.7 0-32 14.3-32 32s14.3 32 32 32l64 0 0 64c0 17.7 14.3 32 32 32s32-14.3 32-32l0-96c0-17.7-14.3-32-32-32l-96 0zM448 352c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 64-64 0c-17.7 0-32 14.3-32 32s14.3 32 32 32l96 0c17.7 0 32-14.3 32-32l0-96z"></path>
+</svg>
+</a>
+<span class="translated-text">- 彩色主题切换</span><span class="original-text">- colored theme toggle</span>
+<button aria-label="Toggle color scheme" class="header-button color-tog" onclick="toggleColorScheme();" title="Toggle dark/light mode" type="button">
+<span aria-hidden="true" class="toggle-icon automatic-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon light-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+<span aria-hidden="true" class="toggle-icon dark-tog">
+<svg height="1.25rem" role="presentation" viewbox="0 0 24 24">
+<path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z">
+</path>
+</svg>
+</span>
+</button>
+</nav>
+</header><nav class="ltx_page_navbar">
+<nav class="ltx_TOC">
+<ol class="ltx_toclist">
+<li class="ltx_tocentry ltx_tocentry_abstract"><a class="ltx_ref" href="#abstract1" title="In Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title">Abstract</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S1" title="In Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">1 </span>Introduction</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S2" title="In Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">2 </span>Related Work</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S3" title="In Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3 </span>Methodology</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS1" title="In 3 Methodology ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.1 </span>Structure of CUA</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection">
+<a class="ltx_ref" href="#S3.SS2" title="In 3 Methodology ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2 </span>Compute Scaling Dimensions</span></a>
+<ol class="ltx_toclist ltx_toclist_subsection">
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS1" title="In 3.2 Compute Scaling Dimensions ‣ 3 Methodology ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2.1 </span>Temporal Scaling: Max Decoding Steps (<math alttext="S" class="ltx_Math" display="inline" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>)</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS2" title="In 3.2 Compute Scaling Dimensions ‣ 3 Methodology ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2.2 </span>Contextual Scaling: History Image Length (<math alttext="H" class="ltx_Math" display="inline" intent=":literal"><semantics><mi>H</mi><annotation encoding="application/x-tex">H</annotation></semantics></math>)</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsubsection"><a class="ltx_ref" href="#S3.SS2.SSS3" title="In 3.2 Compute Scaling Dimensions ‣ 3 Methodology ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.2.3 </span>Parallel Scaling: Number of Multiple Plans (<math alttext="P" class="ltx_Math" display="inline" intent=":literal"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>)</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS3" title="In 3 Methodology ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.3 </span>Cost Metrics</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S3.SS4" title="In 3 Methodology ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">3.4 </span>Experimental Setup</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S4" title="In Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4 </span>Results</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS1" title="In 4 Results ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.1 </span>The Dynamics of Contextual and Temporal Scaling (Single Agent)</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S4.SS2" title="In 4 Results ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">4.2 </span>Structural Decomposition and Parallel Scaling (Two-stage Agent)</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section">
+<a class="ltx_ref" href="#S5" title="In Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5 </span>Discussion</span></a>
+<ol class="ltx_toclist ltx_toclist_section">
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS1" title="In 5 Discussion ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5.1 </span>Resource Allocation Strategy and Practical Guidelines</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_subsection"><a class="ltx_ref" href="#S5.SS2" title="In 5 Discussion ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">5.2 </span>Toward Efficient Local Computer-Use Agents</span></a></li>
+</ol>
+</li>
+<li class="ltx_tocentry ltx_tocentry_section"><a class="ltx_ref" href="#S6" title="In Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title"><span class="ltx_tag ltx_tag_ref">6 </span>Conclusion</span></a></li>
+<li class="ltx_tocentry ltx_tocentry_bibliography"><a class="ltx_ref" href="#bib" title="In Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_title">References</span></a></li>
+</ol></nav>
+</nav>
+<div class="ltx_page_main">
+<div class="infobox" id="infobox">
+<a href="https://info.arxiv.org/help/license/index.html#licenses-available" id="license-tr"><span class="translated-text">许可证：CC BY 4.0</span><span class="original-text">License: CC BY 4.0</span></a>
+<div id="watermark-tr"><span class="translated-text">arXiv:2607.28573v1 [cs.AI] 2026 年 7 月 30 日</span><span class="original-text">arXiv:2607.28573v1 [cs.AI] 30 Jul 2026</span></div>
+</div><div class="ltx_page_content">
+<article class="ltx_document ltx_authors_1line">
+<h1 class="ltx_title ltx_title_document"><span class="translated-text">重新思考本地计算机使用代理中的推理时间缩放：故障模式和计算权衡</span><span class="original-text">Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs</span></h1>
+<div class="ltx_authors">
+<span class="ltx_creator ltx_role_author">
+<span class="ltx_personname">
+<span class="ltx_tabular ltx_align_middle" id="id1.1.id1">
+<span class="ltx_tbody">
+<span class="ltx_tr" id="id1.1.id1.1.1">
+<span class="ltx_td ltx_align_left" id="id1.1.id1.1.1.1"><span class="ltx_text ltx_font_bold" id="id1.1.id1.1.1.1.1">Woongkyu Lee</span></span>
+<span class="ltx_td ltx_align_left" id="id1.1.id1.1.1.2"><span class="ltx_text ltx_font_bold" id="id1.1.id1.1.1.2.1">Jungwook Choi</span></span></span>
+<span class="ltx_tr" id="id1.1.id1.2.2">
+<span class="ltx_td ltx_align_left ltx_colspan ltx_colspan_2" id="id1.1.id1.2.2.1">Hanyang University</span></span>
+<span class="ltx_tr" id="id1.1.id1.3.3">
+<span class="ltx_td ltx_align_left ltx_colspan ltx_colspan_2" id="id1.1.id1.3.3.1"><span class="ltx_text ltx_font_typewriter" id="id1.1.id1.3.3.1.1">{lwghanyang, choij}@hanyang.ac.kr</span></span></span>
+</span>
+</span>
+</span><span class="ltx_author_notes"><span class="ltx_text ltx_font_bold" id="id2.2.id1">Corresponding author.</span></span></span>
+</div>
+<div class="ltx_abstract" id="abstract1">
+<h6 class="ltx_title ltx_title_abstract"><span class="translated-text">摘要</span><span class="original-text">Abstract</span></h6>
+<p class="ltx_p"><span class="translated-text">在本地部署自主计算机使用代理 (CUA) 对于隐私、成本效率和实际可用性越来越重要，但在严格的硬件限制下提高其性能仍然具有挑战性。虽然最近的研究表明，推理时间扩展可以通过执行期间的额外计算来改进前沿计算机使用代理，但其对于资源受限的本地模型的有效性仍然知之甚少。我们对本地 CUA 中跨上下文、时间、结构和并行维度的推理时间缩放进行了系统的实证研究。我们在 OSWorld 基准测试中评估了 Qwen3-VL-8B/30B-A3B、UI-TARS-1.5-7B 和 OpenCUA-7B。我们的结果表明，在改变故障模式时，额外的计算通常会产生收益递减。上下文缩放提供了提高轨迹稳定性和任务准确性的历史基础，但随着代币成本的增加以及失败从重复或停滞的轨迹转向过早的错误成功，其收益会饱和。时间缩放类似地减少了最大步停顿，但并没有显着提高任务成功率，这表明更长的视野通常会扩展错误的轨迹，而不是纠正它们。我们进一步发现，结构分解可能会在本地两阶段代理中引入规划和格式化开销，而并行扩展则以大量计算成本部分缓解了这些故障。总体而言，我们的研究结果表明，高效的本地 CUA 需要选择性的计算分配、故障感知控制机制以及围绕本地模型的功能和限制而设计的代理框架。</span><span class="original-text">Deploying autonomous computer-use agents (CUAs) locally is increasingly important for privacy, cost efficiency, and practical usability, yet improving their performance under strict hardware constraints remains challenging. While recent studies show that inference-time scaling can improve frontier computer-use agents through additional computation during execution, its effectiveness for resource-constrained local models remains poorly understood. We present a systematic empirical study of inference-time scaling in local CUAs across contextual, temporal, structural, and parallel dimensions. We evaluate Qwen3-VL-8B/30B-A3B, UI-TARS-1.5-7B, and OpenCUA-7B on the OSWorld benchmark. Our results show that additional computation often yields diminishing returns while changing failure modes. Contextual scaling provides historical grounding that improves trajectory stability and task accuracy, but its gains saturate as token cost increases and failures shift from repetitive or stalled trajectories toward premature false successes. Temporal scaling similarly reduces max-step stalls, yet does not substantially improve task success, indicating that longer horizons often extend erroneous trajectories rather than correct them. We further find that structural decomposition can introduce planning and formatting overhead in local two-stage agents, while parallel scaling partially mitigates these failures at a substantial computational cost. Overall, our findings suggest that efficient local CUAs require selective compute allocation, failure-aware control mechanisms, and agentic frameworks designed around the capabilities and limitations of local models.</span></p>
+</div>
+<section class="ltx_section" id="S1">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">1 </span><span class="translated-text">简介</span><span class="original-text">Introduction</span></h2>
+<div class="ltx_para ltx_noindent" id="S1.p1">
+<p class="ltx_p" id="S1.p1.1"><span class="translated-text">大型语言模型 (LLM) 的出现从根本上改变了数字交互的范式，从简单的文本生成转向能够导航复杂图形用户界面 (GUI) 的自主计算机使用代理 (CUA)。
+与传统的特定任务机器人不同，这些代理利用多模式推理来感知屏幕状态和交互历史记录，执行 GUI 操作（例如单击、键入和滚动）来完成高级用户指令。
+现实评估基准的制定推动了这一进展</span><span class="original-text">The emergence of Large Language Models (LLMs) has fundamentally shifted the paradigm of digital interaction, moving beyond simple text generation toward autonomous Computer-use Agents (CUAs) capable of navigating complex Graphical User Interfaces (GUIs).
+Unlike traditional task-specific bots, these agents leverage multimodal reasoning to perceive screen states and interaction history, execute GUI actions (e.g., click, type, and scroll) to fulfill high-level user instructions.
+This progress has been fueled by both the development of realistic evaluation benchmarks</span><cite class="ltx_cite ltx_citemacro_citep">(Xie et al., <a class="ltx_ref" href="#bib.bib20" title="">2024</a>; Deng et al., <a class="ltx_ref" href="#bib.bib8" title="">2023</a>; Bonatti et al., <a class="ltx_ref" href="#bib.bib6" title="">2024</a>; Zhou et al., <a class="ltx_ref" href="#bib.bib26" title="">2024</a>)</cite><span class="translated-text">以及专门的多式联运模型的出现</span><span class="original-text">and the emergence of specialized multimodal models</span><cite class="ltx_cite ltx_citemacro_citep">(Qin et al., <a class="ltx_ref" href="#bib.bib13" title="">2025</a>; Wang et al., <a class="ltx_ref" href="#bib.bib17" title="">2025</a>; Xue et al., <a class="ltx_ref" href="#bib.bib22" title="">2026</a>; Lin et al., <a class="ltx_ref" href="#bib.bib11" title="">2024</a>)</cite><span class="translated-text">专为 GUI 交互和动作基础而设计。总之，这些进步使得在构建能够在复杂的现实数字环境中运行的代理方面取得了快速进展。</span><span class="original-text">designed for GUI interaction and action grounding. Together, these advances have enabled rapid progress in building agents capable of operating in complex, real-world digital environments.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p2">
+<p class="ltx_p" id="S1.p2.1"><span class="translated-text">最近的进步引入了高性能的代理架构。以特工S系列为例</span><span class="original-text">Recent advancements have introduced highly capable agentic architectures. For instance, the Agent S series</span><cite class="ltx_cite ltx_citemacro_citep">(Agashe et al., <a class="ltx_ref" href="#bib.bib2" title="">2024</a>; <a class="ltx_ref" href="#bib.bib3" title="">2025</a>; Gonzalez-Pumariega et al., <a class="ltx_ref" href="#bib.bib9" title="">2026</a>)</cite><span class="translated-text">证明了分层规划和子目标管理的有效性，而 JEDI</span><span class="original-text">demonstrated the effectiveness of hierarchical planning and sub-goal management, while JEDI</span><cite class="ltx_cite ltx_citemacro_citep">(Xie et al., <a class="ltx_ref" href="#bib.bib21" title="">2025</a>)</cite><span class="translated-text">和GTA-1</span><span class="original-text">and GTA-1</span><cite class="ltx_cite ltx_citemacro_citep">(Yang et al., <a class="ltx_ref" href="#bib.bib24" title="">2025</a>)</cite><span class="translated-text">采用解耦的规划-基础框架，其中高级计划由推理模型生成并由专门的基础模型执行。为了进一步提高性能，最近的工作探索了推理时间缩放，它在执行期间分配额外的计算以提高代理的准确性</span><span class="original-text">adopt decoupled planning–grounding frameworks, where high-level plans are generated by a reasoning model and executed by a specialized grounding model. To further improve performance, recent work explores inference-time scaling, which allocates additional computation during execution to enhance agent accuracy</span><cite class="ltx_cite ltx_citemacro_citep">(Gonzalez-Pumariega et al., <a class="ltx_ref" href="#bib.bib9" title="">2026</a>; Yang et al., <a class="ltx_ref" href="#bib.bib24" title="">2025</a>)</cite><span class="translated-text">。在计算机使用的代理中，这是通过轨迹级缩放和并行计划生成等技术实现的，从而在任务成功方面取得显着进展。</span><span class="original-text">. In computer-use agents, this is realized through techniques such as trajectory-level scaling and parallel plan generation, leading to notable gains in task success.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p3">
+<p class="ltx_p" id="S1.p3.1"><span class="translated-text">然而，模型能力和运营效率之间仍然存在根本性的紧张关系。虽然最先进的代理使用专有模型实现了强大的性能</span><span class="original-text">However, a fundamental tension remains between model capability and operational efficiency. While state-of-the-art agents achieve strong performance using proprietary models</span><cite class="ltx_cite ltx_citemacro_citep">(Singh et al., <a class="ltx_ref" href="#bib.bib14" title="">2025</a>; Anthropic, <a class="ltx_ref" href="#bib.bib4" title="">2025</a>)</cite><span class="translated-text">，与人类效率相比，它们在步数计数和令牌消耗方面产生了巨大的成本</span><span class="original-text">, they incur substantial costs in step counts and token consumption compared to human efficiency</span><cite class="ltx_cite ltx_citemacro_citep">(Abhyankar et al., <a class="ltx_ref" href="#bib.bib1" title="">2025</a>)</cite><span class="translated-text">。因此，基于小型开源模型的本地 CUA 对于实际和安全的部署非常重要。然而，尽管推理时间缩放</span><span class="original-text">. Local CUAs based on small open-source models are therefore important for practical and secure deployment. Yet, although inference-time scaling</span><cite class="ltx_cite ltx_citemacro_citep">(Yang et al., <a class="ltx_ref" href="#bib.bib24" title="">2025</a>; Gonzalez-Pumariega et al., <a class="ltx_ref" href="#bib.bib9" title="">2026</a>)</cite><span class="translated-text">虽然改进了大型专有代理，但目前尚不清楚增加的计算对于资源受限的本地模型是否值得，或者哪些故障模式限制了进一步的收益。这激发了对局部环境中推理时间缩放的边际效用和失败行为的系统研究。</span><span class="original-text">improves large proprietary agents, it remains unclear whether the added computation is worthwhile for resource-constrained local models, or which failure patterns limit further gains. This motivates a systematic study of the marginal utility and failure behavior of inference-time scaling in local settings.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p4">
+<p class="ltx_p" id="S1.p4.1"><span class="translated-text">在本文中，我们在 OSWorld 基准上评估了本地 CUA（包括 Qwen3-VL、UI-TARS 和 OpenCUA）的推理时间缩放行为。为了了解推理时间缩放如何影响效率和失败行为，我们将其分类为</span><span class="original-text">In this paper, we evaluate the inference-time scaling behaviors of local CUAs, including Qwen3-VL, UI-TARS, and OpenCUA, on the OSWorld benchmark. To understand how inference-time scaling affects both efficiency and failure behavior, we categorize it into</span><span class="ltx_text ltx_font_italic" id="S1.p4.1.1"><span class="translated-text">上下文的</span><span class="original-text">contextual</span></span>, <span class="ltx_text ltx_font_italic" id="S1.p4.1.2"><span class="translated-text">时间性的</span><span class="original-text">temporal</span></span>, <span class="ltx_text ltx_font_italic" id="S1.p4.1.3"><span class="translated-text">结构性的</span><span class="original-text">structural</span></span><span class="translated-text">, 和</span><span class="original-text">, and</span><span class="ltx_text ltx_font_italic" id="S1.p4.1.4"><span class="translated-text">平行</span><span class="original-text">parallel</span></span><span class="translated-text">维度，分析每个维度如何有助于任务成功。我们的实证分析表明，本地 CUA 的规模是由非线性动态控制的，增量资源分配通常会导致收益递减。具体来说，虽然最少的历史记录是稳定性的先决条件，但过度的上下文缩放和结构分解会引发饱和效应和推理瓶颈，从而在没有提高准确性的情况下增加成本。这些观察结果表明，本地 CUA 中的推理时间扩展对失败模式的改变大于对任务成功率的提高，因此需要围绕本地模型的限制有选择地分配计算。</span><span class="original-text">dimensions, analyzing how each contributes to task success. Our empirical analysis reveals that the scaling of local CUAs is governed by non-linear dynamics, where incremental resource allocation often leads to diminishing returns. Specifically, while minimal history is a prerequisite for stability, excessive contextual scaling and structural decomposition trigger saturation effects and reasoning bottlenecks that escalate costs without accuracy gains. These observations suggest that inference-time scaling in local CUAs changes failure modes more than it increases task success, requiring compute to be allocated selectively around the limitations of local models.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p5">
+<p class="ltx_p" id="S1.p5.1"><span class="translated-text">这项工作的主要贡献如下：</span><span class="original-text">The primary contributions of this work are as follows:</span></p>
+<ul class="ltx_itemize" id="S1.I1">
+<li class="ltx_item" id="S1.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para ltx_noindent" id="S1.I1.i1.p1">
+<p class="ltx_p" id="S1.I1.i1.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i1.p1.1.1"><span class="translated-text">本地 CUA 扩展的系统研究：</span><span class="original-text">A Systematic Study of Local CUA Scaling:</span></span><span class="translated-text">我们分析本地 GUI 代理的推理时间缩放</span><span class="original-text">We analyze inference-time scaling in local GUI agents across</span><span class="ltx_text ltx_font_bold" id="S1.I1.i1.p1.1.2"><span class="translated-text">情境缩放</span><span class="original-text">contextual scaling</span></span><span class="translated-text">（历史长度），</span><span class="original-text">(history length),</span><span class="ltx_text ltx_font_bold" id="S1.I1.i1.p1.1.3"><span class="translated-text">时间尺度</span><span class="original-text">temporal scaling</span></span><span class="translated-text">（最大步数），</span><span class="original-text">(maximum steps),</span><span class="ltx_text ltx_font_bold" id="S1.I1.i1.p1.1.4"><span class="translated-text">结构分解</span><span class="original-text">structural decomposition</span></span><span class="translated-text">（单代理与两阶段代理），以及</span><span class="original-text">(single-agent vs. two-stage agents), and</span><span class="ltx_text ltx_font_bold" id="S1.I1.i1.p1.1.5"><span class="translated-text">并行缩放</span><span class="original-text">parallel scaling</span></span><span class="translated-text">（多个计划）。这提供了关于额外计算如何影响本地 CUA 中的任务成功和成本的统一经验视图。</span><span class="original-text">(multiple plans). This provides a unified empirical view of how additional computation affects task success and cost in local CUAs.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i2.p1">
+<p class="ltx_p" id="S1.I1.i2.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i2.p1.1.1"><span class="translated-text">结垢行为的故障模式分析：</span><span class="original-text">Failure-mode Analysis of Scaling Behavior:</span></span><span class="translated-text">我们表明，额外的计算通常会改变失败模式，而不是提高任务的成功率。特别是，更长的历史记录和更大的步数预算减少了重复循环和最大步数停顿，但越来越多地将失败转向过早的错误成功。我们还将规划和格式解析失败视为两阶段本地代理的主要限制。</span><span class="original-text">We show that additional computation often changes failure patterns rather than improving task success. In particular, longer histories and larger step budgets reduce repetitive loops and max-step stalls, but increasingly shift failures toward premature false successes. We also identify planning and format-parsing failures as key limitations of two-stage local agents.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S1.I1.i3" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">•</span>
+<div class="ltx_para" id="S1.I1.i3.p1">
+<p class="ltx_p" id="S1.I1.i3.p1.1"><span class="ltx_text ltx_font_bold" id="S1.I1.i3.p1.1.1"><span class="translated-text">高效本地 CUA 的实用指导：</span><span class="original-text">Practical Directions for Efficient Local CUAs:</span></span><span class="translated-text">根据观察到的准确性-成本权衡和故障模式，我们得出了高效本地 CUA 部署的实用方向。我们的分析建议使用适度的历史长度、有限的时间预算、结构简单的代理和选择性的并行缩放。它进一步推动了未来的设计，将上下文管理、故障感知控制和与本地模型功能相一致的代理框架结合起来。</span><span class="original-text">Based on the observed accuracy–cost tradeoffs and failure patterns, we derive practical directions for efficient local CUA deployment. Our analysis suggests using moderate history lengths, bounded temporal budgets, structurally simple agents, and selective parallel scaling. It further motivates future designs that combine context management, failure-aware control, and agentic frameworks aligned with local model capabilities.</span></p>
+</div>
+</li>
+</ul>
+</div>
+<div class="ltx_para ltx_noindent" id="S1.p6">
+<p class="ltx_p" id="S1.p6.1"><span class="translated-text">本文其余部分的结构是从经验观察到实际优化。第 2 节和第 3 节确立了研究背景和方法。第 4 节介绍了我们的核心分析，从单个代理的扩展动态和两阶段架构的结构开销开始，并检查额外的计算如何影响任务的成功和失败模式。第 5 节讨论了这些发现的含义，包括资源分配策略、故障感知控制以及高效本地 CUA 的设计原则。最后，第六节总结了本文并概述了未来的研究方向。</span><span class="original-text">The remainder of this paper is structured to lead from empirical observation to practical optimization. Sections 2 and 3 establish the research context and methodology. Section 4 presents our core analysis, beginning with the scaling dynamics of single agents and the structural overhead of two-stage architectures, and examines how additional computation affects both task success and failure patterns. Section 5 discusses the implications of these findings, including resource allocation strategies, failure-aware control, and design principles for efficient local CUAs. Finally, Section 6 concludes the paper and outlines future research directions.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S2">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">2 </span><span class="translated-text">相关工作</span><span class="original-text">Related Work</span></h2>
+<div class="ltx_para ltx_noindent" id="S2.p1">
+<p class="ltx_p" id="S2.p1.1"><span class="ltx_text ltx_font_bold" id="S2.p1.1.1"><span class="translated-text">自主计算机使用代理</span><span class="original-text">Autonomous Computer-Use Agents</span></span><span class="translated-text">综合基准的引入加速了能够导航图形用户界面（GUI）的自主代理的开发</span><span class="original-text">The development of autonomous agents capable of navigating Graphical User Interfaces (GUIs) has been accelerated by the introduction of comprehensive benchmarks</span><cite class="ltx_cite ltx_citemacro_citep">(Xie et al., <a class="ltx_ref" href="#bib.bib20" title="">2024</a>; Bonatti et al., <a class="ltx_ref" href="#bib.bib6" title="">2024</a>; Deng et al., <a class="ltx_ref" href="#bib.bib8" title="">2023</a>; Zhou et al., <a class="ltx_ref" href="#bib.bib26" title="">2024</a>)</cite><span class="translated-text">。现有的方法可以大致分为两个方向。
+第一个方向利用单模型架构</span><span class="original-text">. Existing approaches can be broadly categorized into two directions.
+The first direction leverages single-model architectures</span><cite class="ltx_cite ltx_citemacro_citep">(Anthropic, <a class="ltx_ref" href="#bib.bib4" title="">2025</a>; Bai et al., <a class="ltx_ref" href="#bib.bib5" title="">2025</a>; Wang et al., <a class="ltx_ref" href="#bib.bib17" title="">2025</a>; Qin et al., <a class="ltx_ref" href="#bib.bib13" title="">2025</a>)</cite><span class="translated-text">，其中多模态模型以端到端的方式直接将视觉观察和任务指令映射到可执行操作。第二个方向采用代理框架，将决策过程分解为多个阶段，例如规划和落地。 Agent S 等框架</span><span class="original-text">, where a multimodal model directly maps visual observations and task instructions to executable actions in an end-to-end manner. The second direction adopts agentic frameworks that decompose the decision-making process into multiple stages, such as planning and grounding. Frameworks such as Agent S</span><cite class="ltx_cite ltx_citemacro_citep">(Agashe et al., <a class="ltx_ref" href="#bib.bib2" title="">2024</a>; <a class="ltx_ref" href="#bib.bib3" title="">2025</a>; Gonzalez-Pumariega et al., <a class="ltx_ref" href="#bib.bib9" title="">2026</a>)</cite><span class="translated-text">和GTA-1</span><span class="original-text">and GTA-1</span><cite class="ltx_cite ltx_citemacro_citep">(Yang et al., <a class="ltx_ref" href="#bib.bib24" title="">2025</a>)</cite><span class="translated-text">已经证明，结构化分解可以通过分层规划和协调来提高任务成功率。然而，尽管它们很有效，但这些智能体严重依赖基于 API 的专有模型进行规划，从而激发了在严格的硬件和推理时间限制下基于开源模型的本地 CUA 的研究。</span><span class="original-text">have demonstrated that structured decomposition can improve task success through hierarchical planning and coordination. However, despite their effectiveness, these agents rely heavily on proprietary API-based models for planning, motivating the study of local CUAs based on open-source models under strict hardware and inference-time constraints.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p2">
+<p class="ltx_p" id="S2.p2.1"><span class="ltx_text ltx_font_bold" id="S2.p2.1.1"><span class="translated-text">推理时间缩放定律</span><span class="original-text">Inference-time Scaling Laws</span></span><span class="translated-text">推理时间扩展，定义为通过在执行期间分配额外的计算资源来提高性能，随着大规模推理模型的成功而受到重视</span><span class="original-text">Inference-time scaling, defined as improving performance by allocating additional computational resources during execution, has gained prominence following the success of large-scale reasoning models</span><cite class="ltx_cite ltx_citemacro_citep">(Snell et al., <a class="ltx_ref" href="#bib.bib15" title="">2024</a>; Wang et al., <a class="ltx_ref" href="#bib.bib18" title="">2023</a>; Yao et al., <a class="ltx_ref" href="#bib.bib25" title="">2023</a>)</cite><span class="translated-text">。最近的工作已经开始在计算机使用代理的背景下探索这种范例。例如，Agent S3 通过多次部署和行为选择引入了轨迹级缩放</span><span class="original-text">. Recent work has begun to explore this paradigm in the context of computer-use agents. For instance, Agent S3 introduces trajectory-level scaling via multiple rollouts and behavior selection</span><cite class="ltx_cite ltx_citemacro_citep">(Gonzalez-Pumariega et al., <a class="ltx_ref" href="#bib.bib9" title="">2026</a>)</cite><span class="translated-text">，而 GTA-1 通过多个候选计划采用并行测试时间扩展</span><span class="original-text">, while GTA-1 employs parallel test-time scaling through multiple candidate plans</span><cite class="ltx_cite ltx_citemacro_citep">(Yang et al., <a class="ltx_ref" href="#bib.bib24" title="">2025</a>)</cite><span class="translated-text">。尽管取得了这些进展，多模式 GUI 环境中推理时间参数与任务成功之间的经验关系仍未得到充分探索，我们通过系统分析缩放维度之间的相互作用来解决这一问题。</span><span class="original-text">. Despite these advances, the empirical relationship between inference-time parameters and task success in multimodal GUI environments remains under-explored, which we address by systematically analyzing the interplay between the scaling dimensions.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S2.p3">
+<p class="ltx_p" id="S2.p3.1"><span class="ltx_text ltx_font_bold" id="S2.p3.1.1"><span class="translated-text">CUA 中的效率和上下文管理</span><span class="original-text">Efficiency and Context Management in CUAs</span></span><span class="translated-text">在高密度 GUI 环境中操作计算机使用的代理需要处理高分辨率屏幕截图和交互历史记录，从而导致大量的计算开销。最近的工作强调评估效率，OSWorld-Human 引入了基于步骤的人类基线并揭示了显着的效率差距</span><span class="original-text">Operating computer-use agents in high-density GUI environments requires processing high-resolution screenshots and interaction histories, leading to substantial computational overhead. Recent work emphasizes efficiency in evaluation, with OSWorld-Human introducing step-based human baselines and revealing significant efficiency gaps</span><cite class="ltx_cite ltx_citemacro_citep">(Abhyankar et al., <a class="ltx_ref" href="#bib.bib1" title="">2025</a>)</cite><span class="translated-text">。为了减轻长上下文成本，先前的方法探索压缩技术，包括键值缓存压缩和令牌修剪</span><span class="original-text">. To mitigate long-context costs, prior approaches explore compression techniques, including key-value cache compression and token pruning</span><cite class="ltx_cite ltx_citemacro_citep">(Huang et al., <a class="ltx_ref" href="#bib.bib10" title="">2025</a>; Chen et al., <a class="ltx_ref" href="#bib.bib7" title="">2025</a>)</cite><span class="translated-text">，以及将视觉历史总结为紧凑的文本表示</span><span class="original-text">, as well as summarizing visual histories into compact textual representations</span><cite class="ltx_cite ltx_citemacro_citep">(Liu et al., <a class="ltx_ref" href="#bib.bib12" title="">2025</a>)</cite><span class="translated-text">。
+然而，对于本地规模的代理来说，维持足够的历史记录以保证任务连续性和最小化计算成本之间的权衡仍然没有得到充分探索，我们通过分析历史记录使用中的效率与性能权衡来解决这个问题。</span><span class="original-text">.
+However, the tradeoff between maintaining sufficient history for task continuity and minimizing computational cost remains under-explored for local-scale agents, which we address by analyzing efficiency-performance tradeoffs across history usage.</span></p>
+</div>
+</section>
+<section class="ltx_section" id="S3">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">3 </span><span class="translated-text">方法论</span><span class="original-text">Methodology</span></h2>
+<div class="ltx_para ltx_noindent" id="S3.p1">
+<p class="ltx_p" id="S3.p1.1"><span class="translated-text">本节描述了根据缩放参数评估本地计算机使用代理的准确性与成本权衡的实验设计。</span><span class="original-text">This section describes the experimental design for evaluating the accuracy-cost tradeoff of local computer-use agents according to scaling parameters.</span></p>
+</div>
+<section class="ltx_subsection" id="S3.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.1 </span><span class="translated-text">CUA的结构</span><span class="original-text">Structure of CUA</span></h3>
+<div class="ltx_para ltx_noindent" id="S3.SS1.p1">
+<p class="ltx_p" id="S3.SS1.p1.1"><span class="translated-text">为了提高计算机使用代理的准确性，已经提出了各种代理框架。我们将它们分为两种有代表性的结构，如图 1 所示。</span><span class="original-text">To improve the accuracy of computer-use agents, various agentic frameworks have been proposed. We categorize these into two representative structures, illustrated in Fig.</span><a class="ltx_ref" href="#S3.F1" title="Figure 1 ‣ 3.1 Structure of CUA ‣ 3 Methodology ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">，并进行相应的实验：</span><span class="original-text">, and conduct experiments accordingly:</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS1.p2">
+<ol class="ltx_enumerate" id="S3.I1">
+<li class="ltx_item" id="S3.I1.i1" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">1.</span>
+<div class="ltx_para" id="S3.I1.i1.p1">
+<p class="ltx_p" id="S3.I1.i1.p1.2"><span class="ltx_text ltx_font_bold" id="S3.I1.i1.p1.2.1"><span class="translated-text">单一代理（图 1）</span><span class="original-text">Single Agent (Fig.</span><a class="ltx_ref" href="#S3.F1" title="Figure 1 ‣ 3.1 Structure of CUA ‣ 3 Methodology ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">1</span></a>a)</span><span class="translated-text">：这是计算机使用代理的基本结构。单个模型接收任务指令、当前屏幕截图以及之前操作和屏幕截图的历史记录（</span><span class="original-text">: This is the basic structure for a computer-use agent. A single model receives the task instruction, the current screenshot, and a history of previous actions and screenshots (</span><math alttext="H" class="ltx_Math" display="inline" id="S3.I1.i1.p1.1.m1" intent=":literal"><semantics><mi>H</mi><annotation encoding="application/x-tex">H</annotation></semantics></math><span class="translated-text">) 作为输入在每一步生成一个动作</span><span class="original-text">) as input to generate an action at each step</span><cite class="ltx_cite ltx_citemacro_citep">(Qin et al., <a class="ltx_ref" href="#bib.bib13" title="">2025</a>; Wang et al., <a class="ltx_ref" href="#bib.bib17" title="">2025</a>)</cite><span class="translated-text">。此过程循环迭代，直到代理达到任务目标或最大解码步骤（</span><span class="original-text">. This process iterates in a loop until the agent reaches the task goal or the maximum decoding steps (</span><math alttext="S" class="ltx_Math" display="inline" id="S3.I1.i1.p1.2.m2" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math><span class="translated-text">）已经筋疲力尽了。</span><span class="original-text">) are exhausted.</span></p>
+</div>
+</li>
+<li class="ltx_item" id="S3.I1.i2" style="list-style-type:none;">
+<span class="ltx_tag ltx_tag_item">2.</span>
+<div class="ltx_para" id="S3.I1.i2.p1">
+<p class="ltx_p" id="S3.I1.i2.p1.3"><span class="ltx_text ltx_font_bold" id="S3.I1.i2.p1.3.1"><span class="translated-text">两阶段代理（图 1）</span><span class="original-text">Two-stage Agent (Fig.</span><a class="ltx_ref" href="#S3.F1" title="Figure 1 ‣ 3.1 Structure of CUA ‣ 3 Methodology ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">1</span></a>b)</span><span class="translated-text">：该结构将推理解耦为</span><span class="original-text">: This structure decouples inference into</span><span class="ltx_text ltx_font_italic" id="S3.I1.i2.p1.3.2"><span class="translated-text">规划</span><span class="original-text">Planning</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_italic" id="S3.I1.i2.p1.3.3"><span class="translated-text">接地</span><span class="original-text">Grounding</span></span><span class="translated-text">阶段</span><span class="original-text">stages</span><cite class="ltx_cite ltx_citemacro_citep">(Xie et al., <a class="ltx_ref" href="#bib.bib21" title="">2025</a>; Yang et al., <a class="ltx_ref" href="#bib.bib24" title="">2025</a>)</cite><span class="translated-text">。规划者收到当前的屏幕截图和历史记录（</span><span class="original-text">. A planner receives the current screenshot and history (</span><math alttext="H" class="ltx_Math" display="inline" id="S3.I1.i2.p1.1.m1" intent=":literal"><semantics><mi>H</mi><annotation encoding="application/x-tex">H</annotation></semantics></math><span class="translated-text">）生成多个候选计划（</span><span class="original-text">) to generate multiple candidate plans (</span><math alttext="P" class="ltx_Math" display="inline" id="S3.I1.i2.p1.2.m2" intent=":literal"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math><span class="translated-text">）。然后，判断过程会选择最佳计划，专门的基础模型会将其转化为具有特定坐标的最终行动。此过程不断迭代，直到达到目标或达到最大步数 (</span><span class="original-text">). A judging process then selects the best plan, which a specialized grounding model translates into a final action with specific coordinates. This process iterates until the goal is met or the maximum steps (</span><math alttext="S" class="ltx_Math" display="inline" id="S3.I1.i2.p1.3.m3" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math><span class="translated-text">) 达到。虽然包含编码剂的更复杂的结构</span><span class="original-text">) are reached. While more complex structures incorporating coding agents</span><cite class="ltx_cite ltx_citemacro_citep">(Song et al., <a class="ltx_ref" href="#bib.bib16" title="">2026</a>)</cite><span class="translated-text">或内存模块</span><span class="original-text">or memory modules</span><cite class="ltx_cite ltx_citemacro_citep">(Agashe et al., <a class="ltx_ref" href="#bib.bib2" title="">2024</a>)</cite><span class="translated-text">存在时，它们从根本上遵循这种两阶段范式。</span><span class="original-text">exist, they fundamentally follow this two-stage paradigm.</span></p>
+</div>
+</li>
+</ol>
+</div>
+<figure class="ltx_figure" id="S3.F1"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="329" id="S3.F1.g1" src="https://arxiv.org/html/2607.28573v1/x1.png" width="830"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 1: </span>Illustration of CUA frameworks and inference-time scaling dimensions. (a) The Single Agent directly maps the current screenshot and history length (<math alttext="H" class="ltx_Math" display="inline" id="S3.F1.4.m1" intent=":literal"><semantics><mi>H</mi><annotation encoding="application/x-tex">H</annotation></semantics></math>) to an action within the maximum temporal budget (<math alttext="S" class="ltx_Math" display="inline" id="S3.F1.5.m2" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>). (b) The Two-stage Agent decouples this process into a Planning stage that generates multiple parallel candidate plans (<math alttext="P" class="ltx_Math" display="inline" id="S3.F1.6.m3" intent=":literal"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>) and a Grounding stage that executes the selected action.</figcaption>
+</figure>
+</section>
+<section class="ltx_subsection" id="S3.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.2 </span><span class="translated-text">计算缩放尺寸</span><span class="original-text">Compute Scaling Dimensions</span></h3>
+<div class="ltx_para ltx_noindent" id="S3.SS2.p1">
+<p class="ltx_p" id="S3.SS2.p1.1"><span class="translated-text">计算机使用的代理允许在推理时间内跨各个维度进行扩展。我们在每个代理架构中确定了三个计算缩放因子（图 1 中以红色突出显示）。</span><span class="original-text">Computer-use agents allow for scaling across various dimensions during inference-time. We identify three compute scaling factors within each agent architecture (highlighted in red in Fig.</span><a class="ltx_ref" href="#S3.F1" title="Figure 1 ‣ 3.1 Structure of CUA ‣ 3 Methodology ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">），并检查它们对准确性和成本的影响。</span><span class="original-text">), and examine their impact on accuracy and cost.</span></p>
+</div>
+<section class="ltx_subsubsection" id="S3.SS2.SSS1">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.1 </span><span class="translated-text">时间缩放：最大解码步骤（</span><span class="original-text">Temporal Scaling: Max Decoding Steps (</span><math alttext="S" class="ltx_Math" display="inline" id="S3.SS2.SSS1.1.m1" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>)</h4>
+<div class="ltx_para ltx_noindent" id="S3.SS2.SSS1.p1">
+<p class="ltx_p" id="S3.SS2.SSS1.p1.1"><span class="translated-text">任务完成的时间预算本质上是有限的，并且通常通过最大步骤约束来强制执行。每个步骤对应于单个代理与环境的交互，其中代理观察当前状态并生成操作。作为</span><span class="original-text">The temporal budget for task completion is inherently limited and is typically enforced through a maximum step constraint. Each step corresponds to a single agent–environment interaction, where the agent observes the current state and generates an action. As</span><math alttext="S" class="ltx_Math" display="inline" id="S3.SS2.SSS1.p1.1.m1" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math><span class="translated-text">增加，代理就有更多机会达成解决方案。我们按照 OSWorld 基准标准，通过将最大步数扩展到 15、50 和 100 来衡量性能。</span><span class="original-text">increases, the agent is afforded more opportunities to reach a solution. We measure performance by scaling the maximum steps to 15, 50, and 100, following the OSWorld benchmark standards.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS2.SSS2">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.2 </span><span class="translated-text">上下文缩放：历史图像长度（</span><span class="original-text">Contextual Scaling: History Image Length (</span><math alttext="H" class="ltx_Math" display="inline" id="S3.SS2.SSS2.1.m1" intent=":literal"><semantics><mi>H</mi><annotation encoding="application/x-tex">H</annotation></semantics></math>)</h4>
+<div class="ltx_para ltx_noindent" id="S3.SS2.SSS2.p1">
+<p class="ltx_p" id="S3.SS2.SSS2.p1.1"><span class="translated-text">代理可以利用之前的操作和屏幕截图历史记录作为上下文来保持连续性。虽然历史记录可以提高准确性，但由此带来的代币使用量的增加是不可避免的。大多数现代计算机使用代理都利用多模式大型语言模型 (MLLM)，其中高分辨率屏幕截图历史记录会导致大量视觉令牌消耗</span><span class="original-text">Agents can utilize previous actions and screenshot history as context to maintain continuity. While history can improve accuracy, the resulting increase in token usage is inevitable. Most modern computer-use agents leverage Multimodal Large Language Models (MLLMs), where high-resolution screenshot histories lead to significant visual token consumption</span><cite class="ltx_cite ltx_citemacro_citep">(Huang et al., <a class="ltx_ref" href="#bib.bib10" title="">2025</a>; Liu et al., <a class="ltx_ref" href="#bib.bib12" title="">2025</a>)</cite><span class="translated-text">。在本文中，我们将屏幕截图历史记录的数量缩放为</span><span class="original-text">. In this paper, we scale the number of screenshot histories to</span><math alttext="H\in\{0,1,4,8\}" class="ltx_Math" display="inline" id="S3.SS2.SSS2.p1.1.m1" intent=":literal"><semantics><mrow><mi>H</mi><mo>∈</mo><mrow><mo stretchy="false">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>4</mn><mo>,</mo><mn>8</mn><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">H\in\{0,1,4,8\}</annotation></semantics></math><span class="translated-text">分析由此产生的权衡。</span><span class="original-text">to analyze the resulting tradeoffs.</span></p>
+</div>
+</section>
+<section class="ltx_subsubsection" id="S3.SS2.SSS3">
+<h4 class="ltx_title ltx_title_subsubsection">
+<span class="ltx_tag ltx_tag_subsubsection">3.2.3 </span><span class="translated-text">并行扩展：多个计划的数量 (</span><span class="original-text">Parallel Scaling: Number of Multiple Plans (</span><math alttext="P" class="ltx_Math" display="inline" id="S3.SS2.SSS3.1.m1" intent=":literal"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>)</h4>
+<div class="ltx_para ltx_noindent" id="S3.SS2.SSS3.p1">
+<p class="ltx_p" id="S3.SS2.SSS3.p1.1"><span class="translated-text">并行测试时间扩展涉及生成多个输出以提高代理的准确性。例如，两阶段智能体中的规划智能体可以生成多个计划，或者多个智能体可以并行运行以选择最佳轨迹。遵循GTA-1的方法</span><span class="original-text">Parallel test-time scaling involves generating multiple outputs to improve agent accuracy. For instance, a planning agent in a two-stage agent may generate multiple plans, or multiple agents may run in parallel to select the optimal trajectory. Following the approach of GTA-1</span><cite class="ltx_cite ltx_citemacro_citep">(Yang et al., <a class="ltx_ref" href="#bib.bib24" title="">2025</a>)</cite><span class="translated-text">，我们研究了不同高层计划数量的影响（</span><span class="original-text">, we investigate the effects of varying the number of high-level plans (</span><math alttext="P" class="ltx_Math" display="inline" id="S3.SS2.SSS3.p1.1.m1" intent=":literal"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math><span class="translated-text">）在本地 CUA 的两阶段代理中。</span><span class="original-text">) in a two-stage agent for local CUAs.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_subsection" id="S3.SS3">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.3 </span><span class="translated-text">成本指标</span><span class="original-text">Cost Metrics</span></h3>
+<div class="ltx_para ltx_noindent" id="S3.SS3.p1">
+<p class="ltx_p" id="S3.SS3.p1.1"><span class="translated-text">为了评估每种情况下的运营成本，我们利用</span><span class="original-text">To evaluate the operational cost in each setting, we utilize the</span><span class="ltx_text ltx_font_bold" id="S3.SS3.p1.1.1"><span class="translated-text">每个任务的步骤数</span><span class="original-text">number of steps per task</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_bold" id="S3.SS3.p1.1.2"><span class="translated-text">提示令牌使用</span><span class="original-text">prompt token usage</span></span><span class="translated-text">作为主要指标。步骤数衡量智能体完成任务平均采取的动作数量，作为执行效率的直接指标</span><span class="original-text">as primary metrics. The number of steps measures how many actions an agent takes on average to complete a task, serving as a direct indicator of execution efficiency</span><cite class="ltx_cite ltx_citemacro_citep">(Abhyankar et al., <a class="ltx_ref" href="#bib.bib1" title="">2025</a>)</cite><span class="translated-text">。提示令牌使用量计算为单个任务中所有模型调用期间处理的令牌的累积数量，这反映了基于 GUI 的交互中的主要计算成本，特别是因为重复的高分辨率屏幕截图历史在代理架构中主导了输入成本。</span><span class="original-text">. Prompt token usage is calculated as the cumulative number of tokens processed during all model calls within a single task, which reflects the dominant computational cost in GUI-based interaction, especially because repeated high-resolution screenshot histories dominate the input cost across agent architectures.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S3.SS4">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">3.4 </span><span class="translated-text">实验装置</span><span class="original-text">Experimental Setup</span></h3>
+<div class="ltx_para ltx_noindent" id="S3.SS4.p1">
+<p class="ltx_p" id="S3.SS4.p1.1"><span class="ltx_text ltx_font_bold" id="S3.SS4.p1.1.1"><span class="translated-text">基准。</span><span class="original-text">Benchmark.</span></span><span class="translated-text">我们利用 OSWorld</span><span class="original-text">We utilize OSWorld</span><cite class="ltx_cite ltx_citemacro_citep">(Xie et al., <a class="ltx_ref" href="#bib.bib20" title="">2024</a>)</cite><span class="translated-text">，计算机使用领域的代表性基准。我们的实验是在 361 个真实的 Ubuntu 任务上进行的，由于环境限制，不包括 8 个 Google Drive 任务。代理仅通过屏幕截图进行操作，无法访问辅助界面，例如可访问性 (a11y) 树或视觉提示技术，例如标记集 (SoM)</span><span class="original-text">, a representative benchmark in the computer-use domain. Our experiments were conducted on 361 real-world Ubuntu tasks, excluding eight Google Drive tasks due to environment constraints. Agents operate solely from screenshots, without access to auxiliary interfaces such as accessibility (a11y) trees or visual prompting techniques like Set-of-Mark (SoM)</span><cite class="ltx_cite ltx_citemacro_citep">(Yang et al., <a class="ltx_ref" href="#bib.bib23" title="">2023</a>)</cite>.</p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS4.p2">
+<p class="ltx_p" id="S3.SS4.p2.1"><span class="ltx_text ltx_font_bold" id="S3.SS4.p2.1.1"><span class="translated-text">模型。</span><span class="original-text">Models.</span></span><span class="translated-text">对于单代理框架，我们评估了四种模型：Qwen3-VL-8B-Instruct、Qwen3-VL-30B-A3B-Instruct (MoE)</span><span class="original-text">For the single agent framework, we evaluated four models: Qwen3-VL-8B-Instruct, Qwen3-VL-30B-A3B-Instruct (MoE)</span><cite class="ltx_cite ltx_citemacro_citep">(Bai et al., <a class="ltx_ref" href="#bib.bib5" title="">2025</a>)</cite>, UI-TARS-1.5-7B <cite class="ltx_cite ltx_citemacro_citep">(Qin et al., <a class="ltx_ref" href="#bib.bib13" title="">2025</a>)</cite><span class="translated-text">和 OpenCUA-7B</span><span class="original-text">, and OpenCUA-7B</span><cite class="ltx_cite ltx_citemacro_citep">(Wang et al., <a class="ltx_ref" href="#bib.bib17" title="">2025</a>)</cite><span class="translated-text">。对于两级框架，接地剂固定为GTA-1-7B</span><span class="original-text">. For the two-stage framework, the grounding agent was fixed as GTA-1-7B</span><cite class="ltx_cite ltx_citemacro_citep">(Yang et al., <a class="ltx_ref" href="#bib.bib24" title="">2025</a>)</cite><span class="translated-text">。规划和判断角色由两个 Qwen3 模型（8B 和 30B-A3B）执行。</span><span class="original-text">. The planning and judging roles were performed by the two Qwen3 models (8B and 30B-A3B).</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S3.SS4.p3">
+<p class="ltx_p" id="S3.SS4.p3.1"><span class="ltx_text ltx_font_bold" id="S3.SS4.p3.1.1"><span class="translated-text">系统。</span><span class="original-text">System.</span></span><span class="translated-text">所有实验均在 A100-80GB GPU 上进行。我们利用 vLLM 引擎进行模型推理并测量每个代理配置的精确令牌使用情况。</span><span class="original-text">All experiments were conducted on an A100-80GB GPU. We utilized the vLLM engine for model inference and to measure precise token usage for each agentic configuration.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S4">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">结果</span><span class="original-text">Results</span></h2>
+<figure class="ltx_figure" id="S4.F2"><object class="ltx_graphics ltx_centering ltx_img_landscape" data="2607.28573v1/Figures/single_agent_avg_with_failure_cohorts.svg" height="199" id="S4.F2.g1" type="image/svg+xml" width="598"></object>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 2: </span>Impact of history length on single-agent performance, efficiency, and failure modes.
+(a) Task success rates across different local models.
+(b) Failure-mode cohort analysis of Qwen3-VL-30B-A3B (<math alttext="S=15" class="ltx_Math" display="inline" id="S4.F2.3.m1" intent=":literal"><semantics><mrow><mi>S</mi><mo>=</mo><mn>15</mn></mrow><annotation encoding="application/x-tex">S=15</annotation></semantics></math>), showing that increasing history reduces max-step stalls but shifts failures toward false successes, leading to performance saturation beyond <math alttext="H=4" class="ltx_Math" display="inline" id="S4.F2.4.m2" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">H=4</annotation></semantics></math>.
+(c) Normalized average steps per task.
+(d) Normalized prompt token usage per task.
+</figcaption>
+</figure>
+<section class="ltx_subsection" id="S4.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.1 </span><span class="translated-text">上下文和时间缩放的动态（单代理）</span><span class="original-text">The Dynamics of Contextual and Temporal Scaling (Single Agent)</span></h3>
+<div class="ltx_para ltx_noindent" id="S4.SS1.p1">
+<span class="ltx_inline-block"><svg class="ltx_picture" height="90.24" id="S4.SS1.p1.pic1" overflow="visible" version="1.1" viewbox="0 0 600 90.24" width="600"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,90.24) matrix(1 0 0 -1 0 0)"><g fill="#404040" fill-opacity="1.0" style="--ltx-fill-color:#404040;"><path d="M 0 0 L 0 90.24 L 600 90.24 L 600 0 Z" style="stroke:none"></path></g><g fill="#F9F9F9" fill-opacity="1.0" style="--ltx-fill-color:#F9F9F9;"><path d="M 0.69 0.69 L 0.69 68.68 L 599.31 68.68 L 599.31 0.69 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 11.55 76)"><foreignobject color="#FFFFFF" height="12.3" overflow="visible" style="--ltx-fg-color:#FFFFFF;--ltx-fo-width:41.69em;--ltx-fo-height:0.69em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 9.61)" width="576.91"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S4.SS1.p1.pic1.3.3.3.1.1" style="width:36.25em;">
+<span class="ltx_p" id="S4.SS1.p1.pic1.3.3.3.1.1.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p1.pic1.3.3.3.1.1.1.1">Finding 1: Minimal history is a fundamental prerequisite for local agent stability.</span></span>
+</span></span></span></foreignobject></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 11.55 14.24)"><foreignobject color="#000000" height="46.28" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:41.69em;--ltx-fo-height:3.15em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 43.59)" width="576.91"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S4.SS1.p1.pic1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2" style="width:41.69em;">
+<span class="ltx_p" id="S4.SS1.p1.pic1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2">Our empirical results reveal that providing even a single previous screenshot (<math alttext="H=1" class="ltx_Math" display="inline" id="S4.SS1.p1.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.m1" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">H=1</annotation></semantics></math>) leads to a substantial performance leap across all evaluated models. Expanding to <math alttext="H=4" class="ltx_Math" display="inline" id="S4.SS1.p1.pic1.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.m2" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">H=4</annotation></semantics></math> further improves the context for tracking complex state transitions.</span>
+</span></span></span></foreignobject></g></g></svg></span>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS1.p2">
+<p class="ltx_p" id="S4.SS1.p2.2"><span class="translated-text">图。</span><span class="original-text">Fig.</span><a class="ltx_ref" href="#S4.F2" title="Figure 2 ‣ 4 Results ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">(a) 说明了上下文缩放对单遍本地代理成功率的影响。平均而言，准确率从 18% 左右飙升至</span><span class="original-text">(a) illustrates the impact of the contextual scaling on the success rates of single-pass local agents. On average, accuracy surges from approximately 18% at</span><math alttext="H=0" class="ltx_Math" display="inline" id="S4.SS1.p2.1.m1" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">H=0</annotation></semantics></math><span class="translated-text">超过 25%</span><span class="original-text">to over 25% at</span><math alttext="H=1" class="ltx_Math" display="inline" id="S4.SS1.p2.2.m2" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">H=1</annotation></semantics></math><span class="translated-text">。这种急剧的增长表明，最少的历史对于稳定动作序列至关重要。如果无法访问最近的历史记录，本地代理经常陷入重复循环或执行冗余操作，因为它们缺乏上下文来验证先前的指令是否已成功执行。</span><span class="original-text">. This sharp gain suggests that minimal history is essential for stabilizing action sequences. Without access to recent history, local agents frequently fall into repetitive loops or execute redundant actions, as they lack the context to verify whether a previous instruction was successfully carried out.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS1.p3">
+<p class="ltx_p" id="S4.SS1.p3.4"><span class="translated-text">如图所示的定性示例。</span><span class="original-text">As shown in the qualitative example in Fig.</span><a class="ltx_ref" href="#S4.F3" title="Figure 3 ‣ 4.1 The Dynamics of Contextual and Temporal Scaling (Single Agent) ‣ 4 Results ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">，一个代理与</span><span class="original-text">, an agent with</span><math alttext="H=0" class="ltx_Math" display="inline" id="S4.SS1.p3.1.m1" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">H=0</annotation></semantics></math><span class="translated-text">重复单击相同的菜单项无法继续，实际上陷入了执行循环。相反，提供足够的历史记录（</span><span class="original-text">fails to progress by repeatedly clicking the same menu items, effectively becoming trapped in an execution loop. In contrast, providing adequate history (</span><math alttext="H=4" class="ltx_Math" display="inline" id="S4.SS1.p3.2.m2" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">H=4</annotation></semantics></math><span class="translated-text">）允许代理识别先前的状态并成功导航多步骤序列以完成。同时</span><span class="original-text">) allows the agent to recognize previous states and successfully navigate the multi-step sequence to completion. While</span><math alttext="H=1" class="ltx_Math" display="inline" id="S4.SS1.p3.3.m3" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">H=1</annotation></semantics></math><span class="translated-text">作为主要稳定器，将历史扩展到</span><span class="original-text">serves as the primary stabilizer, expanding the history to</span><math alttext="H=4" class="ltx_Math" display="inline" id="S4.SS1.p3.4.m4" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">H=4</annotation></semantics></math><span class="translated-text">为跟踪长期任务中的复杂状态转换提供必要的上下文。然而，我们的数据表明，这种上升趋势不会线性持续，指向一个特定的阈值，在该阈值中，额外的上下文不再转化为任务成功。</span><span class="original-text">provides the necessary context for tracking complex state transitions in long-horizon tasks. However, our data indicates that this upward trend does not continue linearly, pointing toward a specific threshold where additional context no longer translates to task success.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F3"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="160" id="S4.F3.g1" src="https://arxiv.org/html/2607.28573v1/Figures/history_example.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 3: </span>Comparison of agent trajectories by contextual scaling. Without contextual grounding (<math alttext="H=0" class="ltx_Math" display="inline" id="S4.F3.3.m1" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">H=0</annotation></semantics></math>), the agent falls into a repetitive loop. With adequate history (<math alttext="H=4" class="ltx_Math" display="inline" id="S4.F3.4.m2" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">H=4</annotation></semantics></math>), the agent leverages previous states to successfully complete the multi-step task.</figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S4.SS1.p4">
+<span class="ltx_inline-block"><svg class="ltx_picture" height="103.38" id="S4.SS1.p4.pic1" overflow="visible" version="1.1" viewbox="0 0 600 103.38" width="600"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,103.38) matrix(1 0 0 -1 0 0)"><g fill="#404040" fill-opacity="1.0" style="--ltx-fill-color:#404040;"><path d="M 0 0 L 0 103.38 L 600 103.38 L 600 0 Z" style="stroke:none"></path></g><g fill="#F9F9F9" fill-opacity="1.0" style="--ltx-fill-color:#F9F9F9;"><path d="M 0.69 0.69 L 0.69 67.91 L 599.31 67.91 L 599.31 0.69 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 11.55 72.54)"><foreignobject color="#FFFFFF" height="26.21" overflow="visible" style="--ltx-fg-color:#FFFFFF;--ltx-fo-width:41.69em;--ltx-fo-height:1.89em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 26.21)" width="576.91"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S4.SS1.p4.pic1.2.2.2.1.1" style="width:36.25em;">
+<span class="ltx_p" id="S4.SS1.p4.pic1.2.2.2.1.1.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p4.pic1.2.2.2.1.1.1.1">Finding 2: History improves step efficiency but shifts failures toward false successes.</span></span>
+</span></span></span></foreignobject></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 11.55 14.24)"><foreignobject color="#000000" height="45.51" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:41.69em;--ltx-fo-height:3.09em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 42.82)" width="576.91"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S4.SS1.p4.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1" style="width:41.69em;">
+<span class="ltx_p" id="S4.SS1.p4.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1">Increasing history length reduces redundant actions and lowers max-step stalls, but accuracy saturates beyond <math alttext="H=4" class="ltx_Math" display="inline" id="S4.SS1.p4.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.m1" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">H=4</annotation></semantics></math> as premature false successes increase. This indicates that additional history improves stability but can also lead to incorrect termination.</span>
+</span></span></span></foreignobject></g></g></svg></span>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS1.p5">
+<p class="ltx_p" id="S4.SS1.p5.3"><span class="translated-text">失效模式分析如图 1 所示。</span><span class="original-text">The failure-mode analysis in Fig.</span><a class="ltx_ref" href="#S4.F2" title="Figure 2 ‣ 4 Results ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">(b) 表明增加</span><span class="original-text">(b) shows that increasing</span><math alttext="H" class="ltx_Math" display="inline" id="S4.SS1.p5.1.m1" intent=":literal"><semantics><mi>H</mi><annotation encoding="application/x-tex">H</annotation></semantics></math><span class="translated-text">减少最大步停顿，表明历史背景有助于智能体避免重复或停顿的轨迹。
+这种稳定性也反映在图 2 中。</span><span class="original-text">reduces max-step stalls, suggesting that historical context helps agents avoid repetitive or stalled trajectories.
+This stabilization is also reflected in Fig.</span><a class="ltx_ref" href="#S4.F2" title="Figure 2 ‣ 4 Results ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">(c)，较长的历史记录会减少每个任务的平均步骤数。
+然而，仅仅延长历史并不能消除失败。
+相反，主要的失败模式转向过早的错误成功，即代理尽管没有完成任务但仍终止。
+这些观察结果表明，上下文缩放主要提高了轨迹稳定性，而其对任务完成判断的影响仍然有限。
+结果，</span><span class="original-text">(c), where longer histories reduce the average number of steps per task.
+However, simply extending history does not eliminate failures.
+Instead, the dominant failure mode shifts toward premature false successes, where the agent terminates despite not completing the task.
+These observations suggest that contextual scaling primarily improves trajectory stability, while its effect on task-completion judgment remains limited.
+As a result,</span><math alttext="H=4" class="ltx_Math" display="inline" id="S4.SS1.p5.2.m2" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">H=4</annotation></semantics></math><span class="translated-text">(28.56%) 提供了最佳观察到的权衡，同时增加了历史记录</span><span class="original-text">(28.56%) offers the best observed tradeoff, while increasing history to</span><math alttext="H=8" class="ltx_Math" display="inline" id="S4.SS1.p5.3.m3" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">H=8</annotation></semantics></math><span class="translated-text">(27.16%) 增加了成本但没有提高准确性。</span><span class="original-text">(27.16%) adds cost without improving accuracy.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F4"><object class="ltx_graphics ltx_centering ltx_img_landscape" data="2607.28573v1/Figures/single_agent_avg_by_max_steps_with_failure_cohorts.svg" height="199" id="S4.F4.g1" type="image/svg+xml" width="598"></object>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 4: </span>
+Impact of temporal scaling on single-agent.
+(a) Task success rates across different local models.
+(b) Normalized average steps per task.
+(c) Normalized prompt token usage per task.
+(d) Failure-mode cohorts for Qwen3-VL-30B-A3B (<math alttext="H=4" class="ltx_Math" display="inline" id="S4.F4.2.m1" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">H=4</annotation></semantics></math>). Additional steps shift failures from max-step stalls to premature false successes rather than increasing task success.
+</figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S4.SS1.p6">
+<span class="ltx_inline-block"><svg class="ltx_picture" height="106.84" id="S4.SS1.p6.pic1" overflow="visible" version="1.1" viewbox="0 0 600 106.84" width="600"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,106.84) matrix(1 0 0 -1 0 0)"><g fill="#404040" fill-opacity="1.0" style="--ltx-fill-color:#404040;"><path d="M 0 0 L 0 106.84 L 600 106.84 L 600 0 Z" style="stroke:none"></path></g><g fill="#F9F9F9" fill-opacity="1.0" style="--ltx-fill-color:#F9F9F9;"><path d="M 0.69 0.69 L 0.69 85.28 L 599.31 85.28 L 599.31 0.69 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 11.55 92.6)"><foreignobject color="#FFFFFF" height="12.3" overflow="visible" style="--ltx-fg-color:#FFFFFF;--ltx-fo-width:41.69em;--ltx-fo-height:0.69em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 9.61)" width="576.91"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S4.SS1.p6.pic1.2.2.2.1.1" style="width:36.25em;">
+<span class="ltx_p" id="S4.SS1.p6.pic1.2.2.2.1.1.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p6.pic1.2.2.2.1.1.1.1">Finding 3: Temporal scaling is ineffective under limited reasoning capacity.</span></span>
+</span></span></span></foreignobject></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 11.55 14.24)"><foreignobject color="#000000" height="62.88" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:41.69em;--ltx-fo-height:4.35em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 60.19)" width="576.91"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S4.SS1.p6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1" style="width:41.69em;">
+<span class="ltx_p" id="S4.SS1.p6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1">Extending decoding steps (<math alttext="S" class="ltx_Math" display="inline" id="S4.SS1.p6.pic1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.1.m1" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>) fails to overcome the reasoning limitations of local models. While accuracy remains largely unchanged, operational costs grow linearly. Additional steps also shift failures from max-step stalls to premature false successes, making temporal scaling inefficient for improving task success in resource-constrained settings.</span>
+</span></span></span></foreignobject></g></g></svg></span>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS1.p7">
+<p class="ltx_p" id="S4.SS1.p7.3"><span class="translated-text">我们通过改变最大步数来评估时间缩放（</span><span class="original-text">We evaluate temporal scaling by varying the maximum number of steps (</span><math alttext="S" class="ltx_Math" display="inline" id="S4.SS1.p7.1.m1" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math><span class="translated-text">）。如图所示。</span><span class="original-text">). As shown in Fig.</span><a class="ltx_ref" href="#S4.F4" title="Figure 4 ‣ 4.1 The Dynamics of Contextual and Temporal Scaling (Single Agent) ‣ 4 Results ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">(一)、增加</span><span class="original-text">(a), increasing</span><math alttext="S" class="ltx_Math" display="inline" id="S4.SS1.p7.2.m2" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math><span class="translated-text">在大多数模型中，从 15 到 100 对任务成功率几乎没有改善。虽然 Qwen3 在增加时显示出一些改进</span><span class="original-text">from 15 to 100 yields little to no improvement in task success across most models. Although Qwen3 shows some improvement when increasing</span><math alttext="S" class="ltx_Math" display="inline" id="S4.SS1.p7.3.m3" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math><span class="translated-text">从 15 到 50，超出这个范围，收益仍然微乎其微。</span><span class="original-text">from 15 to 50, the gains remain marginal beyond this range.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS1.p8">
+<p class="ltx_p" id="S4.SS1.p8.2"><span class="translated-text">图。</span><span class="original-text">Fig.</span><a class="ltx_ref" href="#S4.F4" title="Figure 4 ‣ 4.1 The Dynamics of Contextual and Temporal Scaling (Single Agent) ‣ 4 Results ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">(b) 表明增加</span><span class="original-text">(b) shows that increasing</span><math alttext="S" class="ltx_Math" display="inline" id="S4.SS1.p8.1.m1" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math><span class="translated-text">减少最大步停顿，但将失败转变为过早的错误成功。
+这表明额外的步骤可以帮助智能体避免因步骤限制而提前终止，但不一定可以帮助他们从错误的轨迹中恢复。
+相反，更长的视野往往会让代理人继续错误的行为。
+这种失败模式的重新分配解释了为什么尽管步骤预算更大，但任务成功率基本上保持不变。
+与此同时，运营成本稳步上升</span><span class="original-text">reduces max-step stalls but shifts failures toward premature false successes.
+This suggests that additional steps help agents avoid early termination by step limits, but do not necessarily help them recover from incorrect trajectories.
+Instead, longer horizons often allow agents to continue erroneous behavior.
+This failure-mode redistribution explains why task success remains largely unchanged despite larger step budgets.
+At the same time, operational cost increases steadily with</span><math alttext="S" class="ltx_Math" display="inline" id="S4.SS1.p8.2.m2" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math><span class="translated-text">，正如每个任务的平均步数和提示令牌使用情况所反映的那样（图 1）。</span><span class="original-text">, as reflected by both average steps per task and prompt token usage (Fig.</span><a class="ltx_ref" href="#S4.F4" title="Figure 4 ‣ 4.1 The Dynamics of Contextual and Temporal Scaling (Single Agent) ‣ 4 Results ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">(c)、(d))。
+因此，时间扩展会增加成本，同时主要是重新分配失败而不是提高成功上限。</span><span class="original-text">(c), (d)).
+Thus, temporal scaling increases cost while primarily redistributing failures rather than raising the success ceiling.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S4.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">4.2 </span><span class="translated-text">结构分解和并行扩展（两阶段代理）</span><span class="original-text">Structural Decomposition and Parallel Scaling (Two-stage Agent)</span></h3>
+<div class="ltx_para ltx_noindent" id="S4.SS2.p1">
+<span class="ltx_inline-block"><svg class="ltx_picture" height="89.47" id="S4.SS2.p1.pic1" overflow="visible" version="1.1" viewbox="0 0 600 89.47" width="600"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,89.47) matrix(1 0 0 -1 0 0)"><g fill="#404040" fill-opacity="1.0" style="--ltx-fill-color:#404040;"><path d="M 0 0 L 0 89.47 L 600 89.47 L 600 0 Z" style="stroke:none"></path></g><g fill="#F9F9F9" fill-opacity="1.0" style="--ltx-fill-color:#F9F9F9;"><path d="M 0.69 0.69 L 0.69 67.91 L 599.31 67.91 L 599.31 0.69 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 11.55 75.23)"><foreignobject color="#FFFFFF" height="12.3" overflow="visible" style="--ltx-fg-color:#FFFFFF;--ltx-fo-width:41.69em;--ltx-fo-height:0.69em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 9.61)" width="576.91"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S4.SS2.p1.pic1.1.1.1.1.1" style="width:36.25em;">
+<span class="ltx_p" id="S4.SS2.p1.pic1.1.1.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.p1.pic1.1.1.1.1.1.1.1">Finding 4: Structural decomposition can introduce overhead in local-scale agents.</span></span>
+</span></span></span></foreignobject></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 11.55 14.24)"><foreignobject color="#000000" height="45.51" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:41.69em;--ltx-fo-height:3.09em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 42.82)" width="576.91"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S4.SS2.p1.pic1.2.2.2.1.1" style="width:41.69em;">
+<span class="ltx_p" id="S4.SS2.p1.pic1.2.2.2.1.1.1">In our experiments, decoupling reasoning into planning and grounding stages reduced task success while increasing computational cost. Compared to single-pass agents, two-stage agents incur additional planning and formatting requirements that introduce new failure modes.</span>
+</span></span></span></foreignobject></g></g></svg></span>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS2.p2">
+<p class="ltx_p" id="S4.SS2.p2.1"><span class="translated-text">如图所示。</span><span class="original-text">As shown in Fig.</span><a class="ltx_ref" href="#S4.F5" title="Figure 5 ‣ 4.2 Structural Decomposition and Parallel Scaling (Two-stage Agent) ‣ 4 Results ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">(a,b)，两阶段框架在整个历史长度中始终表现不佳相应的单代理基线。在基线配置（</span><span class="original-text">(a,b), the two-stage framework consistently underperforms the corresponding single-agent baselines across history lengths. At the baseline configuration (</span><math alttext="P=1" class="ltx_Math" display="inline" id="S4.SS2.p2.1.m1" intent=":literal"><semantics><mrow><mi>P</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">P=1</annotation></semantics></math><span class="translated-text">），尽管有额外的规划阶段，任务成功率仍大幅下降，这表明仅进行结构分解并不能提高局部环境中的性能。</span><span class="original-text">), task success drops substantially despite the additional planning stage, indicating that structural decomposition alone does not improve performance in local settings.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS2.p3">
+<p class="ltx_p" id="S4.SS2.p3.1"><span class="translated-text">图 2 成本与精度的权衡</span><span class="original-text">The cost–accuracy tradeoff in Fig.</span><a class="ltx_ref" href="#S4.F5" title="Figure 5 ‣ 4.2 Structural Decomposition and Parallel Scaling (Two-stage Agent) ‣ 4 Results ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">(c) 进一步强调了这一开销。
+与单个代理相比，两阶段配置消耗更多的令牌，但准确性较低。
+这可能源于本地模型的规划能力有限，生成的计划可能不完整或与视觉状态不一致。此外，分解引入了规划和基础之间的格式依赖性。如图所示</span><span class="original-text">(c) further highlights this overhead.
+Two-stage configurations consume substantially more tokens while achieving lower accuracy than single agents.
+This may stem from limited planning capability in local models, where generated plans can be incomplete or poorly aligned with the visual state. Moreover, decomposition introduces a formatting dependency between planning and grounding. As illustrated in Fig.</span><a class="ltx_ref" href="#S4.F6" title="Figure 6 ‣ 4.2 Structural Decomposition and Parallel Scaling (Two-stage Agent) ‣ 4 Results ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">，规划器可以省略必填字段或在所需代码块之外生成操作。图。</span><span class="original-text">, the planner can omit required fields or generate actions outside the required code block. Fig.</span><a class="ltx_ref" href="#S4.F5" title="Figure 5 ‣ 4.2 Structural Decomposition and Parallel Scaling (Two-stage Agent) ‣ 4 Results ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">(d) 显示格式错误在失败中占了相当大的比例，从而阻止了接地代理的成功解析和执行。</span><span class="original-text">(d) shows that format errors account for a non-trivial portion of failures, preventing successful parsing and execution by the grounding agent.</span></p>
+</div>
+<figure class="ltx_figure" id="S4.F5"><object class="ltx_graphics ltx_centering ltx_img_landscape" data="2607.28573v1/Figures/finding45_parallel_scaling_failure_cohort.svg" height="190" id="S4.F5.g1" type="image/svg+xml" width="598"></object>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 5: </span>
+Impact of parallel scaling on two-stage agent.
+(a,b) Task success rates of Qwen3-8B and Qwen3-30B-A3B planners across different numbers of plans (<math alttext="P" class="ltx_Math" display="inline" id="S4.F5.6.m1" intent=":literal"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>) and history lengths (<math alttext="H" class="ltx_Math" display="inline" id="S4.F5.7.m2" intent=":literal"><semantics><mi>H</mi><annotation encoding="application/x-tex">H</annotation></semantics></math>) with <math alttext="S=15" class="ltx_Math" display="inline" id="S4.F5.8.m3" intent=":literal"><semantics><mrow><mi>S</mi><mo>=</mo><mn>15</mn></mrow><annotation encoding="application/x-tex">S=15</annotation></semantics></math>. Dotted lines indicate the corresponding single-agent performance.
+(c) Accuracy–cost tradeoff, where single-agent configurations (stars) achieve higher accuracy at substantially lower token cost than two-stage configurations (circles).
+(d) Failure-mode cohorts for the Qwen3-VL-30B-A3B two-stage agent (<math alttext="S=15" class="ltx_Math" display="inline" id="S4.F5.9.m4" intent=":literal"><semantics><mrow><mi>S</mi><mo>=</mo><mn>15</mn></mrow><annotation encoding="application/x-tex">S=15</annotation></semantics></math>, <math alttext="H=4" class="ltx_Math" display="inline" id="S4.F5.10.m5" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">H=4</annotation></semantics></math>).
+</figcaption>
+</figure>
+<figure class="ltx_figure" id="S4.F6"><img alt="Refer to caption" class="ltx_graphics ltx_centering ltx_img_landscape" height="177" id="S4.F6.g1" src="https://arxiv.org/html/2607.28573v1/Figures/plan.png" width="598"/>
+<figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Figure 6: </span>
+Example of a planner format error. Despite explicit formatting instructions, the planner omits the observation section and generates an action as a plain string rather than a valid code block, resulting in a parsing failure.
+</figcaption>
+</figure>
+<div class="ltx_para ltx_noindent" id="S4.SS2.p4">
+<span class="ltx_inline-block"><svg class="ltx_picture" height="119.99" id="S4.SS2.p4.pic1" overflow="visible" version="1.1" viewbox="0 0 600 119.99" width="600"><g fill="#000000" stroke="#000000" stroke-width="0.4pt" style="--ltx-stroke-color:#000000;--ltx-fill-color:#000000;" transform="translate(0,119.99) matrix(1 0 0 -1 0 0)"><g fill="#404040" fill-opacity="1.0" style="--ltx-fill-color:#404040;"><path d="M 0 0 L 0 119.99 L 600 119.99 L 600 0 Z" style="stroke:none"></path></g><g fill="#F9F9F9" fill-opacity="1.0" style="--ltx-fill-color:#F9F9F9;"><path d="M 0.69 0.69 L 0.69 81.83 L 599.31 81.83 L 599.31 0.69 Z" style="stroke:none"></path></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 11.55 89.14)"><foreignobject color="#FFFFFF" height="28.9" overflow="visible" style="--ltx-fg-color:#FFFFFF;--ltx-fo-width:41.69em;--ltx-fo-height:1.89em;--ltx-fo-depth:0.19em;" transform="matrix(1 0 0 -1 0 26.21)" width="576.91"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S4.SS2.p4.pic1.1.1.1.1.1" style="width:36.25em;">
+<span class="ltx_p" id="S4.SS2.p4.pic1.1.1.1.1.1.1"><span class="ltx_text ltx_font_bold" id="S4.SS2.p4.pic1.1.1.1.1.1.1.1">Finding 5: Parallel scaling partially recovers performance but only with sub-linear gains relative to computation.</span></span>
+</span></span></span></foreignobject></g><g fill-opacity="1.0" transform="matrix(1.0 0.0 0.0 1.0 11.55 11.55)"><foreignobject color="#000000" height="59.42" overflow="visible" style="--ltx-fg-color:#000000;--ltx-fo-width:41.69em;--ltx-fo-height:4.29em;--ltx-fo-depth:0em;" transform="matrix(1 0 0 -1 0 59.42)" width="576.91"><span class="ltx_foreignobject_container"><span class="ltx_foreignobject_content">
+<span class="ltx_inline-block ltx_minipage ltx_align_bottom" id="S4.SS2.p4.pic1.2.2.2.1.1" style="width:41.69em;">
+<span class="ltx_p" id="S4.SS2.p4.pic1.2.2.2.1.1.1">Increasing the number of candidate plans partially offsets the weaknesses of two-stage decomposition by improving plan selection and reducing format-related failures. However, this recovery requires substantially higher token consumption, yielding a clear accuracy–cost tradeoff.</span>
+</span></span></span></foreignobject></g></g></svg></span>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS2.p5">
+<p class="ltx_p" id="S4.SS2.p5.2"><span class="translated-text">虽然结构分解会抑制基线性能，但会增加并行推出的数量（</span><span class="original-text">While structural decomposition suppresses performance at baseline, increasing the number of parallel rollouts (</span><math alttext="P" class="ltx_Math" display="inline" id="S4.SS2.p5.1.m1" intent=":literal"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math><span class="translated-text">）部分恢复精度。如图所示。</span><span class="original-text">) partially recovers accuracy. As shown in Fig.</span><a class="ltx_ref" href="#S4.F5" title="Figure 5 ‣ 4.2 Structural Decomposition and Parallel Scaling (Two-stage Agent) ‣ 4 Results ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">(a,b)，性能提高为</span><span class="original-text">(a,b), performance improves as</span><math alttext="P" class="ltx_Math" display="inline" id="S4.SS2.p5.2.m2" intent=":literal"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math><span class="translated-text">从 1 增加到 4，表明多个候选计划提供了额外的机会来选择可执行且协调一致的行动。</span><span class="original-text">increases from 1 to 4, suggesting that multiple candidate plans provide additional opportunities to select an executable and better-aligned action.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS2.p6">
+<p class="ltx_p" id="S4.SS2.p6.1"><span class="translated-text">图。</span><span class="original-text">Fig.</span><a class="ltx_ref" href="#S4.F5" title="Figure 5 ‣ 4.2 Structural Decomposition and Parallel Scaling (Two-stage Agent) ‣ 4 Results ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">(d) 进一步表明并行缩放减少了格式错误。
+由于规划器生成多个候选计划，因此当至少一个有效候选计划仍可用于接地时，可以绕过无效格式的输出。这有助于减轻分解引入的一种故障模式，尽管它并不能完全缩小与单代理基线的差距。</span><span class="original-text">(d) further shows that parallel scaling reduces format errors.
+Because the planner generates multiple candidate plans, invalidly formatted outputs can be bypassed when at least one valid candidate remains available for grounding. This helps mitigate one failure mode introduced by decomposition, although it does not fully close the gap with single-agent baselines.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S4.SS2.p7">
+<p class="ltx_p" id="S4.SS2.p7.1"><span class="translated-text">然而，这种改进需要付出巨大的代价。代币使用量急剧增加</span><span class="original-text">This improvement, however, comes at a significant cost. Token usage increases sharply with</span><math alttext="P" class="ltx_Math" display="inline" id="S4.SS2.p7.1.m1" intent=":literal"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math><span class="translated-text">，反映生成多个计划的开销（图 1）</span><span class="original-text">, reflecting the overhead of generating multiple plans (Fig.</span><a class="ltx_ref" href="#S4.F5" title="Figure 5 ‣ 4.2 Structural Decomposition and Parallel Scaling (Two-stage Agent) ‣ 4 Results ‣ Rethinking Inference-Time Scaling in Local Computer-Use Agents: Failure Modes and Compute Tradeoffs"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">(c))。总体而言，并行扩展引入了明显的权衡：它部分恢复了任务成功并减少了与格式相关的失败，但相对于计算量的增加，收益仍然是次线性的。</span><span class="original-text">(c)). Overall, parallel scaling introduces a clear tradeoff: it partially recovers task success and reduces format-related failures, but the gains remain sub-linear relative to the increase in computation.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S5">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">5 </span><span class="translated-text">讨论</span><span class="original-text">Discussion</span></h2>
+<section class="ltx_subsection" id="S5.SS1">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.1 </span><span class="translated-text">资源分配策略和实用指南</span><span class="original-text">Resource Allocation Strategy and Practical Guidelines</span></h3>
+<div class="ltx_para ltx_noindent" id="S5.SS1.p1">
+<p class="ltx_p" id="S5.SS1.p1.1"><span class="translated-text">基于观察到的准确性-成本权衡和故障模式模式，我们建议本地 CUA 中的计算应该有选择地分配，而不是统一缩放。</span><span class="original-text">Based on the observed accuracy–cost tradeoffs and failure-mode patterns, we propose that compute in local CUAs should be allocated selectively rather than scaled uniformly.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S5.SS1.p2">
+<p class="ltx_p" id="S5.SS1.p2.3"><span class="ltx_text ltx_font_bold" id="S5.SS1.p2.3.1"><span class="translated-text">情境尺度和历史基础</span><span class="original-text">Contextual Scaling and Historical Grounding</span></span><span class="translated-text">上下文扩展提供了最强的初始优势。搬家自</span><span class="original-text">Contextual scaling offers the strongest initial benefit. Moving from</span><math alttext="H=0" class="ltx_Math" display="inline" id="S5.SS1.p2.1.m1" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">H=0</annotation></semantics></math> to <math alttext="H=1" class="ltx_Math" display="inline" id="S5.SS1.p2.2.m2" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">H=1</annotation></semantics></math><span class="translated-text">减少重复循环和最大步停顿，同时</span><span class="original-text">reduces repetitive loops and max-step stalls, while</span><math alttext="H=4" class="ltx_Math" display="inline" id="S5.SS1.p2.3.m3" intent=":literal"><semantics><mrow><mi>H</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">H=4</annotation></semantics></math><span class="translated-text">进一步提高了步进效率。然而，更长的历史越来越多地将失败转向过早的错误成功，这表明适度的历史比无限制的背景扩展更可取。</span><span class="original-text">further improves step efficiency. However, longer histories increasingly shift failures toward premature false successes, suggesting that moderate history is preferable to unbounded context expansion.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S5.SS1.p3">
+<p class="ltx_p" id="S5.SS1.p3.2"><span class="ltx_text ltx_font_bold" id="S5.SS1.p3.2.1"><span class="translated-text">时间缩放的局限性</span><span class="original-text">Limitations of Temporal Scaling</span></span><span class="translated-text">时间缩放提供的收益有限。增加</span><span class="original-text">Temporal scaling provides limited gains. Increasing</span><math alttext="S" class="ltx_Math" display="inline" id="S5.SS1.p3.1.m1" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math><span class="translated-text">减少最大步数停顿，但不会显着提高任务成功率；相反，失败常常会导致过早的错误成功。因此，</span><span class="original-text">reduces max-step stalls but does not substantially improve task success; instead, failures often shift toward premature false successes. Thus,</span><math alttext="S" class="ltx_Math" display="inline" id="S5.SS1.p3.2.m2" intent=":literal"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math><span class="translated-text">应被视为与模型推理能力一致的有限预算。</span><span class="original-text">should be treated as a bounded budget aligned with the model’s reasoning capacity.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S5.SS1.p4">
+<p class="ltx_p" id="S5.SS1.p4.1"><span class="ltx_text ltx_font_bold" id="S5.SS1.p4.1.1"><span class="translated-text">并行扩展的策略性使用</span><span class="original-text">Strategic Use of Parallel Scaling</span></span><span class="translated-text">并行扩展可以通过增加计划多样性和减少格式失败来部分恢复两阶段性能。然而，它的收益相对于代币成本仍然是次线性的，因此应该有选择地使用它，而不是默认使用。</span><span class="original-text">Parallel scaling can partially recover two-stage performance by increasing plan diversity and reducing format-failures. However, its gains remain sub-linear relative to the token cost, so it should be used selectively rather than by default.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S5.SS1.p5">
+<p class="ltx_p" id="S5.SS1.p5.1"><span class="translated-text">总的来说，我们建议优先考虑结构简单性，校准时间预算，并使用适度的上下文历史来平衡效率和轨迹稳定性。</span><span class="original-text">Overall, we recommend prioritizing structural simplicity, calibrating temporal budgets, and using moderate contextual history to balance efficiency and trajectory stability.</span></p>
+</div>
+</section>
+<section class="ltx_subsection" id="S5.SS2">
+<h3 class="ltx_title ltx_title_subsection">
+<span class="ltx_tag ltx_tag_subsection">5.2 </span><span class="translated-text">迈向高效的本地计算机使用代理</span><span class="original-text">Toward Efficient Local Computer-Use Agents</span></h3>
+<div class="ltx_para ltx_noindent" id="S5.SS2.p1">
+<p class="ltx_p" id="S5.SS2.p1.1"><span class="translated-text">我们的研究结果表明，改进本地 CUA 需要有针对性的优化，而不是无约束的推理时间缩放。由于额外的计算通常会改变故障模式而不是解决它们，因此未来的工作应重点关注上下文质量、故障感知控制和模型感知代理设计。</span><span class="original-text">Our findings suggest that improving local CUAs requires targeted optimization rather than unconstrained inference-time scaling. Since additional compute often shifts failure modes instead of resolving them, future work should focus on context quality, failure-aware control, and model-aware agent design.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S5.SS2.p2">
+<p class="ltx_p" id="S5.SS2.p2.1"><span class="ltx_text ltx_font_bold" id="S5.SS2.p2.1.1"><span class="translated-text">高效的上下文管理</span><span class="original-text">Efficient Context Management</span></span><span class="translated-text">上下文缩放通过提供历史基础来提高准确性，但它也会增加代币成本，并且当历史变得太长时，它的好处就会饱和。这表明本地 CUA 需要机制来保留与任务相关的历史记录，同时过滤掉不太有用的过去观察结果。本地代理不应简单地扩展上下文窗口，而应支持选择性记忆保留和紧凑的历史表示，如 PAL-UI 中所探讨的那样</span><span class="original-text">Contextual scaling improves accuracy by providing historical grounding, but it also increases token cost and its benefit saturates when histories become too long. This suggests that local CUAs need mechanisms to retain task-relevant history while filtering out less useful past observations. Rather than simply expanding the context window, local agents should favor selective memory retention and compact history representations, as explored in PAL-UI</span><cite class="ltx_cite ltx_citemacro_citep">(Liu et al., <a class="ltx_ref" href="#bib.bib12" title="">2025</a>)</cite>.</p>
+</div>
+<div class="ltx_para ltx_noindent" id="S5.SS2.p3">
+<p class="ltx_p" id="S5.SS2.p3.1"><span class="ltx_text ltx_font_bold" id="S5.SS2.p3.1.1"><span class="translated-text">故障感知代理控制</span><span class="original-text">Failure-Aware Agent Control</span></span><span class="translated-text">我们的失败分析表明，本地代理经常遭受重复循环、进度停滞和过早错误成功的困扰。这些模式表明，仅采取额外步骤是不够的，除非智能体能够检测到它们何时不再取得有意义的进展或何时错误终止。事件驱动级联</span><span class="original-text">Our failure analysis shows that local agents often suffer from repetitive loops, stalled progress, and premature false successes. These patterns suggest that additional steps alone are insufficient unless agents can detect when they are no longer making meaningful progress or when they have terminated incorrectly. Event-driven cascades</span><cite class="ltx_cite ltx_citemacro_citep">(Wei et al., <a class="ltx_ref" href="#bib.bib19" title="">2026</a>)</cite><span class="translated-text">当检测到进度停滞或语义漂移时，通过升级到更强大的模型来解决类似的风险。然而，完全本地的 CUA 需要大型模型恢复的轻量级替代方案，包括循环检测、轨迹修正和任务完成验证。</span><span class="original-text">address similar risks by escalating to stronger models when progress stalls or semantic drift is detected. However, fully local CUAs require lightweight alternatives to large-model recovery, including loop detection, trajectory revision, and task-completion verification.</span></p>
+</div>
+<div class="ltx_para ltx_noindent" id="S5.SS2.p4">
+<p class="ltx_p" id="S5.SS2.p4.1"><span class="ltx_text ltx_font_bold" id="S5.SS2.p4.1.1"><span class="translated-text">本地 CUA 的代理框架</span><span class="original-text">Agentic Frameworks for Local CUAs</span></span><span class="translated-text">我们的结果还表明，为更强的模型设计的代理框架可能不会直接转移到本地模型。当局部模型无法可靠地遵循指令时，复杂的分解可能会引入额外的故障。因此，本地多智能体系统应该将结构与模型能力相匹配，或者通过有针对性的训练或微调来使每个模型适应其指定的角色。</span><span class="original-text">Our results also indicate that agentic frameworks designed for stronger models may not transfer directly to local models. Complex decomposition can introduce additional failures when local models cannot reliably follow the instructions. Therefore, local multi-agent systems should match the structure to model capability, or adapt each model to its assigned role through targeted training or fine-tuning.</span></p>
+</div>
+</section>
+</section>
+<section class="ltx_section" id="S6">
+<h2 class="ltx_title ltx_title_section">
+<span class="ltx_tag ltx_tag_section">6 </span><span class="translated-text">结论</span><span class="original-text">Conclusion</span></h2>
+<div class="ltx_para ltx_noindent" id="S6.p1">
+<p class="ltx_p" id="S6.p1.1"><span class="translated-text">我们系统地研究了本地 CUA 中跨上下文、时间、结构和并行维度的推理时间缩放。我们的结果表明，额外的计算并不一定会转化为更高的任务成功率。上下文和时间缩放可以通过减少重复循环和最大步停顿来提高稳定性，但随着失败越来越多地转向过早的错误成功，它们的增益会饱和。结构分解可以进一步在本地两阶段代理中引入规划和格式解析开销，而并行扩展则以大量计算成本部分缓解这些问题。这些发现表明，本地 CUA 的未来进展将更多地依赖于设计根据本地模型的功能和限制分配计算的代理，而不是增加推理时间计算。</span><span class="original-text">We systematically studied inference-time scaling in local CUAs across contextual, temporal, structural, and parallel dimensions. Our results show that additional computation does not necessarily translate into higher task success. Contextual and temporal scaling can improve stability by reducing repetitive loops and max-step stalls, but their gains saturate as failures increasingly shift toward premature false successes. Structural decomposition can further introduce planning and format-parsing overhead in local two-stage agents, while parallel scaling partially mitigates these issues at a substantial computational cost. These findings suggest that future progress in local CUAs will depend less on increasing inference-time compute than on designing agents that allocate compute according to the capabilities and limitations of local models.</span></p>
+</div>
+</section>
+<section class="ltx_bibliography" id="bib">
+<h2 class="ltx_title ltx_title_bibliography">References</h2>
+<ul class="ltx_biblist">
+<li class="ltx_bibitem" id="bib.bib1">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Abhyankar et al. (2025)</span>
+<span class="ltx_bibblock">
+Reyna Abhyankar, Qi Qi, and Yiying Zhang.
+
+</span>
+<span class="ltx_bibblock">Osworld-human: Benchmarking the efficiency of computer-use agents, 2025.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2506.16042" title="">https://arxiv.org/abs/2506.16042</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib2">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Agashe et al. (2024)</span>
+<span class="ltx_bibblock">
+Saaket Agashe, Jiuzhou Han, Shuyu Gan, Jiachen Yang, Ang Li, and Xin Eric Wang.
+
+</span>
+<span class="ltx_bibblock">Agent s: An open agentic framework that uses computers like a human, 2024.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2410.08164" title="">https://arxiv.org/abs/2410.08164</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib3">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Agashe et al. (2025)</span>
+<span class="ltx_bibblock">
+Saaket Agashe, Kyle Wong, Vincent Tu, Jiachen Yang, Ang Li, and Xin Eric Wang.
+
+</span>
+<span class="ltx_bibblock">Agent s2: A compositional generalist-specialist framework for computer use agents, 2025.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2504.00906" title="">https://arxiv.org/abs/2504.00906</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib4">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Anthropic (2025)</span>
+<span class="ltx_bibblock">
+Anthropic.
+
+</span>
+<span class="ltx_bibblock">Introducing claude sonnet 4.5.
+
+</span>
+<span class="ltx_bibblock"><a class="ltx_ref ltx_url ltx_font_typewriter" href="https://www.anthropic.com/news/claude-sonnet-4-5" title="">https://www.anthropic.com/news/claude-sonnet-4-5</a>, 2025.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib5">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bai et al. (2025)</span>
+<span class="ltx_bibblock">
+Shuai Bai, Yuxuan Cai, Ruizhe Chen, Keqin Chen, Xionghui Chen, Zesen Cheng, Lianghao Deng, Wei Ding, Chang Gao, Chunjiang Ge, Wenbin Ge, Zhifang Guo, Qidong Huang, Jie Huang, Fei Huang, Binyuan Hui, Shutong Jiang, Zhaohai Li, Mingsheng Li, Mei Li, Kaixin Li, Zicheng Lin, Junyang Lin, Xuejing Liu, Jiawei Liu, Chenglong Liu, Yang Liu, Dayiheng Liu, Shixuan Liu, Dunjie Lu, Ruilin Luo, Chenxu Lv, Rui Men, Lingchen Meng, Xuancheng Ren, Xingzhang Ren, Sibo Song, Yuchong Sun, Jun Tang, Jianhong Tu, Jianqiang Wan, Peng Wang, Pengfei Wang, Qiuyue Wang, Yuxuan Wang, Tianbao Xie, Yiheng Xu, Haiyang Xu, Jin Xu, Zhibo Yang, Mingkun Yang, Jianxin Yang, An Yang, Bowen Yu, Fei Zhang, Hang Zhang, Xi Zhang, Bo Zheng, Humen Zhong, Jingren Zhou, Fan Zhou, Jing Zhou, Yuanzhi Zhu, and Ke Zhu.
+
+</span>
+<span class="ltx_bibblock">Qwen3-vl technical report, 2025.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2511.21631" title="">https://arxiv.org/abs/2511.21631</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib6">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Bonatti et al. (2024)</span>
+<span class="ltx_bibblock">
+Rogerio Bonatti, Dan Zhao, Francesco Bonacci, Dillon Dupont, Sara Abdali, Yinheng Li, Yadong Lu, Justin Wagle, Kazuhito Koishida, Arthur Bucker, Lawrence Jang, and Zack Hui.
+
+</span>
+<span class="ltx_bibblock">Windows agent arena: Evaluating multi-modal os agents at scale, 2024.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2409.08264" title="">https://arxiv.org/abs/2409.08264</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib7">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Chen et al. (2025)</span>
+<span class="ltx_bibblock">
+Gongwei Chen, Xurui Zhou, Rui Shao, Yibo Lyu, Kaiwen Zhou, Shuai Wang, Wentao Li, Yinchuan Li, Zhongang Qi, and Liqiang Nie.
+
+</span>
+<span class="ltx_bibblock">Less is more: Empowering gui agent with context-aware simplification, 2025.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2507.03730" title="">https://arxiv.org/abs/2507.03730</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib8">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Deng et al. (2023)</span>
+<span class="ltx_bibblock">
+Xiang Deng, Yu Gu, Boyuan Zheng, Shijie Chen, Samuel Stevens, Boshi Wang, Huan Sun, and Yu Su.
+
+</span>
+<span class="ltx_bibblock">Mind2web: Towards a generalist agent for the web, 2023.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2306.06070" title="">https://arxiv.org/abs/2306.06070</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib9">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Gonzalez-Pumariega et al. (2026)</span>
+<span class="ltx_bibblock">
+Gonzalo Gonzalez-Pumariega, Vincent Tu, Chih-Lun Lee, Jiachen Yang, Ang Li, and Xin Eric Wang.
+
+</span>
+<span class="ltx_bibblock">Scaling agents for computer use, 2026.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2510.02250" title="">https://arxiv.org/abs/2510.02250</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib10">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Huang et al. (2025)</span>
+<span class="ltx_bibblock">
+Kung-Hsiang Huang, Haoyi Qiu, Yutong Dai, Caiming Xiong, and Chien-Sheng Wu.
+
+</span>
+<span class="ltx_bibblock">Gui-kv: Efficient gui agents via kv cache with spatio-temporal awareness, 2025.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2510.00536" title="">https://arxiv.org/abs/2510.00536</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib11">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Lin et al. (2024)</span>
+<span class="ltx_bibblock">
+Kevin Qinghong Lin, Linjie Li, Difei Gao, Zhengyuan Yang, Shiwei Wu, Zechen Bai, Weixian Lei, Lijuan Wang, and Mike Zheng Shou.
+
+</span>
+<span class="ltx_bibblock">Showui: One vision-language-action model for gui visual agent, 2024.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2411.17465" title="">https://arxiv.org/abs/2411.17465</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib12">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Liu et al. (2025)</span>
+<span class="ltx_bibblock">
+Zikang Liu, Junyi Li, Wayne Xin Zhao, Dawei Gao, Yaliang Li, and Ji rong Wen.
+
+</span>
+<span class="ltx_bibblock">Pal-ui: Planning with active look-back for vision-based gui agents, 2025.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2510.00413" title="">https://arxiv.org/abs/2510.00413</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib13">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Qin et al. (2025)</span>
+<span class="ltx_bibblock">
+Yujia Qin, Yining Ye, Junjie Fang, Haoming Wang, Shihao Liang, Shizuo Tian, Junda Zhang, Jiahao Li, Yunxin Li, Shijue Huang, Wanjun Zhong, Kuanye Li, Jiale Yang, Yu Miao, Woyu Lin, Longxiang Liu, Xu Jiang, Qianli Ma, Jingyu Li, Xiaojun Xiao, Kai Cai, Chuang Li, Yaowei Zheng, Chaolin Jin, Chen Li, Xiao Zhou, Minchao Wang, Haoli Chen, Zhaojian Li, Haihua Yang, Haifeng Liu, Feng Lin, Tao Peng, Xin Liu, and Guang Shi.
+
+</span>
+<span class="ltx_bibblock">Ui-tars: Pioneering automated gui interaction with native agents, 2025.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2501.12326" title="">https://arxiv.org/abs/2501.12326</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib14">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Singh et al. (2025)</span>
+<span class="ltx_bibblock">
+Aaditya Singh, Adam Fry, Adam Perelman, Adam Tart, Adi Ganesh, Ahmed El-Kishky, Aidan McLaughlin, Aiden Low, AJ Ostrow, Akhila Ananthram, Akshay Nathan, Alan Luo, Alec Helyar, Aleksander Madry, Aleksandr Efremov, Aleksandra Spyra, Alex Baker-Whitcomb, Alex Beutel, Alex Karpenko, Alex Makelov, Alex Neitz, Alex Wei, Alexandra Barr, Alexandre Kirchmeyer, Alexey Ivanov, Alexi Christakis, Alistair Gillespie, Allison Tam, Ally Bennett, Alvin Wan, Alyssa Huang, Amy McDonald Sandjideh, Amy Yang, Ananya Kumar, Andre Saraiva, Andrea Vallone, Andrei Gheorghe, Andres Garcia Garcia, Andrew Braunstein, Andrew Liu, Andrew Schmidt, Andrey Mereskin, Andrey Mishchenko, Andy Applebaum, Andy Rogerson, Ann Rajan, Annie Wei, Anoop Kotha, Anubha Srivastava, Anushree Agrawal, Arun Vijayvergiya, Ashley Tyra, Ashvin Nair, Avi Nayak, Ben Eggers, Bessie Ji, Beth Hoover, Bill Chen, Blair Chen, Boaz Barak, Borys Minaiev, Botao Hao, Bowen Baker, Brad Lightcap, Brandon McKinzie, Brandon Wang, Brendan Quinn, Brian Fioca, Brian Hsu, Brian
+Yang, Brian Yu, Brian Zhang, Brittany Brenner, Callie Riggins Zetino, Cameron Raymond, Camillo Lugaresi, Carolina Paz, Cary Hudson, Cedric Whitney, Chak Li, Charles Chen, Charlotte Cole, Chelsea Voss, Chen Ding, Chen Shen, Chengdu Huang, Chris Colby, Chris Hallacy, Chris Koch, Chris Lu, Christina Kaplan, Christina Kim, CJ Minott-Henriques, Cliff Frey, Cody Yu, Coley Czarnecki, Colin Reid, Colin Wei, Cory Decareaux, Cristina Scheau, Cyril Zhang, Cyrus Forbes, Da Tang, Dakota Goldberg, Dan Roberts, Dana Palmie, Daniel Kappler, Daniel Levine, Daniel Wright, Dave Leo, David Lin, David Robinson, Declan Grabb, Derek Chen, Derek Lim, Derek Salama, Dibya Bhattacharjee, Dimitris Tsipras, Dinghua Li, Dingli Yu, DJ Strouse, Drew Williams, Dylan Hunn, Ed Bayes, Edwin Arbus, Ekin Akyurek, Elaine Ya Le, Elana Widmann, Eli Yani, Elizabeth Proehl, Enis Sert, Enoch Cheung, Eri Schwartz, Eric Han, Eric Jiang, Eric Mitchell, Eric Sigler, Eric Wallace, Erik Ritter, Erin Kavanaugh, Evan Mays, Evgenii Nikishin, Fangyuan Li,
+Felipe Petroski Such, Filipe de Avila Belbute Peres, Filippo Raso, Florent Bekerman, Foivos Tsimpourlas, Fotis Chantzis, Francis Song, Francis Zhang, Gaby Raila, Garrett McGrath, Gary Briggs, Gary Yang, Giambattista Parascandolo, Gildas Chabot, Grace Kim, Grace Zhao, Gregory Valiant, Guillaume Leclerc, Hadi Salman, Hanson Wang, Hao Sheng, Haoming Jiang, Haoyu Wang, Haozhun Jin, Harshit Sikchi, Heather Schmidt, Henry Aspegren, Honglin Chen, Huida Qiu, Hunter Lightman, Ian Covert, Ian Kivlichan, Ian Silber, Ian Sohl, Ibrahim Hammoud, Ignasi Clavera, Ikai Lan, Ilge Akkaya, Ilya Kostrikov, Irina Kofman, Isak Etinger, Ishaan Singal, Jackie Hehir, Jacob Huh, Jacqueline Pan, Jake Wilczynski, Jakub Pachocki, James Lee, James Quinn, Jamie Kiros, Janvi Kalra, Jasmyn Samaroo, Jason Wang, Jason Wolfe, Jay Chen, Jay Wang, Jean Harb, Jeffrey Han, Jeffrey Wang, Jennifer Zhao, Jeremy Chen, Jerene Yang, Jerry Tworek, Jesse Chand, Jessica Landon, Jessica Liang, Ji Lin, Jiancheng Liu, Jianfeng Wang, Jie Tang, Jihan Yin,
+Joanne Jang, Joel Morris, Joey Flynn, Johannes Ferstad, Johannes Heidecke, John Fishbein, John Hallman, Jonah Grant, Jonathan Chien, Jonathan Gordon, Jongsoo Park, Jordan Liss, Jos Kraaijeveld, Joseph Guay, Joseph Mo, Josh Lawson, Josh McGrath, Joshua Vendrow, Joy Jiao, Julian Lee, Julie Steele, Julie Wang, Junhua Mao, Kai Chen, Kai Hayashi, Kai Xiao, Kamyar Salahi, Kan Wu, Karan Sekhri, Karan Sharma, Karan Singhal, Karen Li, Kenny Nguyen, Keren Gu-Lemberg, Kevin King, Kevin Liu, Kevin Stone, Kevin Yu, Kristen Ying, Kristian Georgiev, Kristie Lim, Kushal Tirumala, Kyle Miller, Lama Ahmad, Larry Lv, Laura Clare, Laurance Fauconnet, Lauren Itow, Lauren Yang, Laurentia Romaniuk, Leah Anise, Lee Byron, Leher Pathak, Leon Maksin, Leyan Lo, Leyton Ho, Li Jing, Liang Wu, Liang Xiong, Lien Mamitsuka, Lin Yang, Lindsay McCallum, Lindsey Held, Liz Bourgeois, Logan Engstrom, Lorenz Kuhn, Louis Feuvrier, Lu Zhang, Lucas Switzer, Lukas Kondraciuk, Lukasz Kaiser, Manas Joglekar, Mandeep Singh, Mandip Shah, Manuka
+Stratta, Marcus Williams, Mark Chen, Mark Sun, Marselus Cayton, Martin Li, Marvin Zhang, Marwan Aljubeh, Matt Nichols, Matthew Haines, Max Schwarzer, Mayank Gupta, Meghan Shah, Melody Huang, Meng Dong, Mengqing Wang, Mia Glaese, Micah Carroll, Michael Lampe, Michael Malek, Michael Sharman, Michael Zhang, Michele Wang, Michelle Pokrass, Mihai Florian, Mikhail Pavlov, Miles Wang, Ming Chen, Mingxuan Wang, Minnia Feng, Mo Bavarian, Molly Lin, Moose Abdool, Mostafa Rohaninejad, Nacho Soto, Natalie Staudacher, Natan LaFontaine, Nathan Marwell, Nelson Liu, Nick Preston, Nick Turley, Nicklas Ansman, Nicole Blades, Nikil Pancha, Nikita Mikhaylin, Niko Felix, Nikunj Handa, Nishant Rai, Nitish Keskar, Noam Brown, Ofir Nachum, Oleg Boiko, Oleg Murk, Olivia Watkins, Oona Gleeson, Pamela Mishkin, Patryk Lesiewicz, Paul Baltescu, Pavel Belov, Peter Zhokhov, Philip Pronin, Phillip Guo, Phoebe Thacker, Qi Liu, Qiming Yuan, Qinghua Liu, Rachel Dias, Rachel Puckett, Rahul Arora, Ravi Teja Mullapudi, Raz Gaon, Reah Miyara,
+Rennie Song, Rishabh Aggarwal, RJ Marsan, Robel Yemiru, Robert Xiong, Rohan Kshirsagar, Rohan Nuttall, Roman Tsiupa, Ronen Eldan, Rose Wang, Roshan James, Roy Ziv, Rui Shu, Ruslan Nigmatullin, Saachi Jain, Saam Talaie, Sam Altman, Sam Arnesen, Sam Toizer, Sam Toyer, Samuel Miserendino, Sandhini Agarwal, Sarah Yoo, Savannah Heon, Scott Ethersmith, Sean Grove, Sean Taylor, Sebastien Bubeck, Sever Banesiu, Shaokyi Amdo, Shengjia Zhao, Sherwin Wu, Shibani Santurkar, Shiyu Zhao, Shraman Ray Chaudhuri, Shreyas Krishnaswamy, Shuaiqi, Xia, Shuyang Cheng, Shyamal Anadkat, Simón Posada Fishman, Simon Tobin, Siyuan Fu, Somay Jain, Song Mei, Sonya Egoian, Spencer Kim, Spug Golden, SQ Mah, Steph Lin, Stephen Imm, Steve Sharpe, Steve Yadlowsky, Sulman Choudhry, Sungwon Eum, Suvansh Sanjeev, Tabarak Khan, Tal Stramer, Tao Wang, Tao Xin, Tarun Gogineni, Taya Christianson, Ted Sanders, Tejal Patwardhan, Thomas Degry, Thomas Shadwell, Tianfu Fu, Tianshi Gao, Timur Garipov, Tina Sriskandarajah, Toki Sherbakov, Tomer Kaftan,
+Tomo Hiratsuka, Tongzhou Wang, Tony Song, Tony Zhao, Troy Peterson, Val Kharitonov, Victoria Chernova, Vineet Kosaraju, Vishal Kuo, Vitchyr Pong, Vivek Verma, Vlad Petrov, Wanning Jiang, Weixing Zhang, Wenda Zhou, Wenlei Xie, Wenting Zhan, Wes McCabe, Will DePue, Will Ellsworth, Wulfie Bain, Wyatt Thompson, Xiangning Chen, Xiangyu Qi, Xin Xiang, Xinwei Shi, Yann Dubois, Yaodong Yu, Yara Khakbaz, Yifan Wu, Yilei Qian, Yin Tat Lee, Yinbo Chen, Yizhen Zhang, Yizhong Xiong, Yonglong Tian, Young Cha, Yu Bai, Yu Yang, Yuan Yuan, Yuanzhi Li, Yufeng Zhang, Yuguang Yang, Yujia Jin, Yun Jiang, Yunyun Wang, Yushi Wang, Yutian Liu, Zach Stubenvoll, Zehao Dou, Zheng Wu, and Zhigang Wang.
+
+</span>
+<span class="ltx_bibblock">Openai gpt-5 system card, 2025.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2601.03267" title="">https://arxiv.org/abs/2601.03267</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib15">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Snell et al. (2024)</span>
+<span class="ltx_bibblock">
+Charlie Snell, Jaehoon Lee, Kelvin Xu, and Aviral Kumar.
+
+</span>
+<span class="ltx_bibblock">Scaling llm test-time compute optimally can be more effective than scaling model parameters, 2024.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2408.03314" title="">https://arxiv.org/abs/2408.03314</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib16">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Song et al. (2026)</span>
+<span class="ltx_bibblock">
+Linxin Song, Yutong Dai, Viraj Prabhu, Jieyu Zhang, Taiwei Shi, Li Li, Junnan Li, Silvio Savarese, Zeyuan Chen, Jieyu Zhao, Ran Xu, and Caiming Xiong.
+
+</span>
+<span class="ltx_bibblock">Coact-1: Computer-using multi-agent system with coding actions, 2026.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2508.03923" title="">https://arxiv.org/abs/2508.03923</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib17">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wang et al. (2025)</span>
+<span class="ltx_bibblock">
+Xinyuan Wang, Bowen Wang, Dunjie Lu, Junlin Yang, Tianbao Xie, Junli Wang, Jiaqi Deng, Xiaole Guo, Yiheng Xu, Chen Henry Wu, Zhennan Shen, Zhuokai Li, Ryan Li, Xiaochuan Li, Junda Chen, Boyuan Zheng, Peihang Li, Fangyu Lei, Ruisheng Cao, Yeqiao Fu, Dongchan Shin, Martin Shin, Jiarui Hu, Yuyan Wang, Jixuan Chen, Yuxiao Ye, Danyang Zhang, Dikang Du, Hao Hu, Huarong Chen, Zaida Zhou, Haotian Yao, Ziwei Chen, Qizheng Gu, Yipu Wang, Heng Wang, Diyi Yang, Victor Zhong, Flood Sung, Y. Charles, Zhilin Yang, and Tao Yu.
+
+</span>
+<span class="ltx_bibblock">Opencua: Open foundations for computer-use agents, 2025.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2508.09123" title="">https://arxiv.org/abs/2508.09123</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib18">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wang et al. (2023)</span>
+<span class="ltx_bibblock">
+Xuezhi Wang, Jason Wei, Dale Schuurmans, Quoc Le, Ed Chi, Sharan Narang, Aakanksha Chowdhery, and Denny Zhou.
+
+</span>
+<span class="ltx_bibblock">Self-consistency improves chain of thought reasoning in language models, 2023.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2203.11171" title="">https://arxiv.org/abs/2203.11171</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib19">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Wei et al. (2026)</span>
+<span class="ltx_bibblock">
+Jinbiao Wei, Kangqi Ni, Yilun Zhao, Guo Gan, and Arman Cohan.
+
+</span>
+<span class="ltx_bibblock">Step-level optimization for efficient computer-use agents, 2026.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2604.27151" title="">https://arxiv.org/abs/2604.27151</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib20">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Xie et al. (2024)</span>
+<span class="ltx_bibblock">
+Tianbao Xie, Danyang Zhang, Jixuan Chen, Xiaochuan Li, Siheng Zhao, Ruisheng Cao, Toh Jing Hua, Zhoujun Cheng, Dongchan Shin, Fangyu Lei, Yitao Liu, Yiheng Xu, Shuyan Zhou, Silvio Savarese, Caiming Xiong, Victor Zhong, and Tao Yu.
+
+</span>
+<span class="ltx_bibblock">Osworld: Benchmarking multimodal agents for open-ended tasks in real computer environments, 2024.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2404.07972" title="">https://arxiv.org/abs/2404.07972</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib21">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Xie et al. (2025)</span>
+<span class="ltx_bibblock">
+Tianbao Xie, Jiaqi Deng, Xiaochuan Li, Junlin Yang, Haoyuan Wu, Jixuan Chen, Wenjing Hu, Xinyuan Wang, Yuhui Xu, Zekun Wang, Yiheng Xu, Junli Wang, Doyen Sahoo, Tao Yu, and Caiming Xiong.
+
+</span>
+<span class="ltx_bibblock">Scaling computer-use grounding via user interface decomposition and synthesis, 2025.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2505.13227" title="">https://arxiv.org/abs/2505.13227</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib22">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Xue et al. (2026)</span>
+<span class="ltx_bibblock">
+Taofeng Xue, Chong Peng, Mianqiu Huang, Linsen Guo, Tiancheng Han, Haozhe Wang, Jianing Wang, Xiaocheng Zhang, Xin Yang, Dengchang Zhao, Jinrui Ding, Xiandi Ma, Yuchen Xie, Peng Pei, Xunliang Cai, and Xipeng Qiu.
+
+</span>
+<span class="ltx_bibblock">Evocua: Evolving computer use agents via learning from scalable synthetic experience, 2026.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2601.15876" title="">https://arxiv.org/abs/2601.15876</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib23">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang et al. (2023)</span>
+<span class="ltx_bibblock">
+Jianwei Yang, Hao Zhang, Feng Li, Xueyan Zou, Chunyuan Li, and Jianfeng Gao.
+
+</span>
+<span class="ltx_bibblock">Set-of-mark prompting unleashes extraordinary visual grounding in gpt-4v, 2023.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2310.11441" title="">https://arxiv.org/abs/2310.11441</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib24">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yang et al. (2025)</span>
+<span class="ltx_bibblock">
+Yan Yang, Dongxu Li, Yutong Dai, Yuhao Yang, Ziyang Luo, Zirui Zhao, Zhiyuan Hu, Junzhe Huang, Amrita Saha, Zeyuan Chen, Ran Xu, Liyuan Pan, Silvio Savarese, Caiming Xiong, and Junnan Li.
+
+</span>
+<span class="ltx_bibblock">Gta1: Gui test-time scaling agent, 2025.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2507.05791" title="">https://arxiv.org/abs/2507.05791</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib25">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Yao et al. (2023)</span>
+<span class="ltx_bibblock">
+Shunyu Yao, Dian Yu, Jeffrey Zhao, Izhak Shafran, Thomas L. Griffiths, Yuan Cao, and Karthik Narasimhan.
+
+</span>
+<span class="ltx_bibblock">Tree of thoughts: Deliberate problem solving with large language models, 2023.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2305.10601" title="">https://arxiv.org/abs/2305.10601</a>.
+
+</span>
+</li>
+<li class="ltx_bibitem" id="bib.bib26">
+<span class="ltx_tag ltx_role_refnum ltx_tag_bibitem">Zhou et al. (2024)</span>
+<span class="ltx_bibblock">
+Shuyan Zhou, Frank F. Xu, Hao Zhu, Xuhui Zhou, Robert Lo, Abishek Sridhar, Xianyi Cheng, Tianyue Ou, Yonatan Bisk, Daniel Fried, Uri Alon, and Graham Neubig.
+
+</span>
+<span class="ltx_bibblock">Webarena: A realistic web environment for building autonomous agents, 2024.
+
+</span>
+<span class="ltx_bibblock">URL <a class="ltx_ref ltx_url ltx_font_typewriter" href="https://arxiv.org/abs/2307.13854" title="">https://arxiv.org/abs/2307.13854</a>.
+
+</span>
+</li>
+</ul>
+</section>
+</article>
+</div>
+</div>
+<footer class="arxiv-html-footer">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2607.28573v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<span style="letter-spacing: -0.2em; margin-right: 0.1em;">
+        L
+        <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
+        T
+        <span style="position: relative; bottom: -0.4ex;">E</span>
+</span>
+<span class="ltx_font_smallcaps">xml</span>
+<img alt="[LOGO]" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAAOCAYAAAD5YeaVAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wKExQZLWTEaOUAAAAddEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIFRoZSBHSU1Q72QlbgAAAdpJREFUKM9tkL+L2nAARz9fPZNCKFapUn8kyI0e4iRHSR1Kb8ng0lJw6FYHFwv2LwhOpcWxTjeUunYqOmqd6hEoRDhtDWdA8ApRYsSUCDHNt5ul13vz4w0vWCgUnnEc975arX6ORqN3VqtVZbfbTQC4uEHANM3jSqXymFI6yWazP2KxWAXAL9zCUa1Wy2tXVxheKA9YNoR8Pt+aTqe4FVVVvz05O6MBhqUIBGk8Hn8HAOVy+T+XLJfLS4ZhTiRJgqIoVBRFIoric47jPnmeB1mW/9rr9ZpSSn3Lsmir1fJZlqWlUonKsvwWwD8ymc/nXwVBeLjf7xEKhdBut9Hr9WgmkyGEkJwsy5eHG5vN5g0AKIoCAEgkEkin0wQAfN9/cXPdheu6P33fBwB4ngcAcByHJpPJl+fn54mD3Gg0NrquXxeLRQAAwzAYj8cwTZPwPH9/sVg8PXweDAauqqr2cDjEer1GJBLBZDJBs9mE4zjwfZ85lAGg2+06hmGgXq+j3+/DsixYlgVN03a9Xu8jgCNCyIegIAgx13Vfd7vdu+FweG8YRkjXdWy329+dTgeSJD3ieZ7RNO0VAXAPwDEAO5VKndi2fWrb9jWl9Esul6PZbDY9Go1OZ7PZ9z/lyuD3OozU2wAAAABJRU5ErkJggg=="/>
+</a>.
+  </div>
+<div class="keyboard-glossary">
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:</span></p>
+<ul>
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
+</ul>
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+</div>
+</footer><footer class="ds-site-footer">
+<div class="ds-site-footer-grid">
+<div class="ds-site-footer-main">
+<div class="ds-site-footer-ack"><span class="translated-text">我们衷心感谢来自
+        我们的</span><span class="original-text">We gratefully acknowledge support from
+        our</span><strong><span class="translated-text">主要资助者</span><span class="original-text">major funders</span></strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong><span class="translated-text">成员机构</span><span class="original-text">member institutions</span></strong></a><span class="ack-member-inline" hidden="">, <strong></strong></span><span class="translated-text">,
+        以及所有贡献者。</span><span class="original-text">,
+        and all contributors.</span></div>
+<nav aria-label="Site navigation" class="ds-site-footer-links">
+<a href="https://info.arxiv.org/about"><span class="translated-text">关于</span><span class="original-text">About</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help"><span class="translated-text">帮助</span><span class="original-text">Help</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/contact.html"><span class="translated-text">联系方式</span><span class="original-text">Contact</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/subscribe"><span class="translated-text">订阅</span><span class="original-text">Subscribe</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/license/index.html"><span class="translated-text">版权</span><span class="original-text">Copyright</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/policies/privacy_policy.html"><span class="translated-text">隐私</span><span class="original-text">Privacy</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://info.arxiv.org/help/web_accessibility.html"><span class="translated-text">无障碍</span><span class="original-text">Accessibility</span></a>
+<span aria-hidden="true" class="ds-site-footer-sep">·</span>
+<a href="https://status.arxiv.org" rel="noopener noreferrer" target="_blank"><span class="translated-text">运营状况</span><span class="original-text">Operational Status</span><span class="is-sr-only"><span class="translated-text">（在新选项卡中打开）</span><span class="original-text">(opens in new tab)</span></span></a>
+</nav>
+</div>
+<div aria-label="Major funders" class="ds-site-footer-funders">
+<div class="ds-site-footer-funders-label"><span class="translated-text">主要资金支持来自</span><span class="original-text">Major funding support from</span></div>
+<div class="ds-site-footer-funders-logos">
+<a class="ds-funder-link" href="https://www.simonsfoundation.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.sfi.org.bm/" rel="noopener noreferrer" target="_blank">
+<img alt="Simons Foundation International" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation-international.png"/>
+</a>
+<a class="ds-funder-link" href="https://www.schmidtsciences.org/" rel="noopener noreferrer" target="_blank">
+<img alt="Schmidt Sciences" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/schmidt-sciences.png"/>
+</a>
+</div>
+</div>
+</div>
+</footer><div id="fixed-buttons-container">
+<a class="header-button" href="javascript:toggleReadingMode();" id="disable-reading-mode-btn" title="Disable reading mode, show header and footer">
+<svg height="1.25rem" role="presentation" viewbox="0 0 448 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2026 Fonticons, Inc.-->
+<path d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path>
+</svg>
+</a>
+</div>
+<script id="ai-tracker-toggle">
+    function toggleBilingual() {
+        document.body.classList.toggle('bilingual');
+        var btn = document.getElementById('bilingualToggle');
+        if (document.body.classList.contains('bilingual')) {
+            btn.classList.add('active');
+            btn.textContent = '🔄 仅中文';
+        } else {
+            btn.classList.remove('active');
+            btn.textContent = '🔄 中英对照';
+        }
+    }
+    </script>
+</body>
+</html>
