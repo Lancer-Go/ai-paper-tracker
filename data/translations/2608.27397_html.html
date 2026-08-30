@@ -545,23 +545,32 @@ Equation (</span><a class="ltx_ref" href="#S3.E1" title="In Residual-correction
 processes the steered states.</span></p>
 </div>
 <div class="ltx_para" id="S3.SS3.p2">
-<p class="ltx_p" id="S3.SS3.p2.1">Because clinical discharge notes routinely exceed the encoder’s context window,
+<p class="ltx_p" id="S3.SS3.p2.1"><span class="translated-text">由于临床出院记录通常会超出编码器的上下文窗口，
+每个文档都被划分为重叠的块。后缀输出是
+通过非特殊令牌的均值池化减少为单个块嵌入，并且
+通过学习将块嵌入组合成文档嵌入
+注意力池。然后将文档嵌入输入线性分类
+产生任务逻辑的头。</span><span class="original-text">Because clinical discharge notes routinely exceed the encoder’s context window,
 each document is partitioned into overlapping chunks. The suffix outputs are
 reduced to a single chunk embedding by mean pooling over non-special tokens, and
 chunk embeddings are combined into a document embedding through a learned
 attention pool. The document embedding is then fed to a linear classification
-head that produces the task logits.</p>
+head that produces the task logits.</span></p>
 </div>
 <section class="ltx_paragraph" id="S3.SS3.SSS0.Px1">
-<h4 class="ltx_title ltx_title_paragraph">Residual-correction intervention.</h4>
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">残差校正干预。</span><span class="original-text">Residual-correction intervention.</span></h4>
 <div class="ltx_para" id="S3.SS3.SSS0.Px1.p1">
-<p class="ltx_p" id="S3.SS3.SSS0.Px1.p1.1">Let <math alttext="\mathcal{T}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.m1" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒯</mi><annotation encoding="application/x-tex">\mathcal{T}</annotation></semantics></math> denote the set of task-relevant concept indices identified by
-the LLM judge in Section <a class="ltx_ref" href="#S4.SS4" title="4.4 Feature Extraction and Interpretation ‣ 4 Results and Discussion ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">4.4</span></a>, and let
-<math alttext="\overline{\mathcal{T}}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.m2" intent=":literal"><semantics><mover accent="true"><mi class="ltx_font_mathcaligraphic">𝒯</mi><mo stretchy="true">¯</mo></mover><annotation encoding="application/x-tex">\overline{\mathcal{T}}</annotation></semantics></math> denote the indices labeled as task-irrelevant or
-artifactual. Rather than replacing <math alttext="h^{(K)}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.m3" intent=":literal"><semantics><msup><mi>h</mi><mrow><mo stretchy="false">(</mo><mi>K</mi><mo stretchy="false">)</mo></mrow></msup><annotation encoding="application/x-tex">h^{(K)}</annotation></semantics></math> with the SAE reconstruction, which
+<p class="ltx_p" id="S3.SS3.SSS0.Px1.p1.1"><span class="translated-text">让</span><span class="original-text">Let</span><math alttext="\mathcal{T}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.m1" intent=":literal"><semantics><mi class="ltx_font_mathcaligraphic">𝒯</mi><annotation encoding="application/x-tex">\mathcal{T}</annotation></semantics></math><span class="translated-text">表示由以下确定的任务相关概念索引集
+法学硕士法官在部分</span><span class="original-text">denote the set of task-relevant concept indices identified by
+the LLM judge in Section</span><a class="ltx_ref" href="#S4.SS4" title="4.4 Feature Extraction and Interpretation ‣ 4 Results and Discussion ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">4.4</span></a><span class="translated-text">，并让</span><span class="original-text">, and let</span><math alttext="\overline{\mathcal{T}}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.m2" intent=":literal"><semantics><mover accent="true"><mi class="ltx_font_mathcaligraphic">𝒯</mi><mo stretchy="true">¯</mo></mover><annotation encoding="application/x-tex">\overline{\mathcal{T}}</annotation></semantics></math><span class="translated-text">表示标记为与任务无关的索引或
+人工的。而不是更换</span><span class="original-text">denote the indices labeled as task-irrelevant or
+artifactual. Rather than replacing</span><math alttext="h^{(K)}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.m3" intent=":literal"><semantics><msup><mi>h</mi><mrow><mo stretchy="false">(</mo><mi>K</mi><mo stretchy="false">)</mo></mrow></msup><annotation encoding="application/x-tex">h^{(K)}</annotation></semantics></math><span class="translated-text">通过 SAE 重建，
+字典无法捕获的信号会产生重建错误，我们
+采用一个</span><span class="original-text">with the SAE reconstruction, which
 would incur reconstruction error on signals the dictionary fails to capture, we
-adopt a <em class="ltx_emph ltx_font_italic" id="S3.SS3.SSS0.Px1.p1.1.1">residual correction</em> that preserves the original hidden state and
-subtracts only the contribution of the suppressed concepts:</p>
+adopt a</span><em class="ltx_emph ltx_font_italic" id="S3.SS3.SSS0.Px1.p1.1.1"><span class="translated-text">残差修正</span><span class="original-text">residual correction</span></em><span class="translated-text">保留原始隐藏状态并且
+仅减去被抑制概念的贡献：</span><span class="original-text">that preserves the original hidden state and
+subtracts only the contribution of the suppressed concepts:</span></p>
 <table class="ltx_equation ltx_eqn_table" id="S3.E1">
 <tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
 <td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
@@ -569,53 +578,70 @@ subtracts only the contribution of the suppressed concepts:</p>
 <td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
 <td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(1)</span></td></tr></tbody>
 </table>
-<p class="ltx_p" id="S3.SS3.SSS0.Px1.p1.2">where <math alttext="z_{t,j}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.m4" intent=":literal"><semantics><msub><mi>z</mi><mrow><mi>t</mi><mo>,</mo><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">z_{t,j}</annotation></semantics></math> is the SAE activation of latent <math alttext="j" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.m5" intent=":literal"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> at token <math alttext="t" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.m6" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>, and
-<math alttext="W_{\mathrm{dec}}[j,:]" class="ltx_math_unparsed" display="inline" id="S3.SS3.SSS0.Px1.p1.m7" intent=":literal"><semantics><mrow><msub><mi>W</mi><mi>dec</mi></msub><mrow><mo stretchy="false">[</mo><mi>j</mi><mo>,</mo><mo rspace="0em">:</mo><mo stretchy="false">]</mo></mrow></mrow><annotation encoding="application/x-tex">W_{\mathrm{dec}}[j,:]</annotation></semantics></math> is its decoder direction. The unmodeled portion of
-<math alttext="h^{(K)}_{t}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.m8" intent=":literal"><semantics><msubsup><mi>h</mi><mi>t</mi><mrow><mo stretchy="false">(</mo><mi>K</mi><mo stretchy="false">)</mo></mrow></msubsup><annotation encoding="application/x-tex">h^{(K)}_{t}</annotation></semantics></math>, i.e., the SAE residual <math alttext="h^{(K)}_{t}-D_{\psi}(z_{t})" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.m9" intent=":literal"><semantics><mrow><msubsup><mi>h</mi><mi>t</mi><mrow><mo stretchy="false">(</mo><mi>K</mi><mo stretchy="false">)</mo></mrow></msubsup><mo>−</mo><mrow><msub><mi>D</mi><mi>ψ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>z</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">h^{(K)}_{t}-D_{\psi}(z_{t})</annotation></semantics></math>, passes through
+<p class="ltx_p" id="S3.SS3.SSS0.Px1.p1.2"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="z_{t,j}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.m4" intent=":literal"><semantics><msub><mi>z</mi><mrow><mi>t</mi><mo>,</mo><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">z_{t,j}</annotation></semantics></math><span class="translated-text">是潜在的 SAE 激活</span><span class="original-text">is the SAE activation of latent</span><math alttext="j" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.m5" intent=":literal"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math><span class="translated-text">在令牌处</span><span class="original-text">at token</span><math alttext="t" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.m6" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="W_{\mathrm{dec}}[j,:]" class="ltx_math_unparsed" display="inline" id="S3.SS3.SSS0.Px1.p1.m7" intent=":literal"><semantics><mrow><msub><mi>W</mi><mi>dec</mi></msub><mrow><mo stretchy="false">[</mo><mi>j</mi><mo>,</mo><mo rspace="0em">:</mo><mo stretchy="false">]</mo></mrow></mrow><annotation encoding="application/x-tex">W_{\mathrm{dec}}[j,:]</annotation></semantics></math><span class="translated-text">是它的解码器方向。未建模的部分</span><span class="original-text">is its decoder direction. The unmodeled portion of</span><math alttext="h^{(K)}_{t}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.m8" intent=":literal"><semantics><msubsup><mi>h</mi><mi>t</mi><mrow><mo stretchy="false">(</mo><mi>K</mi><mo stretchy="false">)</mo></mrow></msubsup><annotation encoding="application/x-tex">h^{(K)}_{t}</annotation></semantics></math><span class="translated-text">，即 SAE 残差</span><span class="original-text">, i.e., the SAE residual</span><math alttext="h^{(K)}_{t}-D_{\psi}(z_{t})" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px1.p1.m9" intent=":literal"><semantics><mrow><msubsup><mi>h</mi><mi>t</mi><mrow><mo stretchy="false">(</mo><mi>K</mi><mo stretchy="false">)</mo></mrow></msubsup><mo>−</mo><mrow><msub><mi>D</mi><mi>ψ</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><msub><mi>z</mi><mi>t</mi></msub><mo stretchy="false">)</mo></mrow></mrow></mrow><annotation encoding="application/x-tex">h^{(K)}_{t}-D_{\psi}(z_{t})</annotation></semantics></math><span class="translated-text">，经过
+未改变，因此 SAE 无法重建的临床信号得以保留
+逐字逐句。</span><span class="original-text">, passes through
 unchanged, so clinical signal the SAE fails to reconstruct is preserved
-verbatim.</p>
+verbatim.</span></p>
 </div>
 </section>
 <section class="ltx_paragraph" id="S3.SS3.SSS0.Px2">
-<h4 class="ltx_title ltx_title_paragraph">Uniform artifact suppression.</h4>
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">均匀伪影抑制。</span><span class="original-text">Uniform artifact suppression.</span></h4>
 <div class="ltx_para" id="S3.SS3.SSS0.Px2.p1">
-<p class="ltx_p" id="S3.SS3.SSS0.Px2.p1.1">We subtract every latent the interpretation pipeline labels as
+<p class="ltx_p" id="S3.SS3.SSS0.Px2.p1.1"><span class="translated-text">我们减去每个潜在的解释管道标签：
+人为因素，无论其激活程度或下游估计值如何
+影响。有两个考虑因素促成了这一选择。首先，即使是低幅度的
+工件方向可以与特定于机构或模板的相关联
+文档模式并改变部署中的决策边界
+分布转移。二、残差形式
+方程（</span><span class="original-text">We subtract every latent the interpretation pipeline labels as
 artifactual, regardless of its activation magnitude or estimated downstream
 impact. Two considerations motivate this choice. First, even low-magnitude
 artifact directions can correlate with institution- or template-specific
 documentation patterns and shift the decision boundary under deployment
 distribution shift. Second, the residual form in
-Equation (<a class="ltx_ref" href="#S3.E1" title="In Residual-correction intervention. ‣ 3.3 Fine-Tuning with Concept Steering ‣ 3 Method ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">1</span></a>) makes uniform suppression more conservative: only the
-explicit decoder contributions in <math alttext="\overline{\mathcal{T}}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px2.p1.m1" intent=":literal"><semantics><mover accent="true"><mi class="ltx_font_mathcaligraphic">𝒯</mi><mo stretchy="true">¯</mo></mover><annotation encoding="application/x-tex">\overline{\mathcal{T}}</annotation></semantics></math> are removed, while
-the rest of <math alttext="h^{(K)}_{t}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px2.p1.m2" intent=":literal"><semantics><msubsup><mi>h</mi><mi>t</mi><mrow><mo stretchy="false">(</mo><mi>K</mi><mo stretchy="false">)</mo></mrow></msubsup><annotation encoding="application/x-tex">h^{(K)}_{t}</annotation></semantics></math> flows through unchanged. This design deliberately
-decouples <em class="ltx_emph ltx_font_italic" id="S3.SS3.SSS0.Px2.p1.1.1">what the model is forbidden to use</em>—any verified artifact,
-set during training—from <em class="ltx_emph ltx_font_italic" id="S3.SS3.SSS0.Px2.p1.1.2">what evidence the model is shown to rely on</em>,
-which is defined as a post-hoc audit signal in Section <a class="ltx_ref" href="#S3.SS4" title="3.4 Per-Concept Attribution for Auditability ‣ 3 Method ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">3.4</span></a>.</p>
+Equation (</span><a class="ltx_ref" href="#S3.E1" title="In Residual-correction intervention. ‣ 3.3 Fine-Tuning with Concept Steering ‣ 3 Method ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">）使得均匀抑制更加保守：只有
+显式解码器贡献</span><span class="original-text">) makes uniform suppression more conservative: only the
+explicit decoder contributions in</span><math alttext="\overline{\mathcal{T}}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px2.p1.m1" intent=":literal"><semantics><mover accent="true"><mi class="ltx_font_mathcaligraphic">𝒯</mi><mo stretchy="true">¯</mo></mover><annotation encoding="application/x-tex">\overline{\mathcal{T}}</annotation></semantics></math><span class="translated-text">被删除，同时
+其余的</span><span class="original-text">are removed, while
+the rest of</span><math alttext="h^{(K)}_{t}" class="ltx_Math" display="inline" id="S3.SS3.SSS0.Px2.p1.m2" intent=":literal"><semantics><msubsup><mi>h</mi><mi>t</mi><mrow><mo stretchy="false">(</mo><mi>K</mi><mo stretchy="false">)</mo></mrow></msubsup><annotation encoding="application/x-tex">h^{(K)}_{t}</annotation></semantics></math><span class="translated-text">流经不变。这个设计是刻意的
+解耦</span><span class="original-text">flows through unchanged. This design deliberately
+decouples</span><em class="ltx_emph ltx_font_italic" id="S3.SS3.SSS0.Px2.p1.1.1"><span class="translated-text">该模型禁止使用什么</span><span class="original-text">what the model is forbidden to use</span></em><span class="translated-text">——任何经过验证的工件，
+在训练期间设定——从</span><span class="original-text">—any verified artifact,
+set during training—from</span><em class="ltx_emph ltx_font_italic" id="S3.SS3.SSS0.Px2.p1.1.2"><span class="translated-text">该模型依赖什么证据</span><span class="original-text">what evidence the model is shown to rely on</span></em><span class="translated-text">,
+它被定义为节中的事后审计信号</span><span class="original-text">,
+which is defined as a post-hoc audit signal in Section</span><a class="ltx_ref" href="#S3.SS4" title="3.4 Per-Concept Attribution for Auditability ‣ 3 Method ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">3.4</span></a>.</p>
 </div>
 </section>
 </section>
 <section class="ltx_subsection" id="S3.SS4">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.4 </span>Per-Concept Attribution for Auditability</h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">3.4 </span><span class="translated-text">可审核性的每个概念归因</span><span class="original-text">Per-Concept Attribution for Auditability</span></h3>
 <div class="ltx_para" id="S3.SS4.p1">
-<p class="ltx_p" id="S3.SS4.p1.1">The suppression mechanism in Section <a class="ltx_ref" href="#S3.SS3" title="3.3 Fine-Tuning with Concept Steering ‣ 3 Method ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">3.3</span></a> controls
-<em class="ltx_emph ltx_font_italic" id="S3.SS4.p1.1.1">what the model is forbidden to use</em>; clinical deployment additionally
-requires evidence of <em class="ltx_emph ltx_font_italic" id="S3.SS4.p1.1.2">what the trained model actually used</em>. We therefore
+<p class="ltx_p" id="S3.SS4.p1.1"><span class="translated-text">节中的抑制机制</span><span class="original-text">The suppression mechanism in Section</span><a class="ltx_ref" href="#S3.SS3" title="3.3 Fine-Tuning with Concept Steering ‣ 3 Method ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">3.3</span></a><span class="translated-text">控制</span><span class="original-text">controls</span><em class="ltx_emph ltx_font_italic" id="S3.SS4.p1.1.1"><span class="translated-text">该模型禁止使用什么</span><span class="original-text">what the model is forbidden to use</span></em><span class="translated-text">;另外临床部署
+需要证据</span><span class="original-text">; clinical deployment additionally
+requires evidence of</span><em class="ltx_emph ltx_font_italic" id="S3.SS4.p1.1.2"><span class="translated-text">训练后的模型实际使用了什么</span><span class="original-text">what the trained model actually used</span></em><span class="translated-text">。我们因此
+为该框架配备事后归因模块，对于每个文档，
+根据对预测的贡献对每个潜在 SAE 进行评分，而不影响
+任何经过训练的参数。</span><span class="original-text">. We therefore
 equip the framework with a post-hoc attribution module that, for every document,
 scores each SAE latent by its contribution to the prediction without affecting
-any trained parameter.</p>
+any trained parameter.</span></p>
 </div>
 <div class="ltx_para" id="S3.SS4.p2">
-<p class="ltx_p" id="S3.SS4.p2.1">Let <math alttext="F_{\omega}" class="ltx_Math" display="inline" id="S3.SS4.p2.m1" intent=":literal"><semantics><msub><mi>F</mi><mi>ω</mi></msub><annotation encoding="application/x-tex">F_{\omega}</annotation></semantics></math> denote the deployed suffix classifier that maps the steered
-layer-<math alttext="K" class="ltx_Math" display="inline" id="S3.SS4.p2.m2" intent=":literal"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math> representation <math alttext="\tilde{h}^{(K)}(x)" class="ltx_Math" display="inline" id="S3.SS4.p2.m3" intent=":literal"><semantics><mrow><msup><mover accent="true"><mi>h</mi><mo>~</mo></mover><mrow><mo stretchy="false">(</mo><mi>K</mi><mo stretchy="false">)</mo></mrow></msup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\tilde{h}^{(K)}(x)</annotation></semantics></math> to the positive-class logit,</p>
+<p class="ltx_p" id="S3.SS4.p2.1"><span class="translated-text">让</span><span class="original-text">Let</span><math alttext="F_{\omega}" class="ltx_Math" display="inline" id="S3.SS4.p2.m1" intent=":literal"><semantics><msub><mi>F</mi><mi>ω</mi></msub><annotation encoding="application/x-tex">F_{\omega}</annotation></semantics></math><span class="translated-text">表示部署的后缀分类器映射转向
+层-</span><span class="original-text">denote the deployed suffix classifier that maps the steered
+layer-</span><math alttext="K" class="ltx_Math" display="inline" id="S3.SS4.p2.m2" intent=":literal"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math><span class="translated-text">代表性</span><span class="original-text">representation</span><math alttext="\tilde{h}^{(K)}(x)" class="ltx_Math" display="inline" id="S3.SS4.p2.m3" intent=":literal"><semantics><mrow><msup><mover accent="true"><mi>h</mi><mo>~</mo></mover><mrow><mo stretchy="false">(</mo><mi>K</mi><mo stretchy="false">)</mo></mrow></msup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">\tilde{h}^{(K)}(x)</annotation></semantics></math><span class="translated-text">到正类 Logit，</span><span class="original-text">to the positive-class logit,</span></p>
 <table class="ltx_equation ltx_eqn_table" id="S3.Ex4">
 <tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
 <td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
 <td class="ltx_eqn_cell ltx_align_center"><math alttext="s(x)=F_{\omega}\!\left(\tilde{h}^{(K)}(x)\right)." class="ltx_Math" display="block" id="S3.Ex4.m1" intent=":literal"><semantics><mrow><mrow><mrow><mi>s</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><mo>=</mo><mrow><msub><mi>F</mi><mi>ω</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo>(</mo><mrow><msup><mover accent="true"><mi>h</mi><mo>~</mo></mover><mrow><mo stretchy="false">(</mo><mi>K</mi><mo stretchy="false">)</mo></mrow></msup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><mo>)</mo></mrow></mrow></mrow><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">s(x)=F_{\omega}\!\left(\tilde{h}^{(K)}(x)\right).</annotation></semantics></math></td>
 <td class="ltx_eqn_cell ltx_eqn_center_padright"></td></tr></tbody>
 </table>
-<p class="ltx_p" id="S3.SS4.p2.2">We use the logit rather than the probability to avoid vanishing gradients for
-confident predictions. For latent <math alttext="j" class="ltx_Math" display="inline" id="S3.SS4.p2.m4" intent=":literal"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>, we define the signed first-order
-attribution as</p>
+<p class="ltx_p" id="S3.SS4.p2.2"><span class="translated-text">我们使用 logit 而不是概率来避免梯度消失
+自信的预测。对于潜伏的</span><span class="original-text">We use the logit rather than the probability to avoid vanishing gradients for
+confident predictions. For latent</span><math alttext="j" class="ltx_Math" display="inline" id="S3.SS4.p2.m4" intent=":literal"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math><span class="translated-text">，我们定义有符号的一阶
+归因为</span><span class="original-text">, we define the signed first-order
+attribution as</span></p>
 <table class="ltx_equation ltx_eqn_table" id="S3.E2">
 <tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
 <td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
@@ -623,13 +649,16 @@ attribution as</p>
 <td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
 <td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(2)</span></td></tr></tbody>
 </table>
-<p class="ltx_p" id="S3.SS4.p2.3">where <math alttext="\nabla_{t}s(x)\equiv\partial s(x)/\partial\tilde{h}^{(K)}_{t}(x)" class="ltx_Math" display="inline" id="S3.SS4.p2.m5" intent=":literal"><semantics><mrow><mrow><mrow><msub><mo>∇</mo><mi>t</mi></msub><mi>s</mi></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><mo rspace="0.111em">≡</mo><mrow><mo>∂</mo><mrow><mrow><mi>s</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><mo rspace="0.055em">/</mo><mrow><mo>∂</mo><mrow><msubsup><mover accent="true"><mi>h</mi><mo>~</mo></mover><mi>t</mi><mrow><mo stretchy="false">(</mo><mi>K</mi><mo stretchy="false">)</mo></mrow></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow></mrow></mrow><annotation encoding="application/x-tex">\nabla_{t}s(x)\equiv\partial s(x)/\partial\tilde{h}^{(K)}_{t}(x)</annotation></semantics></math>, and <math alttext="z_{t,j}(x)" class="ltx_Math" display="inline" id="S3.SS4.p2.m6" intent=":literal"><semantics><mrow><msub><mi>z</mi><mrow><mi>t</mi><mo>,</mo><mi>j</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">z_{t,j}(x)</annotation></semantics></math> is the SAE
-activation of latent <math alttext="j" class="ltx_Math" display="inline" id="S3.SS4.p2.m7" intent=":literal"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math> at token <math alttext="t" class="ltx_Math" display="inline" id="S3.SS4.p2.m8" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.</p>
+<p class="ltx_p" id="S3.SS4.p2.3"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\nabla_{t}s(x)\equiv\partial s(x)/\partial\tilde{h}^{(K)}_{t}(x)" class="ltx_Math" display="inline" id="S3.SS4.p2.m5" intent=":literal"><semantics><mrow><mrow><mrow><msub><mo>∇</mo><mi>t</mi></msub><mi>s</mi></mrow><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><mo rspace="0.111em">≡</mo><mrow><mo>∂</mo><mrow><mrow><mi>s</mi><mo>⁡</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><mo rspace="0.055em">/</mo><mrow><mo>∂</mo><mrow><msubsup><mover accent="true"><mi>h</mi><mo>~</mo></mover><mi>t</mi><mrow><mo stretchy="false">(</mo><mi>K</mi><mo stretchy="false">)</mo></mrow></msubsup><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow></mrow></mrow></mrow></mrow><annotation encoding="application/x-tex">\nabla_{t}s(x)\equiv\partial s(x)/\partial\tilde{h}^{(K)}_{t}(x)</annotation></semantics></math><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="z_{t,j}(x)" class="ltx_Math" display="inline" id="S3.SS4.p2.m6" intent=":literal"><semantics><mrow><msub><mi>z</mi><mrow><mi>t</mi><mo>,</mo><mi>j</mi></mrow></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">z_{t,j}(x)</annotation></semantics></math><span class="translated-text">是美国汽车工程师协会
+激活潜伏</span><span class="original-text">is the SAE
+activation of latent</span><math alttext="j" class="ltx_Math" display="inline" id="S3.SS4.p2.m7" intent=":literal"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math><span class="translated-text">在令牌处</span><span class="original-text">at token</span><math alttext="t" class="ltx_Math" display="inline" id="S3.SS4.p2.m8" intent=":literal"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.</p>
 </div>
 <div class="ltx_para" id="S3.SS4.p3">
-<p class="ltx_p" id="S3.SS4.p3.2">Equation (<a class="ltx_ref" href="#S3.E2" title="In 3.4 Per-Concept Attribution for Auditability ‣ 3 Method ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">2</span></a>) is the first-order Taylor approximation of the
-exact counterfactual logit change when concept <math alttext="j" class="ltx_Math" display="inline" id="S3.SS4.p3.m1" intent=":literal"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>’s decoder direction is
-removed from the steered state:</p>
+<p class="ltx_p" id="S3.SS4.p3.2"><span class="translated-text">方程（</span><span class="original-text">Equation (</span><a class="ltx_ref" href="#S3.E2" title="In 3.4 Per-Concept Attribution for Auditability ‣ 3 Method ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">) 是一阶泰勒近似
+概念时精确的反事实逻辑变化</span><span class="original-text">) is the first-order Taylor approximation of the
+exact counterfactual logit change when concept</span><math alttext="j" class="ltx_Math" display="inline" id="S3.SS4.p3.m1" intent=":literal"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math><span class="translated-text">的解码器方向是
+从转向状态中移除：</span><span class="original-text">’s decoder direction is
+removed from the steered state:</span></p>
 <table class="ltx_equationgroup ltx_eqn_table" id="S3.E3">
 <tbody>
 <tr class="ltx_equation ltx_eqn_row ltx_align_baseline" id="S3.E3X">
@@ -644,33 +673,43 @@ removed from the steered state:</p>
 <td class="ltx_td ltx_align_left ltx_eqn_cell"><math alttext="\displaystyle-F_{\omega}\!\left(\tilde{h}^{(K)}(x)-z_{\cdot,j}(x)W_{\mathrm{dec}}[j,:]\right)." class="ltx_Math" display="inline" id="S3.E3Xa.m2" intent=":literal"><semantics><mrow><mo>−</mo><mi>F</mi><msub><mrow></mrow><mi>ω</mi></msub><mo>(</mo><mover accent="true"><mi>h</mi><mo>~</mo></mover><msup><mrow></mrow><mrow><mo stretchy="false">(</mo><mi>K</mi><mo stretchy="false">)</mo></mrow></msup><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mo>−</mo><mi>z</mi><msub><mrow></mrow><mrow><mo rspace="0em">⋅</mo><mo>,</mo><mi>j</mi></mrow></msub><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo><mi>W</mi><msub><mrow></mrow><mi>dec</mi></msub><mo stretchy="false">[</mo><mi>j</mi><mo>,</mo><mo rspace="0em">:</mo><mo stretchy="false">]</mo><mo>)</mo><mo lspace="0em">.</mo></mrow><annotation encoding="application/x-tex">\displaystyle-F_{\omega}\!\left(\tilde{h}^{(K)}(x)-z_{\cdot,j}(x)W_{\mathrm{dec}}[j,:]\right).</annotation></semantics></math></td>
 <td class="ltx_eqn_cell ltx_eqn_center_padright"></td></tr></tbody>
 </table>
-<p class="ltx_p" id="S3.SS4.p3.3">Positive values of <math alttext="A_{j}(x)" class="ltx_Math" display="inline" id="S3.SS4.p3.m2" intent=":literal"><semantics><mrow><msub><mi>A</mi><mi>j</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">A_{j}(x)</annotation></semantics></math> indicate concepts that push the prediction toward
+<p class="ltx_p" id="S3.SS4.p3.3"><span class="translated-text">正值</span><span class="original-text">Positive values of</span><math alttext="A_{j}(x)" class="ltx_Math" display="inline" id="S3.SS4.p3.m2" intent=":literal"><semantics><mrow><msub><mi>A</mi><mi>j</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">A_{j}(x)</annotation></semantics></math><span class="translated-text">指出推动预测的概念
+死亡率，而负值表示反对它的概念。我们
+对概念进行排序</span><span class="original-text">indicate concepts that push the prediction toward
 mortality, whereas negative values indicate concepts that push against it. We
-rank concepts by <math alttext="|A_{j}(x)|" class="ltx_Math" display="inline" id="S3.SS4.p3.m3" intent=":literal"><semantics><mrow><mo stretchy="false">|</mo><mrow><msub><mi>A</mi><mi>j</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">|</mo></mrow><annotation encoding="application/x-tex">|A_{j}(x)|</annotation></semantics></math> for overall importance and by signed <math alttext="A_{j}(x)" class="ltx_Math" display="inline" id="S3.SS4.p3.m4" intent=":literal"><semantics><mrow><msub><mi>A</mi><mi>j</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">A_{j}(x)</annotation></semantics></math> when
-presenting per-prediction evidence.</p>
+rank concepts by</span><math alttext="|A_{j}(x)|" class="ltx_Math" display="inline" id="S3.SS4.p3.m3" intent=":literal"><semantics><mrow><mo stretchy="false">|</mo><mrow><msub><mi>A</mi><mi>j</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><mo stretchy="false">|</mo></mrow><annotation encoding="application/x-tex">|A_{j}(x)|</annotation></semantics></math><span class="translated-text">出于整体重要性并通过签署</span><span class="original-text">for overall importance and by signed</span><math alttext="A_{j}(x)" class="ltx_Math" display="inline" id="S3.SS4.p3.m4" intent=":literal"><semantics><mrow><msub><mi>A</mi><mi>j</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">A_{j}(x)</annotation></semantics></math><span class="translated-text">当
+提供预测证据。</span><span class="original-text">when
+presenting per-prediction evidence.</span></p>
 </div>
 <div class="ltx_para" id="S3.SS4.p4">
-<p class="ltx_p" id="S3.SS4.p4.1">Computing Equation (<a class="ltx_ref" href="#S3.E2" title="In 3.4 Per-Concept Attribution for Auditability ‣ 3 Method ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">2</span></a>) requires one forward pass and one
-backward pass per batch through <math alttext="F_{\omega}" class="ltx_Math" display="inline" id="S3.SS4.p4.m1" intent=":literal"><semantics><msub><mi>F</mi><mi>ω</mi></msub><annotation encoding="application/x-tex">F_{\omega}</annotation></semantics></math>, plus a single matrix multiplication
-against <math alttext="W_{\mathrm{dec}}^{\top}" class="ltx_Math" display="inline" id="S3.SS4.p4.m2" intent=":literal"><semantics><msubsup><mi>W</mi><mi>dec</mi><mo>⊤</mo></msubsup><annotation encoding="application/x-tex">W_{\mathrm{dec}}^{\top}</annotation></semantics></math>. This replaces the <math alttext="|D|" class="ltx_Math" display="inline" id="S3.SS4.p4.m3" intent=":literal"><semantics><mrow><mo stretchy="false">|</mo><mi>D</mi><mo stretchy="false">|</mo></mrow><annotation encoding="application/x-tex">|D|</annotation></semantics></math> separate forward passes
-required by exact counterfactual ablation, where <math alttext="|D|" class="ltx_Math" display="inline" id="S3.SS4.p4.m4" intent=":literal"><semantics><mrow><mo stretchy="false">|</mo><mi>D</mi><mo stretchy="false">|</mo></mrow><annotation encoding="application/x-tex">|D|</annotation></semantics></math> is the SAE dictionary
+<p class="ltx_p" id="S3.SS4.p4.1"><span class="translated-text">计算方程（</span><span class="original-text">Computing Equation (</span><a class="ltx_ref" href="#S3.E2" title="In 3.4 Per-Concept Attribution for Auditability ‣ 3 Method ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">) 需要一次前向传球和一次
+每批次向后传递</span><span class="original-text">) requires one forward pass and one
+backward pass per batch through</span><math alttext="F_{\omega}" class="ltx_Math" display="inline" id="S3.SS4.p4.m1" intent=":literal"><semantics><msub><mi>F</mi><mi>ω</mi></msub><annotation encoding="application/x-tex">F_{\omega}</annotation></semantics></math><span class="translated-text">，加上单个矩阵乘法
+反对</span><span class="original-text">, plus a single matrix multiplication
+against</span><math alttext="W_{\mathrm{dec}}^{\top}" class="ltx_Math" display="inline" id="S3.SS4.p4.m2" intent=":literal"><semantics><msubsup><mi>W</mi><mi>dec</mi><mo>⊤</mo></msubsup><annotation encoding="application/x-tex">W_{\mathrm{dec}}^{\top}</annotation></semantics></math><span class="translated-text">。这取代了</span><span class="original-text">. This replaces the</span><math alttext="|D|" class="ltx_Math" display="inline" id="S3.SS4.p4.m3" intent=":literal"><semantics><mrow><mo stretchy="false">|</mo><mi>D</mi><mo stretchy="false">|</mo></mrow><annotation encoding="application/x-tex">|D|</annotation></semantics></math><span class="translated-text">单独向前传球
+精确的反事实消融所需，其中</span><span class="original-text">separate forward passes
+required by exact counterfactual ablation, where</span><math alttext="|D|" class="ltx_Math" display="inline" id="S3.SS4.p4.m4" intent=":literal"><semantics><mrow><mo stretchy="false">|</mo><mi>D</mi><mo stretchy="false">|</mo></mrow><annotation encoding="application/x-tex">|D|</annotation></semantics></math><span class="translated-text">是SAE词典
+尺寸。在我们的实现中，完整的 MIMIC-IV 测试分割在
+在单个 GPU 上大约需要六分钟。开</span><span class="original-text">is the SAE dictionary
 size. In our implementation, the full MIMIC-IV test split is processed in
-roughly six minutes on a single GPU. On <math alttext="30" class="ltx_Math" display="inline" id="S3.SS4.p4.m5" intent=":literal"><semantics><mn>30</mn><annotation encoding="application/x-tex">30</annotation></semantics></math> held-out documents, the
-per-document Spearman rank correlation between <math alttext="A_{j}(x)" class="ltx_Math" display="inline" id="S3.SS4.p4.m6" intent=":literal"><semantics><mrow><msub><mi>A</mi><mi>j</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">A_{j}(x)</annotation></semantics></math> and the exact
-counterfactual effect is <math alttext="\rho=0.976" class="ltx_Math" display="inline" id="S3.SS4.p4.m7" intent=":literal"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0.976</mn></mrow><annotation encoding="application/x-tex">\rho=0.976</annotation></semantics></math> with Pearson <math alttext="r=0.935" class="ltx_Math" display="inline" id="S3.SS4.p4.m8" intent=":literal"><semantics><mrow><mi>r</mi><mo>=</mo><mn>0.935</mn></mrow><annotation encoding="application/x-tex">r=0.935</annotation></semantics></math>. Appendix
-<a class="ltx_ref" href="#A1.SS2" title="A.2 Per-Concept Attribution: Linear Limit, Validation, and Use Cases ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">A.2</span></a> provides the closed-form expression for the linear case,
+roughly six minutes on a single GPU. On</span><math alttext="30" class="ltx_Math" display="inline" id="S3.SS4.p4.m5" intent=":literal"><semantics><mn>30</mn><annotation encoding="application/x-tex">30</annotation></semantics></math><span class="translated-text">持有的文件，
+每个文档之间的斯皮尔曼等级相关性</span><span class="original-text">held-out documents, the
+per-document Spearman rank correlation between</span><math alttext="A_{j}(x)" class="ltx_Math" display="inline" id="S3.SS4.p4.m6" intent=":literal"><semantics><mrow><msub><mi>A</mi><mi>j</mi></msub><mo lspace="0em" rspace="0em">​</mo><mrow><mo stretchy="false">(</mo><mi>x</mi><mo stretchy="false">)</mo></mrow></mrow><annotation encoding="application/x-tex">A_{j}(x)</annotation></semantics></math><span class="translated-text">以及确切的
+反事实效应是</span><span class="original-text">and the exact
+counterfactual effect is</span><math alttext="\rho=0.976" class="ltx_Math" display="inline" id="S3.SS4.p4.m7" intent=":literal"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>0.976</mn></mrow><annotation encoding="application/x-tex">\rho=0.976</annotation></semantics></math><span class="translated-text">与皮尔逊</span><span class="original-text">with Pearson</span><math alttext="r=0.935" class="ltx_Math" display="inline" id="S3.SS4.p4.m8" intent=":literal"><semantics><mrow><mi>r</mi><mo>=</mo><mn>0.935</mn></mrow><annotation encoding="application/x-tex">r=0.935</annotation></semantics></math><span class="translated-text">。附录</span><span class="original-text">. Appendix</span><a class="ltx_ref" href="#A1.SS2" title="A.2 Per-Concept Attribution: Linear Limit, Validation, and Use Cases ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">A.2</span></a><span class="translated-text">提供线性情况的封闭式表达式，
+验证协议和详细的用例，包括每次预测
+证据追踪、全球审计和具有成本效益的专家审查。</span><span class="original-text">provides the closed-form expression for the linear case,
 the validation protocol, and detailed use cases, including per-prediction
-evidence trails, global auditing, and cost-efficient expert review.</p>
+evidence trails, global auditing, and cost-efficient expert review.</span></p>
 </div>
 </section>
 </section>
 <section class="ltx_section" id="S4">
-<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">4 </span>Results and Discussion</h2>
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">4 </span><span class="translated-text">结果与讨论</span><span class="original-text">Results and Discussion</span></h2>
 <section class="ltx_subsection" id="S4.SS1">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.1 </span>Dataset</h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">4.1 </span><span class="translated-text">数据集</span><span class="original-text">Dataset</span></h3>
 <div class="ltx_para" id="S4.SS1.p1">
-<p class="ltx_p" id="S4.SS1.p1.1">We use the dataset introduced by
-<cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib24" title="">Yoon et al. (2025)</a></cite><span class="translated-text">根据 MIMIC-IV v2.2 中的 ICU 出院记录预测 30 天院外死亡率</span><span class="original-text">for 30-day out-of-hospital mortality prediction from ICU discharge notes in MIMIC-IV v2.2</span><cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib26" title="">Johnson et al., 2023</a>)</cite><span class="translated-text">，通过将遭遇链接到外部死亡登记处而派生标签。该数据集包含来自 39,705 名患者的 49,832 份入院记录/笔记，并按患者级别进行分割以避免泄漏，并排除院内死亡和临终关怀处置。重要的是，分类目标极其不平衡（30 天的任务中大约有 1,830 个阳性与 48,002 个阴性），这为长篇临床文本的稳健评估带来了挑战。</span><span class="original-text">, with labels derived by linking encounters to an external death registry. The dataset contains 49,832 admissions/notes from 39,705 patients, with patient-level splits to avoid leakage and exclusions for in-hospital death and hospice disposition. Importantly, the classification target is extremely imbalanced (approximately 1,830 positives vs. 48,002 negatives for the 30-day task), posing a challenging setting for robust evaluation on long-form clinical text.</span></p>
+<p class="ltx_p" id="S4.SS1.p1.1"><span class="translated-text">我们使用引入的数据集</span><span class="original-text">We use the dataset introduced by</span><cite class="ltx_cite ltx_citemacro_citet"><a class="ltx_ref" href="#bib.bib24" title="">Yoon et al. (2025)</a></cite><span class="translated-text">根据 MIMIC-IV v2.2 中的 ICU 出院记录预测 30 天院外死亡率</span><span class="original-text">for 30-day out-of-hospital mortality prediction from ICU discharge notes in MIMIC-IV v2.2</span><cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib26" title="">Johnson et al., 2023</a>)</cite><span class="translated-text">，通过将遭遇链接到外部死亡登记处而派生标签。该数据集包含来自 39,705 名患者的 49,832 份入院记录/笔记，并按患者级别进行分割以避免泄漏，并排除院内死亡和临终关怀处置。重要的是，分类目标极其不平衡（30 天的任务中大约有 1,830 个阳性与 48,002 个阴性），这为长篇临床文本的稳健评估带来了挑战。</span><span class="original-text">, with labels derived by linking encounters to an external death registry. The dataset contains 49,832 admissions/notes from 39,705 patients, with patient-level splits to avoid leakage and exclusions for in-hospital death and hospice disposition. Importantly, the classification target is extremely imbalanced (approximately 1,830 positives vs. 48,002 negatives for the 30-day task), posing a challenging setting for robust evaluation on long-form clinical text.</span></p>
 </div>
 </section>
 <section class="ltx_subsection" id="S4.SS2">
@@ -2216,35 +2255,48 @@ ICD-10 codes, and the fraction classified as mortality-related.</span></p>
 <section class="ltx_paragraph" id="A1.SS4.SSS0.Px1">
 <h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">骨干对比。</span><span class="original-text">Backbone comparison.</span></h4>
 <div class="ltx_para" id="A1.SS4.SSS0.Px1.p1">
-<p class="ltx_p" id="A1.SS4.SSS0.Px1.p1.1">ClinicalBERT consistently yields a higher clinical-concept fraction than
+<p class="ltx_p" id="A1.SS4.SSS0.Px1.p1.1"><span class="translated-text">ClinicalBERT 始终产生比
+Longformer同层且SAE型。这种差异可能源于
+他们独特的注意力机制：Longformer 的局部滑动窗口注意力
+可能会限制分散的临床实体的合成，而 ClinicalBERT 的
+充分的自注意力将医学上下文聚合成更密集的语义空间，
+产生更多可解释的潜在因素。</span><span class="original-text">ClinicalBERT consistently yields a higher clinical-concept fraction than
 Longformer at the same layer and SAE type. This disparity plausibly stems from
 their distinct attention mechanisms: Longformer’s local sliding-window attention
 may limit the synthesis of scattered clinical entities, whereas ClinicalBERT’s
 full self-attention aggregates medical context into a denser semantic space,
-yielding more interpretable latents.</p>
+yielding more interpretable latents.</span></p>
 </div>
 </section>
 <section class="ltx_paragraph" id="A1.SS4.SSS0.Px2">
-<h4 class="ltx_title ltx_title_paragraph">Layer comparison.</h4>
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">层比较。</span><span class="original-text">Layer comparison.</span></h4>
 <div class="ltx_para" id="A1.SS4.SSS0.Px2.p1">
-<p class="ltx_p" id="A1.SS4.SSS0.Px2.p1.1">SAEs trained on layer <math alttext="11" class="ltx_Math" display="inline" id="A1.SS4.SSS0.Px2.p1.m1" intent=":literal"><semantics><mn>11</mn><annotation encoding="application/x-tex">11</annotation></semantics></math> yield richer clinical semantics than those trained on
-layer <math alttext="8" class="ltx_Math" display="inline" id="A1.SS4.SSS0.Px2.p1.m2" intent=":literal"><semantics><mn>8</mn><annotation encoding="application/x-tex">8</annotation></semantics></math> across backbone–SAE combinations, reflecting the natural progression
-of high-level, task-specific representations in deeper Transformer layers.</p>
+<p class="ltx_p" id="A1.SS4.SSS0.Px2.p1.1"><span class="translated-text">SAE 分层训练</span><span class="original-text">SAEs trained on layer</span><math alttext="11" class="ltx_Math" display="inline" id="A1.SS4.SSS0.Px2.p1.m1" intent=":literal"><semantics><mn>11</mn><annotation encoding="application/x-tex">11</annotation></semantics></math><span class="translated-text">比受过训练的人产生更丰富的临床语义
+层</span><span class="original-text">yield richer clinical semantics than those trained on
+layer</span><math alttext="8" class="ltx_Math" display="inline" id="A1.SS4.SSS0.Px2.p1.m2" intent=":literal"><semantics><mn>8</mn><annotation encoding="application/x-tex">8</annotation></semantics></math><span class="translated-text">跨骨干-SAE 组合，反映自然进展
+更深层 Transformer 层中的高级、特定于任务的表示。</span><span class="original-text">across backbone–SAE combinations, reflecting the natural progression
+of high-level, task-specific representations in deeper Transformer layers.</span></p>
 </div>
 </section>
 <section class="ltx_paragraph" id="A1.SS4.SSS0.Px3">
-<h4 class="ltx_title ltx_title_paragraph">SAE variant comparison.</h4>
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">SAE 变体比较。</span><span class="original-text">SAE variant comparison.</span></h4>
 <div class="ltx_para" id="A1.SS4.SSS0.Px3.p1">
-<p class="ltx_p" id="A1.SS4.SSS0.Px3.p1.1">Matryoshka SAEs match or slightly exceed TopK SAEs in clinical-concept fraction
+<p class="ltx_p" id="A1.SS4.SSS0.Px3.p1.1"><span class="translated-text">俄罗斯套娃 SAE 在临床概念分数方面与 TopK SAE 相当或略胜一筹
+在可比较的设置内。这种模式与嵌套结构一致
+Matryoshka 字典，鼓励跨区域组织功能
+由粗到细的代表性群体。</span><span class="original-text">Matryoshka SAEs match or slightly exceed TopK SAEs in clinical-concept fraction
 within comparable settings. This pattern is consistent with the nested structure of
 Matryoshka dictionaries, which encourages features to be organized across
-coarser-to-finer representational groups.</p>
+coarser-to-finer representational groups.</span></p>
 </div>
 <div class="ltx_para" id="A1.SS4.SSS0.Px3.p2">
-<p class="ltx_p" id="A1.SS4.SSS0.Px3.p2.1">The strict-consensus artifact set <math alttext="\overline{\mathcal{T}}" class="ltx_Math" display="inline" id="A1.SS4.SSS0.Px3.p2.m1" intent=":literal"><semantics><mover accent="true"><mi class="ltx_font_mathcaligraphic">𝒯</mi><mo stretchy="true">¯</mo></mover><annotation encoding="application/x-tex">\overline{\mathcal{T}}</annotation></semantics></math> used in
-Section <a class="ltx_ref" href="#S3.SS3" title="3.3 Fine-Tuning with Concept Steering ‣ 3 Method ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">3.3</span></a> is a much smaller subset of the non-mortality side of
-Table <a class="ltx_ref" href="#A1.T4" title="Table 4 ‣ SAE variant comparison. ‣ A.4 Per-Configuration Interpretation Summary ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">4</span></a>, requiring <math alttext="3" class="ltx_Math" display="inline" id="A1.SS4.SSS0.Px3.p2.m2" intent=":literal"><semantics><mn>3</mn><annotation encoding="application/x-tex">3</annotation></semantics></math>-of-<math alttext="3" class="ltx_Math" display="inline" id="A1.SS4.SSS0.Px3.p2.m3" intent=":literal"><semantics><mn>3</mn><annotation encoding="application/x-tex">3</annotation></semantics></math> agreement across
-independent LLM runs; see Section <a class="ltx_ref" href="#S4.SS4" title="4.4 Feature Extraction and Interpretation ‣ 4 Results and Discussion ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">4.4</span></a>.</p>
+<p class="ltx_p" id="A1.SS4.SSS0.Px3.p2.1"><span class="translated-text">严格共识工件集</span><span class="original-text">The strict-consensus artifact set</span><math alttext="\overline{\mathcal{T}}" class="ltx_Math" display="inline" id="A1.SS4.SSS0.Px3.p2.m1" intent=":literal"><semantics><mover accent="true"><mi class="ltx_font_mathcaligraphic">𝒯</mi><mo stretchy="true">¯</mo></mover><annotation encoding="application/x-tex">\overline{\mathcal{T}}</annotation></semantics></math><span class="translated-text">用于
+部分</span><span class="original-text">used in
+Section</span><a class="ltx_ref" href="#S3.SS3" title="3.3 Fine-Tuning with Concept Steering ‣ 3 Method ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">3.3</span></a><span class="translated-text">是非死亡率方面的一个小得多的子集
+表</span><span class="original-text">is a much smaller subset of the non-mortality side of
+Table</span><a class="ltx_ref" href="#A1.T4" title="Table 4 ‣ SAE variant comparison. ‣ A.4 Per-Configuration Interpretation Summary ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">4</span></a><span class="translated-text">，要求</span><span class="original-text">, requiring</span><math alttext="3" class="ltx_Math" display="inline" id="A1.SS4.SSS0.Px3.p2.m2" intent=":literal"><semantics><mn>3</mn><annotation encoding="application/x-tex">3</annotation></semantics></math><span class="translated-text">-之-</span><span class="original-text">-of-</span><math alttext="3" class="ltx_Math" display="inline" id="A1.SS4.SSS0.Px3.p2.m3" intent=":literal"><semantics><mn>3</mn><annotation encoding="application/x-tex">3</annotation></semantics></math><span class="translated-text">协议
+独立的法学硕士运行；见章节</span><span class="original-text">agreement across
+independent LLM runs; see Section</span><a class="ltx_ref" href="#S4.SS4" title="4.4 Feature Extraction and Interpretation ‣ 4 Results and Discussion ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">4.4</span></a>.</p>
 </div>
 <figure class="ltx_table" id="A1.T4">
 <figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 4: </span>
@@ -2333,47 +2385,53 @@ mortality-related across backbone architectures, SAE types, and layer depths.
 </section>
 </section>
 <section class="ltx_subsection" id="A1.SS5">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.5 </span>Training Details</h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.5 </span><span class="translated-text">培训详情</span><span class="original-text">Training Details</span></h3>
 <section class="ltx_paragraph" id="A1.SS5.SSS0.Px1">
-<h4 class="ltx_title ltx_title_paragraph">SAE pretraining corpus.</h4>
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">SAE 预训练语料库。</span><span class="original-text">SAE pretraining corpus.</span></h4>
 <div class="ltx_para" id="A1.SS5.SSS0.Px1.p1">
-<p class="ltx_p" id="A1.SS5.SSS0.Px1.p1.1">We pretrain SAEs on <math alttext="200{,}000" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px1.p1.m1" intent=":literal"><semantics><mn>200,000</mn><annotation encoding="application/x-tex">200{,}000</annotation></semantics></math> MIMIC notes: <math alttext="120{,}000" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px1.p1.m2" intent=":literal"><semantics><mn>120,000</mn><annotation encoding="application/x-tex">120{,}000</annotation></semantics></math> from MIMIC-III
-narrative records and <math alttext="80{,}000" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px1.p1.m3" intent=":literal"><semantics><mn>80,000</mn><annotation encoding="application/x-tex">80{,}000</annotation></semantics></math> from MIMIC-IV discharge summaries.</p>
+<p class="ltx_p" id="A1.SS5.SSS0.Px1.p1.1"><span class="translated-text">我们对 SAE 进行预训练</span><span class="original-text">We pretrain SAEs on</span><math alttext="200{,}000" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px1.p1.m1" intent=":literal"><semantics><mn>200,000</mn><annotation encoding="application/x-tex">200{,}000</annotation></semantics></math><span class="translated-text">模仿笔记：</span><span class="original-text">MIMIC notes:</span><math alttext="120{,}000" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px1.p1.m2" intent=":literal"><semantics><mn>120,000</mn><annotation encoding="application/x-tex">120{,}000</annotation></semantics></math><span class="translated-text">来自 MIMIC-III
+叙述性记录和</span><span class="original-text">from MIMIC-III
+narrative records and</span><math alttext="80{,}000" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px1.p1.m3" intent=":literal"><semantics><mn>80,000</mn><annotation encoding="application/x-tex">80{,}000</annotation></semantics></math><span class="translated-text">来自 MIMIC-IV 出院总结。</span><span class="original-text">from MIMIC-IV discharge summaries.</span></p>
 </div>
 </section>
 <section class="ltx_paragraph" id="A1.SS5.SSS0.Px2">
-<h4 class="ltx_title ltx_title_paragraph">SAE optimization.</h4>
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">SAE 优化。</span><span class="original-text">SAE optimization.</span></h4>
 <div class="ltx_para" id="A1.SS5.SSS0.Px2.p1">
-<p class="ltx_p" id="A1.SS5.SSS0.Px2.p1.1">Each SAE is trained for <math alttext="100{,}000" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px2.p1.m1" intent=":literal"><semantics><mn>100,000</mn><annotation encoding="application/x-tex">100{,}000</annotation></semantics></math> steps with <math alttext="4{,}096" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px2.p1.m2" intent=":literal"><semantics><mn>4,096</mn><annotation encoding="application/x-tex">4{,}096</annotation></semantics></math> tokens per step,
-corresponding to approximately <math alttext="410" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px2.p1.m3" intent=":literal"><semantics><mn>410</mn><annotation encoding="application/x-tex">410</annotation></semantics></math>M training tokens. We use AdamW with
-learning rate <math alttext="1\mathrm{e}{-}3" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px2.p1.m4" intent=":literal"><semantics><mrow><mrow><mn>1</mn><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><mo>−</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">1\mathrm{e}{-}3</annotation></semantics></math>, <math alttext="\ell_{1}" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px2.p1.m5" intent=":literal"><semantics><msub><mi mathvariant="normal">ℓ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\ell_{1}</annotation></semantics></math> coefficient <math alttext="5\mathrm{e}{-}4" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px2.p1.m6" intent=":literal"><semantics><mrow><mrow><mn>5</mn><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><mo>−</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">5\mathrm{e}{-}4</annotation></semantics></math>, and an
-auxiliary penalty of <math alttext="1.56\mathrm{e}{-}2" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px2.p1.m7" intent=":literal"><semantics><mrow><mrow><mn>1.56</mn><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><mo>−</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">1.56\mathrm{e}{-}2</annotation></semantics></math> for latents inactive for more than
-<math alttext="1{,}000" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px2.p1.m8" intent=":literal"><semantics><mn>1,000</mn><annotation encoding="application/x-tex">1{,}000</annotation></semantics></math> batches.</p>
+<p class="ltx_p" id="A1.SS5.SSS0.Px2.p1.1"><span class="translated-text">每个 SAE 均经过培训</span><span class="original-text">Each SAE is trained for</span><math alttext="100{,}000" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px2.p1.m1" intent=":literal"><semantics><mn>100,000</mn><annotation encoding="application/x-tex">100{,}000</annotation></semantics></math><span class="translated-text">步骤与</span><span class="original-text">steps with</span><math alttext="4{,}096" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px2.p1.m2" intent=":literal"><semantics><mn>4,096</mn><annotation encoding="application/x-tex">4{,}096</annotation></semantics></math><span class="translated-text">每一步的令牌，
+大约对应于</span><span class="original-text">tokens per step,
+corresponding to approximately</span><math alttext="410" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px2.p1.m3" intent=":literal"><semantics><mn>410</mn><annotation encoding="application/x-tex">410</annotation></semantics></math><span class="translated-text">M 训练令牌。我们使用 AdamW 与
+学习率</span><span class="original-text">M training tokens. We use AdamW with
+learning rate</span><math alttext="1\mathrm{e}{-}3" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px2.p1.m4" intent=":literal"><semantics><mrow><mrow><mn>1</mn><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><mo>−</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">1\mathrm{e}{-}3</annotation></semantics></math>, <math alttext="\ell_{1}" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px2.p1.m5" intent=":literal"><semantics><msub><mi mathvariant="normal">ℓ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\ell_{1}</annotation></semantics></math><span class="translated-text">系数</span><span class="original-text">coefficient</span><math alttext="5\mathrm{e}{-}4" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px2.p1.m6" intent=":literal"><semantics><mrow><mrow><mn>5</mn><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><mo>−</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">5\mathrm{e}{-}4</annotation></semantics></math><span class="translated-text">，和一个
+的辅助处罚</span><span class="original-text">, and an
+auxiliary penalty of</span><math alttext="1.56\mathrm{e}{-}2" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px2.p1.m7" intent=":literal"><semantics><mrow><mrow><mn>1.56</mn><mo lspace="0em" rspace="0em">​</mo><mi>e</mi></mrow><mo>−</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">1.56\mathrm{e}{-}2</annotation></semantics></math><span class="translated-text">对于潜伏者不活动超过</span><span class="original-text">for latents inactive for more than</span><math alttext="1{,}000" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px2.p1.m8" intent=":literal"><semantics><mn>1,000</mn><annotation encoding="application/x-tex">1{,}000</annotation></semantics></math><span class="translated-text">批次。</span><span class="original-text">batches.</span></p>
 </div>
 </section>
 <section class="ltx_paragraph" id="A1.SS5.SSS0.Px3">
-<h4 class="ltx_title ltx_title_paragraph">Downstream fine-tuning.</h4>
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">下游微调。</span><span class="original-text">Downstream fine-tuning.</span></h4>
 <div class="ltx_para" id="A1.SS5.SSS0.Px3.p1">
-<p class="ltx_p" id="A1.SS5.SSS0.Px3.p1.1">We use AdamW with weight decay <math alttext="0.01" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px3.p1.m1" intent=":literal"><semantics><mn>0.01</mn><annotation encoding="application/x-tex">0.01</annotation></semantics></math> and an effective batch size of <math alttext="256" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px3.p1.m2" intent=":literal"><semantics><mn>256</mn><annotation encoding="application/x-tex">256</annotation></semantics></math>,
-using gradient accumulation when needed. All reported runs use random seed <math alttext="42" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px3.p1.m3" intent=":literal"><semantics><mn>42</mn><annotation encoding="application/x-tex">42</annotation></semantics></math>.</p>
+<p class="ltx_p" id="A1.SS5.SSS0.Px3.p1.1"><span class="translated-text">我们使用带有权重衰减的 AdamW</span><span class="original-text">We use AdamW with weight decay</span><math alttext="0.01" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px3.p1.m1" intent=":literal"><semantics><mn>0.01</mn><annotation encoding="application/x-tex">0.01</annotation></semantics></math><span class="translated-text">和有效批量大小</span><span class="original-text">and an effective batch size of</span><math alttext="256" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px3.p1.m2" intent=":literal"><semantics><mn>256</mn><annotation encoding="application/x-tex">256</annotation></semantics></math><span class="translated-text">,
+需要时使用梯度累积。所有报告的运行都使用随机种子</span><span class="original-text">,
+using gradient accumulation when needed. All reported runs use random seed</span><math alttext="42" class="ltx_Math" display="inline" id="A1.SS5.SSS0.Px3.p1.m3" intent=":literal"><semantics><mn>42</mn><annotation encoding="application/x-tex">42</annotation></semantics></math>.</p>
 </div>
 </section>
 </section>
 <section class="ltx_subsection" id="A1.SS6">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.6 </span>Layer and Hyperparameter Sensitivity</h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.6 </span><span class="translated-text">层和超参数敏感性</span><span class="original-text">Layer and Hyperparameter Sensitivity</span></h3>
 <div class="ltx_para" id="A1.SS6.p1">
-<p class="ltx_p" id="A1.SS6.p1.1">We extend the layer analysis to layer <math alttext="4" class="ltx_Math" display="inline" id="A1.SS6.p1.m1" intent=":literal"><semantics><mn>4</mn><annotation encoding="application/x-tex">4</annotation></semantics></math> and conduct controlled sensitivity
-experiments on ClinicalBERT with a TopK SAE at layer <math alttext="11" class="ltx_Math" display="inline" id="A1.SS6.p1.m2" intent=":literal"><semantics><mn>11</mn><annotation encoding="application/x-tex">11</annotation></semantics></math>. Unless otherwise varied, the
-default setting is <math alttext="d_{\mathrm{SAE}}=8{,}192" class="ltx_Math" display="inline" id="A1.SS6.p1.m3" intent=":literal"><semantics><mrow><msub><mi>d</mi><mi>SAE</mi></msub><mo>=</mo><mn>8,192</mn></mrow><annotation encoding="application/x-tex">d_{\mathrm{SAE}}=8{,}192</annotation></semantics></math>, <math alttext="k=64" class="ltx_Math" display="inline" id="A1.SS6.p1.m4" intent=":literal"><semantics><mrow><mi>k</mi><mo>=</mo><mn>64</mn></mrow><annotation encoding="application/x-tex">k=64</annotation></semantics></math>, learning rate
-<math alttext="5\times 10^{-5}" class="ltx_Math" display="inline" id="A1.SS6.p1.m5" intent=":literal"><semantics><mrow><mn>5</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>5</mn></mrow></msup></mrow><annotation encoding="application/x-tex">5\times 10^{-5}</annotation></semantics></math>, and five fine-tuning epochs.</p>
+<p class="ltx_p" id="A1.SS6.p1.1"><span class="translated-text">我们将层分析扩展到层</span><span class="original-text">We extend the layer analysis to layer</span><math alttext="4" class="ltx_Math" display="inline" id="A1.SS6.p1.m1" intent=":literal"><semantics><mn>4</mn><annotation encoding="application/x-tex">4</annotation></semantics></math><span class="translated-text">并进行受控灵敏度
+使用 TopK SAE 进行的 ClinicalBERT 实验</span><span class="original-text">and conduct controlled sensitivity
+experiments on ClinicalBERT with a TopK SAE at layer</span><math alttext="11" class="ltx_Math" display="inline" id="A1.SS6.p1.m2" intent=":literal"><semantics><mn>11</mn><annotation encoding="application/x-tex">11</annotation></semantics></math><span class="translated-text">。除非另有变更，否则
+默认设置是</span><span class="original-text">. Unless otherwise varied, the
+default setting is</span><math alttext="d_{\mathrm{SAE}}=8{,}192" class="ltx_Math" display="inline" id="A1.SS6.p1.m3" intent=":literal"><semantics><mrow><msub><mi>d</mi><mi>SAE</mi></msub><mo>=</mo><mn>8,192</mn></mrow><annotation encoding="application/x-tex">d_{\mathrm{SAE}}=8{,}192</annotation></semantics></math>, <math alttext="k=64" class="ltx_Math" display="inline" id="A1.SS6.p1.m4" intent=":literal"><semantics><mrow><mi>k</mi><mo>=</mo><mn>64</mn></mrow><annotation encoding="application/x-tex">k=64</annotation></semantics></math><span class="translated-text">, 学习率</span><span class="original-text">, learning rate</span><math alttext="5\times 10^{-5}" class="ltx_Math" display="inline" id="A1.SS6.p1.m5" intent=":literal"><semantics><mrow><mn>5</mn><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>5</mn></mrow></msup></mrow><annotation encoding="application/x-tex">5\times 10^{-5}</annotation></semantics></math><span class="translated-text">，以及五个微调时期。</span><span class="original-text">, and five fine-tuning epochs.</span></p>
 </div>
 <section class="ltx_paragraph" id="A1.SS6.SSS0.Px1">
-<h4 class="ltx_title ltx_title_paragraph">Earlier-layer intervention.</h4>
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">早期层干预。</span><span class="original-text">Earlier-layer intervention.</span></h4>
 <div class="ltx_para" id="A1.SS6.SSS0.Px1.p1">
-<p class="ltx_p" id="A1.SS6.SSS0.Px1.p1.1">Table <a class="ltx_ref" href="#A1.T5" title="Table 5 ‣ Earlier-layer intervention. ‣ A.6 Layer and Hyperparameter Sensitivity ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">5</span></a> complements the layer-<math alttext="8" class="ltx_Math" display="inline" id="A1.SS6.SSS0.Px1.p1.m1" intent=":literal"><semantics><mn>8</mn><annotation encoding="application/x-tex">8</annotation></semantics></math> and layer-<math alttext="11" class="ltx_Math" display="inline" id="A1.SS6.SSS0.Px1.p1.m2" intent=":literal"><semantics><mn>11</mn><annotation encoding="application/x-tex">11</annotation></semantics></math>
-results in Table <a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ Downstream training. ‣ 4.3 Training setup and hyperparameters ‣ 4 Results and Discussion ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">1</span></a>. Early-layer behavior is more dependent
+<p class="ltx_p" id="A1.SS6.SSS0.Px1.p1.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#A1.T5" title="Table 5 ‣ Earlier-layer intervention. ‣ A.6 Layer and Hyperparameter Sensitivity ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">5</span></a><span class="translated-text">补充层-</span><span class="original-text">complements the layer-</span><math alttext="8" class="ltx_Math" display="inline" id="A1.SS6.SSS0.Px1.p1.m1" intent=":literal"><semantics><mn>8</mn><annotation encoding="application/x-tex">8</annotation></semantics></math><span class="translated-text">和层-</span><span class="original-text">and layer-</span><math alttext="11" class="ltx_Math" display="inline" id="A1.SS6.SSS0.Px1.p1.m2" intent=":literal"><semantics><mn>11</mn><annotation encoding="application/x-tex">11</annotation></semantics></math><span class="translated-text">结果见表</span><span class="original-text">results in Table</span><a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ Downstream training. ‣ 4.3 Training setup and hyperparameters ‣ 4 Results and Discussion ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">。早期层行为更加依赖
+在 SAE 架构上：TopK 对于 ClinicalBERT 表现最好，而
+Matryoshka 在 Clinical-Longformer 中表现最佳。</span><span class="original-text">. Early-layer behavior is more dependent
 on the SAE architecture: TopK performs best for ClinicalBERT, whereas
-Matryoshka performs best for Clinical-Longformer.</p>
+Matryoshka performs best for Clinical-Longformer.</span></p>
 </div>
 <figure class="ltx_table" id="A1.T5">
 <figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 5: </span>Layer-<math alttext="4" class="ltx_Math" display="inline" id="A1.T5.m4" intent=":literal"><semantics><mn>4</mn><annotation encoding="application/x-tex">4</annotation></semantics></math> results on MIMIC-IV, complementing the layer-<math alttext="8" class="ltx_Math" display="inline" id="A1.T5.m5" intent=":literal"><semantics><mn>8</mn><annotation encoding="application/x-tex">8</annotation></semantics></math> and
@@ -2429,9 +2487,9 @@ layer-<math alttext="11" class="ltx_Math" display="inline" id="A1.T5.m6" intent=
 </figure>
 </section>
 <section class="ltx_paragraph" id="A1.SS6.SSS0.Px2">
-<h4 class="ltx_title ltx_title_paragraph">SAE dictionary size and sparsity.</h4>
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">SAE 词典大小和稀疏性。</span><span class="original-text">SAE dictionary size and sparsity.</span></h4>
 <div class="ltx_para" id="A1.SS6.SSS0.Px2.p1">
-<p class="ltx_p" id="A1.SS6.SSS0.Px2.p1.1">Table <a class="ltx_ref" href="#A1.T6" title="Table 6 ‣ SAE dictionary size and sparsity. ‣ A.6 Layer and Hyperparameter Sensitivity ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">6</span></a> varies <math alttext="d_{\mathrm{SAE}}" class="ltx_Math" display="inline" id="A1.SS6.SSS0.Px2.p1.m1" intent=":literal"><semantics><msub><mi>d</mi><mi>SAE</mi></msub><annotation encoding="application/x-tex">d_{\mathrm{SAE}}</annotation></semantics></math> and <math alttext="k" class="ltx_Math" display="inline" id="A1.SS6.SSS0.Px2.p1.m2" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>. Performance remains stable across the tested settings, suggesting that CAST is not sensitive to a particular dictionary size or sparsity level.</p>
+<p class="ltx_p" id="A1.SS6.SSS0.Px2.p1.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#A1.T6" title="Table 6 ‣ SAE dictionary size and sparsity. ‣ A.6 Layer and Hyperparameter Sensitivity ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">6</span></a><span class="translated-text">各不相同</span><span class="original-text">varies</span><math alttext="d_{\mathrm{SAE}}" class="ltx_Math" display="inline" id="A1.SS6.SSS0.Px2.p1.m1" intent=":literal"><semantics><msub><mi>d</mi><mi>SAE</mi></msub><annotation encoding="application/x-tex">d_{\mathrm{SAE}}</annotation></semantics></math><span class="translated-text">和</span><span class="original-text">and</span><math alttext="k" class="ltx_Math" display="inline" id="A1.SS6.SSS0.Px2.p1.m2" intent=":literal"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math><span class="translated-text">。在测试的设置中，性能保持稳定，这表明 CAST 对特定字典大小或稀疏级别不敏感。</span><span class="original-text">. Performance remains stable across the tested settings, suggesting that CAST is not sensitive to a particular dictionary size or sparsity level.</span></p>
 </div>
 <figure class="ltx_table" id="A1.T6">
 <figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 6: </span>Dictionary-size and TopK-sparsity sensitivity for ClinicalBERT
@@ -2478,17 +2536,20 @@ layer <math alttext="11" class="ltx_Math" display="inline" id="A1.T6.m2" intent
 </section>
 </section>
 <section class="ltx_subsection" id="A1.SS7">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.7 </span>Baseline implementations.</h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.7 </span><span class="translated-text">基线实施。</span><span class="original-text">Baseline implementations.</span></h3>
 <div class="ltx_para" id="A1.SS7.p1">
-<p class="ltx_p" id="A1.SS7.p1.1">For fair comparison with the protocols,
+<p class="ltx_p" id="A1.SS7.p1.1"><span class="translated-text">为了与协议进行公平比较，
+我们将基于 SAE 的基线适应我们的长文本设置，同时保留
+他们的特色设计。</span><span class="original-text">For fair comparison with the protocols,
 we adapt both SAE-based baselines to our long-text setting while preserving
-their characteristic designs.</p>
+their characteristic designs.</span></p>
 </div>
 <section class="ltx_paragraph" id="A1.SS7.SSS0.Px1">
-<h4 class="ltx_title ltx_title_paragraph">Self-Regul</h4>
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">自我调节</span><span class="original-text">Self-Regul</span></h4>
 <div class="ltx_para" id="A1.SS7.SSS0.Px1.p1">
-<p class="ltx_p" id="A1.SS7.SSS0.Px1.p1.1"><cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib36" title="">Wu et al., 2025</a>)</cite> is implemented as a linear probe on a
-frozen document embedding:</p>
+<p class="ltx_p" id="A1.SS7.SSS0.Px1.p1.1"><cite class="ltx_cite ltx_citemacro_citep">(<a class="ltx_ref" href="#bib.bib36" title="">Wu et al., 2025</a>)</cite><span class="translated-text">是作为线性探头实现的
+冻结文档嵌入：</span><span class="original-text">is implemented as a linear probe on a
+frozen document embedding:</span></p>
 <table class="ltx_equation ltx_eqn_table" id="A1.E4">
 <tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
 <td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
@@ -2496,10 +2557,11 @@ frozen document embedding:</p>
 <td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
 <td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(4)</span></td></tr></tbody>
 </table>
-<p class="ltx_p" id="A1.SS7.SSS0.Px1.p1.2">where <math alttext="\mathbf{h}" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px1.p1.m1" intent=":literal"><semantics><mi>𝐡</mi><annotation encoding="application/x-tex">\mathbf{h}</annotation></semantics></math> is obtained by attention-masked mean pooling within chunks,
-followed by mean pooling across chunks, and
-<math alttext="\overline{\mathcal{T}}" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px1.p1.m2" intent=":literal"><semantics><mover accent="true"><mi class="ltx_font_mathcaligraphic">𝒯</mi><mo stretchy="true">¯</mo></mover><annotation encoding="application/x-tex">\overline{\mathcal{T}}</annotation></semantics></math> is the same strict-consensus artifact set used by
-CAST. We retain the original weight-projection penalty,</p>
+<p class="ltx_p" id="A1.SS7.SSS0.Px1.p1.2"><span class="translated-text">哪里</span><span class="original-text">where</span><math alttext="\mathbf{h}" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px1.p1.m1" intent=":literal"><semantics><mi>𝐡</mi><annotation encoding="application/x-tex">\mathbf{h}</annotation></semantics></math><span class="translated-text">通过块内的注意力屏蔽均值池获得，
+接下来是跨块的平均池化，以及</span><span class="original-text">is obtained by attention-masked mean pooling within chunks,
+followed by mean pooling across chunks, and</span><math alttext="\overline{\mathcal{T}}" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px1.p1.m2" intent=":literal"><semantics><mover accent="true"><mi class="ltx_font_mathcaligraphic">𝒯</mi><mo stretchy="true">¯</mo></mover><annotation encoding="application/x-tex">\overline{\mathcal{T}}</annotation></semantics></math><span class="translated-text">与使用的严格共识工件集相同
+演员阵容。我们保留原来的权重投影惩罚，</span><span class="original-text">is the same strict-consensus artifact set used by
+CAST. We retain the original weight-projection penalty,</span></p>
 <table class="ltx_equation ltx_eqn_table" id="A1.E5">
 <tbody><tr class="ltx_equation ltx_eqn_row ltx_align_baseline">
 <td class="ltx_eqn_cell ltx_eqn_center_padleft"></td>
@@ -2507,44 +2569,56 @@ CAST. We retain the original weight-projection penalty,</p>
 <td class="ltx_eqn_cell ltx_eqn_center_padright"></td>
 <td class="ltx_eqn_cell ltx_eqn_eqno ltx_align_middle ltx_align_right" rowspan="1"><span class="ltx_tag ltx_tag_equation ltx_align_right">(5)</span></td></tr></tbody>
 </table>
-<p class="ltx_p" id="A1.SS7.SSS0.Px1.p1.3">and select <math alttext="\lambda" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px1.p1.m3" intent=":literal"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math> on the development set.</p>
+<p class="ltx_p" id="A1.SS7.SSS0.Px1.p1.3"><span class="translated-text">并选择</span><span class="original-text">and select</span><math alttext="\lambda" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px1.p1.m3" intent=":literal"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math><span class="translated-text">在开发集上。</span><span class="original-text">on the development set.</span></p>
 </div>
 </section>
 <section class="ltx_paragraph" id="A1.SS7.SSS0.Px2">
-<h4 class="ltx_title ltx_title_paragraph">SAE-Probe</h4>
+<h4 class="ltx_title ltx_title_paragraph"><span class="translated-text">SAE探针</span><span class="original-text">SAE-Probe</span></h4>
 <div class="ltx_para" id="A1.SS7.SSS0.Px2.p1">
-<p class="ltx_p" id="A1.SS7.SSS0.Px2.p1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib19" title="">Gallifant et al. (2025)</a></cite> sums per-token SAE activations
+<p class="ltx_p" id="A1.SS7.SSS0.Px2.p1.1"><cite class="ltx_cite ltx_citemacro_cite"><a class="ltx_ref" href="#bib.bib19" title="">Gallifant et al. (2025)</a></cite><span class="translated-text">每个令牌 SAE 激活的总和
+整个文档，不包括特殊标记，可选择二值化
+纸张默认阈值</span><span class="original-text">sums per-token SAE activations
 across the entire document, excluding special tokens, optionally binarizes at
-the paper-default threshold <math alttext="\tau=1" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p1.m1" intent=":literal"><semantics><mrow><mi>τ</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\tau=1</annotation></semantics></math>, and trains a linear classifier on the
-resulting <math alttext="d_{\text{SAE}}" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p1.m2" intent=":literal"><semantics><msub><mi>d</mi><mtext>SAE</mtext></msub><annotation encoding="application/x-tex">d_{\text{SAE}}</annotation></semantics></math>-dimensional feature vector. Because
-<math alttext="\mathbf{F}=\sum_{t}\mathbf{f}_{t}" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p1.m3" intent=":literal"><semantics><mrow><mi>𝐅</mi><mo rspace="0.111em">=</mo><mrow><msub><mo>∑</mo><mi>t</mi></msub><msub><mi>𝐟</mi><mi>t</mi></msub></mrow></mrow><annotation encoding="application/x-tex">\mathbf{F}=\sum_{t}\mathbf{f}_{t}</annotation></semantics></math> saturates on long discharge notes
-(<math alttext="\sim" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p1.m4" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math>5,000 tokens <math alttext="\times" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p1.m5" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math> <math alttext="k=64" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p1.m6" intent=":literal"><semantics><mrow><mi>k</mi><mo>=</mo><mn>64</mn></mrow><annotation encoding="application/x-tex">k=64</annotation></semantics></math> active latents per token), we drop the
-binarization step for SAE configurations whose summed features exceed <math alttext="95\%" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p1.m7" intent=":literal"><semantics><mrow><mn>95</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">95\%</annotation></semantics></math>
-density on the training set and keep <math alttext="\tau=1" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p1.m8" intent=":literal"><semantics><mrow><mi>τ</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\tau=1</annotation></semantics></math> otherwise.</p>
+the paper-default threshold</span><math alttext="\tau=1" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p1.m1" intent=":literal"><semantics><mrow><mi>τ</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\tau=1</annotation></semantics></math><span class="translated-text">，并在上训练线性分类器
+结果</span><span class="original-text">, and trains a linear classifier on the
+resulting</span><math alttext="d_{\text{SAE}}" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p1.m2" intent=":literal"><semantics><msub><mi>d</mi><mtext>SAE</mtext></msub><annotation encoding="application/x-tex">d_{\text{SAE}}</annotation></semantics></math><span class="translated-text">维特征向量。因为</span><span class="original-text">-dimensional feature vector. Because</span><math alttext="\mathbf{F}=\sum_{t}\mathbf{f}_{t}" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p1.m3" intent=":literal"><semantics><mrow><mi>𝐅</mi><mo rspace="0.111em">=</mo><mrow><msub><mo>∑</mo><mi>t</mi></msub><msub><mi>𝐟</mi><mi>t</mi></msub></mrow></mrow><annotation encoding="application/x-tex">\mathbf{F}=\sum_{t}\mathbf{f}_{t}</annotation></semantics></math><span class="translated-text">饱和于长放电音符
+（</span><span class="original-text">saturates on long discharge notes
+(</span><math alttext="\sim" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p1.m4" intent=":literal"><semantics><mo>∼</mo><annotation encoding="application/x-tex">\sim</annotation></semantics></math><span class="translated-text">5,000 个代币</span><span class="original-text">5,000 tokens</span><math alttext="\times" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p1.m5" intent=":literal"><semantics><mo>×</mo><annotation encoding="application/x-tex">\times</annotation></semantics></math> <math alttext="k=64" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p1.m6" intent=":literal"><semantics><mrow><mi>k</mi><mo>=</mo><mn>64</mn></mrow><annotation encoding="application/x-tex">k=64</annotation></semantics></math><span class="translated-text">每个令牌的活跃潜伏），我们放弃
+SAE 配置的二值化步骤，其特征总和超过</span><span class="original-text">active latents per token), we drop the
+binarization step for SAE configurations whose summed features exceed</span><math alttext="95\%" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p1.m7" intent=":literal"><semantics><mrow><mn>95</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">95\%</annotation></semantics></math><span class="translated-text">训练集上的密度并保持</span><span class="original-text">density on the training set and keep</span><math alttext="\tau=1" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p1.m8" intent=":literal"><semantics><mrow><mi>τ</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\tau=1</annotation></semantics></math><span class="translated-text">否则。</span><span class="original-text">otherwise.</span></p>
 </div>
 <div class="ltx_para" id="A1.SS7.SSS0.Px2.p2">
-<p class="ltx_p" id="A1.SS7.SSS0.Px2.p2.1">For both baselines and CAST, we use the same single-layer classifier head,
+<p class="ltx_p" id="A1.SS7.SSS0.Px2.p2.1"><span class="translated-text">对于基线和 CAST，我们使用相同的单层分类器头，
+类别加权焦点损失
+（</span><span class="original-text">For both baselines and CAST, we use the same single-layer classifier head,
 class-weighted focal loss
-(<math alttext="\gamma=2" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p2.m1" intent=":literal"><semantics><mrow><mi>γ</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">\gamma=2</annotation></semantics></math>,
-<math alttext="\boldsymbol{\alpha}=[1,\,N_{\text{neg}}/N_{\text{pos}}]" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p2.m2" intent=":literal"><semantics><mrow><mi>𝜶</mi><mo>=</mo><mrow><mo stretchy="false">[</mo><mrow><mn>1</mn><mo rspace="0.337em">,</mo><mrow><msub><mi>N</mi><mtext>neg</mtext></msub><mo>/</mo><msub><mi>N</mi><mtext>pos</mtext></msub></mrow></mrow><mo stretchy="false">]</mo></mrow></mrow><annotation encoding="application/x-tex">\boldsymbol{\alpha}=[1,\,N_{\text{neg}}/N_{\text{pos}}]</annotation></semantics></math>),
-AdamW optimization, effective batch size <math alttext="256" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p2.m3" intent=":literal"><semantics><mn>256</mn><annotation encoding="application/x-tex">256</annotation></semantics></math>, and <math alttext="5" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p2.m4" intent=":literal"><semantics><mn>5</mn><annotation encoding="application/x-tex">5</annotation></semantics></math> training epochs. The learning rate is
-<math alttext="1\!\times\!10^{-3}" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p2.m5" intent=":literal"><semantics><mrow><mphantom></mphantom><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>3</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1\!\times\!10^{-3}</annotation></semantics></math> for the classifier head and <math alttext="5\!\times\!10^{-5}" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p2.m6" intent=":literal"><semantics><mrow><mphantom></mphantom><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>5</mn></mrow></msup></mrow><annotation encoding="application/x-tex">5\!\times\!10^{-5}</annotation></semantics></math> for any
+(</span><math alttext="\gamma=2" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p2.m1" intent=":literal"><semantics><mrow><mi>γ</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">\gamma=2</annotation></semantics></math>,
+<math alttext="\boldsymbol{\alpha}=[1,\,N_{\text{neg}}/N_{\text{pos}}]" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p2.m2" intent=":literal"><semantics><mrow><mi>𝜶</mi><mo>=</mo><mrow><mo stretchy="false">[</mo><mrow><mn>1</mn><mo rspace="0.337em">,</mo><mrow><msub><mi>N</mi><mtext>neg</mtext></msub><mo>/</mo><msub><mi>N</mi><mtext>pos</mtext></msub></mrow></mrow><mo stretchy="false">]</mo></mrow></mrow><annotation encoding="application/x-tex">\boldsymbol{\alpha}=[1,\,N_{\text{neg}}/N_{\text{pos}}]</annotation></semantics></math><span class="translated-text">),
+AdamW优化，有效批量大小</span><span class="original-text">),
+AdamW optimization, effective batch size</span><math alttext="256" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p2.m3" intent=":literal"><semantics><mn>256</mn><annotation encoding="application/x-tex">256</annotation></semantics></math><span class="translated-text">, 和</span><span class="original-text">, and</span><math alttext="5" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p2.m4" intent=":literal"><semantics><mn>5</mn><annotation encoding="application/x-tex">5</annotation></semantics></math><span class="translated-text">训练纪元。学习率是</span><span class="original-text">training epochs. The learning rate is</span><math alttext="1\!\times\!10^{-3}" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p2.m5" intent=":literal"><semantics><mrow><mphantom></mphantom><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>3</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1\!\times\!10^{-3}</annotation></semantics></math><span class="translated-text">对于分类器头和</span><span class="original-text">for the classifier head and</span><math alttext="5\!\times\!10^{-5}" class="ltx_Math" display="inline" id="A1.SS7.SSS0.Px2.p2.m6" intent=":literal"><semantics><mrow><mphantom></mphantom><mo lspace="0.222em" rspace="0.222em">×</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>5</mn></mrow></msup></mrow><annotation encoding="application/x-tex">5\!\times\!10^{-5}</annotation></semantics></math><span class="translated-text">对于任何
+可训练的骨干层。自调节和 SAE-Probe 两者兼具
+编码器和 SAE 冻结； CAST 和标准微调基线
+在相同的时间表下调整上骨干层。</span><span class="original-text">for any
 trainable backbone layers. Self-Regul and SAE-Probe keep both
 the encoder and the SAE frozen; CAST and the standard fine-tuning baseline
-tune the upper backbone layers under an identical schedule.</p>
+tune the upper backbone layers under an identical schedule.</span></p>
 </div>
 </section>
 </section>
 <section class="ltx_subsection" id="A1.SS8">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.8 </span>Paired Bootstrap Analysis</h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.8 </span><span class="translated-text">配对引导分析</span><span class="original-text">Paired Bootstrap Analysis</span></h3>
 <div class="ltx_para" id="A1.SS8.p1">
-<p class="ltx_p" id="A1.SS8.p1.1">We draw
-<math alttext="10{,}000" class="ltx_Math" display="inline" id="A1.SS8.p1.m1" intent=":literal"><semantics><mn>10,000</mn><annotation encoding="application/x-tex">10{,}000</annotation></semantics></math> resamples from the shared test set and apply the same resample to
+<p class="ltx_p" id="A1.SS8.p1.1"><span class="translated-text">我们画</span><span class="original-text">We draw</span><math alttext="10{,}000" class="ltx_Math" display="inline" id="A1.SS8.p1.m1" intent=":literal"><semantics><mn>10,000</mn><annotation encoding="application/x-tex">10{,}000</annotation></semantics></math><span class="translated-text">从共享测试集中重新采样并将相同的重新采样应用于
+每个 TopK 或 Matryoshka CAST 模型及其匹配的微调基线。测试是片面的
+改进方向：</span><span class="original-text">resamples from the shared test set and apply the same resample to
 each TopK or Matryoshka CAST model and its matched fine-tuning baseline. Tests are one-sided in the
-direction of improvement: <math alttext="\Delta=\mathrm{CAST}-\mathrm{FineTune}&gt;0" class="ltx_Math" display="inline" id="A1.SS8.p1.m2" intent=":literal"><semantics><mrow><mi mathvariant="normal">Δ</mi><mo>=</mo><mrow><mi>CAST</mi><mo>−</mo><mi>FineTune</mi></mrow><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\Delta=\mathrm{CAST}-\mathrm{FineTune}&gt;0</annotation></semantics></math> for F1,
-F1<math alttext="{}_{\tau^{\star}}" class="ltx_Math" display="inline" id="A1.SS8.p1.m3" intent=":literal"><semantics><msub><mrow></mrow><msup><mi>τ</mi><mo>⋆</mo></msup></msub><annotation encoding="application/x-tex">{}_{\tau^{\star}}</annotation></semantics></math>, AUROC, and PR-AUC, and <math alttext="\Delta&lt;0" class="ltx_Math" display="inline" id="A1.SS8.p1.m4" intent=":literal"><semantics><mrow><mi mathvariant="normal">Δ</mi><mo>&lt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\Delta&lt;0</annotation></semantics></math> for Brier score, NLL, and
-ECE. Table <a class="ltx_ref" href="#A1.T7" title="Table 7 ‣ A.8 Paired Bootstrap Analysis ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">7</span></a> reports the <math alttext="p" class="ltx_Math" display="inline" id="A1.SS8.p1.m5" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>-value for all
-metrics in Table <a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ Downstream training. ‣ 4.3 Training setup and hyperparameters ‣ 4 Results and Discussion ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
+direction of improvement:</span><math alttext="\Delta=\mathrm{CAST}-\mathrm{FineTune}&gt;0" class="ltx_Math" display="inline" id="A1.SS8.p1.m2" intent=":literal"><semantics><mrow><mi mathvariant="normal">Δ</mi><mo>=</mo><mrow><mi>CAST</mi><mo>−</mo><mi>FineTune</mi></mrow><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\Delta=\mathrm{CAST}-\mathrm{FineTune}&gt;0</annotation></semantics></math><span class="translated-text">对于F1，
+F1</span><span class="original-text">for F1,
+F1</span><math alttext="{}_{\tau^{\star}}" class="ltx_Math" display="inline" id="A1.SS8.p1.m3" intent=":literal"><semantics><msub><mrow></mrow><msup><mi>τ</mi><mo>⋆</mo></msup></msub><annotation encoding="application/x-tex">{}_{\tau^{\star}}</annotation></semantics></math><span class="translated-text">、AUROC 和 PR-AUC，以及</span><span class="original-text">, AUROC, and PR-AUC, and</span><math alttext="\Delta&lt;0" class="ltx_Math" display="inline" id="A1.SS8.p1.m4" intent=":literal"><semantics><mrow><mi mathvariant="normal">Δ</mi><mo>&lt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\Delta&lt;0</annotation></semantics></math><span class="translated-text">Brier 分数、NLL 和
+欧洲经委会。表</span><span class="original-text">for Brier score, NLL, and
+ECE. Table</span><a class="ltx_ref" href="#A1.T7" title="Table 7 ‣ A.8 Paired Bootstrap Analysis ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">7</span></a><span class="translated-text">报告了</span><span class="original-text">reports the</span><math alttext="p" class="ltx_Math" display="inline" id="A1.SS8.p1.m5" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math><span class="translated-text">-对所有人的价值
+表中的指标</span><span class="original-text">-value for all
+metrics in Table</span><a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ Downstream training. ‣ 4.3 Training setup and hyperparameters ‣ 4 Results and Discussion ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">1</span></a>.</p>
 </div>
 <figure class="ltx_table" id="A1.T7">
 <figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 7: </span>One-sided paired-bootstrap <math alttext="p" class="ltx_Math" display="inline" id="A1.T7.m4" intent=":literal"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>-values for TopK and Matryoshka CAST
@@ -2668,46 +2742,68 @@ improvement by CAST. Bold entries denote <math alttext="p&lt;.05" class="ltx_Mat
 </figure>
 </section>
 <section class="ltx_subsection" id="A1.SS9">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.9 </span>Additional BatchTopK SAE Results on MIMIC-IV</h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.9 </span><span class="translated-text">MIMIC-IV 上的其他 BatchTopK SAE 结果</span><span class="original-text">Additional BatchTopK SAE Results on MIMIC-IV</span></h3>
 <div class="ltx_para" id="A1.SS9.p1">
-<p class="ltx_p" id="A1.SS9.p1.1">Table <a class="ltx_ref" href="#A1.T8" title="Table 8 ‣ A.10 Evaluation on MIMIC-III ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">8</span></a> reports BatchTopK SAE performance on the
+<p class="ltx_p" id="A1.SS9.p1.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#A1.T8" title="Table 8 ‣ A.10 Evaluation on MIMIC-III ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">8</span></a><span class="translated-text">报告 BatchTopK SAE 性能
+MIMIC-IV 放电音符在四个骨干层上保留的测试装置
+配置以及标准微调、自调节和 SAE 探针
+基线。我们从主结果表中省略了 BatchTopK
+（表</span><span class="original-text">reports BatchTopK SAE performance on the
 MIMIC-IV discharge-note held-out test set across the four backbone–layer
 configurations, alongside standard fine-tuning, Self-Regul, and SAE-Probe
 baselines. We omit BatchTopK from the main results table
-(Table <a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ Downstream training. ‣ 4.3 Training setup and hyperparameters ‣ 4 Results and Discussion ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">1</span></a>) for space, since its overall behavior closely tracks
-that of the TopK SAE. The trends mirror those in the main table.</p>
+(Table</span><a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ Downstream training. ‣ 4.3 Training setup and hyperparameters ‣ 4 Results and Discussion ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">）对于空间来说，因为它的整体行为密切跟踪
+TopK SAE 的认证。这些趋势反映了主表中的趋势。</span><span class="original-text">) for space, since its overall behavior closely tracks
+that of the TopK SAE. The trends mirror those in the main table.</span></p>
 </div>
 </section>
 <section class="ltx_subsection" id="A1.SS10">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.10 </span>Evaluation on MIMIC-III</h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.10 </span><span class="translated-text">MIMIC-III评估</span><span class="original-text">Evaluation on MIMIC-III</span></h3>
 <div class="ltx_para" id="A1.SS10.p1">
-<p class="ltx_p" id="A1.SS10.p1.1">MIMIC-III is a publicly available critical-care
+<p class="ltx_p" id="A1.SS10.p1.1"><span class="translated-text">MIMIC-III 是一种公开可用的重症监护
+涵盖贝斯以色列女执事医疗中心 ICU 入院情况的数据库
+2001 年至 2012 年间。我们使用其出院记录，并与相同的记录配对
+30 天院外死亡率标签为 MIMIC-IV
+（节</span><span class="original-text">MIMIC-III is a publicly available critical-care
 database covering ICU admissions at Beth Israel Deaconess Medical Center
 between 2001 and 2012. We use its discharge notes, paired with the same
 30-day out-of-hospital mortality label as MIMIC-IV
-(Section <a class="ltx_ref" href="#S4.SS1" title="4.1 Dataset ‣ 4 Results and Discussion ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">4.1</span></a>), giving <math alttext="n=42{,}548" class="ltx_Math" display="inline" id="A1.SS10.p1.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>42,548</mn></mrow><annotation encoding="application/x-tex">n=42{,}548</annotation></semantics></math> notes with a positive rate of
-<math alttext="4.15\%" class="ltx_Math" display="inline" id="A1.SS10.p1.m2" intent=":literal"><semantics><mrow><mn>4.15</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">4.15\%</annotation></semantics></math>. The two corpora share the source institution, broad discharge-note
+(Section</span><a class="ltx_ref" href="#S4.SS1" title="4.1 Dataset ‣ 4 Results and Discussion ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">4.1</span></a><span class="translated-text">），给予</span><span class="original-text">), giving</span><math alttext="n=42{,}548" class="ltx_Math" display="inline" id="A1.SS10.p1.m1" intent=":literal"><semantics><mrow><mi>n</mi><mo>=</mo><mn>42,548</mn></mrow><annotation encoding="application/x-tex">n=42{,}548</annotation></semantics></math><span class="translated-text">正面利率为</span><span class="original-text">notes with a positive rate of</span><math alttext="4.15\%" class="ltx_Math" display="inline" id="A1.SS10.p1.m2" intent=":literal"><semantics><mrow><mn>4.15</mn><mo>%</mo></mrow><annotation encoding="application/x-tex">4.15\%</annotation></semantics></math><span class="translated-text">。两个语料库共享来源机构，广泛的放电注释
+格式和基于 ICD 的结果编码，但记录周期不同，
+注释模板、主治医师群体和 EHR 版本。我们
+因此使用 MIMIC-III 作为第二个自然异构评估集，
+而不是作为分布转移测试。</span><span class="original-text">. The two corpora share the source institution, broad discharge-note
 format, and ICD-based outcome coding, but differ in documentation period,
 note templates, attending-physician populations, and EHR version. We
 therefore use MIMIC-III as a second naturally heterogeneous evaluation set,
-rather than as a distribution-shift test.</p>
+rather than as a distribution-shift test.</span></p>
 </div>
 <div class="ltx_para" id="A1.SS10.p2">
-<p class="ltx_p" id="A1.SS10.p2.1">Table <a class="ltx_ref" href="#A1.T9" title="Table 9 ‣ A.10 Evaluation on MIMIC-III ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">9</span></a> summarizes the resulting performance. Across all backbone–layer settings, the best-performing CAST variant achieves higher F1 than the corresponding fine-tuning baseline. The largest absolute
-gains occur on Clinical-Longformer, reaching up to <math alttext="+0.11" class="ltx_Math" display="inline" id="A1.SS10.p2.m1" intent=":literal"><semantics><mrow><mo>+</mo><mn>0.11</mn></mrow><annotation encoding="application/x-tex">+0.11</annotation></semantics></math>
-F<sub class="ltx_sub" id="A1.SS10.p2.1.1">1</sub> at layer 8 with the Matryoshka SAE, suggesting that the
+<p class="ltx_p" id="A1.SS10.p2.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#A1.T9" title="Table 9 ‣ A.10 Evaluation on MIMIC-III ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">9</span></a><span class="translated-text">总结了所产生的性能。在所有主干层设置中，性能最佳的 CAST 变体比相应的微调基线实现了更高的 F1。绝对最大
+Clinical-Longformer 取得了进展，达到</span><span class="original-text">summarizes the resulting performance. Across all backbone–layer settings, the best-performing CAST variant achieves higher F1 than the corresponding fine-tuning baseline. The largest absolute
+gains occur on Clinical-Longformer, reaching up to</span><math alttext="+0.11" class="ltx_Math" display="inline" id="A1.SS10.p2.m1" intent=":literal"><semantics><mrow><mo>+</mo><mn>0.11</mn></mrow><annotation encoding="application/x-tex">+0.11</annotation></semantics></math>
+F<sub class="ltx_sub" id="A1.SS10.p2.1.1">1</sub><span class="translated-text">在 Matryoshka SAE 的第 8 层，表明
+微调 Longformer 模型对语料库特定表面更敏感
+模式。校准指标显示出最一致的改进：
+每个单元中的最佳校准模型是 CAST 变体，具有 Brier、NLL 和
+所有四个骨干层设置的 ECE 均大幅减少。</span><span class="original-text">at layer 8 with the Matryoshka SAE, suggesting that the
 fine-tuned Longformer model is more sensitive to corpus-specific surface
 patterns. The calibration metrics show the most consistent improvement: the
 best-calibrated model in every cell is a CAST variant, with Brier, NLL, and
-ECE substantially reduced across all four backbone-layer settings.</p>
+ECE substantially reduced across all four backbone-layer settings.</span></p>
 </div>
 <div class="ltx_para" id="A1.SS10.p3">
-<p class="ltx_p" id="A1.SS10.p3.1">The relative ranking of SAE families also carries over from
-Table <a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ Downstream training. ‣ 4.3 Training setup and hyperparameters ‣ 4 Results and Discussion ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">1</span></a>: Matryoshka is preferred for ClinicalBERT, whereas TopK
-and BatchTopK are preferred for Clinical-Longformer. Overall, the calibration and F<sub class="ltx_sub" id="A1.SS10.p3.1.1">1</sub> gains
+<p class="ltx_p" id="A1.SS10.p3.1"><span class="translated-text">SAE 家族的相对排名也延续自
+表</span><span class="original-text">The relative ranking of SAE families also carries over from
+Table</span><a class="ltx_ref" href="#S4.T1" title="Table 1 ‣ Downstream training. ‣ 4.3 Training setup and hyperparameters ‣ 4 Results and Discussion ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">1</span></a><span class="translated-text">：Matryoshka 是 ClinicalBERT 的首选，而 TopK
+和 BatchTopK 是 Clinical-Longformer 的首选。总体而言，校准和 F</span><span class="original-text">: Matryoshka is preferred for ClinicalBERT, whereas TopK
+and BatchTopK are preferred for Clinical-Longformer. Overall, the calibration and F</span><sub class="ltx_sub" id="A1.SS10.p3.1.1">1</sub><span class="translated-text">收益
+伪影引导的抑制干净地从 MIMIC-IV 转移到 MIMIC-III，
+支持我们的主张，即 CAST 恢复了临床上更稳定的死亡率
+信号比经过微调的同类信号更好。</span><span class="original-text">gains
 of artifact-guided suppression transfer cleanly from MIMIC-IV to MIMIC-III,
 supporting our claim that CAST recovers more clinically stable mortality
-signals than its fine-tuned counterparts.</p>
+signals than its fine-tuned counterparts.</span></p>
 </div>
 <figure class="ltx_table" id="A1.T8">
 <figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 8: </span>
@@ -3105,14 +3201,17 @@ tuning. CAST denotes our concept-guided fine-tuning method.
 </figure>
 </section>
 <section class="ltx_subsection" id="A1.SS11">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.11 </span>Top Clinical Concepts by Attribution</h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.11 </span><span class="translated-text">按归因划分的热门临床概念</span><span class="original-text">Top Clinical Concepts by Attribution</span></h3>
 <div class="ltx_para" id="A1.SS11.p1">
-<p class="ltx_p" id="A1.SS11.p1.1">Table <a class="ltx_ref" href="#A1.T10" title="Table 10 ‣ A.11 Top Clinical Concepts by Attribution ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">10</span></a> expands Table <a class="ltx_ref" href="#S4.T2" title="Table 2 ‣ 4.6 Feature Importance ‣ 4 Results and Discussion ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">2</span></a> with
+<p class="ltx_p" id="A1.SS11.p1.1"><span class="translated-text">表</span><span class="original-text">Table</span><a class="ltx_ref" href="#A1.T10" title="Table 10 ‣ A.11 Top Clinical Concepts by Attribution ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">10</span></a><span class="translated-text">展开表格</span><span class="original-text">expands Table</span><a class="ltx_ref" href="#S4.T2" title="Table 2 ‣ 4.6 Feature Importance ‣ 4 Results and Discussion ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">2</span></a><span class="translated-text">与
+LLM生成的概念描述和代表最大激活
+每个顶级签名归因临床概念的背景
+临床BERT层</span><span class="original-text">with
 the LLM-generated concept description and a representative maximally activating
 context for each of the top signed-attribution clinical concepts on
-ClinicalBERT layer <math alttext="11" class="ltx_Math" display="inline" id="A1.SS11.p1.m1" intent=":literal"><semantics><mn>11</mn><annotation encoding="application/x-tex">11</annotation></semantics></math> across the three SAE variants. The activating contexts
-are sampled directly from MIMIC-IV discharge notes; the symbol <span class="ltx_text ltx_font_typewriter" id="A1.SS11.p1.1.1">/</span>
-denotes a line break, originally represented as <span class="ltx_text ltx_font_typewriter" id="A1.SS11.p1.1.2">&lt;cr&gt;</span>.</p>
+ClinicalBERT layer</span><math alttext="11" class="ltx_Math" display="inline" id="A1.SS11.p1.m1" intent=":literal"><semantics><mn>11</mn><annotation encoding="application/x-tex">11</annotation></semantics></math><span class="translated-text">跨越三个 SAE 变体。激活情境
+直接从 MIMIC-IV 放电记录中采样；符号</span><span class="original-text">across the three SAE variants. The activating contexts
+are sampled directly from MIMIC-IV discharge notes; the symbol</span><span class="ltx_text ltx_font_typewriter" id="A1.SS11.p1.1.1">/</span><span class="translated-text">表示换行符，最初表示为</span><span class="original-text">denotes a line break, originally represented as</span><span class="ltx_text ltx_font_typewriter" id="A1.SS11.p1.1.2">&lt;cr&gt;</span>.</p>
 </div>
 <figure class="ltx_table" id="A1.T10">
 <figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 10: </span>
@@ -3303,20 +3402,27 @@ corpus.
 </figure>
 </section>
 <section class="ltx_subsection" id="A1.SS12">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.12 </span>Examples of Suppressed Artifacts</h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.12 </span><span class="translated-text">抑制文物的示例</span><span class="original-text">Examples of Suppressed Artifacts</span></h3>
 <div class="ltx_para" id="A1.SS12.p1">
-<p class="ltx_p" id="A1.SS12.p1.1">To make the strict-consensus suppression set <math alttext="\overline{\mathcal{T}}" class="ltx_Math" display="inline" id="A1.SS12.p1.m1" intent=":literal"><semantics><mover accent="true"><mi class="ltx_font_mathcaligraphic">𝒯</mi><mo stretchy="true">¯</mo></mover><annotation encoding="application/x-tex">\overline{\mathcal{T}}</annotation></semantics></math> concrete,
-Table <a class="ltx_ref" href="#A1.T11" title="Table 11 ‣ A.12 Examples of Suppressed Artifacts ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">11</span></a> shows representative entries from the
-strict-consensus artifact latents identified on the ClinicalBERT layer <math alttext="11" class="ltx_Math" display="inline" id="A1.SS12.p1.m2" intent=":literal"><semantics><mn>11</mn><annotation encoding="application/x-tex">11</annotation></semantics></math>
-TopK SAE. Two broad sub-categories dominate: <em class="ltx_emph ltx_font_italic" id="A1.SS12.p1.1.1">formatting artifacts</em>,
+<p class="ltx_p" id="A1.SS12.p1.1"><span class="translated-text">制定严格共识抑制集</span><span class="original-text">To make the strict-consensus suppression set</span><math alttext="\overline{\mathcal{T}}" class="ltx_Math" display="inline" id="A1.SS12.p1.m1" intent=":literal"><semantics><mover accent="true"><mi class="ltx_font_mathcaligraphic">𝒯</mi><mo stretchy="true">¯</mo></mover><annotation encoding="application/x-tex">\overline{\mathcal{T}}</annotation></semantics></math><span class="translated-text">混凝土,
+表</span><span class="original-text">concrete,
+Table</span><a class="ltx_ref" href="#A1.T11" title="Table 11 ‣ A.12 Examples of Suppressed Artifacts ‣ Appendix A Appendix ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">11</span></a><span class="translated-text">显示来自的代表性条目
+在 ClinicalBERT 层上识别的严格共识伪影潜伏</span><span class="original-text">shows representative entries from the
+strict-consensus artifact latents identified on the ClinicalBERT layer</span><math alttext="11" class="ltx_Math" display="inline" id="A1.SS12.p1.m2" intent=":literal"><semantics><mn>11</mn><annotation encoding="application/x-tex">11</annotation></semantics></math><span class="translated-text">顶级 SAE。两大子类别占主导地位：</span><span class="original-text">TopK SAE. Two broad sub-categories dominate:</span><em class="ltx_emph ltx_font_italic" id="A1.SS12.p1.1.1"><span class="translated-text">格式化工件</span><span class="original-text">formatting artifacts</span></em><span class="translated-text">,
+包括换行标记、列表项分隔符、括号符号和
+结构截面标记，以及</span><span class="original-text">,
 including line-break tokens, list-item delimiters, parenthetical notations, and
-structural section markers , and <em class="ltx_emph ltx_font_italic" id="A1.SS12.p1.1.2">de-identification
-artifacts</em>, including placeholder tokens introduced by the MIMIC de-identification
-pipeline such as <span class="ltx_text ltx_font_typewriter" id="A1.SS12.p1.1.3">[**...**]</span> . These patterns may correlate
+structural section markers , and</span><em class="ltx_emph ltx_font_italic" id="A1.SS12.p1.1.2"><span class="translated-text">去识别化
+文物</span><span class="original-text">de-identification
+artifacts</span></em><span class="translated-text">，包括MIMIC去标识化引入的占位符token
+管道如</span><span class="original-text">, including placeholder tokens introduced by the MIMIC de-identification
+pipeline such as</span><span class="ltx_text ltx_font_typewriter" id="A1.SS12.p1.1.3">[**...**]</span><span class="translated-text">。这些模式可能相互关联
+数据集级别的患者结果，例如通过文档
+密度或注释结构，但它们并不直接反映患者的生理机能。
+因此，他们的解码器贡献从</span><span class="original-text">. These patterns may correlate
 with patient outcomes at the dataset level, for example through documentation
 density or note structure, but they do not directly reflect patient physiology.
-Their decoder contributions are therefore subtracted from <math alttext="\tilde{h}^{(K)}" class="ltx_Math" display="inline" id="A1.SS12.p1.m3" intent=":literal"><semantics><msup><mover accent="true"><mi>h</mi><mo>~</mo></mover><mrow><mo stretchy="false">(</mo><mi>K</mi><mo stretchy="false">)</mo></mrow></msup><annotation encoding="application/x-tex">\tilde{h}^{(K)}</annotation></semantics></math>
-during fine-tuning (Section <a class="ltx_ref" href="#S3.SS3" title="3.3 Fine-Tuning with Concept Steering ‣ 3 Method ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">3.3</span></a>).</p>
+Their decoder contributions are therefore subtracted from</span><math alttext="\tilde{h}^{(K)}" class="ltx_Math" display="inline" id="A1.SS12.p1.m3" intent=":literal"><semantics><msup><mover accent="true"><mi>h</mi><mo>~</mo></mover><mrow><mo stretchy="false">(</mo><mi>K</mi><mo stretchy="false">)</mo></mrow></msup><annotation encoding="application/x-tex">\tilde{h}^{(K)}</annotation></semantics></math><span class="translated-text">微调期间（部分</span><span class="original-text">during fine-tuning (Section</span><a class="ltx_ref" href="#S3.SS3" title="3.3 Fine-Tuning with Concept Steering ‣ 3 Method ‣ Making Clinical Language Models Auditable: Concept-Guided Fine-Tuning for Robust Prediction"><span class="ltx_text ltx_ref_tag">3.3</span></a>).</p>
 </div>
 <figure class="ltx_table" id="A1.T11">
 <figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_table">Table 11: </span>
@@ -3432,12 +3538,15 @@ contributions are subtracted from <math alttext="\tilde{h}^{(K)}" class="ltx_Mat
 </figure>
 </section>
 <section class="ltx_subsection" id="A1.SS13">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.13 </span>Artifacts and licensing</h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection">A.13 </span><span class="translated-text">工件和许可</span><span class="original-text">Artifacts and licensing</span></h3>
 <div class="ltx_para" id="A1.SS13.p1">
-<p class="ltx_p" id="A1.SS13.p1.1">We use MIMIC-III and MIMIC-IV under the PhysioNet credentialed access and data use requirements, and only for retrospective research on clinical NLP.
+<p class="ltx_p" id="A1.SS13.p1.1"><span class="translated-text">我们根据 PhysioNet 认证访问和数据使用要求使用 MIMIC-III 和 MIMIC-IV，并且仅用于临床 NLP 的回顾性研究。
+我们以与临床文本建模研究用途一致的方式使用公开的预训练临床编码器，并仅将 ICD-10-CM 术语用于基于检索的概念基础。
+我们不会重新分发 MIMIC 临床记录，任何发布的代码或经过训练的工件都将排除患者文本并遵循相应的数据集和模型使用条款。
+本工作中创建的模型和工件仅用于临床语言模型的研究和审核，而不是在未经进一步验证、批准和合规性审查的情况下部署在临床决策中。</span><span class="original-text">We use MIMIC-III and MIMIC-IV under the PhysioNet credentialed access and data use requirements, and only for retrospective research on clinical NLP.
 We use publicly available pretrained clinical encoders in a manner consistent with their research use for clinical text modeling, and use ICD-10-CM terminology only for retrieval-based concept grounding.
 We do not redistribute MIMIC clinical notes, and any released code or trained artifacts will exclude patient text and follow the corresponding dataset and model usage terms.
-The models and artifacts created in this work are intended only for research and auditing of clinical language models, not for deployment in clinical decision-making without further validation, approval, and compliance review.</p>
+The models and artifacts created in this work are intended only for research and auditing of clinical language models, not for deployment in clinical decision-making without further validation, approval, and compliance review.</span></p>
 </div>
 </section>
 </section>
@@ -3445,11 +3554,7 @@ The models and artifacts created in this work are intended only for research and
 </div>
 </div>
 <footer class="arxiv-html-footer">
-<div class="ltx_page_logo">
-    Experimental support, please
-    <a class="ltx_ref" href="https://arxiv.org/html/./2608.27397v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a>
-    for errors. Generated by
-    <a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
+<div class="ltx_page_logo"><span class="translated-text">实验支持，请</span><span class="original-text">Experimental support, please</span><a class="ltx_ref" href="https://arxiv.org/html/./2608.27397v1/__stdout.txt" rel="nofollow" target="_blank">view the build logs</a><span class="translated-text">对于错误。生成者</span><span class="original-text">for errors. Generated by</span><a class="ltx_ref ltx_LaTeXML_logo" href="https://math.nist.gov/~BMiller/LaTeXML/" target="_blank">
 <span style="letter-spacing: -0.2em; margin-right: 0.1em;">
         L
         <span style="font-size: 70%; position: relative; bottom: 2.2pt;">A</span>
@@ -3461,51 +3566,56 @@ The models and artifacts created in this work are intended only for research and
 </a>.
   </div>
 <div class="keyboard-glossary">
-<h2>Instructions for reporting errors</h2>
-<p>We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+<h2><span class="translated-text">报告错误的说明</span><span class="original-text">Instructions for reporting errors</span></h2>
+<p><span class="translated-text">我们正在继续改进论文的 HTML 版本，您的反馈有助于增强可访问性和移动性
+      支持。要报告 HTML 中的错误以帮助我们改进转换和呈现，请选择以下任一选项：
+      方法如下：</span><span class="original-text">We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
       support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
-      methods listed below:</p>
+      methods listed below:</span></p>
 <ul>
-<li>Click the "Report Issue" <span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
+<li><span class="translated-text">点击“报告问题”</span><span class="original-text">Click the "Report Issue"</span><span class="mobile-only">(<svg aria-hidden="true" height="1em" role="presentation" style="display: inline-block; vertical-align: middle; fill: var(--text-color);" viewbox="0 0 640 640">
 <path d="M224 160C224 107 267 64 320 64C373 64 416 107 416 160L416 163.6C416 179.3 403.3 192 387.6 192L252.5 192C236.8 192 224.1 179.3 224.1 163.6L224.1 160zM569.6 172.8C580.2 186.9 577.3 207 563.2 217.6L465.4 290.9C470.7 299.8 474.7 309.6 477.2 320L576 320C593.7 320 608 334.3 608 352C608 369.7 593.7 384 576 384L480 384L480 416C480 418.6 479.9 421.3 479.8 423.9L563.2 486.4C577.3 497 580.2 517.1 569.6 531.2C559 545.3 538.9 548.2 524.8 537.6L461.7 490.3C438.5 534.5 395.2 566.5 344 574.2L344 344C344 330.7 333.3 320 320 320C306.7 320 296 330.7 296 344L296 574.2C244.8 566.5 201.5 534.5 178.3 490.3L115.2 537.6C101.1 548.2 81 545.3 70.4 531.2C59.8 517.1 62.7 497 76.8 486.4L160.2 423.9C160.1 421.3 160 418.7 160 416L160 384L64 384C46.3 384 32 369.7 32 352C32 334.3 46.3 320 64 320L162.8 320C165.3 309.6 169.3 299.8 174.6 290.9L76.8 217.6C62.7 207 59.8 186.9 70.4 172.8C81 158.7 101.1 155.8 115.2 166.4L224 248C236.3 242.9 249.8 240 264 240L376 240C390.2 240 403.7 242.8 416 248L524.8 166.4C538.9 155.8 559 158.7 569.6 172.8z"></path>
-</svg>)</span> button, located in the page header.</li>
+</svg>)</span><span class="translated-text">按钮，位于页眉中。</span><span class="original-text">button, located in the page header.</span></li>
 </ul>
-<p><strong>Tip:</strong> You can select the relevant text first, to include it in your report.</p>
-<p>Our team has already identified <a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a>. We appreciate your time reviewing and reporting rendering errors we
+<p><strong><span class="translated-text">提示：</span><span class="original-text">Tip:</span></strong><span class="translated-text">您可以先选择相关文本，将其包含在报告中。</span><span class="original-text">You can select the relevant text first, to include it in your report.</span></p>
+<p><span class="translated-text">我们的团队已经确定</span><span class="original-text">Our team has already identified</span><a class="ltx_ref" href="https://github.com/arXiv/html_feedback/issues" target="_blank">the following issues</a><span class="translated-text">。感谢您花时间查看和报告渲染错误，我们
+      可能还没有找到。您的努力将帮助我们为所有读者改进 HTML 版本，因为残疾
+      不应成为获得研究的障碍。感谢您对倡导开放获取的持续支持
+      所有。</span><span class="original-text">. We appreciate your time reviewing and reporting rendering errors we
       may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
       should not be a barrier to accessing research. Thank you for your continued support in championing open access for
-      all.</p>
-<p>Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a <a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a>, and welcome <a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
+      all.</span></p>
+<p><span class="translated-text">有免费的开发周期吗？帮助支持 arXiv 的可访问性！我们在 LaTeXML 的合作者维护着</span><span class="original-text">Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/wiki/Porting-LaTeX-packages-for-LaTeXML" target="_blank">list of packages that need conversion</a><span class="translated-text">，欢迎</span><span class="original-text">, and welcome</span><a class="ltx_ref" href="https://github.com/brucemiller/LaTeXML/issues" target="_blank">developer contributions</a>.</p>
 </div>
 </footer><footer class="ds-site-footer">
 <div class="ds-site-footer-grid">
 <div class="ds-site-footer-main">
-<div class="ds-site-footer-ack">
-        We gratefully acknowledge support from
-        our <strong>major funders</strong>,
-        <a href="https://info.arxiv.org/about/ourmembers.html"><strong>member institutions</strong></a><span class="ack-member-inline" hidden="">, <strong></strong></span>,
-        and all contributors.
-      </div>
+<div class="ds-site-footer-ack"><span class="translated-text">我们衷心感谢来自
+        我们的</span><span class="original-text">We gratefully acknowledge support from
+        our</span><strong><span class="translated-text">主要资助者</span><span class="original-text">major funders</span></strong>,
+        <a href="https://info.arxiv.org/about/ourmembers.html"><strong><span class="translated-text">成员机构</span><span class="original-text">member institutions</span></strong></a><span class="ack-member-inline" hidden="">, <strong></strong></span><span class="translated-text">,
+        以及所有贡献者。</span><span class="original-text">,
+        and all contributors.</span></div>
 <nav aria-label="Site navigation" class="ds-site-footer-links">
-<a href="https://info.arxiv.org/about">About</a>
+<a href="https://info.arxiv.org/about"><span class="translated-text">关于</span><span class="original-text">About</span></a>
 <span aria-hidden="true" class="ds-site-footer-sep">·</span>
-<a href="https://info.arxiv.org/help">Help</a>
+<a href="https://info.arxiv.org/help"><span class="translated-text">帮助</span><span class="original-text">Help</span></a>
 <span aria-hidden="true" class="ds-site-footer-sep">·</span>
-<a href="https://info.arxiv.org/help/contact.html">Contact</a>
+<a href="https://info.arxiv.org/help/contact.html"><span class="translated-text">联系方式</span><span class="original-text">Contact</span></a>
 <span aria-hidden="true" class="ds-site-footer-sep">·</span>
-<a href="https://info.arxiv.org/help/subscribe">Subscribe</a>
+<a href="https://info.arxiv.org/help/subscribe"><span class="translated-text">订阅</span><span class="original-text">Subscribe</span></a>
 <span aria-hidden="true" class="ds-site-footer-sep">·</span>
-<a href="https://info.arxiv.org/help/license/index.html">Copyright</a>
+<a href="https://info.arxiv.org/help/license/index.html"><span class="translated-text">版权</span><span class="original-text">Copyright</span></a>
 <span aria-hidden="true" class="ds-site-footer-sep">·</span>
-<a href="https://info.arxiv.org/help/policies/privacy_policy.html">Privacy</a>
+<a href="https://info.arxiv.org/help/policies/privacy_policy.html"><span class="translated-text">隐私</span><span class="original-text">Privacy</span></a>
 <span aria-hidden="true" class="ds-site-footer-sep">·</span>
-<a href="https://info.arxiv.org/help/web_accessibility.html">Accessibility</a>
+<a href="https://info.arxiv.org/help/web_accessibility.html"><span class="translated-text">无障碍</span><span class="original-text">Accessibility</span></a>
 <span aria-hidden="true" class="ds-site-footer-sep">·</span>
-<a href="https://status.arxiv.org" rel="noopener noreferrer" target="_blank">Operational Status<span class="is-sr-only"> (opens in new tab)</span></a>
+<a href="https://status.arxiv.org" rel="noopener noreferrer" target="_blank"><span class="translated-text">运营状况</span><span class="original-text">Operational Status</span><span class="is-sr-only"><span class="translated-text">（在新选项卡中打开）</span><span class="original-text">(opens in new tab)</span></span></a>
 </nav>
 </div>
 <div aria-label="Major funders" class="ds-site-footer-funders">
-<div class="ds-site-footer-funders-label">Major funding support from</div>
+<div class="ds-site-footer-funders-label"><span class="translated-text">主要资金支持来自</span><span class="original-text">Major funding support from</span></div>
 <div class="ds-site-footer-funders-logos">
 <a class="ds-funder-link" href="https://www.simonsfoundation.org/" rel="noopener noreferrer" target="_blank">
 <img alt="Simons Foundation" class="ds-funder-logo" src="https://arxiv.org/static/base/1.0.1/images/funders/simons-foundation.png"/>
