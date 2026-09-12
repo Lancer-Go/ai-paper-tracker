@@ -477,119 +477,157 @@ Built upon the architecture in</span><cite class="ltx_cite ltx_citemacro_cite">[
 Consequently, our method is compatible with both</span><span class="ltx_text ltx_font_italic" id="S3.p1.1.2"><span class="translated-text">标准</span><span class="original-text">standard</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_italic" id="S3.p1.1.3"><span class="translated-text">早期推理</span><span class="original-text">early reasoning</span></span><span class="translated-text">，并且可以与其他并发推理方法结合</span><span class="original-text">, and can be combined with other concurrent-reasoning methods</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib8" title="">11</a>, <a class="ltx_ref" href="#bib.bib9" title="">10</a>, <a class="ltx_ref" href="#bib.bib10" title="">12</a>]</cite>.</p>
 </div>
 <div class="ltx_para ltx_noindent" id="S3.p2">
-<p class="ltx_p" id="S3.p2.1"><span class="ltx_text ltx_font_bold" id="S3.p2.1.1">Stage 1: Rule-based Retrospective Training.</span> We first segment each GSM8K ground-truth rationale into ordered CoT steps using sentence and equation boundaries, keeping the final answer as the spoken response target.
+<p class="ltx_p" id="S3.p2.1"><span class="ltx_text ltx_font_bold" id="S3.p2.1.1"><span class="translated-text">第一阶段：基于规则的回顾性培训。</span><span class="original-text">Stage 1: Rule-based Retrospective Training.</span></span><span class="translated-text">我们首先使用句子和方程边界将每个 GSM8K 地面实况基本原理分割为有序的 CoT 步骤，并将最终答案保留为口头响应目标。
+对于每个选定的步骤，我们通过应用基于规则的扰动（例如修改数值或替换算术运算符）来合成错误的变体。
+然后，训练序列包含错误步骤、否定自我验证标记、纠正步骤和肯定标记，然后继续下一步。
+验证标记呈现为 [</span><span class="original-text">We first segment each GSM8K ground-truth rationale into ordered CoT steps using sentence and equation boundaries, keeping the final answer as the spoken response target.
 For each selected step, we synthesize an erroneous variant by applying rule-based perturbations, such as modifying numerical values or substituting arithmetic operators.
 The training sequence then contains the erroneous step, a negative self-verification marker, the corrected step, and a positive marker before continuing to the next step.
-The verification markers are rendered as [<span class="ltx_text" id="S3.p2.1.2" style="--ltx-fg-color:#FF0000;">✘</span>] and [<span class="ltx_text" id="S3.p2.1.3" style="--ltx-fg-color:#00E000;">✔</span>] in our qualitative examples.
-Unlike REVERSE <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="">15</a>]</cite>, which performs rollback or terminates the sequence after an incorrect segment, our framework requires the model to continue the generation process.
+The verification markers are rendered as [</span><span class="ltx_text" id="S3.p2.1.2" style="--ltx-fg-color:#FF0000;">✘</span><span class="translated-text">] 和 [</span><span class="original-text">] and [</span><span class="ltx_text" id="S3.p2.1.3" style="--ltx-fg-color:#00E000;">✔</span><span class="translated-text">] 在我们的定性示例中。
+与反向不同</span><span class="original-text">] in our qualitative examples.
+Unlike REVERSE</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="">15</a>]</cite><span class="translated-text">，它在不正确的段之后执行回滚或终止序列，我们的框架要求模型继续生成过程。
+在流语音应用中，系统无法在不破坏用户体验的情况下执行临时“回滚”。
+因此，我们构建数据，使得模型能够学习识别、修改并继续后续的 CoT 步骤，即使与之前的错误交织在一起。
+我们使用这些数据对 Moshi 进行监督微调（SFT），掩盖合成错误 CoT 代币的损失，同时保留验证标记和纠正延续的损失，类似于</span><span class="original-text">, which performs rollback or terminates the sequence after an incorrect segment, our framework requires the model to continue the generation process.
 In streaming speech applications, the system cannot perform a temporal “rollback” without disrupting the user experience.
 Therefore, we structure our data such that the model learns to identify, revise, and proceed with subsequent CoT steps even when interleaved with previous errors.
-We perform Supervised Fine-Tuning (SFT) on Moshi using this data, masking the loss on the synthesized erroneous CoT tokens while retaining loss on the verification markers and corrected continuation, similarly to <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="">15</a>]</cite>.</p>
+We perform Supervised Fine-Tuning (SFT) on Moshi using this data, masking the loss on the synthesized erroneous CoT tokens while retaining loss on the verification markers and corrected continuation, similarly to</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="">15</a>]</cite>.</p>
 </div>
 <div class="ltx_para ltx_noindent" id="S3.p3">
-<p class="ltx_p" id="S3.p3.1"><span class="ltx_text ltx_font_bold" id="S3.p3.1.1">Stage 2: Sample-based Distribution Alignment.</span> While Stage 1 establishes the structural format for retrospective thinking, rule-based errors often fail to reflect the actual distribution of model failures during inference.
+<p class="ltx_p" id="S3.p3.1"><span class="ltx_text ltx_font_bold" id="S3.p3.1.1"><span class="translated-text">第 2 阶段：基于样本的分布对齐。</span><span class="original-text">Stage 2: Sample-based Distribution Alignment.</span></span><span class="translated-text">虽然第一阶段建立了回顾性思维的结构格式，但基于规则的错误通常无法反映推理过程中模型失败的实际分布。
+为了减轻这种分布不匹配的情况，我们提出了第二阶段基于样本的微调。
+我们从第一阶段检查点生成推理轨迹，并使用法学硕士作为法官来评估给定问题和先前推理上下文的每个步骤。
+每当法官识别出错误的步骤时，它就会返回从该点到最终答案的正确延续。
+然后，我们使用模型生成的误差作为屏蔽的负步骤，并使用法官提供的延续作为正校正，构建回顾性训练示例。
+这保持了与第一阶段相同的损失掩蔽策略，同时使校正行为与真实的模型故障保持一致。</span><span class="original-text">While Stage 1 establishes the structural format for retrospective thinking, rule-based errors often fail to reflect the actual distribution of model failures during inference.
 To mitigate this distribution mismatch, we proposed a second stage of sample-based fine-tuning.
 We generate reasoning traces from the Stage 1 checkpoint and use an LLM-as-a-judge to evaluate each step given the question and preceding reasoning context.
 Whenever the judge identifies an incorrect step, it returns a corrected continuation from that point to the final answer.
 We then construct retrospective training examples by using the model-generated error as the masked negative step and the continuation provided by the judge as the positive correction.
-This keeps the same loss-masking strategy as Stage 1 while aligning the correction behavior to authentic model failures.</p>
+This keeps the same loss-masking strategy as Stage 1 while aligning the correction behavior to authentic model failures.</span></p>
 </div>
 <div class="ltx_para ltx_noindent" id="S3.p4">
-<p class="ltx_p" id="S3.p4.1"><span class="ltx_text ltx_font_bold" id="S3.p4.1.1">Stage 3: Length-based DPO Fine-tuning.</span> While retrospective thinking significantly enhances accuracy, the inclusion of revision steps non-trivially increases the total thinking length, thereby escalating response latency.
-To address this, we employ LengthDPO <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="">7</a>]</cite> to compress the reasoning trace without sacrificing accuracy.
+<p class="ltx_p" id="S3.p4.1"><span class="ltx_text ltx_font_bold" id="S3.p4.1.1"><span class="translated-text">第 3 阶段：基于长度的 DPO 微调。</span><span class="original-text">Stage 3: Length-based DPO Fine-tuning.</span></span><span class="translated-text">虽然回顾性思维可以显着提高准确性，但包含修订步骤却会显着增加总思维长度，从而增加响应延迟。
+为了解决这个问题，我们采用 LengthDPO</span><span class="original-text">While retrospective thinking significantly enhances accuracy, the inclusion of revision steps non-trivially increases the total thinking length, thereby escalating response latency.
+To address this, we employ LengthDPO</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="">7</a>]</cite><span class="translated-text">在不牺牲准确性的情况下压缩推理轨迹。
+具体来说，我们对第二阶段模型的输出进行采样，并构建偏好对，其中首选示例正确且简洁，而不首选示例不正确。
+除了减少延迟之外，DPO 微调还可以作为减少固有分布不匹配的关键机制。</span><span class="original-text">to compress the reasoning trace without sacrificing accuracy.
 Specifically, we sample outputs from the Stage 2 model and construct preference pairs where preferred examples are correct and concise, while dispreferred examples are incorrect.
-Beyond latency reduction, DPO fine-tuning serves as a critical mechanism for reducing the distribution mismatch inherent in <span class="ltx_text ltx_font_italic" id="S3.p4.1.2">early reasoning</span> <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="">7</a>]</cite>.
+Beyond latency reduction, DPO fine-tuning serves as a critical mechanism for reducing the distribution mismatch inherent in</span><span class="ltx_text ltx_font_italic" id="S3.p4.1.2"><span class="translated-text">早期推理</span><span class="original-text">early reasoning</span></span> <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="">7</a>]</cite><span class="translated-text">。
+在第二阶段，推理痕迹由法学硕士进行判断和修改，而不会受到用户查询可能尚未完全接收的约束。
+通过应用 DPO</span><span class="original-text">.
 In Stage 2, the reasoning traces are judged and revised by an LLM without exposure to the constraint that the user’s query may not yet be fully received.
-By applying DPO in the <span class="ltx_text ltx_font_italic" id="S3.p4.1.3">early reasoning</span> setting, the model learns to adapt its retrospective capabilities to the uncertainties of incomplete user queries.</p>
+By applying DPO in the</span><span class="ltx_text ltx_font_italic" id="S3.p4.1.3"><span class="translated-text">早期推理</span><span class="original-text">early reasoning</span></span><span class="translated-text">设置中，模型学习使其回顾能力适应不完整用户查询的不确定性。</span><span class="original-text">setting, the model learns to adapt its retrospective capabilities to the uncertainties of incomplete user queries.</span></p>
 </div>
 <div class="ltx_para ltx_noindent" id="S3.p5">
-<p class="ltx_p" id="S3.p5.1"><span class="ltx_text ltx_font_bold" id="S3.p5.1.1">Inference Strategy.</span> Departing from the rollback mechanism in <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="">15</a>]</cite>, our inference procedure adheres to the streaming constraints of SpeechLLMs.
+<p class="ltx_p" id="S3.p5.1"><span class="ltx_text ltx_font_bold" id="S3.p5.1.1"><span class="translated-text">推理策略。</span><span class="original-text">Inference Strategy.</span></span><span class="translated-text">背离回滚机制</span><span class="original-text">Departing from the rollback mechanism in</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib3" title="">15</a>]</cite><span class="translated-text">，我们的推理过程遵循 SpeechLLM 的流约束。
+我们的模型执行“仅向前”的自我校正：它继续生成后续的 CoT 步骤和最终响应，同时在文本流中保留整个推理历史记录，包括不正确和正确的步骤。
+如果模型发出否定验证标记，则会像普通的后续文本一样生成更正。
+此设置与我们微调模型的方式相匹配。</span><span class="original-text">, our inference procedure adheres to the streaming constraints of SpeechLLMs.
 Our model performs “forward-only” self-correction: it continues generating subsequent CoT steps and the final response while preserving the entire reasoning history, including both incorrect and corrected steps, in the text stream.
 If the model emits a negative verification marker, correction is produced as ordinary subsequent text.
-This setup matches the way we finetune the model.</p>
+This setup matches the way we finetune the model.</span></p>
 </div>
 </section>
 <section class="ltx_section" id="S4">
-<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">IV </span><span class="ltx_text ltx_font_smallcaps" id="S4.1">Experiments</span></h2>
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">IV </span><span class="ltx_text ltx_font_smallcaps" id="S4.1"><span class="translated-text">实验</span><span class="original-text">Experiments</span></span></h2>
 <section class="ltx_subsection" id="S4.SS1">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS1.4">IV-A</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS1.5">Training and Inference Details</span></h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS1.4">IV-A</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS1.5"><span class="translated-text">训练和推理细节</span><span class="original-text">Training and Inference Details</span></span></h3>
 <div class="ltx_para ltx_noindent" id="S4.SS1.p1">
-<p class="ltx_p" id="S4.SS1.p1.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p1.1.1">Training Details.</span>
-To minimize computational cost, we employ LoRA <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="">17</a>]</cite> rather than full fine-tuning <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="">7</a>]</cite> of the Moshi model.
-We select GSM8K <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib12" title="">18</a>]</cite> as our controlled training and evaluation dataset because it provides high-quality multi-step ground-truth reasoning steps and objective final answers.
+<p class="ltx_p" id="S4.SS1.p1.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p1.1.1"><span class="translated-text">培训细节。</span><span class="original-text">Training Details.</span></span><span class="translated-text">为了最大限度地减少计算成本，我们采用 LoRA</span><span class="original-text">To minimize computational cost, we employ LoRA</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib13" title="">17</a>]</cite><span class="translated-text">而不是完全微调</span><span class="original-text">rather than full fine-tuning</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="">7</a>]</cite><span class="translated-text">莫西模型。
+我们选择GSM8K</span><span class="original-text">of the Moshi model.
+We select GSM8K</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib12" title="">18</a>]</cite><span class="translated-text">作为我们的受控训练和评估数据集，因为它提供了高质量的多步骤真实推理步骤和客观的最终答案。
+这些特性使我们适合评估我们方法的有效性。
+为了使这个基于文本的数据集适应语音领域，我们使用 Gemini-Flash-TTS 将问题和答案合成为音频。
+我们强调，这种设置评估多步骤数学推理的口头表达，而不是自然的开放域对话；更广泛的语音基准，例如 VoiceBench</span><span class="original-text">as our controlled training and evaluation dataset because it provides high-quality multi-step ground-truth reasoning steps and objective final answers.
 These properties makes it suitable for us to evaluate the effectiveness of our approaches.
 To adapt this text-based dataset for the speech domain, we synthesize the questions and answers into audio using Gemini-Flash-TTS.
-We emphasize that this setup evaluates spoken delivery of multi-step math reasoning rather than natural open-domain dialogue; broader speech benchmarks such as VoiceBench <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="">19</a>]</cite> contain reasoning examples but mix them with many factual or short-form tasks that do not require retrospective CoT correction.
-For all SFT stages (Stage 1 and Stage 2), we search learning rates in the range <span class="ltx_text ltx_font_typewriter" id="S4.SS1.p1.1.2">2e-5</span> to <span class="ltx_text ltx_font_typewriter" id="S4.SS1.p1.1.3">2e-6</span>, selecting checkpoints based on the minimum validation loss.
-For the DPO phase, we search learning rates between <span class="ltx_text ltx_font_typewriter" id="S4.SS1.p1.1.4">1e-7</span> and <span class="ltx_text ltx_font_typewriter" id="S4.SS1.p1.1.5">1e-6</span> with <math alttext="\beta=0.1" class="ltx_Math" display="inline" id="S4.SS1.p1.m1" intent=":literal"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0.1</mn></mrow><annotation encoding="application/x-tex">\beta=0.1</annotation></semantics></math>.
-Additionally, to stabilize preference learning, we add an additional Negative Log-Likelihood (NLL) loss (weighted by <math alttext="0.1" class="ltx_Math" display="inline" id="S4.SS1.p1.m2" intent=":literal"><semantics><mn>0.1</mn><annotation encoding="application/x-tex">0.1</annotation></semantics></math>) on the positive examples <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib22" title="">20</a>]</cite>, normalize the probability distribution by length <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib21" title="">21</a>]</cite>, and use only the text stream to calculate the policy distribution <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib23" title="">22</a>]</cite>.
-The final checkpoints are selected based on the highest reward-based accuracy on the validation set.</p>
+We emphasize that this setup evaluates spoken delivery of multi-step math reasoning rather than natural open-domain dialogue; broader speech benchmarks such as VoiceBench</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib1" title="">19</a>]</cite><span class="translated-text">包含推理示例，但将它们与许多不需要回顾性 CoT 纠正的事实或简短形式的任务混合在一起。
+对于所有 SFT 阶段（阶段 1 和阶段 2），我们搜索范围内的学习率</span><span class="original-text">contain reasoning examples but mix them with many factual or short-form tasks that do not require retrospective CoT correction.
+For all SFT stages (Stage 1 and Stage 2), we search learning rates in the range</span><span class="ltx_text ltx_font_typewriter" id="S4.SS1.p1.1.2">2e-5</span> to <span class="ltx_text ltx_font_typewriter" id="S4.SS1.p1.1.3">2e-6</span><span class="translated-text">，根据最小验证损失选择检查点。
+对于 DPO 阶段，我们搜索学习率</span><span class="original-text">, selecting checkpoints based on the minimum validation loss.
+For the DPO phase, we search learning rates between</span><span class="ltx_text ltx_font_typewriter" id="S4.SS1.p1.1.4">1e-7</span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_typewriter" id="S4.SS1.p1.1.5">1e-6</span><span class="translated-text">与</span><span class="original-text">with</span><math alttext="\beta=0.1" class="ltx_Math" display="inline" id="S4.SS1.p1.m1" intent=":literal"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0.1</mn></mrow><annotation encoding="application/x-tex">\beta=0.1</annotation></semantics></math><span class="translated-text">。
+此外，为了稳定偏好学习，我们添加了额外的负对数似然（NLL）损失（加权为</span><span class="original-text">.
+Additionally, to stabilize preference learning, we add an additional Negative Log-Likelihood (NLL) loss (weighted by</span><math alttext="0.1" class="ltx_Math" display="inline" id="S4.SS1.p1.m2" intent=":literal"><semantics><mn>0.1</mn><annotation encoding="application/x-tex">0.1</annotation></semantics></math><span class="translated-text">）关于正面例子</span><span class="original-text">) on the positive examples</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib22" title="">20</a>]</cite><span class="translated-text">，按长度标准化概率分布</span><span class="original-text">, normalize the probability distribution by length</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib21" title="">21</a>]</cite><span class="translated-text">，并且仅使用文本流来计算策略分布</span><span class="original-text">, and use only the text stream to calculate the policy distribution</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib23" title="">22</a>]</cite><span class="translated-text">。
+最终检查点是根据验证集上基于奖励的最高准确性来选择的。</span><span class="original-text">.
+The final checkpoints are selected based on the highest reward-based accuracy on the validation set.</span></p>
 </div>
 <div class="ltx_para ltx_noindent" id="S4.SS1.p2">
-<p class="ltx_p" id="S4.SS1.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p2.1.1">Evaluation Details.</span>
-We adopt the same evaluation pipeline as <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="">7</a>]</cite>.
+<p class="ltx_p" id="S4.SS1.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p2.1.1"><span class="translated-text">评估详情。</span><span class="original-text">Evaluation Details.</span></span><span class="translated-text">我们采用与</span><span class="original-text">We adopt the same evaluation pipeline as</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="">7</a>]</cite><span class="translated-text">。
+在推理过程中，我们将用户的音频查询作为输入传输到 Moshi 中并捕获模型的响应波形。
+所有报告的设置共享相同的合成、解码、转录和判断管道。</span><span class="original-text">.
 During inference, we stream the user’s audio query as input into Moshi and capture the model’s response waveform.
-All reported settings share the same synthesis, decoding, transcription, and judging pipeline.</p>
+All reported settings share the same synthesis, decoding, transcription, and judging pipeline.</span></p>
 </div>
 <div class="ltx_para ltx_noindent" id="S4.SS1.p3">
-<p class="ltx_p" id="S4.SS1.p3.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p3.1.1">Latency Metrics.</span>
-To quantify response latency, we apply Voice Activity Detection (VAD) to the output waveform. Latency is defined as the number of seconds between the end of the user’s speech and the onset of Moshi’s audio response.</p>
+<p class="ltx_p" id="S4.SS1.p3.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p3.1.1"><span class="translated-text">延迟指标。</span><span class="original-text">Latency Metrics.</span></span><span class="translated-text">为了量化响应延迟，我们将语音活动检测 (VAD) 应用于输出波形。延迟定义为用户语音结束与 Moshi 音频响应开始之间的秒数。</span><span class="original-text">To quantify response latency, we apply Voice Activity Detection (VAD) to the output waveform. Latency is defined as the number of seconds between the end of the user’s speech and the onset of Moshi’s audio response.</span></p>
 </div>
 <div class="ltx_para ltx_noindent" id="S4.SS1.p4">
-<p class="ltx_p" id="S4.SS1.p4.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p4.1.1">Accuracy Calculation.</span>
-Following <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="">7</a>]</cite>, we transcribe the generated audio using Whisper <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="">23</a>]</cite> for accuracy evaluation.
+<p class="ltx_p" id="S4.SS1.p4.1"><span class="ltx_text ltx_font_bold" id="S4.SS1.p4.1.1"><span class="translated-text">精度计算。</span><span class="original-text">Accuracy Calculation.</span></span><span class="translated-text">正在关注</span><span class="original-text">Following</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="">7</a>]</cite><span class="translated-text">，我们使用 Whisper 转录生成的音频</span><span class="original-text">, we transcribe the generated audio using Whisper</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib14" title="">23</a>]</cite><span class="translated-text">用于准确性评估。
+我们评估生成的波形而不是 Moshi 的内部文本流，因为波形是面向用户的输出。
+然后使用法学硕士作为法官框架评估生成的成绩单，以确定逻辑正确性。
+在所有实验中，我们利用</span><span class="original-text">for accuracy evaluation.
 We evaluate the generated waveform rather than Moshi’s internal text stream because the waveform is the user-facing output.
 The resulting transcripts are then evaluated using an LLM-as-a-Judge framework to determine logical correctness.
-Across all experiments, we utilize <span class="ltx_text ltx_font_typewriter" id="S4.SS1.p4.1.2">Qwen3-235B-Instruct</span> <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib15" title="">24</a>]</cite> as our LLM.</p>
+Across all experiments, we utilize</span><span class="ltx_text ltx_font_typewriter" id="S4.SS1.p4.1.2"><span class="translated-text">Qwen3-235B-说明书</span><span class="original-text">Qwen3-235B-Instruct</span></span> <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib15" title="">24</a>]</cite><span class="translated-text">作为我们的法学硕士。</span><span class="original-text">as our LLM.</span></p>
 </div>
 </section>
 <section class="ltx_subsection" id="S4.SS2">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS2.4">IV-B</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS2.5">Baselines and Experiment Settings</span></h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS2.4">IV-B</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS2.5"><span class="translated-text">基线和实验设置</span><span class="original-text">Baselines and Experiment Settings</span></span></h3>
 <div class="ltx_para" id="S4.SS2.p1">
-<p class="ltx_p" id="S4.SS2.p1.1">To investigate the interplay between RetroThinker, <span class="ltx_text ltx_font_italic" id="S4.SS2.p1.1.1">early reasoning</span>, and <span class="ltx_text ltx_font_italic" id="S4.SS2.p1.1.2">LengthDPO</span>, we establish a comprehensive experimental matrix across two primary scenarios: <span class="ltx_text ltx_font_italic" id="S4.SS2.p1.1.3">Standard Reasoning</span> and <span class="ltx_text ltx_font_italic" id="S4.SS2.p1.1.4">Early Reasoning</span>.
-For early reasoning, we run experiments with 4 different QC thresholds: <math alttext="\theta\in\{65\%,75\%,85\%,95\%\}" class="ltx_Math" display="inline" id="S4.SS2.p1.m1" intent=":literal"><semantics><mrow><mi>θ</mi><mo>∈</mo><mrow><mo stretchy="false">{</mo><mrow><mrow><mn>65</mn><mo>%</mo></mrow><mo>,</mo><mrow><mn>75</mn><mo>%</mo></mrow><mo>,</mo><mrow><mn>85</mn><mo>%</mo></mrow><mo>,</mo><mrow><mn>95</mn><mo>%</mo></mrow></mrow><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">\theta\in\{65\%,75\%,85\%,95\%\}</annotation></semantics></math>.
+<p class="ltx_p" id="S4.SS2.p1.1"><span class="translated-text">为了研究 RetroThinker 之间的相互作用，</span><span class="original-text">To investigate the interplay between RetroThinker,</span><span class="ltx_text ltx_font_italic" id="S4.SS2.p1.1.1"><span class="translated-text">早期推理</span><span class="original-text">early reasoning</span></span><span class="translated-text">, 和</span><span class="original-text">, and</span><span class="ltx_text ltx_font_italic" id="S4.SS2.p1.1.2"><span class="translated-text">长度DPO</span><span class="original-text">LengthDPO</span></span><span class="translated-text">，我们建立了一个跨两个主要场景的综合实验矩阵：</span><span class="original-text">, we establish a comprehensive experimental matrix across two primary scenarios:</span><span class="ltx_text ltx_font_italic" id="S4.SS2.p1.1.3"><span class="translated-text">标准推理</span><span class="original-text">Standard Reasoning</span></span><span class="translated-text">和</span><span class="original-text">and</span><span class="ltx_text ltx_font_italic" id="S4.SS2.p1.1.4"><span class="translated-text">早期推理</span><span class="original-text">Early Reasoning</span></span><span class="translated-text">。
+为了进行早期推理，我们使用 4 个不同的 QC 阈值进行实验：</span><span class="original-text">.
+For early reasoning, we run experiments with 4 different QC thresholds:</span><math alttext="\theta\in\{65\%,75\%,85\%,95\%\}" class="ltx_Math" display="inline" id="S4.SS2.p1.m1" intent=":literal"><semantics><mrow><mi>θ</mi><mo>∈</mo><mrow><mo stretchy="false">{</mo><mrow><mrow><mn>65</mn><mo>%</mo></mrow><mo>,</mo><mrow><mn>75</mn><mo>%</mo></mrow><mo>,</mo><mrow><mn>85</mn><mo>%</mo></mrow><mo>,</mo><mrow><mn>95</mn><mo>%</mo></mrow></mrow><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">\theta\in\{65\%,75\%,85\%,95\%\}</annotation></semantics></math><span class="translated-text">。
+对于这两种场景，我们都在使用和不使用 RetroThinker 的情况下进行了对比实验。
+最后，我们将 LengthDPO 应用于早期推理模型，以检查减少推理轨迹对整个系统延迟的影响。
+我们将所有没有 RetroThinker 的设置作为我们的基线。</span><span class="original-text">.
 For both scenarios, we conduct comparative experiments with and without RetroThinker.
 Finally, we apply LengthDPO to the early-reasoning models to examine the effect of reducing the reasoning trace on overall system latency.
-We regard all settings without RetroThinker as our baselines.</p>
+We regard all settings without RetroThinker as our baselines.</span></p>
 </div>
 <figure class="ltx_figure" id="S4.F3"><object class="ltx_graphics ltx_centering ltx_img_landscape" data="2609.11864v1/latency_accuracy_simple.svg" height="287" id="S4.F3.g1" style="aspect-ratio:476/287;" type="image/svg+xml" width="476"></object>
 <figcaption class="ltx_caption ltx_centering"><span class="ltx_tag ltx_tag_figure">Fig. 3: </span>Accuracy-latency trade-off for different configurations. For Early Reasoning settings, varying Question Completeness (QC) thresholds <math alttext="\theta\in\{65\%,75\%,85\%,95\%\}" class="ltx_Math" display="inline" id="S4.F3.m2" intent=":literal"><semantics><mrow><mi>θ</mi><mo>∈</mo><mrow><mo stretchy="false">{</mo><mrow><mrow><mn>65</mn><mo>%</mo></mrow><mo>,</mo><mrow><mn>75</mn><mo>%</mo></mrow><mo>,</mo><mrow><mn>85</mn><mo>%</mo></mrow><mo>,</mo><mrow><mn>95</mn><mo>%</mo></mrow></mrow><mo stretchy="false">}</mo></mrow></mrow><annotation encoding="application/x-tex">\theta\in\{65\%,75\%,85\%,95\%\}</annotation></semantics></math> are represented by different marker sizes; an increase in size denotes a higher threshold. The 95% threshold is highlighted. Gray dotted arrows indicate the performance shift from adding RetroThinker. The baselines are he settings without Retro.</figcaption>
 </figure>
 </section>
 <section class="ltx_subsection" id="S4.SS3">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS3.4">IV-C</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS3.5">Main Results</span></h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S4.SS3.4">IV-C</span> </span><span class="ltx_text ltx_font_italic" id="S4.SS3.5"><span class="translated-text">主要结果</span><span class="original-text">Main Results</span></span></h3>
 <div class="ltx_para" id="S4.SS3.p1">
-<p class="ltx_p" id="S4.SS3.p1.1">The accuracy and latency performance for each setting is illustrated in Figure <a class="ltx_ref" href="#S4.F3" title="Fig. 3 ‣ IV-B Baselines and Experiment Settings ‣ IV Experiments ‣ RetroThinker: Enabling Retrospective Thinking in Speech LLMs"><span class="ltx_text ltx_ref_tag">3</span></a>.
-Our analysis yields several key insights.</p>
+<p class="ltx_p" id="S4.SS3.p1.1"><span class="translated-text">每个设置的准确性和延迟性能如图所示</span><span class="original-text">The accuracy and latency performance for each setting is illustrated in Figure</span><a class="ltx_ref" href="#S4.F3" title="Fig. 3 ‣ IV-B Baselines and Experiment Settings ‣ IV Experiments ‣ RetroThinker: Enabling Retrospective Thinking in Speech LLMs"><span class="ltx_text ltx_ref_tag">3</span></a><span class="translated-text">。
+我们的分析得出了几个关键的见解。</span><span class="original-text">.
+Our analysis yields several key insights.</span></p>
 </div>
 <div class="ltx_para ltx_noindent" id="S4.SS3.p2">
-<p class="ltx_p" id="S4.SS3.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS3.p2.1.1">RetroThinker generally improves accuracy at the cost of latency.</span>
-As indicated by the gray arrows, integrating RetroThinker consistently improves accuracy across the evaluated settings. However, these improvements come at the cost of increased latency before applying LengthDPO, averaging approximately two seconds.</p>
+<p class="ltx_p" id="S4.SS3.p2.1"><span class="ltx_text ltx_font_bold" id="S4.SS3.p2.1.1"><span class="translated-text">RetroThinker 通常会以延迟为代价来提高准确性。</span><span class="original-text">RetroThinker generally improves accuracy at the cost of latency.</span></span><span class="translated-text">如灰色箭头所示，集成 RetroThinker 持续提高了评估设置的准确性。然而，这些改进的代价是应用 LengthDPO 之前的延迟增加，平均约为两秒。</span><span class="original-text">As indicated by the gray arrows, integrating RetroThinker consistently improves accuracy across the evaluated settings. However, these improvements come at the cost of increased latency before applying LengthDPO, averaging approximately two seconds.</span></p>
 </div>
 <div class="ltx_para ltx_noindent" id="S4.SS3.p3">
-<p class="ltx_p" id="S4.SS3.p3.1"><span class="ltx_text ltx_font_bold" id="S4.SS3.p3.1.1">RetroThinker improves accuracy for early reasoning with the help of DPO.</span>
-Furthermore, the observed improvement in <span class="ltx_text ltx_font_italic" id="S4.SS3.p3.1.2">EarlyReasoning</span> is limited when compared to <span class="ltx_text ltx_font_italic" id="S4.SS3.p3.1.3">StandardReasoning</span>.
-This aligns with our hypothesis in Section <a class="ltx_ref" href="#S3" title="III RetroThinker ‣ RetroThinker: Enabling Retrospective Thinking in Speech LLMs"><span class="ltx_text ltx_ref_tag">III</span></a> (Stage 3), which posits a mismatch when using an external LLM to evaluate and rewrite model-generated samples.
-By applying DPO, we largely alleviate this discrepancy, yielding accuracy and latency trade-offs comparable to standard reasoning.</p>
+<p class="ltx_p" id="S4.SS3.p3.1"><span class="ltx_text ltx_font_bold" id="S4.SS3.p3.1.1"><span class="translated-text">RetroThinker 在 DPO 的帮助下提高了早期推理的准确性。</span><span class="original-text">RetroThinker improves accuracy for early reasoning with the help of DPO.</span></span><span class="translated-text">此外，观察到的改善</span><span class="original-text">Furthermore, the observed improvement in</span><span class="ltx_text ltx_font_italic" id="S4.SS3.p3.1.2"><span class="translated-text">早期推理</span><span class="original-text">EarlyReasoning</span></span><span class="translated-text">相比之下是有限的</span><span class="original-text">is limited when compared to</span><span class="ltx_text ltx_font_italic" id="S4.SS3.p3.1.3"><span class="translated-text">标准推理</span><span class="original-text">StandardReasoning</span></span><span class="translated-text">。
+这与我们在章节中的假设一致</span><span class="original-text">.
+This aligns with our hypothesis in Section</span><a class="ltx_ref" href="#S3" title="III RetroThinker ‣ RetroThinker: Enabling Retrospective Thinking in Speech LLMs"><span class="ltx_text ltx_ref_tag">III</span></a><span class="translated-text">（第 3 阶段），当使用外部 LLM 评估和重写模型生成的样本时，会出现不匹配。
+通过应用 DPO，我们在很大程度上缓解了这种差异，产生了与标准推理相当的准确性和延迟权衡。</span><span class="original-text">(Stage 3), which posits a mismatch when using an external LLM to evaluate and rewrite model-generated samples.
+By applying DPO, we largely alleviate this discrepancy, yielding accuracy and latency trade-offs comparable to standard reasoning.</span></p>
 </div>
 <div class="ltx_para ltx_noindent" id="S4.SS3.p4">
-<p class="ltx_p" id="S4.SS3.p4.1"><span class="ltx_text ltx_font_bold" id="S4.SS3.p4.1.1">Combining RetroThinker with EarlyReasoning and LengthDPO gives the best trade-off.</span>
-Our best setting, <span class="ltx_text ltx_font_italic" id="S4.SS3.p4.1.2">EarlyReasoning</span> + Retro + DPO with the 95% QC threshold, achieves an 11 percentage-point absolute accuracy improvement while keeping nearly the same latency compared to Standard Reasoning.
-It also obtains about a 30% latency reduction compared to <span class="ltx_text ltx_font_italic" id="S4.SS3.p4.1.3">StandardReasoning</span> + Retro with comparable accuracy.
-In contrast, removing the RetroThinker component (leaving only <span class="ltx_text ltx_font_italic" id="S4.SS3.p4.1.4">EarlyReasoning + DPO</span>, as in <cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="">7</a>]</cite>) results in a substantial accuracy drop.
-These results indicate that RetroThinker is a critical driver of accuracy, and its combination with <span class="ltx_text ltx_font_italic" id="S4.SS3.p4.1.5">Early Reasoning</span> and DPO yields the most favorable accuracy-latency Pareto frontier.</p>
+<p class="ltx_p" id="S4.SS3.p4.1"><span class="ltx_text ltx_font_bold" id="S4.SS3.p4.1.1"><span class="translated-text">将 RetroThinker 与 EarlyReasoning 和 LengthDPO 相结合可实现最佳权衡。</span><span class="original-text">Combining RetroThinker with EarlyReasoning and LengthDPO gives the best trade-off.</span></span><span class="translated-text">我们最好的环境，</span><span class="original-text">Our best setting,</span><span class="ltx_text ltx_font_italic" id="S4.SS3.p4.1.2"><span class="translated-text">早期推理</span><span class="original-text">EarlyReasoning</span></span><span class="translated-text">+ Retro + DPO 具有 95% QC 阈值，与标准推理相比，绝对精度提高了 11 个百分点，同时保持几乎相同的延迟。
+与相比，它还减少了约 30% 的延迟</span><span class="original-text">+ Retro + DPO with the 95% QC threshold, achieves an 11 percentage-point absolute accuracy improvement while keeping nearly the same latency compared to Standard Reasoning.
+It also obtains about a 30% latency reduction compared to</span><span class="ltx_text ltx_font_italic" id="S4.SS3.p4.1.3"><span class="translated-text">标准推理</span><span class="original-text">StandardReasoning</span></span><span class="translated-text">+ 复古且具有相当的准确性。
+相比之下，删除 RetroThinker 组件（只留下</span><span class="original-text">+ Retro with comparable accuracy.
+In contrast, removing the RetroThinker component (leaving only</span><span class="ltx_text ltx_font_italic" id="S4.SS3.p4.1.4"><span class="translated-text">早期推理+DPO</span><span class="original-text">EarlyReasoning + DPO</span></span><span class="translated-text">，如</span><span class="original-text">, as in</span><cite class="ltx_cite ltx_citemacro_cite">[<a class="ltx_ref" href="#bib.bib7" title="">7</a>]</cite><span class="translated-text">）导致准确率大幅下降。
+这些结果表明 RetroThinker 是准确性的关键驱动因素，并且它与</span><span class="original-text">) results in a substantial accuracy drop.
+These results indicate that RetroThinker is a critical driver of accuracy, and its combination with</span><span class="ltx_text ltx_font_italic" id="S4.SS3.p4.1.5"><span class="translated-text">早期推理</span><span class="original-text">Early Reasoning</span></span><span class="translated-text">DPO 产生最有利的准确度-延迟帕累托前沿。</span><span class="original-text">and DPO yields the most favorable accuracy-latency Pareto frontier.</span></p>
 </div>
 <div class="ltx_para ltx_noindent" id="S4.SS3.p5">
-<p class="ltx_p" id="S4.SS3.p5.1"><span class="ltx_text ltx_font_bold" id="S4.SS3.p5.1.1">Latency control of the QC metric is diminished with RetroThinker.</span>
-Despite the improved Pareto frontier achieved with RetroThinker, we observe that the QC metric loses its precise control over latency compared to models without retrospective thinking.
+<p class="ltx_p" id="S4.SS3.p5.1"><span class="ltx_text ltx_font_bold" id="S4.SS3.p5.1.1"><span class="translated-text">RetroThinker 减少了 QC 指标的延迟控制。</span><span class="original-text">Latency control of the QC metric is diminished with RetroThinker.</span></span><span class="translated-text">尽管使用 RetroThinker 实现了帕累托前沿的改进，但我们观察到，与没有回顾性思维的模型相比，QC 指标失去了对延迟的精确控制。
+在分析这种现象时，我们确定了影响最终延迟的两个主要因素：模型多早启动推理轨迹和推理轨迹的总长度。
+我们发现，虽然推理的开始严格由 QC 阈值决定（即较高的阈值延迟启动），但所得的 CoT 长度仍然高度可变。
+我们将回顾性思维下对 CoT 长度的明确控制留给未来的工作。</span><span class="original-text">Despite the improved Pareto frontier achieved with RetroThinker, we observe that the QC metric loses its precise control over latency compared to models without retrospective thinking.
 In analyzing this phenomenon, we identify two primary factors affecting the final latency: how early the model initiates the reasoning trace and the total length of the reasoning trace.
 We find that while the onset of reasoning is strictly dictated by the QC threshold (i.e., a higher threshold delays initiation), the resulting CoT lengths remain highly variable.
-We leave explicit control of CoT lengths under retrospective thinking to future work.</p>
+We leave explicit control of CoT lengths under retrospective thinking to future work.</span></p>
 </div>
 </section>
 </section>
 <section class="ltx_section" id="S5">
-<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">V </span><span class="ltx_text ltx_font_smallcaps" id="S5.1">Detailed Analysis</span></h2>
+<h2 class="ltx_title ltx_title_section"><span class="ltx_tag ltx_tag_section">V </span><span class="ltx_text ltx_font_smallcaps" id="S5.1"><span class="translated-text">详细分析</span><span class="original-text">Detailed Analysis</span></span></h2>
 <figure class="ltx_table" id="S5.T1">
 <figcaption class="ltx_caption"><span class="ltx_tag ltx_tag_table">TABLE I: </span>Examples of different self-correction behaviors. The bold question text is the content spoken by the user before EarlyReasoning begins. The symbols [<span class="ltx_text" id="S5.T1.3" style="--ltx-fg-color:#00E000;">✔</span>] and [<span class="ltx_text" id="S5.T1.4" style="--ltx-fg-color:#FF0000;">✘</span>] indicate the model’s self-verification result.</figcaption>
 <table class="ltx_tabular ltx_centering ltx_align_middle" id="S5.T1.5">
@@ -713,43 +751,56 @@ So, they got 4 + 4 = 8 liters of water. [<span class="ltx_text" id="S5.T1.5.6.2
 </table>
 </figure>
 <section class="ltx_subsection" id="S5.SS1">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS1.4">V-A</span> </span><span class="ltx_text ltx_font_italic" id="S5.SS1.5">Understanding the Accuracy Boost of RetroThinker</span></h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS1.4">V-A</span> </span><span class="ltx_text ltx_font_italic" id="S5.SS1.5"><span class="translated-text">了解 RetroThinker 的准确性提升</span><span class="original-text">Understanding the Accuracy Boost of RetroThinker</span></span></h3>
 <div class="ltx_para" id="S5.SS1.p1">
-<p class="ltx_p" id="S5.SS1.p1.1">To understand how retrospective thinking dynamically improves accuracy, we categorize model revisions into two types: (1) correcting previous logical errors, and (2) integrating new information from the ongoing user query. Utilizing an LLM for automated classification on the <span class="ltx_text ltx_font_italic" id="S5.SS1.p1.1.1">EarlyReasoning</span> (<math alttext="\theta=65\%" class="ltx_Math" display="inline" id="S5.SS1.p1.m1" intent=":literal"><semantics><mrow><mi>θ</mi><mo>=</mo><mrow><mn>65</mn><mo>%</mo></mrow></mrow><annotation encoding="application/x-tex">\theta=65\%</annotation></semantics></math>) + Retro + DPO setup, we find that 23% of revisions are Type 1 and 32% are Type 2. This suggests the model often refines its reasoning based on incoming user context.
-We provide one example for each type in Table <a class="ltx_ref" href="#S5.T1" title="TABLE I ‣ V Detailed Analysis ‣ RetroThinker: Enabling Retrospective Thinking in Speech LLMs"><span class="ltx_text ltx_ref_tag">I</span></a>.
-However, in 42% of instances, the revision remains logically identical to the original step, revealing that incorrect verification still causes redundant retrospective thinking. Addressing this inefficiency remains a clear direction for future work.</p>
+<p class="ltx_p" id="S5.SS1.p1.1"><span class="translated-text">为了理解回顾性思维如何动态提高准确性，我们将模型修订分为两种类型：（1）纠正以前的逻辑错误，（2）集成来自正在进行的用户查询的新信息。利用法学硕士进行自动分类</span><span class="original-text">To understand how retrospective thinking dynamically improves accuracy, we categorize model revisions into two types: (1) correcting previous logical errors, and (2) integrating new information from the ongoing user query. Utilizing an LLM for automated classification on the</span><span class="ltx_text ltx_font_italic" id="S5.SS1.p1.1.1"><span class="translated-text">早期推理</span><span class="original-text">EarlyReasoning</span></span> (<math alttext="\theta=65\%" class="ltx_Math" display="inline" id="S5.SS1.p1.m1" intent=":literal"><semantics><mrow><mi>θ</mi><mo>=</mo><mrow><mn>65</mn><mo>%</mo></mrow></mrow><annotation encoding="application/x-tex">\theta=65\%</annotation></semantics></math><span class="translated-text">) + Retro + DPO 设置，我们发现 23% 的修订属于类型 1，32% 的修订属于类型 2。这表明该模型经常根据传入的用户上下文完善其推理。
+我们为表中的每种类型提供一个示例</span><span class="original-text">) + Retro + DPO setup, we find that 23% of revisions are Type 1 and 32% are Type 2. This suggests the model often refines its reasoning based on incoming user context.
+We provide one example for each type in Table</span><a class="ltx_ref" href="#S5.T1" title="TABLE I ‣ V Detailed Analysis ‣ RetroThinker: Enabling Retrospective Thinking in Speech LLMs"><span class="ltx_text ltx_ref_tag">I</span></a><span class="translated-text">。
+然而，在 42% 的情况下，修订后的步骤在逻辑上仍然与原始步骤相同，这表明错误的验证仍然会导致多余的回顾性思维。解决这种低效率问题仍然是未来工作的明确方向。</span><span class="original-text">.
+However, in 42% of instances, the revision remains logically identical to the original step, revealing that incorrect verification still causes redundant retrospective thinking. Addressing this inefficiency remains a clear direction for future work.</span></p>
 </div>
 </section>
 <section class="ltx_subsection" id="S5.SS2">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS2.4">V-B</span> </span><span class="ltx_text ltx_font_italic" id="S5.SS2.5">Rule-based vs. Sample-based RetroThinker</span></h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS2.4">V-B</span> </span><span class="ltx_text ltx_font_italic" id="S5.SS2.5"><span class="translated-text">基于规则与基于样本的 RetroThinker</span><span class="original-text">Rule-based vs. Sample-based RetroThinker</span></span></h3>
 <div class="ltx_para" id="S5.SS2.p1">
-<p class="ltx_p" id="S5.SS2.p1.1">RetroThinker conducts SFT on retrospective thinking in two stages (Section <a class="ltx_ref" href="#S3" title="III RetroThinker ‣ RetroThinker: Enabling Retrospective Thinking in Speech LLMs"><span class="ltx_text ltx_ref_tag">III</span></a>).
-As shown in Table <a class="ltx_ref" href="#S5.T2" title="TABLE II ‣ V Detailed Analysis ‣ RetroThinker: Enabling Retrospective Thinking in Speech LLMs"><span class="ltx_text ltx_ref_tag">II</span></a>, accuracy remains stagnant after Stage 1 (rule-based).
+<p class="ltx_p" id="S5.SS2.p1.1"><span class="translated-text">RetroThinker分两个阶段对回顾性思维进行SFT（Section</span><span class="original-text">RetroThinker conducts SFT on retrospective thinking in two stages (Section</span><a class="ltx_ref" href="#S3" title="III RetroThinker ‣ RetroThinker: Enabling Retrospective Thinking in Speech LLMs"><span class="ltx_text ltx_ref_tag">III</span></a><span class="translated-text">）。
+如表所示</span><span class="original-text">).
+As shown in Table</span><a class="ltx_ref" href="#S5.T2" title="TABLE II ‣ V Detailed Analysis ‣ RetroThinker: Enabling Retrospective Thinking in Speech LLMs"><span class="ltx_text ltx_ref_tag">II</span></a><span class="translated-text">，在第 1 阶段（基于规则）之后，准确性仍然停滞不前。
+这表明，第一阶段虽然建立了可追溯代币的结构格式，但未能赋予强大的自我纠错能力。
+相比之下，第 2 阶段（基于样本）利用了真实的模型生成的错误，从而显着提高了准确性，尤其是在</span><span class="original-text">, accuracy remains stagnant after Stage 1 (rule-based).
 This indicates that while Stage 1 establishes the structural format of retrospective tokens, it fails to impart strong self-correction abilities.
-In contrast, Stage 2 (sample-based) leverages authentic model-generated errors, yielding significant accuracy improvements—notably a 9% absolute gain at the <math alttext="\theta=0.85" class="ltx_Math" display="inline" id="S5.SS2.p1.m1" intent=":literal"><semantics><mrow><mi>θ</mi><mo>=</mo><mn>0.85</mn></mrow><annotation encoding="application/x-tex">\theta=0.85</annotation></semantics></math> threshold.
-This highlights the necessity of sample-based training to bridge the gap between synthetic perturbations and actual inference errors.</p>
+In contrast, Stage 2 (sample-based) leverages authentic model-generated errors, yielding significant accuracy improvements—notably a 9% absolute gain at the</span><math alttext="\theta=0.85" class="ltx_Math" display="inline" id="S5.SS2.p1.m1" intent=":literal"><semantics><mrow><mi>θ</mi><mo>=</mo><mn>0.85</mn></mrow><annotation encoding="application/x-tex">\theta=0.85</annotation></semantics></math><span class="translated-text">阈值。
+这凸显了基于样本的训练的必要性，以弥合合成扰动和实际推理错误之间的差距。</span><span class="original-text">threshold.
+This highlights the necessity of sample-based training to bridge the gap between synthetic perturbations and actual inference errors.</span></p>
 </div>
 </section>
 <section class="ltx_subsection" id="S5.SS3">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS3.4">V-C</span> </span><span class="ltx_text ltx_font_italic" id="S5.SS3.5">Identifying the Accuracy Bottleneck</span></h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS3.4"><span class="translated-text">电压-C</span><span class="original-text">V-C</span></span> </span><span class="ltx_text ltx_font_italic" id="S5.SS3.5"><span class="translated-text">识别准确性瓶颈</span><span class="original-text">Identifying the Accuracy Bottleneck</span></span></h3>
 <div class="ltx_para" id="S5.SS3.p1">
-<p class="ltx_p" id="S5.SS3.p1.1">Effective retrospective thinking requires both self-verification of CoT steps and subsequent self-correction.
+<p class="ltx_p" id="S5.SS3.p1.1"><span class="translated-text">有效的回顾性思维既需要对 CoT 步骤进行自我验证，又需要随后的自我纠正。
+为了解决这些问题，我们将模型的内部验证令牌替换为外部 LLM 作为“预言机验证者”。
+在推理过程中，每当对验证令牌进行采样时，预言机都会评估前面的推理，并用其判断替换模型的令牌。
+为了建立上限，我们将其应用于最准确的设置（</span><span class="original-text">Effective retrospective thinking requires both self-verification of CoT steps and subsequent self-correction.
 To disentangle these, we replace the model’s internal verification tokens with an external LLM as an “oracle verifier.”
 During inference, whenever a verification token is sampled, the oracle evaluates the preceding reasoning and replaces the model’s token with its judgment.
-To establish an upper bound, we apply this to our most accurate setting (<span class="ltx_text ltx_font_italic" id="S5.SS3.p1.1.1">Standard Reasoning + Retro</span>).
+To establish an upper bound, we apply this to our most accurate setting (</span><span class="ltx_text ltx_font_italic" id="S5.SS3.p1.1.1"><span class="translated-text">标准推理+复古</span><span class="original-text">Standard Reasoning + Retro</span></span><span class="translated-text">）。
+预言机将准确率从 35% 提高到 42%。这 7% 的增长表明，虽然一些错误源于内部验证失败，但其余 58% 的错误率表明主要瓶颈是错误修正过程本身。
+我们将细化留给未来的研究。</span><span class="original-text">).
 The oracle improves accuracy from 35% to 42%. This 7% gain demonstrates that while some errors stem from internal verification failures, the remaining 58% error rate indicates the primary bottleneck is the error revision process itself.
-We leave the refinement for future research.</p>
+We leave the refinement for future research.</span></p>
 </div>
 </section>
 <section class="ltx_subsection" id="S5.SS4">
-<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS4.4">V-D</span> </span><span class="ltx_text ltx_font_italic" id="S5.SS4.5">Impact of LengthDPO on Retrospective Thinking</span></h3>
+<h3 class="ltx_title ltx_title_subsection"><span class="ltx_tag ltx_tag_subsection"><span class="ltx_text" id="S5.SS4.4"><span class="translated-text">维-D</span><span class="original-text">V-D</span></span> </span><span class="ltx_text ltx_font_italic" id="S5.SS4.5"><span class="translated-text">LengthDPO 对回顾性思维的影响</span><span class="original-text">Impact of LengthDPO on Retrospective Thinking</span></span></h3>
 <div class="ltx_para" id="S5.SS4.p1">
-<p class="ltx_p" id="S5.SS4.p1.1">Beyond mitigating distribution mismatch (Section <a class="ltx_ref" href="#S3" title="III RetroThinker ‣ RetroThinker: Enabling Retrospective Thinking in Speech LLMs"><span class="ltx_text ltx_ref_tag">III</span></a>), we analyze how LengthDPO alters generation by examining CoT length and the Retrospective Thinking Ratio (the proportion of test instances with at least one CoT revision).</p>
+<p class="ltx_p" id="S5.SS4.p1.1"><span class="translated-text">除了减轻分布不匹配之外（第</span><span class="original-text">Beyond mitigating distribution mismatch (Section</span><a class="ltx_ref" href="#S3" title="III RetroThinker ‣ RetroThinker: Enabling Retrospective Thinking in Speech LLMs"><span class="ltx_text ltx_ref_tag">III</span></a><span class="translated-text">），我们通过检查 CoT 长度和回顾性思维比率（至少进行一次 CoT 修订的测试实例的比例）来分析 LengthDPO 如何改变生成。</span><span class="original-text">), we analyze how LengthDPO alters generation by examining CoT length and the Retrospective Thinking Ratio (the proportion of test instances with at least one CoT revision).</span></p>
 </div>
 <div class="ltx_para" id="S5.SS4.p2">
-<p class="ltx_p" id="S5.SS4.p2.1">As shown in Table <a class="ltx_ref" href="#S5.T3" title="TABLE III ‣ V Detailed Analysis ‣ RetroThinker: Enabling Retrospective Thinking in Speech LLMs"><span class="ltx_text ltx_ref_tag">III</span></a>, average CoT length and the Retrospective Thinking Ratio decrease consistently across all QC thresholds.
-The ratio’s reduction is more pronounced at higher <math alttext="\theta" class="ltx_Math" display="inline" id="S5.SS4.p2.m1" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>.
-Intuitively, limited initial information (lower <math alttext="\theta" class="ltx_Math" display="inline" id="S5.SS4.p2.m2" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math><span class="translated-text">）会导致更多的推理错误，而更完整的输入（更高</span><span class="original-text">) causes more reasoning errors, whereas more complete input (higher</span><math alttext="\theta" class="ltx_Math" display="inline" id="S5.SS4.p2.m3" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math><span class="translated-text">）可以实现稳健的初始假设，需要更少的修改。
+<p class="ltx_p" id="S5.SS4.p2.1"><span class="translated-text">如表所示</span><span class="original-text">As shown in Table</span><a class="ltx_ref" href="#S5.T3" title="TABLE III ‣ V Detailed Analysis ‣ RetroThinker: Enabling Retrospective Thinking in Speech LLMs"><span class="ltx_text ltx_ref_tag">III</span></a><span class="translated-text">、平均 CoT 长度和回顾性思维比率在所有 QC 阈值上持续下降。
+该比率的降低在较高值下更为明显</span><span class="original-text">, average CoT length and the Retrospective Thinking Ratio decrease consistently across all QC thresholds.
+The ratio’s reduction is more pronounced at higher</span><math alttext="\theta" class="ltx_Math" display="inline" id="S5.SS4.p2.m1" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math><span class="translated-text">。
+直观上，有限的初始信息（较低</span><span class="original-text">.
+Intuitively, limited initial information (lower</span><math alttext="\theta" class="ltx_Math" display="inline" id="S5.SS4.p2.m2" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math><span class="translated-text">）会导致更多的推理错误，而更完整的输入（更高</span><span class="original-text">) causes more reasoning errors, whereas more complete input (higher</span><math alttext="\theta" class="ltx_Math" display="inline" id="S5.SS4.p2.m3" intent=":literal"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math><span class="translated-text">）可以实现稳健的初始假设，需要更少的修改。
 结合观察到的准确率提升，这些发现表明 DPO 微调使模型更具选择性。
 通过仅保留必要的回顾步骤，这种优化可以在不牺牲准确性的情况下减少响应延迟。</span><span class="original-text">) enables robust initial hypotheses, requiring fewer revisions.
 Coupled with the observed accuracy gains, these findings suggest that DPO finetuning makes the model more selective.
